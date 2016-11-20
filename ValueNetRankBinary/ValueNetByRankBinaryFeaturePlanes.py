@@ -15,8 +15,14 @@ from tensorflow.python.framework import  dtypes
 from sklearn import datasets, cross_validation, metrics, grid_search
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
+from sklearn.utils import shuffle
 from sklearn.learning_curve import learning_curve, validation_curve
 from tensorflow.contrib.learn.python.learn.estimators import run_config
+import time
+from scipy import stats ,integrate
+import seaborn as sns
+
+sns.set(color_codes=True)
 
 
 import pickle
@@ -270,22 +276,22 @@ def ReadCSVfile(file_name='BinaryFeaturePlanesDataset.csv', columns=None):#to im
     frame = pd.read_csv(file_name, header=None, names=columns)
     return frame
 def AssignDevice(path):
-    if path == r'/Users/teofilozosa/PycharmProjects/BreakthroughDataProcessingTools/':
+    if path == r'/Users/teofilozosa/PycharmProjects/BreakthroughANN/':
         device = 'MBP2011_'
-    elif path == r'/Users/TeofiloZosa/PycharmProjects/BreakthroughDataProcessingTools/':
+    elif path == r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/':
         device = 'MBP2014'
-    elif path == r'/Users/Home/PycharmProjects/BreakthroughDataProcessingTools/':
+    elif path == r'/Users/Home/PycharmProjects/BreakthroughANN/':
         device = 'MBP2011'
     else:
         device = 'AWS'#todo: configure AWS path
     return device
 def AssignPath(deviceName ='AWS'):
     if  deviceName == 'MBP2011_':
-       path =  r'/Users/teofilozosa/PycharmProjects/BreakthroughDataProcessingTools/'
+       path =  r'/Users/teofilozosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2014':
-       path = r'/Users/TeofiloZosa/PycharmProjects/BreakthroughDataProcessingTools/'
+       path = r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2011':
-       path = r'/Users/Home/PycharmProjects/BreakthroughDataProcessingTools/'
+       path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'AWS':
         path =''#todo: configure AWS path
     else:
@@ -310,72 +316,111 @@ device = AssignDevice(inputPath)
 X, y = LoadXAndy(inputPath)# row vector X[i] has scalar outcome y[i]
 # X_1, y_1 = LoadXAndy_1to1(inputPath)
 
-writePath = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingReluDropout'
-writePath1 = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingSoftplusDropout'
-writePath2 = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingSoftsignDropout'
-writePath3 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingRelu0009'
-writePath4 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingSoftplusDropout'
-writePath5 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingSoftsignDropout'
+# writePath = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingReluDropout'
+# writePath1 = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingSoftplusDropout'
+# writePath2 = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingSoftsignDropout'
+# writePath3 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingRelu0009'
+# writePath4 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingSoftplusDropout'
+# writePath5 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingSoftsignDropout'
 
 #Train/validation/test split or reducing number of training examples
-X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y,
-    test_size=0.1, random_state=42)#change random state?
+# X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y,
+#     test_size=0, random_state=42)#change random state?
 # X_1train, X_1test, y_1train, y_1test = cross_validation.train_test_split(X_1, y_1,
 #     test_size=0.1, random_state=42)#change random state?
+#for final run
+X, y = shuffle(X, y, random_state= 777)
+
 
 config = run_config.RunConfig( num_cores=-1)
 
-#todo: due to freezes, run one network at a time. Next: leaky relu, softplus, softsign
+#print (len(np.asarray(X[0], np.int8)[0]))
 
+# regressor3 = skflow.TensorFlowDNNRegressor(hidden_units=[400],
+#                                            optimizer='Adam', learning_rate=0.0009, steps=20000,
+#                                            batch_size=256)  # AlphaGo uses SGD
+# GridSearch(regressor3, X_train, y_train, X_test, y_test, whichDevice="MBP2014")
 
-
-regressor3 = skflow.TensorFlowDNNRegressor(hidden_units=[400],
-                                           optimizer='Adam', learning_rate=0.0019, steps=20000,
-                                           batch_size=256)  # AlphaGo uses SGD
-GridSearch(regressor3, X_train, y_train, X_test, y_test, whichDevice="MBP2014")
-
-regressor2 = skflow.TensorFlowDNNRegressor(hidden_units=[400, 400],
-                                           optimizer='Adam', learning_rate=0.0019, steps=20000,
-                                           batch_size=256)
-scaler = ('scaler', StandardScaler())
-DNNR = ('regressor', regressor2)
-pipe_DNNR = Pipeline([scaler, DNNR])
-GridSearch(pipe_DNNR, X_train, y_train, X_test, y_test, whichDevice="MBP2014_Scaled")
+# regressor2 = skflow.TensorFlowDNNRegressor(hidden_units=[400, 400],
+#                                            optimizer='Adam', learning_rate=0.0019, steps=20000,
+#                                            batch_size=256)
+# scaler = ('scaler', StandardScaler())
+# DNNR = ('regressor', regressor2)
+# pipe_DNNR = Pipeline([scaler, DNNR])
+# GridSearch(pipe_DNNR, X_train, y_train, X_test, y_test, whichDevice="MBP2014_Scaled")
 # pipe_DNNR.fit(X_1train, y_1train)
+#
 
-
-# regressor3.fit(X_1train, y_1train)
-# score = metrics.mean_squared_error(regressor3.predict(X_1test), y_1test)
-# print('#Relu Adam 0to1 Best Estimator MSE on Holdout Set: {0:f}'.format(score))
-# #print(regressor3.get_tensor_value('hiddenlayer_0/weights'))
-# writeOut = np.asarray(regressor3.weights_)
-# WriteNPArrayToCSV(writeOut)
-# weights = regressor3.weights_
+#regressor3.fit(X, y, logdir=inputPath+r"ValueNetRankBinary/12IntegrationReluAdam1x400_eta0009")
+optimizer = tf.train.AdamOptimizer()
+regressor3 = skflow.DNNRegressor(hidden_units=[400], model_dir=inputPath+r'/finalIntegration', optimizer=tf.train.AdamOptimizer())
+regressor3.fit(X, y, batch_size=256, steps=20000)
+timerObj = time.perf_counter()
+#print("{predict} vs {actual} in {time} seconds.".format(actual = y_train[0], predict = regressor3.predict(X_train[0]), time= time.perf_counter()-timerObj))
+# Dist = sns.distplot(regressor3.predict(X))
+# plot.show(Dist)
+#score = metrics.mean_squared_error(regressor3.predict(X_test), y_test)
+#print('#Relu Adam 0to1 Best Estimator MSE on Holdout Set: {0:f}'.format(score))
+# print(regressor3.get_variable_value('hiddenlayer_0/weights'))
+#
+# # writeOut = np.asarray(regressor3.get_variable_value('hiddenlayer_0/weights'))
+# # WriteNPArrayToCSV(writeOut)
+# weights = regressor3.get_variable_value('hiddenlayer_0/weights')
 # weightList = []
 # for weight in weights:
 #     weightList.append(weight)
 # pprint.pprint(weightList)
-# biases = regressor3.bias_
+# biases = regressor3.get_variable_value('hiddenlayer_0/bias')
 # biasList = []
 # for bias in biases:
 #     biasList.append(bias)
 # pprint.pprint(biasList)
-# outputFile = open("weights.txt", 'w')
+# outputFile = open("hiddenUnitWeights.txt", 'w')
 # outputFile.write(str(weightList))
 # outputFile.close()
-# outputFile = open("biases.txt", 'w')
+# outputFile = open("HiddenUnitBias.txt", 'w')
 # outputFile.write(str(biasList))
 # outputFile.close()
-#regressor3.save('ReluSGD1x4096_00071Integration')
+# weights = regressor3.get_variable_value('dnn_logit/weights')
+# weightList = []
+# for weight in weights:
+#     weightList.append(weight)
+# pprint.pprint(weightList)
+# biases = regressor3.get_variable_value('dnn_logit/bias')
+# biasList = []
+# for bias in biases:
+#     biasList.append(bias)
+# pprint.pprint(biasList)
+# outputFile = open("dnn_logitWeights.txt", 'w')
+# outputFile.write(str(weightList))
+# outputFile.close()
+# outputFile = open("dnn_logitBias.txt", 'w')
+# outputFile.write(str(biasList))
+# outputFile.close()
+# biases = regressor3.get_variable_value(r'centered_bias_weight')
+# biasList = []
+# for bias in biases:
+#     biasList.append(bias)
+# pprint.pprint(biasList)
+# outputFile = open("centeredBias.txt", 'w')
+# outputFile.write(str(biasList))
+# outputFile.close()
+# regressor3.save('12Int')
+
 #WriteToDisk(inputPath, regressor)
-#todo: add back initial states to see if starting player has an advantage?
-#todo:run it as a classification problem and pull out the probability?(AlphaGo used Regression, NOT classification)
-#todo: change output values to 0 - 100 or -100 - 100? (for more intuitive MSE)
 
 
 
-
-
+# saver = tf.train.Saver()
+#
+# with tf.Session() as sess:
+#     checkpoint = tf.train.get_checkpoint_state(inputPath+r"ValueNetRankBinary/12IntegrationReluAdam1x400_eta0009")
+#     if checkpoint and checkpoint.model_checkpoint_path:
+#         saver.restore(sess, inputPath+r"ValueNetRankBinary/12IntegrationReluAdam1x400_eta0009")
+#         print("model Loaded")
+#     else:
+#         print("no checkpoint found")
+#     sess.
 
   ####ON Player opponent empty dataset
 #Skflow Adam 50k steps, batch size 32, 4096x2 hidden units Best Estimator MSE on Holdout Set: 0.164951
@@ -406,5 +451,5 @@ GridSearch(pipe_DNNR, X_train, y_train, X_test, y_test, whichDevice="MBP2014_Sca
 #Relu Adam -1to1 Best Estimator MSE on Holdout Set: 0.082600!!
 #Relu SGD -1to1 Best Estimator MSE on Holdout Set: 0.085655 #at 1024x1 hidden units!
 
-#WBPOEBiasNoZero
-#Relu Adam 0to1 Best Estimator MSE on Holdout Set: 0.069541 #at 1024x1 hidden units!...wrong dataset, 0to1 with no bias
+#WBPOENoBias
+#Relu Adam 0to1 Best Estimator MSE on Holdout Set: 0.069541 #at 1024x1 hidden units! 0to1 with no bias

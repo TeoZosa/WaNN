@@ -22,6 +22,11 @@ def WriteNPArrayToDisk(path, X, y, filterType):
         pickle.dump(X, XMatrix)
         yVector = open(path + r'ValueNetRankBinary/NPDatasets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
         pickle.dump(y, yVector)
+    elif filterType == r'Self-Play':
+        XMatrix = open(path + r'XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
+        pickle.dump(X, XMatrix)
+        yVector = open(path + r'yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
+        pickle.dump(y, yVector)
     else:
         print ("Error: You must specify a valid Filter")
 def FilterByRank(playerList):
@@ -51,6 +56,20 @@ def FilterByWinRatio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
+def FilterForSelfPlay(selfPlayDataList):
+    X = []
+    for serverNodeByDate in selfPlayDataList:
+        for selfPlayLog in serverNodeByDate:
+            for game in selfPlayLog['Games']:
+                states = game['BoardStates']['States']
+                mirrorStates = game['BoardStates']['MirrorStates']
+                assert len(states) == len(mirrorStates)
+                for i in range(0, len(states)):
+                    X.append(states[i])
+                    X.append(mirrorStates[i])
+    print('# of States for Self-Play: {states}'.format(states=len(X)))
+    return X
+
 def SplitArraytoXMatrixAndYVector(arrayToSplit, convertY = True):
     X = []
     y = []
@@ -72,11 +91,13 @@ def SplitArraytoXMatrixAndYVector(arrayToSplit, convertY = True):
             y.append(trainingExample[1])
 
     return X, y
-def generateArrayByFilter(playerListDataFriendly, filter):
+def generateArray(playerListDataFriendly, filter):
         if filter =='Win Ratio':
             X = FilterByWinRatio(playerListDataFriendly)
-        else:
+        elif filter =='Rank':
             X = FilterByRank(playerListDataFriendly)
+        elif filter =='Self-Play':
+            X = FilterForSelfPlay(playerListDataFriendly)
         # Xcopy = copy.deepcopy(X)
         # shuffle(X)  # to break symmetry/prevent overfitting
         # assert (Xcopy != X)
@@ -153,16 +174,16 @@ def AssignPath(deviceName ='AWS'):
        path = r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
-    elif deviceName == 'AWS':
-        path =''#todo: configure AWS path
+    elif deviceName == 'Workstation':
+        path =''
     else:
         path = ''#todo:error checking
     return path
-readPath = r'/Users/teofilozosa/BreakthroughData/AutomatedData/'
-#readPath = ''#default directory for 2011 MBP 2
-fileName = r'PlayerDataBinaryFeaturesWBPOEDatasetSorted.p'
-filter = AssignFilter(fileName)
-playerListDataFriendly = pickle.load(open(readPath + fileName, 'rb'))
-X, y = generateArrayByFilter(playerListDataFriendly, filter)
-writePath = AssignPath("MBP2014")
-WriteNPArrayToDisk(writePath, X, y, filter)
+
+def SelfPlayDriver(filter,path, fileName):
+    file = open(path + fileName, 'r+b')
+    playerListDataFriendly = pickle.load(file)
+    file.close()
+    X, y = generateArray(playerListDataFriendly, filter=filter)
+    writePath = path+"NumpyArrays\\"+fileName[0:len(fileName)-2]
+    WriteNPArrayToDisk(writePath, X, y, filter)

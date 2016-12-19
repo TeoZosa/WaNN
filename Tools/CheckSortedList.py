@@ -119,7 +119,7 @@ def TestOriginalVsMirrorStates(analysisPlayerList):
                 assert (originalStates[stateNum][0][isWhiteIndex] == mirrorStates[stateNum][0][isWhiteIndex] == isWhite == mirrorIsWhite)
                 assert (originalStates[stateNum][0][193] == mirrorStates[stateNum][0][193])
 
-def TestBinaryVsTenerary(ternaryPlayerList, binaryPlayerList):
+def TestBinaryVsTernary(ternaryPlayerList, binaryPlayerList):
     for player in binaryPlayerList:
         for game in player['Games']:
             boardStates = game['BoardStates']

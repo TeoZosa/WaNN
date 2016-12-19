@@ -2,111 +2,88 @@ import re as re  # regular expressions
 import pprint  # pretty printing
 import os, fnmatch  # to retrieve file information from path
 import pickle  # serialize the data structure
+import mmap #read entire files into memory for (only for workstation)
 import copy
+import math
+from psutil import virtual_memory
 
 def ProcessDirectoryOfBreakthroughFiles(path, playerList):
-    for playerGameHistoryData in FindFiles(path, '*.txt'):
-        playerList.append(ProcessBreakthroughFile(path, playerGameHistoryData))
+    for selfPlayGames in FindFiles(path, '*.txt'):
+        playerList.append(ProcessBreakthroughFile(path, selfPlayGames))
 
-def ProcessBreakthroughFile(path, playerGameHistoryData):
-    fileName = playerGameHistoryData[
-               len(path):len(playerGameHistoryData) - len('.txt')]  # trim path & extension
-    fileName = fileName.split('間')  # user間2000間687687 -> ['user',2000, 687687]
-    playerName = str(fileName[0])
-    playerID = int(fileName[2])
-    rank = int(fileName[1])
-    gamesList, numWins, numLosses = FormatGameList(playerGameHistoryData, playerName)
-    return {'Player': playerName, 'PlayerID': playerID, 'Rank': rank, 'Games': gamesList, 'Wins': numWins, 'Losses': numLosses}
+def ProcessBreakthroughFile(path, selfPlayGames):
+    fileName = selfPlayGames[
+               len(path):len(selfPlayGames) - len('.txt')]  # trim path & extension
+    fileName = fileName.split('_SelfPlayLog')  # BreakthroughN_SelfPlayLog00-> ['BreakthroughN',00]
+    serverName = str(fileName[0].strip('\\'))
+    selfPlayLog = str(fileName[1]).strip('(').strip(')')
+    dateRange = str(selfPlayGames[
+                    len(r'G:\TruncatedLogs') + 1:len(path) - len(r'\selfPlayLogsBreakthroughN')])
+    gamesList, whiteWins, blackWins = FormatGameList(selfPlayGames, serverName)
+    return {'ServerNode': serverName, 'selfPlayLog': selfPlayLog, 'dateRange': dateRange, 'Games': gamesList, 'WhiteWins': whiteWins, 'BlackWins': blackWins}
 
 def WriteToDisk(input, path):
-    outputFile = open(path + r'PlayerDataBinaryFeaturesWBPOEDatasetTruncatedMF.p', 'wb')
+    date = str(path [
+                    len(r'G:\TruncatedLogs') + 1:len(path) - len(r'\selfPlayLogsBreakthroughN')])
+    outputFile = open(path + r'{date}SelfPlayDataPython.p'.format(date = date), 'wb')
     pickle.dump(input, outputFile)
 
 def FindFiles(path, filter):  # recursively find files at path with filter extension; pulled from StackOverflow
     for root, dirs, files in os.walk(path):
         for file in fnmatch.filter(files, filter):
-            yield os.path.join(root, file)
+            yield os.path.join(root, file) #TODO: change to chunk based read for speed
 
-def PreprocessGamesList(playerGameHistoryData):  #normalized regex/iterable friendly list
-    gamesList = [y[1] for y in list(
-        enumerate([x.strip() for x in open(playerGameHistoryData, "r")]))]  # read in file and convert to list
-    gamesList = filter(None, gamesList)  # remove empty strings from list
-    gamesList = list(filter(lambda a: a != "[Site \"www.littlegolem.net\"]", gamesList))  # remove site from list
-    return gamesList
-
-def FormatGameList(playerGameHistoryData, playerName):
-    quotesRegex = re.compile(r'"(.*)"')
-    eventEntry = 0
-    whiteEntry = 1
-    blackEntry = 2
-    resultEntry = 3
-    moveEntry = 4
+def FormatGameList(selfPlayGames, serverName):
     games = []
-    gamesList = PreprocessGamesList(playerGameHistoryData)
-    numWins = 0
-    numLosses = 0
-    # flags to indicate if something wasn't set properly
-    opponentName = None
-    event = None
-    playerColor = None
-    opponentColor = None
-    win = None
-                     # format game list
-    for j in range(0, len(gamesList)):
-        thisRow = j % 5
-        if thisRow != moveEntry:
-            rowData = quotesRegex.search(gamesList[j]).group(1)
-        if thisRow == eventEntry:
-            # [Event "Tournament null"] -> Event: 'Tournament null'
-            event = rowData
-        elif thisRow == whiteEntry:
-            if playerName.lower() == rowData.lower():  # ignore case just in case (no pun intended)
-                playerColor = 'White'
-                opponentColor = 'Black'
-            else:
-                opponentName = rowData
-                playerColor = 'Black'
-                opponentColor = 'White'
-        elif thisRow == blackEntry:
-            # assignment case handled above
-            if playerName.lower() != rowData.lower():
-                opponentName = rowData
-        elif thisRow == resultEntry:
-            #
-            if playerColor == 'White':
-                if rowData[0] == '1':
-                    win = True
-                elif rowData[0] == '0':
-                    win = False
-                elif rowData[0] == '*':
-                    win = "Game In Progress"
-            elif playerColor == 'Black':
-                if rowData[0] == '0':
-                    win = True
-                elif rowData[0] == '1':
-                    win = False
-                elif rowData[0] == '*':
-                    win = "Game In Progress"
-            else:
-                print("UNEXPECTED DATA FORMAT")
-                win = "Undefined at line " + str(j)
-        elif thisRow == moveEntry:
-            # format move list
-            moveList = FormatMoveList(gamesList[j])
-            boardStates = GenerateBoardStates(moveList, playerColor, win)  # generate board states from moveList
-            assert (playerColor != opponentColor and opponentName != playerName)
-            if len(moveList) > 3 and boardStates['Win'] != "Game In Progress":
-                #non-spurrious games, remove if statement for all games.
-                if win == True:
-                    numWins += 1
-                elif win == False:
-                    numLosses += 1
-
-                games.append({'Event': event, 'PlayerColor': playerColor, 'OpponentColor': opponentColor,
-                          'OpponentName': opponentName, 'Win': win,
-                          'Moves': moveList, 'BoardStates': boardStates})  # append new game after formatting move list
-    return games, numWins, numLosses
-
+    blackWin = None
+    whiteWin = None
+    endRegex = re.compile(r'.* End')
+    startRegex = re.compile(r'.* Start')
+    moveRegex = re.compile(r'\*play (.*)')
+    blackWinRegex = re.compile(r'Black Wins:.*')
+    whiteWinRegex = re.compile(r'White Wins:.*')
+    numWhiteWins = 0
+    numBlackWins = 0
+    file = open(selfPlayGames, "r+b")# read in file
+    if virtual_memory().total > 64*math.pow(2,30):  #mmap ONLY for system with at least 64 GiB RAM
+      file = mmap.mmap(file.fileno(),length=0, access= mmap.ACCESS_READ)#prot=PROT_READ only in Unix
+    #iterate over list of the form:
+    #Game N Start
+    #...
+    #(Black|White) Wins: \d
+    #[Game N End]
+    moveList = []
+    while True:
+        line = file.readline().decode('utf-8')
+        if line=='':break
+        if moveRegex.match(str(line)):#put plays into move list
+            moveList.append(moveRegex.search(line).group(1))
+        elif blackWinRegex.match(str(line)):
+            blackWin = True
+            whiteWin = False
+        elif whiteWinRegex.match(line):
+            whiteWin = True
+            blackWin = False
+        elif endRegex.match(line):
+            #move list through function
+            moveList = FormatMoveList(moveList)
+            whiteBoardStates = GenerateBoardStates(moveList, "White", whiteWin)  # generate board states from moveList
+            blackBoardStates = GenerateBoardStates(moveList, "Black", blackWin)
+            if whiteWin:
+                numWhiteWins += 1
+            elif blackWin:
+                numBlackWins += 1
+            games.append({'Win': whiteWin,
+                          'Moves': moveList,
+                          'BoardStates': whiteBoardStates})  # append new white game
+            games.append({'Win': blackWin,
+                          'Moves': moveList,
+                          'BoardStates': blackBoardStates})  # append new black game
+            moveList = []
+            whiteWin = None #not necessary/redundant, but good practice
+            blackWin = None
+    file.close()
+    return games, numWhiteWins, numBlackWins
 
 def GenerateBoardStates(moveList, playerColor, win):
     if win == "Game In Progress":
@@ -138,7 +115,6 @@ def GenerateBoardStates(moveList, playerColor, win):
          1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
          }, win]# 9: is playerColor white, 10: did White's move achieve this state (-1 for a for initial state, 0 for if black achieved this state)
     mirrorState = MirrorBoardState(state)
-    # boardStates = {'Win': win, 'States': [], 'MirrorStates': []}#exclude start state
 
     #Original start state should not be useful for tree search since it is the root of every game and has no parent.
     #however, may provide useful bias if starting player matters (i.e. 2nd player wins in solved versions (Saffidine, Jouandeau, & Cazenave, 2011)
@@ -210,10 +186,6 @@ def ConvertBoardTo1DArray(boardState, playerColor):
     GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Player')# 128-191 black
     GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Opponent')# 192-255 black
     GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Empty')#256-319 empty
-    # TODO: remove since this is now redundant? i.e. if position ==white and Player
-    # whiteFlag = [state[isWhiteIndex]]*64
-    # oneDArray += whiteFlag#320-383 is a flag indicating if the player is white
-
     moveFlag = [state[whiteMoveIndex]]#*64
     oneDArray+= moveFlag #320-383 is a flag indicating if the move came from a white move
     for i in range (0, 64):
@@ -337,39 +309,32 @@ def MovePiece(boardState, To, From, whoseMove):
         nextBoardState[whiteMoveIndex] = 0
     return nextBoardState
 
-
 def FormatMoveList(moveListString):
-    moveRegex = re.compile(r'(\d+)\.\s(resign|[a-h]\d.[a-h]\d)\s(resign|[a-h]\d.[a-h]\d|\d-\d)',
+    moveRegex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
                            re.IGNORECASE)
-    moveList = moveRegex.findall(moveListString)
+    moveList = list(map(lambda a: moveRegex.search(a).group(1), moveListString))
+    moveNum = 0
+    newMoveList=[]
+    move = [None] * 3
     for i in range(0, len(moveList)):
-        move = list(moveList[i]) #ex. [2., a1-a2, a7-a6] <=> [move#, white's move, black's move]
-        move[0] = int(move[0])
-        assert (move[0] == i + 1)
-        if move[1] == "resign":
-            move[2] = "NIL"
-        else:
-            move[1] = {'From': move[1][0:2], 'To': move[1][3:len(move[1])]}  # set White's moves
-        if move[2] != "resign" and move[2] != "NIL":  # set Black's moves
-            if len(move[2]) > 3:
-                move[2] = {'From': move[2][0:2], 'To': move[2][3:len(move[2])]}
-            else:
+        moveNum += 1
+        move[0] = math.ceil(moveNum/2)
+        if i % 2 == 0:#white move
+            assert(moveList[i][1] < moveList[i][4])#white should go forward
+            move[1] = {'From': moveList[i][0:2], 'To': moveList[i][3:5]}  # set White's moves
+            if i==len(moveList):#white makes last move of game; black lost
                 move[2] = "NIL"
-        moveList[i] = {'#': move[0], 'White': move[1], 'Black': move[2]}
-    return moveList
+                newMoveList.append({'#': move[0], 'White': move[1], 'Black': move[2]})
+        else:#black move
+            assert (moveList[i][1] > moveList[i][4])#black should go backward
+            move[2] = {'From': moveList[i][0:2], 'To': moveList[i][3:5]}# set Black's moves
+            newMoveList.append({'#': move[0], 'White': move[1], 'Black': move[2]})
+    return newMoveList
 
+def Driver(path):
+    playerList = []
+    ProcessDirectoryOfBreakthroughFiles(path, playerList)
+    #WriteToDisk(playerList, path)
 
-                #main script
-playerList = []
-pathToCheck = r'/Users/TeofiloZosa/BreakthroughData/AutomatedData/'
-ProcessDirectoryOfBreakthroughFiles(pathToCheck, playerList)
-WriteToDisk(playerList, pathToCheck)
-
-# Verified Working.
-# #double check
-#pathToCheck2 = r'/Users/TeofiloZosa/BreakthroughData/'
-# newList = pickle.load(open(pathToCheck+r'PlayerDataPython.p', 'rb'))
-# oldList = pickle.load(open(pathToCheck2+r'PlayerDataPython.p', 'rb'))
-# assert (playerList == newList == oldList)
 
 

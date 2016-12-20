@@ -25,7 +25,7 @@ def ProcessBreakthroughFile(path, selfPlayGames):
 def WriteToDisk(input, path):
     date = str(path [
                     len(r'G:\TruncatedLogs') + 1:len(path) - len(r'\selfPlayLogsBreakthroughN')])
-    outputFile = open(path + r'{date}SelfPlayDataPython.p'.format(date = date), 'wb')
+    outputFile = open(path + r'DataPython.p', 'wb')
     pickle.dump(input, outputFile)
 
 def FindFiles(path, filter):  # recursively find files at path with filter extension; pulled from StackOverflow
@@ -45,8 +45,7 @@ def FormatGameList(selfPlayGames, serverName):
     numWhiteWins = 0
     numBlackWins = 0
     file = open(selfPlayGames, "r+b")# read in file
-    if virtual_memory().total > 64*math.pow(2,30):  #mmap ONLY for system with at least 64 GiB RAM
-      file = mmap.mmap(file.fileno(),length=0, access= mmap.ACCESS_READ)#prot=PROT_READ only in Unix
+    file = mmap.mmap(file.fileno(),length=0, access= mmap.ACCESS_READ)#prot=PROT_READ only in Unix
     #iterate over list of the form:
     #Game N Start
     #...
@@ -322,7 +321,7 @@ def FormatMoveList(moveListString):
         if i % 2 == 0:#white move
             assert(moveList[i][1] < moveList[i][4])#white should go forward
             move[1] = {'From': moveList[i][0:2], 'To': moveList[i][3:5]}  # set White's moves
-            if i==len(moveList):#white makes last move of game; black lost
+            if i==len(moveList)-1:#white makes last move of game; black lost
                 move[2] = "NIL"
                 newMoveList.append({'#': move[0], 'White': move[1], 'Black': move[2]})
         else:#black move
@@ -334,7 +333,7 @@ def FormatMoveList(moveListString):
 def Driver(path):
     playerList = []
     ProcessDirectoryOfBreakthroughFiles(path, playerList)
-    #WriteToDisk(playerList, path)
+    WriteToDisk(playerList, path)
 
 
 

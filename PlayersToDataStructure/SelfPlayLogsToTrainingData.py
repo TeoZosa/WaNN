@@ -1,4 +1,3 @@
-###Super I/O Bound, so multithreading doesn't help too much, even with mmap
 
 import  pickle
 import threading
@@ -6,15 +5,18 @@ import time
 from PlayersToDataStructure import SelfPlayLogsToPythonDataStructure as convertLog
 from Tools import NumpyArray
 
-class convertLogThread (threading.Thread):
-  def __init__(self, path):
-    threading.Thread.__init__(self)
-    self.path = path
-  def run(self):
-    convertLog.Driver(self.path)
+
 
 #15 threads
 def SelfPlayLogsToDataStructures():
+  ###Super I/O Bound, so multithreading doesn't help too much, even with mmap
+  class convertLogThread(threading.Thread):
+    def __init__(self, path):
+      threading.Thread.__init__(self)
+      self.path = path
+
+    def run(self):
+      convertLog.Driver(self.path)
   threads = [None]*15
   paths = [r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx',
     r'G:\TruncatedLogs\0802-0805\selfPlayLogsWorkstationxx',

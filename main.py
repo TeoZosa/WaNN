@@ -1,4 +1,7 @@
 #whatever scripts I want to run here.
+import pickle
+from PlayersToDataStructure import  SelfPlayLogsToPythonDataStructure, SelfPlayLogsToTrainingData
+from Tools import HumanReadableBoardPrinting
 
 ##little golem player data to numpy array
 # readPath = r'/Users/teofilozosa/BreakthroughData/AutomatedData/'
@@ -9,3 +12,11 @@
 # X, y = generateArray(playerListDataFriendly, filter= filter)
 # writePath = AssignPath("MBP2014")
 # WriteNPArrayToDisk(writePath, X, y, filter)
+
+#human readable testing
+#SelfPlayLogsToPythonDataStructure.Driver(r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx')
+#
+# testData = pickle.load(open(r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxxDataPython.p', "r+b"))
+# HumanReadableBoardPrinting.PrintGame(testData[0]['Games'][0])
+
+SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()

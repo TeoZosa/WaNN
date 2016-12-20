@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="updated to most recent working copy">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/main.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/BreakthroughANN.iml" afterPath="$PROJECT_DIR$/.idea/BreakthroughANN.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/shelf/Added_mirror_image_data_generation__Added_new_unit_tests_and_updated_the_datasets.xml" afterPath="$PROJECT_DIR$/.idea/shelf/Added_mirror_image_data_generation__Added_new_unit_tests_and_updated_the_datasets.xml" />
+    <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlayersToDataStructure/PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes.py" afterPath="$PROJECT_DIR$/PlayersToDataStructure/PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/CheckSortedList.py" afterPath="$PROJECT_DIR$/Tools/CheckSortedList.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/NumpyArray.py" afterPath="$PROJECT_DIR$/Tools/NumpyArray.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -63,7 +55,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="NumpyArray.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="NumpyArray.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Tools/NumpyArray.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="632">
@@ -71,6 +63,16 @@
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="68">
+              <caret line="4" column="65" lean-forward="false" selection-start-line="4" selection-start-column="65" selection-end-line="4" selection-end-column="65" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -152,7 +154,7 @@
     </replaceStrings>
   </component>
   <component name="Git.Settings">
-    <option name="UPDATE_TYPE" value="REBASE" />
+    <option name="UPDATE_TYPE" value="MERGE" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
@@ -201,6 +203,7 @@
         <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
         <option value="$PROJECT_DIR$/main.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
+        <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
@@ -956,7 +959,14 @@
       <option name="project" value="LOCAL" />
       <updated>1466271408362</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="Added methods to process self-play logs into NN-friendly training data. Refactored and pulled some scripts out as they were more appropriate for a dynamic main method.">
+      <created>1482191992296</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1482191992296</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TodoView">
@@ -974,12 +984,12 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2552565" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3278272" sideWeight="0.48708752" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24734785" sideWeight="0.5567704" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32774985" sideWeight="0.5336417" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32886654" sideWeight="0.323381" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3278272" sideWeight="0.46789798" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32774985" sideWeight="0.46635827" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.48497853" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24734785" sideWeight="0.44322962" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24734785" sideWeight="0.44322962" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.116304345" sideWeight="0.5197285" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -1030,7 +1040,8 @@
     <MESSAGE value="Added files" />
     <MESSAGE value="Restructured entire repository" />
     <MESSAGE value="updated to most recent working copy" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated to most recent working copy" />
+    <MESSAGE value="Added methods to process self-play logs into NN-friendly training data. Refactored and pulled some scripts out as they were more appropriate for a dynamic main method." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added methods to process self-play logs into NN-friendly training data. Refactored and pulled some scripts out as they were more appropriate for a dynamic main method." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1073,7 +1084,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/pandas/io/excel.py" />
     <entry file="file://$PROJECT_DIR$/probeDatasets.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1303,6 +1313,14 @@
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" column="65" lean-forward="false" selection-start-line="4" selection-start-column="65" selection-end-line="4" selection-end-column="65" />
+          <folding />
         </state>
       </provider>
     </entry>

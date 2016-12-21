@@ -23,4 +23,4 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
   startTime = time.time()
   SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
-  print("Hours elapsed: {time}".format(time=(time.time() - startTime) / (60 * 60)))
+  print("Minutes elapsed: {time}".format(time=(time.time() - startTime) / (60)))

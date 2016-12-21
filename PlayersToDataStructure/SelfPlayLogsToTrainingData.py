@@ -1,23 +1,16 @@
-
 import  pickle
 import threading
+import __main__
+from multiprocessing import Process, Pool, TimeoutError, freeze_support
 import time
 from PlayersToDataStructure import SelfPlayLogsToPythonDataStructure as convertLog
 from Tools import NumpyArray
 
 
 
-#15 threads
+#15 processes
 def SelfPlayLogsToDataStructures():
-  ###Super I/O Bound, so multithreading doesn't help too much, even with mmap
-  class convertLogThread(threading.Thread):
-    def __init__(self, path):
-      threading.Thread.__init__(self)
-      self.path = path
-
-    def run(self):
-      convertLog.Driver(self.path)
-  threads = [None]*15
+  processes = Pool(processes=15)
   paths = [r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx',
     r'G:\TruncatedLogs\0802-0805\selfPlayLogsWorkstationxx',
     r'G:\TruncatedLogs\0806-0824\selfPlayLogsBreakthrough4',
@@ -33,16 +26,8 @@ def SelfPlayLogsToDataStructures():
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough2',
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4']
-  for i in range(0,len(paths)):
-    threads[i]= convertLogThread(paths[i])
-  startTime = time.time()
-  for i in range (0,len(paths)):
-    threads[i].start()
-    print("thread {thread} starting".format(thread = i))
-  for i in range(0,len(paths)):
-    threads[i].join()
-  print("Time elapsed: {time}".format(time = time.time() - startTime))
-
+  processes.map(convertLog.Driver, paths)#map processes to args
+   
 def AggregateSelfPlayDataStructures():
   path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\\'
   files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxSelfPlayDataPython.p',

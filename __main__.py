@@ -1,8 +1,9 @@
 #whatever scripts I want to run here.
 import pickle
+from multiprocessing import freeze_support
 from PlayersToDataStructure import  SelfPlayLogsToPythonDataStructure, SelfPlayLogsToTrainingData
 from Tools import HumanReadableBoardPrinting
-
+import time
 ##little golem player data to numpy array
 # readPath = r'/Users/teofilozosa/BreakthroughData/AutomatedData/'
 # #readPath = ''#default directory for 2011 MBP 2
@@ -18,5 +19,8 @@ from Tools import HumanReadableBoardPrinting
 #
 # testData = pickle.load(open(r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxxDataPython.p', "r+b"))
 # HumanReadableBoardPrinting.PrintGame(testData[0]['Games'][0])
-
-SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
+if __name__ == '__main__':#for Windows since it lacks os.fork
+  freeze_support()
+  startTime = time.time()
+  SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
+  print("Hours elapsed: {time}".format(time=(time.time() - startTime) / (60 * 60)))

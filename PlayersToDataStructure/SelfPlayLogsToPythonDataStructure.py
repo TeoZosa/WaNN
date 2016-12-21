@@ -53,11 +53,12 @@ def FormatGameList(selfPlayGames, serverName):
     #[Game N End]
     moveList = []
     while True:
-        line = file.readline().decode('utf-8')
-        if line=='':break
-        if moveRegex.match(str(line)):#put plays into move list
+        #line = line.decode('utf-8')
+        line = file.readline().decode('utf-8')#convert to string
+        if line=='':break#EOF
+        if moveRegex.match(line):#put plays into move list
             moveList.append(moveRegex.search(line).group(1))
-        elif blackWinRegex.match(str(line)):
+        elif blackWinRegex.match(line):
             blackWin = True
             whiteWin = False
         elif whiteWinRegex.match(line):
@@ -79,7 +80,7 @@ def FormatGameList(selfPlayGames, serverName):
                           'Moves': moveList,
                           'BoardStates': blackBoardStates})  # append new black game
             moveList = []
-            whiteWin = None #not necessary/redundant, but good practice
+            whiteWin = None #not necessary;redundant, but good practice
             blackWin = None
     file.close()
     return games, numWhiteWins, numBlackWins
@@ -333,7 +334,7 @@ def FormatMoveList(moveListString):
 def Driver(path):
     playerList = []
     ProcessDirectoryOfBreakthroughFiles(path, playerList)
-    WriteToDisk(playerList, path)
+   # WriteToDisk(playerList, path)
 
 
 

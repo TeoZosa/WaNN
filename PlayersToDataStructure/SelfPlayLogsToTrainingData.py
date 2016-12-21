@@ -1,8 +1,5 @@
 import  pickle
-import threading
-import __main__
 from multiprocessing import Process, Pool, TimeoutError, freeze_support
-import time
 from PlayersToDataStructure import SelfPlayLogsToPythonDataStructure as convertLog
 from Tools import NumpyArray
 
@@ -26,7 +23,7 @@ def SelfPlayLogsToDataStructures():
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough2',
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4']
-  processes.map(convertLog.Driver, paths)#map processes to args
+  processes.map(convertLog.Driver, paths)#map processes to arg lists
    
 def AggregateSelfPlayDataStructures():
   path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\\'

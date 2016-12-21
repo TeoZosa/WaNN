@@ -66,7 +66,7 @@ def FormatGameList(selfPlayGames, serverName):
             blackWin = False
         elif endRegex.match(line):
             #move list through function
-            moveList = FormatMoveList(moveList)
+            moveList, webVisualizerLink = FormatMoveList(moveList)
             whiteBoardStates = GenerateBoardStates(moveList, "White", whiteWin)  # generate board states from moveList
             blackBoardStates = GenerateBoardStates(moveList, "Black", blackWin)
             if whiteWin:
@@ -75,10 +75,12 @@ def FormatGameList(selfPlayGames, serverName):
                 numBlackWins += 1
             games.append({'Win': whiteWin,
                           'Moves': moveList,
-                          'BoardStates': whiteBoardStates})  # append new white game
+                          'BoardStates': whiteBoardStates,
+                          'VisualizationURL': webVisualizerLink})  # append new white game
             games.append({'Win': blackWin,
                           'Moves': moveList,
-                          'BoardStates': blackBoardStates})  # append new black game
+                          'BoardStates': blackBoardStates,
+                          'VisualizationURL': webVisualizerLink})  # append new black game
             moveList = []
             whiteWin = None #not necessary;redundant, but good practice
             blackWin = None
@@ -312,6 +314,7 @@ def MovePiece(boardState, To, From, whoseMove):
 def FormatMoveList(moveListString):
     moveRegex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
                            re.IGNORECASE)
+    webVisualizerLink = r'http://www.trmph.com/breakthrough/board#8,'
     moveList = list(map(lambda a: moveRegex.search(a).group(1), moveListString))
     moveNum = 0
     newMoveList=[]
@@ -319,22 +322,26 @@ def FormatMoveList(moveListString):
     for i in range(0, len(moveList)):
         moveNum += 1
         move[0] = math.ceil(moveNum/2)
+        From = str(moveList[i][0:2]).lower()
+        to = str(moveList[i][3:5]).lower()
         if i % 2 == 0:#white move
             assert(moveList[i][1] < moveList[i][4])#white should go forward
-            move[1] = {'From': moveList[i][0:2], 'To': moveList[i][3:5]}  # set White's moves
+            move[1] = {'From': From, 'To': to}  # set White's moves
+            webVisualizerLink = webVisualizerLink + From + to
             if i==len(moveList)-1:#white makes last move of game; black lost
                 move[2] = "NIL"
                 newMoveList.append({'#': move[0], 'White': move[1], 'Black': move[2]})
         else:#black move
             assert (moveList[i][1] > moveList[i][4])#black should go backward
-            move[2] = {'From': moveList[i][0:2], 'To': moveList[i][3:5]}# set Black's moves
+            move[2] = {'From': From, 'To': to}# set Black's moves
+            webVisualizerLink = webVisualizerLink + From + to
             newMoveList.append({'#': move[0], 'White': move[1], 'Black': move[2]})
-    return newMoveList
+    return newMoveList, webVisualizerLink
 
 def Driver(path):
     playerList = []
     ProcessDirectoryOfBreakthroughFiles(path, playerList)
-   # WriteToDisk(playerList, path)
+    WriteToDisk(playerList, path)
 
 
 

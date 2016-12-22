@@ -180,12 +180,12 @@ def GenerateBoardStatesPolicyNet(moveList, playerColor, win):
     for i in range(0, len(moveList)):
         assert (moveList[i]['#'] == i + 1)
         if isinstance(moveList[i]['White'], dict):  # if string, then == resign or NIL
-            if isinstance(moveList[i]['Black'], dict):  # if string, then == resign or NIL
+            if isinstance(moveList[i]['Black'], dict):  # if no move => white won
                 blackTransitionVector = generateTransitionVector(moveList[i]['Black']['To'], moveList[i]['Black']['From'], 'Black')
                 blackMirrorTransitionVector = generateTransitionVector(mirrorMoveList[i]['Black']['To'], mirrorMoveList[i]['Black']['From'], 'Black')
                 #can't put black move block in here as it would execute before white's move
             else:
-                blackTransitionVector = [0]*154
+                blackTransitionVector = [0]*154#
                 blackMirrorTransitionVector = [0]*154
             state = [MovePiece(state[0], moveList[i]['White']['To'], moveList[i]['White']['From'], whoseMove='White'),
                      win,
@@ -219,8 +219,6 @@ def generateTransitionVector(to, From, playerColor):
     toColumn = to[0]
     fromRow = int(From[1])
     toRow = int(to[1])
-    ordA = ord('a')
-    ordFrom = ord(fromColumn)
     columnOffset = (ord(fromColumn) - ord('a')) * 3 #ex if white, moves starting from b are [2] or [3] or [4]
     if playerColor == 'Black':
         rowOffset = (toRow - 1) * 22
@@ -477,4 +475,4 @@ def FormatMoveList(moveListString):
 def Driver(path):
     playerList = []
     ProcessDirectoryOfBreakthroughFiles(path, playerList)
-    #WriteToDisk(playerList, path)
+    WriteToDisk(playerList, path)

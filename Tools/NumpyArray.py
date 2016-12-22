@@ -56,19 +56,30 @@ def FilterByWinRatio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
-def FilterForSelfPlay(selfPlayDataList):
+def FilterForSelfPlay(selfPlayDataList, forValueNet):
     X = []
-    for serverNodeByDate in selfPlayDataList:
-        for selfPlayLog in serverNodeByDate:
-            for game in selfPlayLog['Games']:
-                win = game['Win'] #for value net so we don't have to pair wins to each board state
-                states = game['BoardStates']['States']
-                mirrorStates = game['MirrorBoardStates']['States']
-                assert len(states) == len(mirrorStates)
-                for i in range(0, len(states)):
-                    X.append(states[i])
-                    X.append(mirrorStates[i])
-    print('# of States for Self-Play: {states}'.format(states=len(X)))
+    if forValueNet:
+      for serverNodeByDate in selfPlayDataList:
+          for selfPlayLog in serverNodeByDate:
+              for game in selfPlayLog['Games']:
+                  states = game['BoardStates']['States']
+                  mirrorStates = game['MirrorBoardStates']['States']
+                  assert len(states) == len(mirrorStates)
+                  for i in range(0, len(states)):
+                      X.append(states[i])
+                      X.append(mirrorStates[i])
+      print('# of States for Self-Play Value Net: {states}'.format(states=len(X)))
+    else:
+      for serverNodeByDate in selfPlayDataList:
+          for selfPlayLog in serverNodeByDate:
+              for game in selfPlayLog['Games']:
+                  states = game['BoardStates']['PlayerPOV']
+                  mirrorStates = game['MirrorBoardStates']['PlayerPOV']
+                  assert len(states) == len(mirrorStates)
+                  for i in range(0, len(states)):
+                      X.append(states[i])
+                      X.append(mirrorStates[i])
+      print('# of States for Self-Play Policy Net: {states}'.format(states=len(X)))
     return X
 
 def SplitArraytoXMatrixAndYVector(arrayToSplit, convertY = True):
@@ -93,13 +104,14 @@ def SplitArraytoXMatrixAndYVector(arrayToSplit, convertY = True):
     return X, y
 
 
-def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):
+def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to redo Numpy code
     X = []
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
         X.append(trainingExample[0] + ([1] * 64))  # 1 bias plane
         y.append(trainingExample[2])#transition vector
     return X, y
+
 def generateArray(playerListDataFriendly, filter):
         if filter =='Win Ratio':
             X = FilterByWinRatio(playerListDataFriendly)

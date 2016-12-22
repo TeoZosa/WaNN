@@ -71,7 +71,7 @@ def FormatGameList(selfPlayGames, serverName):
                 numWhiteWins += 1
             elif blackWin:
                 numBlackWins += 1
-            games.append({'Win': whiteWin,
+            games.append({'Win': whiteWin,  # TODO: put mirror board states here? will have to redo Numpy code
                           'Moves': moveList,
                           'MirrorMoves': mirrorMoveList,
                           'BoardStates': whiteBoardStates,

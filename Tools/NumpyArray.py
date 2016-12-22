@@ -6,7 +6,7 @@ import  pprint
 import copy
 
 #TODO: redo logic and paths after directory restructuring
-def WriteNPArrayToDisk(path, X, y, filterType):
+def WriteNPArrayToDisk(path, X, y, filterType, NNType):
     if filterType == r'Rank':
         XMatrix = open(path + r'XMatrixByRank.p', 'wb')
         pickle.dump(X, XMatrix)
@@ -23,10 +23,16 @@ def WriteNPArrayToDisk(path, X, y, filterType):
         yVector = open(path + r'ValueNetRankBinary/NPDatasets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
         pickle.dump(y, yVector)
     elif filterType == r'Self-Play':
-        XMatrix = open(path + r'XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
-        pickle.dump(X, XMatrix)
-        yVector = open(path + r'yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
-        pickle.dump(y, yVector)
+        if NNType == 'Policy':
+          XMatrix = open(path + r'XMatrixSelfPlayPOEBias.p', 'wb')
+          pickle.dump(X, XMatrix)
+          yVector = open(path + r'yVectorSelfPlayPOEBias.p', 'wb')
+          pickle.dump(y, yVector)
+        else:#value net
+          XMatrix = open(path + r'XMatrixSelfPlayWBPOEBiasNoZero.p', 'wb')
+          pickle.dump(X, XMatrix)
+          yVector = open(path + r'yVectorSelfPlayWBPOEBiasNoZero.p', 'wb')
+          pickle.dump(y, yVector)
     else:
         print ("Error: You must specify a valid Filter")
 def FilterByRank(playerList):
@@ -56,20 +62,9 @@ def FilterByWinRatio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
-def FilterForSelfPlay(selfPlayDataList, forValueNet):
+def FilterForSelfPlay(selfPlayDataList, NNType):
     X = []
-    if forValueNet:
-      for serverNodeByDate in selfPlayDataList:
-          for selfPlayLog in serverNodeByDate:
-              for game in selfPlayLog['Games']:
-                  states = game['BoardStates']['States']
-                  mirrorStates = game['MirrorBoardStates']['States']
-                  assert len(states) == len(mirrorStates)
-                  for i in range(0, len(states)):
-                      X.append(states[i])
-                      X.append(mirrorStates[i])
-      print('# of States for Self-Play Value Net: {states}'.format(states=len(X)))
-    else:
+    if NNType == 'Policy':
       for serverNodeByDate in selfPlayDataList:
           for selfPlayLog in serverNodeByDate:
               for game in selfPlayLog['Games']:
@@ -80,6 +75,17 @@ def FilterForSelfPlay(selfPlayDataList, forValueNet):
                       X.append(states[i])
                       X.append(mirrorStates[i])
       print('# of States for Self-Play Policy Net: {states}'.format(states=len(X)))
+    else:
+      for serverNodeByDate in selfPlayDataList:
+          for selfPlayLog in serverNodeByDate:
+              for game in selfPlayLog['Games']:
+                  states = game['BoardStates']['States']
+                  mirrorStates = game['MirrorBoardStates']['States']
+                  assert len(states) == len(mirrorStates)
+                  for i in range(0, len(states)):
+                      X.append(states[i])
+                      X.append(mirrorStates[i])
+      print('# of States for Self-Play Value Net: {states}'.format(states=len(X)))
     return X
 
 def SplitArraytoXMatrixAndYVector(arrayToSplit, convertY = True):
@@ -112,14 +118,15 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
         y.append(trainingExample[2])#transition vector
     return X, y
 
-def generateArray(playerListDataFriendly, filter):
+def generateArray(playerListDataFriendly, filter, NNType):
         if filter =='Win Ratio':
             X = FilterByWinRatio(playerListDataFriendly)
         elif filter =='Rank':
             X = FilterByRank(playerListDataFriendly)
         elif filter =='Self-Play':
-            X = FilterForSelfPlay(playerListDataFriendly)
+            X = FilterForSelfPlay(playerListDataFriendly, NNType)
         else:
+            X=[]
             print('Invalid Filter Specified')
             exit(-2)
         # Xcopy = copy.deepcopy(X)
@@ -127,8 +134,10 @@ def generateArray(playerListDataFriendly, filter):
         # assert (Xcopy != X)
         #split into X array and y vectors
         #
-
-        splitX, y = SplitArraytoXMatrixAndYVector(X, convertY=True)
+        if NNType =='Policy':
+            splitX, y = SplitArraytoXMatrixAndYTransitionVector(X)
+        else: # Value Net
+            splitX, y = SplitArraytoXMatrixAndYVector(X, convertY= True)
         # X = np.matrix(splitX, dtype=np.int8)
 
         # transform to m x 64 numpy array; 8-bit ints since legal values are -1, 0, 1 or 0, 1
@@ -204,10 +213,10 @@ def AssignPath(deviceName ='AWS'):
         path = ''#todo:error checking
     return path
 
-def SelfPlayDriver(filter,path, fileName):
+def SelfPlayDriver(filter, NNType, path, fileName):
     file = open(path + fileName, 'r+b')
     playerListDataFriendly = pickle.load(file)
     file.close()
-    X, y = generateArray(playerListDataFriendly, filter=filter)
+    X, y = generateArray(playerListDataFriendly, filter, NNType)
     writePath = path+"NumpyArrays\\"+fileName[0:len(fileName)-2]
-    WriteNPArrayToDisk(writePath, X, y, filter)
+    WriteNPArrayToDisk(writePath, X, y, filter, NNType)

@@ -64,9 +64,11 @@ def FormatGameList(selfPlayGames, serverName):
             blackWin = False
         elif endRegex.match(line):
             #Format move list
-            moveList, mirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink = FormatMoveList(unformattedMoveList)
-            whiteBoardStates = GenerateBoardStates(moveList, mirrorMoveList, "White", whiteWin)  # generate board states from moveList
-            blackBoardStates = GenerateBoardStates(moveList, mirrorMoveList, "Black", blackWin)  # self-play => same states, but win under policy for A=> lose under policy for B
+            moveList, mirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink = FormatMoveListsAndURLs(unformattedMoveList)
+            whiteBoardStates = GenerateBoardStates(moveList, 'White', whiteWin)  # generate board states from moveList
+            whiteMirrorBoardStates = GenerateBoardStates(mirrorMoveList, 'White', whiteWin)
+            blackBoardStates = GenerateBoardStates(moveList,'Black', blackWin)  # self-play => same states, but win under policy for A=> lose under policy for B
+            blackMirrorBoardStates = GenerateBoardStates(mirrorMoveList, 'Black', blackWin)
             if whiteWin:
                 numWhiteWins += 1
             elif blackWin:
@@ -75,6 +77,7 @@ def FormatGameList(selfPlayGames, serverName):
                           'Moves': moveList,
                           'MirrorMoves': mirrorMoveList,
                           'BoardStates': whiteBoardStates,
+                          'MirrorBoardStates': whiteMirrorBoardStates,
                           'OriginalVisualizationURL': originalWebVisualizerLink,
                           'MirrorVisualizationURL': mirrorWebVisualizerLink}
                          )  # append new white game
@@ -82,6 +85,7 @@ def FormatGameList(selfPlayGames, serverName):
                           'Moves': moveList,
                           'MirrorMoves': mirrorMoveList,
                           'BoardStates': blackBoardStates,
+                          'MirrorBoardStates': blackMirrorBoardStates,
                           'OriginalVisualizationURL': originalWebVisualizerLink,
                           'MirrorVisualizationURL': mirrorWebVisualizerLink}
                          )  # append new black game
@@ -115,44 +119,31 @@ def InitialState(moveList, playerColor, win):
         win,
         generateTransitionVector(moveList[0]['White']['To'], moveList[0]['White']['From'], 'White')]#White's opening move
 
-def GenerateBoardStates(moveList, mirrorMoveList, playerColor, win):
+def GenerateBoardStates(moveList, playerColor, win):
     state = InitialState(moveList,playerColor,win)
-    mirrorState = InitialState(mirrorMoveList,playerColor,win)
-    boardStates = {'Win': win, 'States': [state], 'MirrorStates': [mirrorState]}
+    boardStates = {'Win': win, 'States': [state]}
 
     for i in range(0, len(moveList)):
         assert (moveList[i]['#'] == i + 1)
         if isinstance(moveList[i]['White'], dict):  # if string, then == resign or NIL
             if isinstance(moveList[i]['Black'], dict):  # if no move => white won
                 blackTransitionVector = generateTransitionVector(moveList[i]['Black']['To'], moveList[i]['Black']['From'], 'Black')
-                blackMirrorTransitionVector = generateTransitionVector(mirrorMoveList[i]['Black']['To'], mirrorMoveList[i]['Black']['From'], 'Black')
                 #can't put black move block in here as it would execute before white's move
             else:
                 blackTransitionVector = [0]*154#
-                blackMirrorTransitionVector = [0]*154
             state = [MovePiece(state[0], moveList[i]['White']['To'], moveList[i]['White']['From'], whoseMove='White'),
                      win,
                      blackTransitionVector] #Black's response to the generated state
             boardStates['States'].append(state)
-            mirrorState = [MovePiece(mirrorState[0], mirrorMoveList[i]['White']['To'], mirrorMoveList[i]['White']['From'], whoseMove='White'),
-                     win,
-                     blackMirrorTransitionVector]
-            boardStates['MirrorStates'].append(mirrorState)
         if isinstance(moveList[i]['Black'], dict):  # if string, then == resign or NIL
             if i+1 == len(moveList):# if no moves left => black won
                 whiteTransitionVector = [0]*154 # no white move from the next generated state
-                whiteMirrorTransitionVector = [0]*154
             else:
                 whiteTransitionVector = generateTransitionVector(moveList[i+1]['White']['To'], moveList[i+1]['White']['From'], 'White')
-                whiteMirrorTransitionVector = generateTransitionVector(mirrorMoveList[i+1]['White']['To'], mirrorMoveList[i+1]['White']['From'], 'White')
             state = [MovePiece(state[0], moveList[i]['Black']['To'], moveList[i]['Black']['From'], whoseMove='Black'),
                      win,
                      whiteTransitionVector]  # White's response to the generated state
             boardStates['States'].append(state)
-            mirrorState = [MovePiece(mirrorState[0], mirrorMoveList[i]['Black']['To'], mirrorMoveList[i]['Black']['From'], whoseMove='Black'),
-                     win,
-                     whiteMirrorTransitionVector]  # White's response to the generated state
-            boardStates['MirrorStates'].append(mirrorState)
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
     boardStates = ConvertBoardStatesToArrays(boardStates, playerColor)
     return boardStates
@@ -254,13 +245,9 @@ def MirrorBoardState(state):#since a mirror image has the same strategic value
 def ConvertBoardStatesToArrays(boardStates, playerColor):
     newBoardStates = boardStates
     states = boardStates['States']
-    mirrorStates = boardStates['MirrorStates']
-    assert len(states) == len(mirrorStates)#vacuous assertion
     newBoardStates['States'] = []
-    newBoardStates['MirrorStates'] = []
     for i in range (0, len (states)):
         newBoardStates['States'].append(ConvertBoardTo1DArray(states[i], playerColor))
-        newBoardStates['MirrorStates'].append(ConvertBoardTo1DArray(mirrorStates[i], playerColor))
     return newBoardStates
 
 def ConvertBoardTo1DArray(boardState, playerColor):
@@ -292,94 +279,68 @@ def GenerateBinaryPlane(state, arrayToAppend, playerColor, whoToFilter):
     isWhiteIndex = 9
     whiteMoveIndex = 10
     if whoToFilter == 'White':
-        for row in sorted(state):
-            if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
-                for column in sorted(state[row]):
-                    # needs to be sorted to traverse dictionary in lexicographical order
-                    value = -5
-                    if state[row][column] == 'e':
-                        value = 0
-                    elif state[row][column] == 'w':
-                        value = 1
-                    elif state[row][column] == 'b':
-                        value = 0
-                    else:
-                        print("error in convertBoard")
-                        exit(-190)
-                    arrayToAppend.append(value)
-    elif whoToFilter == 'Black':
-        for row in sorted(state):
-            if row != isWhiteIndex and row!= whiteMoveIndex:  # don't touch the index that shows whose move generated this state
-                for column in sorted(state[row]):
-                    # needs to be sorted to traverse dictionary in lexicographical order
-                    value = -5
-                    if state[row][column] == 'e':
-                        value = 0
-                    elif state[row][column] == 'w':
-                        value = 0
-                    elif state[row][column] == 'b':
-                        value = 1
-                    else:
-                        print("error in convertBoard")
-                        exit(-190)
-                    arrayToAppend.append(value)
-    elif whoToFilter == 'Player':
+        whiteDict = {
+            'e': 0,
+            'w': 1,
+            'b': 0}
         for row in sorted(state):
             if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
                 for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
-                    value = -5
-                    if state[row][column] == 'e':
-                        value = 0
-                    elif state[row][column] == 'w':
-                        if playerColor == 'White':
-                            value = 1
-                        else:
-                            value = 0
-                    elif state[row][column] == 'b':
-                        if playerColor == 'Black':
-                            value = 1
-                        else:
-                            value = 0
-                    else:
-                        print("error in convertBoard")
-                        exit(-190)
-                    arrayToAppend.append(value)
+                    arrayToAppend.append(whiteDict[state[row][column]])
+    elif whoToFilter == 'Black':
+        blackDict = {
+            'e': 0,
+            'w': 0,
+            'b': 1}
+        for row in sorted(state):
+            if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
+                for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
+                    arrayToAppend.append(blackDict[state[row][column]])
+    elif whoToFilter == 'Player':
+        if playerColor == 'White':
+            playerDict = {
+            'e': 0,
+            'w': 1,
+            'b': 0}
+        elif playerColor == 'Black':
+            playerDict = {
+                'e': 0,
+                'w': 0,
+                'b': 1}
+        else:
+            print("error in convertBoard")
+            exit(-190)
+        for row in sorted(state):
+            if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
+                for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
+                    arrayToAppend.append(playerDict[state[row][column]])
     elif whoToFilter == 'Opponent':
+        if playerColor == 'White':
+            opponentDict = {
+            'e': 0,
+            'w': 0,
+            'b': 1}
+        elif playerColor == 'Black':
+            opponentDict = {
+                'e': 0,
+                'w': 1,
+                'b': 0}
+        else:
+            print("error in convertBoard")
+            exit(-190)
         for row in sorted(state):
             if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
-                for column in sorted(state[row]):
-                    # needs to be sorted to traverse dictionary in lexicographical order
-                    value = -5
-                    if state[row][column] == 'e':
-                        value = 0
-                    elif state[row][column] == 'w':
-                        if playerColor == 'White':
-                            value = 0
-                        else:
-                            value = 1
-                    elif state[row][column] == 'b':
-                        if playerColor == 'Black':
-                            value = 0
-                        else:
-                            value = 1
-                    else:
-                        print("error in convertBoard")
-                        exit(-190)
-                    arrayToAppend.append(value)
+                for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
+                    arrayToAppend.append(opponentDict[state[row][column]])
     elif whoToFilter == 'Empty':
+        emptyDict = {
+            'e': 1,
+            'w': 0,
+            'b': 0}
         for row in sorted(state):
             if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
-                for column in sorted(state[row]):
-                    # needs to be sorted to traverse dictionary in lexicographical order
-                    value = -5
-                    if state[row][column] == 'e':
-                        value = 1
-                    elif state[row][column] == 'w' or state[row][column] == 'b':
-                        value = 0
-                    else:
-                        print("error in convertBoard")
-                        exit(-190)
-                    arrayToAppend.append(value)
+                for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
+                    arrayToAppend.append(emptyDict[state[row][column]])
     else:
         print("Error, GenerateBinaryPlane needs a valid argument to filter")
 
@@ -395,7 +356,7 @@ def MovePiece(boardState, To, From, whoseMove):
         nextBoardState[whiteMoveIndex] = 0
     return nextBoardState
 
-def FormatMoveList(unformattedMoveList):
+def FormatMoveListsAndURLs(unformattedMoveList):
     moveRegex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
                            re.IGNORECASE)
     originalWebVisualizerLink = mirrorWebVisualizerLink = r'http://www.trmph.com/breakthrough/board#8,'

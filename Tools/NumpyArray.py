@@ -63,11 +63,10 @@ def FilterForSelfPlay(selfPlayDataList):
             for game in selfPlayLog['Games']:
                 win = game['Win'] #for value net so we don't have to pair wins to each board state
                 states = game['BoardStates']['States']
-                mirrorStates = game['BoardStates']['MirrorStates']
+                mirrorStates = game['MirrorBoardStates']['States']
                 assert len(states) == len(mirrorStates)
                 for i in range(0, len(states)):
                     X.append(states[i])
-
                     X.append(mirrorStates[i])
     print('# of States for Self-Play: {states}'.format(states=len(X)))
     return X
@@ -91,7 +90,15 @@ def SplitArraytoXMatrixAndYVector(arrayToSplit, convertY = True):
             X.append(trainingExample[0] + ([1]*1))#1 bias node
             # X.append(trainingExample[0])
             y.append(trainingExample[1])
+    return X, y
 
+
+def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):
+    X = []
+    y = []
+    for trainingExample in arrayToSplit:  # -1 & 1 binary outcomes; better if we want NN output to be in terms of cost/reward?
+        X.append(trainingExample[0] + ([1] * 64))  # 1 bias plane
+        y.append(trainingExample[1])
     return X, y
 def generateArray(playerListDataFriendly, filter):
         if filter =='Win Ratio':

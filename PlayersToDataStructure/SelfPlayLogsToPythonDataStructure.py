@@ -50,12 +50,12 @@ def FormatGameList(selfPlayGames, serverName):
     #...
     #(Black|White) Wins: \d
     #[Game N End]
-    moveList = []
+    unformattedMoveList = []
     while True:
         line = file.readline().decode('utf-8')#convert to string
         if line=='':break#EOF
         if moveRegex.match(line):#put plays into move list
-            moveList.append(moveRegex.search(line).group(1))
+            unformattedMoveList.append(moveRegex.search(line).group(1))
         elif blackWinRegex.match(line):
             blackWin = True
             whiteWin = False
@@ -64,74 +64,32 @@ def FormatGameList(selfPlayGames, serverName):
             blackWin = False
         elif endRegex.match(line):
             #Format move list
-            moveList, webVisualizerLink = FormatMoveList(moveList)
-            whiteBoardStates = GenerateBoardStatesPolicyNet(moveList, "White", whiteWin)  # generate board states from moveList
-            blackBoardStates = GenerateBoardStatesPolicyNet(moveList, "Black", blackWin)#self-play => same states, but win under policy for A=> lose under policy for B
+            moveList, mirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink = FormatMoveList(unformattedMoveList)
+            whiteBoardStates = GenerateBoardStates(moveList, mirrorMoveList, "White", whiteWin)  # generate board states from moveList
+            blackBoardStates = GenerateBoardStates(moveList, mirrorMoveList, "Black", blackWin)  # self-play => same states, but win under policy for A=> lose under policy for B
             if whiteWin:
                 numWhiteWins += 1
             elif blackWin:
                 numBlackWins += 1
             games.append({'Win': whiteWin,
                           'Moves': moveList,
+                          'MirrorMoves': mirrorMoveList,
                           'BoardStates': whiteBoardStates,
-                          'VisualizationURL': webVisualizerLink})  # append new white game
+                          'OriginalVisualizationURL': originalWebVisualizerLink,
+                          'MirrorVisualizationURL': mirrorWebVisualizerLink}
+                         )  # append new white game
             games.append({'Win': blackWin,
                           'Moves': moveList,
+                          'MirrorMoves': mirrorMoveList,
                           'BoardStates': blackBoardStates,
-                          'VisualizationURL': webVisualizerLink})  # append new black game
-            moveList = []#reset moveList for next game
+                          'OriginalVisualizationURL': originalWebVisualizerLink,
+                          'MirrorVisualizationURL': mirrorWebVisualizerLink}
+                         )  # append new black game
+            unformattedMoveList = []#reset moveList for next game
             whiteWin = None #not necessary;redundant, but good practice
             blackWin = None
     file.close()
     return games, numWhiteWins, numBlackWins
-
-def GenerateBoardStates(moveList, playerColor, win):
-    empty = 'e'
-    white = 'w'
-    black = 'b'
-    if playerColor == 'White':
-        isWhite = 1
-    else:
-        isWhite = 0
-        # win/loss 'value' symmetrical
-    if win == True:
-        win = 1
-    elif win == False:
-        win = -1
-    state = [
-        {
-        10: -1,  #did White's move achieve this state (-1 for a for initial state, 0 for if black achieved this state)
-         9: isWhite,  #is playerColor white
-         8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-         7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-         6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-         5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-         4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-         3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-         2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
-         1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
-         }, win]
-    mirrorState = MirrorBoardState(state)
-
-    #Original start state should not be useful for tree search since it is the root of every game and has no parent.
-    #however, may provide useful bias if starting player matters (self-play shows 56% win rate for white, p << 0.001 => first-move advantage)
-    boardStates = {'Win': win, 'States': [state], 'MirrorStates': [mirrorState]}# including original start state
-
-    for i in range(0, len(moveList)):
-        assert (moveList[i]['#'] == i + 1)
-        if isinstance(moveList[i]['White'], dict):  # if string, then == resign or NIL
-            state = [MovePiece(state[0], moveList[i]['White']['To'], moveList[i]['White']['From'], whoseMove='White'), win]
-            boardStates['States'].append(state)
-            mirrorState = MirrorBoardState(state)
-            boardStates['MirrorStates'].append(mirrorState)
-        if isinstance(moveList[i]['Black'], dict):  # if string, then == resign or NIL
-            state= [MovePiece(state[0], moveList[i]['Black']['To'], moveList[i]['Black']['From'], whoseMove='Black'), win]
-            boardStates['States'].append(state)
-            mirrorState = MirrorBoardState(state)
-            boardStates['MirrorStates'].append(mirrorState)
-    #for data transformation; inefficient to essentially compute board states twice, but more error-proof
-    boardStates = ConvertBoardStatesToArrays(boardStates, playerColor)
-    return boardStates
 
 def InitialState(moveList, playerColor, win):
     empty = 'e'
@@ -157,22 +115,7 @@ def InitialState(moveList, playerColor, win):
         win,
         generateTransitionVector(moveList[0]['White']['To'], moveList[0]['White']['From'], 'White')]#White's opening move
 
-def GenerateBoardStatesPolicyNet(moveList, playerColor, win):
-    # probability distribution over the 154 possible (not legal) moves from the POV of the player.
-    # Reasoning: six center columns where, if a piece was present, it could move one of three ways.
-    # A piece in one of the two side columns can move one of two ways.
-    # Since nothing can move in the farthest row, there are only seven rows of possible movement.
-    # => (2*2*7) + (6*3*7) = 154
-    # ==> instead of a win value, we would have a 154 vector of all 0s sans the 1 for the transition that was actually made.
-    # i.e. a1-a2 (if White) && h8-h7 (if Black) =>
-    # row 0 (closest row), column 0(farthest left)
-    # moves to
-    # row +1, column 0
-    # <=> transition[0] = 1, transition[0:len(transition)] = 0
-
-    # Notes: if black, reverse move array. i.e. a=h, 8=1 YES. when calling NN, just reverse board state if black and decode output with black's table
-    # OR decode transitions differently(i.e. h8-h7 (if Black) = a1-a2 (if White))..
-    mirrorMoveList = MirrorMoveList(moveList)
+def GenerateBoardStates(moveList, mirrorMoveList, playerColor, win):
     state = InitialState(moveList,playerColor,win)
     mirrorState = InitialState(mirrorMoveList,playerColor,win)
     boardStates = {'Win': win, 'States': [state], 'MirrorStates': [mirrorState]}
@@ -215,28 +158,35 @@ def GenerateBoardStatesPolicyNet(moveList, playerColor, win):
     return boardStates
 
 def generateTransitionVector(to, From, playerColor):
+  # probability distribution over the 154 possible (vs legal) moves from the POV of the player.
+    # Reasoning: six center columns where, if a piece was present, it could move one of three ways.
+    # A piece in one of the two side columns can move one of two ways.
+    # Since nothing can move in the farthest row, there are only seven rows of possible movement.
+    # => (2*2*7) + (6*3*7) = 154
+    # ==> 154 element vector of all 0s sans the 1 for the transition that was actually made.
+    # i.e. a1-a2 (if White) == h8-h7 (if Black) =>
+    # row 0 (closest row), column 0(farthest left)
+    # moves to
+    # row +1, column 0
+    # <=> transition[0] = 1, transition[1:len(transition)] = 0
+
+    # Notes: when calling NN, just reverse board state if black and decode output with black's table
     fromColumn = From[0]
     toColumn = to[0]
     fromRow = int(From[1])
     toRow = int(to[1])
     columnOffset = (ord(fromColumn) - ord('a')) * 3 #ex if white, moves starting from b are [2] or [3] or [4]
     if playerColor == 'Black':
-        rowOffset = (toRow - 1) * 22
+        rowOffset = (toRow - 1) * 22 #22 possible moves per row
         assert (rowOffset == (fromRow - 2) * 22)  # double check
         index = 153 - (ord(toColumn) - ord(fromColumn) + columnOffset + rowOffset)#153 reverses the board for black
     else:
-        rowOffset = (fromRow - 1) * 22
+        rowOffset = (fromRow - 1) * 22 #22 possible moves per row
         assert (rowOffset == (toRow - 2) * 22)  # double check
         index = ord(toColumn) - ord(fromColumn) + columnOffset + rowOffset
     transitionVector = [0] * 154
     transitionVector[index] = 1
     return transitionVector
-
-def MirrorMoveList(moveList):
-    mirrorMoveList = []
-    for move in moveList:
-        mirrorMoveList.append(MirrorMove(move))
-    return mirrorMoveList
 
 def MirrorMove(move):
     mirrorMove = copy.deepcopy(move)
@@ -258,7 +208,7 @@ def MirrorMove(move):
         blackToRow = int(blackTo[1])
         mirrorMove['Black']['To'] = MirrorColumn(blackToColumn) + str(blackToRow)
         mirrorMove['Black']['From'] = MirrorColumn(blackFromColumn) + str(blackFromRow)
-
+    #else 'Black' == NIL, don't change it
     return mirrorMove
 
 
@@ -445,32 +395,43 @@ def MovePiece(boardState, To, From, whoseMove):
         nextBoardState[whiteMoveIndex] = 0
     return nextBoardState
 
-def FormatMoveList(moveListString):
+def FormatMoveList(unformattedMoveList):
     moveRegex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
                            re.IGNORECASE)
-    webVisualizerLink = r'http://www.trmph.com/breakthrough/board#8,'
-    moveList = list(map(lambda a: moveRegex.search(a).group(1), moveListString))
+    originalWebVisualizerLink = mirrorWebVisualizerLink = r'http://www.trmph.com/breakthrough/board#8,'
+    moveList = list(map(lambda a: moveRegex.search(a).group(1), unformattedMoveList))
     moveNum = 0
     newMoveList=[]
+    newMirrorMoveList=[]
     move = [None] * 3
     for i in range(0, len(moveList)):
         moveNum += 1
         move[0] = math.ceil(moveNum/2)
         From = str(moveList[i][0:2]).lower()
         to = str(moveList[i][3:5]).lower()
+        fromColumn = From[0]
+        fromRow = From[1]
+        toColumn = to[0]
+        toRow = to[1]
+        mirrorFrom = MirrorColumn(fromColumn)+fromRow
+        mirrorTo = MirrorColumn(toColumn)+toRow
         if i % 2 == 0:#white move
-            assert(moveList[i][1] < moveList[i][4])#white should go forward
+            assert(fromRow < toRow)#white should go forward
             move[1] = {'From': From, 'To': to}  # set White's moves
-            webVisualizerLink = webVisualizerLink + From + to
             if i==len(moveList)-1:#white makes last move of game; black lost
                 move[2] = "NIL"
-                newMoveList.append({'#': move[0], 'White': move[1], 'Black': move[2]})
+                tempMove = {'#': move[0], 'White': move[1], 'Black': move[2]}
+                newMoveList.append(tempMove)
+                newMirrorMoveList.append(MirrorMove(tempMove))
         else:#black move
-            assert (moveList[i][1] > moveList[i][4])#black should go backward
+            assert (fromRow > toRow)#black should go backward
             move[2] = {'From': From, 'To': to}# set Black's moves
-            webVisualizerLink = webVisualizerLink + From + to
-            newMoveList.append({'#': move[0], 'White': move[1], 'Black': move[2]})
-    return newMoveList, webVisualizerLink
+            tempMove = {'#': move[0], 'White': move[1], 'Black': move[2]}
+            newMoveList.append(tempMove)
+            newMirrorMoveList.append(MirrorMove(tempMove))
+        originalWebVisualizerLink = originalWebVisualizerLink + From + to
+        mirrorWebVisualizerLink = mirrorWebVisualizerLink + mirrorFrom + mirrorTo
+    return newMoveList, newMirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink
 
 def Driver(path):
     playerList = []

@@ -175,7 +175,7 @@ def generateTransitionVector(to, From, playerColor):
     toColumn = to[0]
     fromRow = int(From[1])
     toRow = int(to[1])
-    columnOffset = (ord(fromColumn) - ord('a')) * 3 #ex if white, moves starting from b are [2] or [3] or [4]
+    columnOffset = (ord(fromColumn) - ord('a')) * 3 #ex if white and fromColumn = b=> 1*3; moves starting from b are [2] or [3] or [4];makes sense in context of formula
     if playerColor == 'Black':
         rowOffset = (toRow - 1) * 22 #22 possible moves per row
         assert (rowOffset == (fromRow - 2) * 22)  # double check

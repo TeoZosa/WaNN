@@ -31,7 +31,7 @@
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464305683673" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$SortPlayerListByRank.coverage" NAME="SortPlayerListByRank Coverage Results" MODIFIED="1465934883390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$ValueNetByRankBinaryFeaturePlanes__1_.coverage" NAME="ValueNetByRankBinaryFeaturePlanes (1) Coverage Results" MODIFIED="1466269717585" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/ValueNetRankBinary" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$main.coverage" NAME="main Coverage Results" MODIFIED="1482383701052" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$main.coverage" NAME="main Coverage Results" MODIFIED="1482383973860" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464194157435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$LittleGolemWebScraper.coverage" NAME="LittleGolemWebScraper Coverage Results" MODIFIED="1464145876852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$SortPlayerListByRank.coverage" NAME="SortPlayerListByRank Coverage Results" MODIFIED="1464189492627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -93,15 +93,15 @@
       <file leaf-file-name="SelfPlayLogsToPythonDataStructure.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="410">
-              <caret line="121" column="0" lean-forward="true" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
+            <state relative-caret-position="1748">
+              <caret line="177" column="168" lean-forward="false" selection-start-line="177" selection-start-column="168" selection-end-line="177" selection-end-column="168" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
-                <element signature="e#11817#13062#0" expanded="false" />
-                <element signature="e#13126#13622#0" expanded="false" />
-                <element signature="e#13680#15473#0" expanded="false" />
-                <element signature="e#15552#20030#0" expanded="false" />
-                <element signature="e#20084#20472#0" expanded="false" />
+                <element signature="e#11876#13121#0" expanded="false" />
+                <element signature="e#13185#13681#0" expanded="false" />
+                <element signature="e#13739#15532#0" expanded="false" />
+                <element signature="e#15611#20089#0" expanded="false" />
+                <element signature="e#20143#20531#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -1077,7 +1077,14 @@
       <option name="project" value="LOCAL" />
       <updated>1482379111605</updated>
     </task>
-    <option name="localTasksCounter" value="45" />
+    <task id="LOCAL-00045" summary="reordered where program mirrors states, put mirror visualization URLs, mirrorMoveList  in 'Games'  dictionary, more comments/self-commenting code">
+      <created>1482383858958</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1482383858958</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1095,16 +1102,16 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26641366" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3278272" sideWeight="0.48708752" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.46138072" sideWeight="0.16242884" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22761449" sideWeight="0.57988614" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.117566645" sideWeight="0.32220113" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3963538" sideWeight="0.4640952" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.48497853" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22761449" sideWeight="0.42125237" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22761449" sideWeight="0.42011386" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.116304345" sideWeight="0.5197285" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.46138072" sideWeight="0.83757114" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46138072" sideWeight="0.83757114" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1130,7 +1137,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="Changes outcomes of games to 0 for losses (previously: -1). Generated corresponding Numpy Arrays. Split up grid search to run on the different computers." />
     <MESSAGE value="Added separate gridsearch functions for each computer" />
     <MESSAGE value="Refactored imperative code into their own functions.  Reduced code duplication in ValueNetByRankBinaryFeaturePlanes, added TODOs, added AWS parameters in the Value Net Grid Search, added default conditions for BuildRegressionNetwork, added tensorboard logdir argument in fit. Created a script to pipeline the player data to Numpy data structures." />
     <MESSAGE value="Refactored function names to begin with upper-case.  Encapsulated imperative code into functions in LittleGolemWebScraper. Added TODOs" />
@@ -1155,7 +1161,8 @@
     <MESSAGE value="redid mirror states to account for the transition vector" />
     <MESSAGE value="fixed bugs" />
     <MESSAGE value="mirror states now computed from mirrorMoveList instead of reflection of original states" />
-    <option name="LAST_COMMIT_MESSAGE" value="mirror states now computed from mirrorMoveList instead of reflection of original states" />
+    <MESSAGE value="reordered where program mirrors states, put mirror visualization URLs, mirrorMoveList  in 'Games'  dictionary, more comments/self-commenting code" />
+    <option name="LAST_COMMIT_MESSAGE" value="reordered where program mirrors states, put mirror visualization URLs, mirrorMoveList  in 'Games'  dictionary, more comments/self-commenting code" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1184,11 +1191,6 @@
           <url>file://$PROJECT_DIR$/Tools/HumanReadableBoardPrinting.py</url>
           <line>5</line>
           <option name="timeStamp" value="96" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py</url>
-          <line>433</line>
-          <option name="timeStamp" value="120" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -1253,11 +1255,11 @@
           <caret line="37" column="40" lean-forward="false" selection-start-line="37" selection-start-column="40" selection-end-line="37" selection-end-column="40" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-            <element signature="e#11817#13062#0" expanded="false" />
-            <element signature="e#13126#13622#0" expanded="false" />
-            <element signature="e#13680#15473#0" expanded="false" />
-            <element signature="e#15552#20030#0" expanded="false" />
-            <element signature="e#20084#20472#0" expanded="false" />
+            <element signature="e#11876#13121#0" expanded="false" />
+            <element signature="e#13185#13681#0" expanded="false" />
+            <element signature="e#13739#15532#0" expanded="false" />
+            <element signature="e#15611#20089#0" expanded="false" />
+            <element signature="e#20143#20531#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1421,15 +1423,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="410">
-          <caret line="121" column="0" lean-forward="true" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
+        <state relative-caret-position="1748">
+          <caret line="177" column="168" lean-forward="false" selection-start-line="177" selection-start-column="168" selection-end-line="177" selection-end-column="168" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
-            <element signature="e#11817#13062#0" expanded="false" />
-            <element signature="e#13126#13622#0" expanded="false" />
-            <element signature="e#13680#15473#0" expanded="false" />
-            <element signature="e#15552#20030#0" expanded="false" />
-            <element signature="e#20084#20472#0" expanded="false" />
+            <element signature="e#11876#13121#0" expanded="false" />
+            <element signature="e#13185#13681#0" expanded="false" />
+            <element signature="e#13739#15532#0" expanded="false" />
+            <element signature="e#15611#20089#0" expanded="false" />
+            <element signature="e#20143#20531#0" expanded="false" />
           </folding>
         </state>
       </provider>

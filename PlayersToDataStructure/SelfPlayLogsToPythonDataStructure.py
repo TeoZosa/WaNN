@@ -65,8 +65,8 @@ def FormatGameList(selfPlayGames, serverName):
         elif endRegex.match(line):
             #Format move list
             moveList, webVisualizerLink = FormatMoveList(moveList)
-            whiteBoardStates = GenerateBoardStates(moveList, "White", whiteWin)  # generate board states from moveList
-            blackBoardStates = GenerateBoardStates(moveList, "Black", blackWin)#self-play => same states, but win under policy for A=> lose under policy for B
+            whiteBoardStates = GenerateBoardStatesPolicyNet(moveList, "White", whiteWin)  # generate board states from moveList
+            blackBoardStates = GenerateBoardStatesPolicyNet(moveList, "Black", blackWin)#self-play => same states, but win under policy for A=> lose under policy for B
             if whiteWin:
                 numWhiteWins += 1
             elif blackWin:
@@ -133,6 +133,29 @@ def GenerateBoardStates(moveList, playerColor, win):
     boardStates = ConvertBoardStatesToArrays(boardStates, playerColor)
     return boardStates
 
+def InitialState(moveList, playerColor, win):
+    empty = 'e'
+    white = 'w'
+    black = 'b'
+    if playerColor == 'White':
+        isWhite = 1
+    else:
+        isWhite = 0
+    return [
+        {
+            10: -1,  # did White's move achieve this state (-1 for a for initial state, 0 for if black achieved this state)
+            9: isWhite,  # is playerColor white
+            8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
+            7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
+            6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+            5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+            4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+            3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+            2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
+            1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
+        },
+        win,
+        generateTransitionVector(moveList[0]['White']['To'], moveList[0]['White']['From'], 'White')]#White's opening move
 
 def GenerateBoardStatesPolicyNet(moveList, playerColor, win):
     # probability distribution over the 154 possible (not legal) moves from the POV of the player.
@@ -149,56 +172,57 @@ def GenerateBoardStatesPolicyNet(moveList, playerColor, win):
 
     # Notes: if black, reverse move array. i.e. a=h, 8=1 YES. when calling NN, just reverse board state if black and decode output with black's table
     # OR decode transitions differently(i.e. h8-h7 (if Black) = a1-a2 (if White))..
-    empty = 'e'
-    white = 'w'
-    black = 'b'
-    if playerColor == 'White':
-        isWhite = 1
-    else:
-        isWhite = 0
-    state = [
-        {
-            10: -1,  # did White's move achieve this state (-1 for a for initial state, 0 for if black achieved this state)
-            9: isWhite,  # is playerColor white
-            8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-            7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-            6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-            5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-            4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-            3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-            2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
-            1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
-        }, generateTransitionVector(moveList[0]['White']['To'], moveList[0]['White']['From'], 'White')]#White's opening move
-    mirrorState = MirrorBoardState(state)
-    boardStates = {'Win': win, 'States': [state], 'MirrorStates': [mirrorState]}  # including original start state
+    mirrorMoveList = MirrorMoveList(moveList)
+    state = InitialState(moveList,playerColor,win)
+    mirrorState = InitialState(mirrorMoveList,playerColor,win)
+    boardStates = {'Win': win, 'States': [state], 'MirrorStates': [mirrorState]}
 
     for i in range(0, len(moveList)):
         assert (moveList[i]['#'] == i + 1)
+
         whiteTo = moveList[i]['White']['To']
         whiteFrom = moveList[i]['White']['From']
+        mirrorWhiteTo = mirrorMoveList[i]['White']['To']
+        mirrorWhiteFrom = mirrorMoveList[i]['White']['From']
+
         blackTo = moveList[i]['Black']['To']
         blackFrom = moveList[i]['Black']['From']
+        mirrorBlackTo = mirrorMoveList[i]['Black']['To']
+        mirrorBlackFrom = mirrorMoveList[i]['Black']['From']
+
         if isinstance(moveList[i]['White'], dict):  # if string, then == resign or NIL
             state = [MovePiece(state[0], whiteTo, whiteFrom, whoseMove='White'),
+                     win,
                      generateTransitionVector(blackTo, blackFrom, 'Black')] #Black's response to the generated state
             boardStates['States'].append(state)
-            boardStates['MirrorStates'].append(MirrorBoardState(state))
+
+            mirrorState = [MovePiece(mirrorState[0], mirrorWhiteTo, mirrorWhiteFrom, whoseMove='White'),
+                     win,
+                     generateTransitionVector(mirrorBlackTo, mirrorBlackFrom, 'Black')]
+            boardStates['MirrorStates'].append(mirrorState)
         if isinstance(moveList[i]['Black'], dict):  # if string, then == resign or NIL
             if i+1 == len(moveList):# if no moves left => black won
                 transitionVector = [0]*154 # no white move from the next generated state
+                mirrorTransitionVector = [0]*154
             else:
                 transitionVector = generateTransitionVector(moveList[i+1]['White']['To'], moveList[i+1]['White']['From'], 'White')
+                mirrorTransitionVector = generateTransitionVector(mirrorMoveList[i+1]['White']['To'], mirrorMoveList[i+1]['White']['From'], 'White')
             state = [MovePiece(state[0], blackTo, blackFrom, whoseMove='Black'),
+                     win,
                      transitionVector]  # White's response to the generated state
             boardStates['States'].append(state)
-            boardStates['MirrorStates'].append(MirrorBoardState(state))
+
+            mirrorState = [MovePiece(mirrorState[0], mirrorBlackTo, mirrorBlackFrom, whoseMove='Black'),
+                     win,
+                     mirrorTransitionVector]  # White's response to the generated state
+            boardStates['MirrorStates'].append(mirrorState)
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
     boardStates = ConvertBoardStatesToArrays(boardStates, playerColor)
     return boardStates
 
 def generateTransitionVector(to, From, playerColor):
-    fromColumn = to[0]
-    toColumn = From[0]
+    fromColumn = From[0]
+    toColumn = to[0]
     fromRow = int(From[1])
     toRow = int(to[1])
     columnOffset = ord(fromColumn) - ord('a') * 3 #ex if white, moves starting from b are [2] or [3] or [4]
@@ -214,15 +238,57 @@ def generateTransitionVector(to, From, playerColor):
     transitionVector[index] = 1
     return transitionVector
 
-    #passing a move
+def MirrorMoveList(moveList):
+    mirrorMoveList = []
+    for move in moveList:
+        mirrorMoveList.append(MirrorMove(move))
+    return mirrorMoveList
+
+def MirrorMove(move):
+    mirrorMove = copy.deepcopy(move)
+
+    whiteTo = move['White']['To']
+    whiteFrom = move['White']['From']
+    whiteFromColumn = whiteFrom[0]
+    whiteToColumn = whiteTo[0]
+    whiteFromRow = int(whiteFrom[1])
+    whiteToRow = int(whiteTo[1])
+    
+    blackTo = move['Black']['To']
+    blackFrom = move['Black']['From']
+    blackFromColumn = blackFrom[0]
+    blackToColumn = blackTo[0]
+    blackFromRow = int(blackFrom[1])
+    blackToRow = int(blackTo[1])
+
+    mirrorMove['White']['To'] = MirrorColumn(whiteToColumn) + str(whiteToRow)
+    mirrorMove['White']['From'] = MirrorColumn(whiteFromColumn) + str(whiteFromRow)
+    mirrorMove['Black']['To'] = MirrorColumn(blackToColumn) + str(blackToRow)
+    mirrorMove['Black']['From'] = MirrorColumn(blackFromColumn) + str(blackFromRow)
+
+    return mirrorMove
+
+
+def MirrorColumn(columnChar):
+    mirrorDict ={'a': 'h',
+                 'b': 'g',
+                 'c': 'f',
+                 'd': 'e',
+                 'e': 'd',
+                 'f': 'c',
+                 'g': 'b',
+                 'h': 'a'
+                 }
+    return mirrorDict[columnChar]
+
 def MirrorBoardState(state):#since a mirror image has the same strategic value
     mirrorStateWithWin = copy.deepcopy(state)  # edit copy of boardState
     mirrorState = mirrorStateWithWin[0]
-    state = state[0] #the board state; state[1] is the win or loss value
+    state = state[0] #the board state; state[1] is the win or loss value, state [2] is the transition vector
     isWhiteIndex = 9
     whiteMoveIndex = 10
     for row in sorted(state):
-        if row != isWhiteIndex and row != whiteMoveIndex:  #don't touch the index that shows whose move generated this state
+        if row != isWhiteIndex and row != whiteMoveIndex:  #these indexes don't change
             for column in sorted(state[row]):
                 if column == 'a':
                     mirrorState[row]['h'] = state[row][column]
@@ -417,6 +483,3 @@ def Driver(path):
     playerList = []
     ProcessDirectoryOfBreakthroughFiles(path, playerList)
     #WriteToDisk(playerList, path)
-
-
-

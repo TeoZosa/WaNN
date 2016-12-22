@@ -61,11 +61,13 @@ def FilterForSelfPlay(selfPlayDataList):
     for serverNodeByDate in selfPlayDataList:
         for selfPlayLog in serverNodeByDate:
             for game in selfPlayLog['Games']:
+                win = game['Win'] #for value net so we don't have to pair wins to each board state
                 states = game['BoardStates']['States']
                 mirrorStates = game['BoardStates']['MirrorStates']
                 assert len(states) == len(mirrorStates)
                 for i in range(0, len(states)):
                     X.append(states[i])
+
                     X.append(mirrorStates[i])
     print('# of States for Self-Play: {states}'.format(states=len(X)))
     return X
@@ -98,6 +100,9 @@ def generateArray(playerListDataFriendly, filter):
             X = FilterByRank(playerListDataFriendly)
         elif filter =='Self-Play':
             X = FilterForSelfPlay(playerListDataFriendly)
+        else:
+            print('Invalid Filter Specified')
+            exit(-2)
         # Xcopy = copy.deepcopy(X)
         # shuffle(X)  # to break symmetry/prevent overfitting
         # assert (Xcopy != X)

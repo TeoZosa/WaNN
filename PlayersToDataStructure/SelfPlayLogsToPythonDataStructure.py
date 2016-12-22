@@ -179,42 +179,36 @@ def GenerateBoardStatesPolicyNet(moveList, playerColor, win):
 
     for i in range(0, len(moveList)):
         assert (moveList[i]['#'] == i + 1)
-
-        whiteTo = moveList[i]['White']['To']
-        whiteFrom = moveList[i]['White']['From']
-        mirrorWhiteTo = mirrorMoveList[i]['White']['To']
-        mirrorWhiteFrom = mirrorMoveList[i]['White']['From']
-
-        blackTo = moveList[i]['Black']['To']
-        blackFrom = moveList[i]['Black']['From']
-        mirrorBlackTo = mirrorMoveList[i]['Black']['To']
-        mirrorBlackFrom = mirrorMoveList[i]['Black']['From']
-
         if isinstance(moveList[i]['White'], dict):  # if string, then == resign or NIL
-            state = [MovePiece(state[0], whiteTo, whiteFrom, whoseMove='White'),
+            if isinstance(moveList[i]['Black'], dict):  # if string, then == resign or NIL
+                blackTransitionVector = generateTransitionVector(moveList[i]['Black']['To'], moveList[i]['Black']['From'], 'Black')
+                blackMirrorTransitionVector = generateTransitionVector(mirrorMoveList[i]['Black']['To'], mirrorMoveList[i]['Black']['From'], 'Black')
+                #can't put black move block in here as it would execute before white's move
+            else:
+                blackTransitionVector = [0]*154
+                blackMirrorTransitionVector = [0]*154
+            state = [MovePiece(state[0], moveList[i]['White']['To'], moveList[i]['White']['From'], whoseMove='White'),
                      win,
-                     generateTransitionVector(blackTo, blackFrom, 'Black')] #Black's response to the generated state
+                     blackTransitionVector] #Black's response to the generated state
             boardStates['States'].append(state)
-
-            mirrorState = [MovePiece(mirrorState[0], mirrorWhiteTo, mirrorWhiteFrom, whoseMove='White'),
+            mirrorState = [MovePiece(mirrorState[0], mirrorMoveList[i]['White']['To'], mirrorMoveList[i]['White']['From'], whoseMove='White'),
                      win,
-                     generateTransitionVector(mirrorBlackTo, mirrorBlackFrom, 'Black')]
+                     blackMirrorTransitionVector]
             boardStates['MirrorStates'].append(mirrorState)
         if isinstance(moveList[i]['Black'], dict):  # if string, then == resign or NIL
             if i+1 == len(moveList):# if no moves left => black won
-                transitionVector = [0]*154 # no white move from the next generated state
-                mirrorTransitionVector = [0]*154
+                whiteTransitionVector = [0]*154 # no white move from the next generated state
+                whiteMirrorTransitionVector = [0]*154
             else:
-                transitionVector = generateTransitionVector(moveList[i+1]['White']['To'], moveList[i+1]['White']['From'], 'White')
-                mirrorTransitionVector = generateTransitionVector(mirrorMoveList[i+1]['White']['To'], mirrorMoveList[i+1]['White']['From'], 'White')
-            state = [MovePiece(state[0], blackTo, blackFrom, whoseMove='Black'),
+                whiteTransitionVector = generateTransitionVector(moveList[i+1]['White']['To'], moveList[i+1]['White']['From'], 'White')
+                whiteMirrorTransitionVector = generateTransitionVector(mirrorMoveList[i+1]['White']['To'], mirrorMoveList[i+1]['White']['From'], 'White')
+            state = [MovePiece(state[0], moveList[i]['Black']['To'], moveList[i]['Black']['From'], whoseMove='Black'),
                      win,
-                     transitionVector]  # White's response to the generated state
+                     whiteTransitionVector]  # White's response to the generated state
             boardStates['States'].append(state)
-
-            mirrorState = [MovePiece(mirrorState[0], mirrorBlackTo, mirrorBlackFrom, whoseMove='Black'),
+            mirrorState = [MovePiece(mirrorState[0], mirrorMoveList[i]['Black']['To'], mirrorMoveList[i]['Black']['From'], whoseMove='Black'),
                      win,
-                     mirrorTransitionVector]  # White's response to the generated state
+                     whiteMirrorTransitionVector]  # White's response to the generated state
             boardStates['MirrorStates'].append(mirrorState)
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
     boardStates = ConvertBoardStatesToArrays(boardStates, playerColor)
@@ -225,7 +219,9 @@ def generateTransitionVector(to, From, playerColor):
     toColumn = to[0]
     fromRow = int(From[1])
     toRow = int(to[1])
-    columnOffset = ord(fromColumn) - ord('a') * 3 #ex if white, moves starting from b are [2] or [3] or [4]
+    ordA = ord('a')
+    ordFrom = ord(fromColumn)
+    columnOffset = (ord(fromColumn) - ord('a')) * 3 #ex if white, moves starting from b are [2] or [3] or [4]
     if playerColor == 'Black':
         rowOffset = (toRow - 1) * 22
         assert (rowOffset == (fromRow - 2) * 22)  # double check
@@ -246,25 +242,24 @@ def MirrorMoveList(moveList):
 
 def MirrorMove(move):
     mirrorMove = copy.deepcopy(move)
-
     whiteTo = move['White']['To']
     whiteFrom = move['White']['From']
     whiteFromColumn = whiteFrom[0]
     whiteToColumn = whiteTo[0]
     whiteFromRow = int(whiteFrom[1])
     whiteToRow = int(whiteTo[1])
-    
-    blackTo = move['Black']['To']
-    blackFrom = move['Black']['From']
-    blackFromColumn = blackFrom[0]
-    blackToColumn = blackTo[0]
-    blackFromRow = int(blackFrom[1])
-    blackToRow = int(blackTo[1])
-
     mirrorMove['White']['To'] = MirrorColumn(whiteToColumn) + str(whiteToRow)
     mirrorMove['White']['From'] = MirrorColumn(whiteFromColumn) + str(whiteFromRow)
-    mirrorMove['Black']['To'] = MirrorColumn(blackToColumn) + str(blackToRow)
-    mirrorMove['Black']['From'] = MirrorColumn(blackFromColumn) + str(blackFromRow)
+
+    if isinstance(move['Black'], dict):
+        blackTo = move['Black']['To']
+        blackFrom = move['Black']['From']
+        blackFromColumn = blackFrom[0]
+        blackToColumn = blackTo[0]
+        blackFromRow = int(blackFrom[1])
+        blackToRow = int(blackTo[1])
+        mirrorMove['Black']['To'] = MirrorColumn(blackToColumn) + str(blackToRow)
+        mirrorMove['Black']['From'] = MirrorColumn(blackFromColumn) + str(blackFromRow)
 
     return mirrorMove
 

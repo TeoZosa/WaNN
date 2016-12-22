@@ -20,11 +20,11 @@ import time
 # testData = pickle.load(open(r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxxDataPython.p', "r+b"))
 # HumanReadableBoardPrinting.PrintGame(testData[0]['Games'][0])
 
-# if __name__ == '__main__':#for Windows since it lacks os.fork
-#   freeze_support()
-#   startTime = time.time()
-#   SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
-#   print("Minutes elapsed: {time}".format(time=(time.time() - startTime) / (60)))
+if __name__ == '__main__':#for Windows since it lacks os.fork
+  freeze_support()
+  startTime = time.time()
+  SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
+  print("Minutes elapsed: {time}".format(time=(time.time() - startTime) / (60)))
 
-SelfPlayLogsToTrainingData.AggregateSelfPlayDataStructures()
-SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()
+#SelfPlayLogsToTrainingData.AggregateSelfPlayDataStructures()
+#SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()

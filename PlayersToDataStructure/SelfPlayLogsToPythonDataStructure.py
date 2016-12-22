@@ -22,9 +22,13 @@ def ProcessBreakthroughFile(path, selfPlayGames):
     return {'ServerNode': serverName, 'selfPlayLog': selfPlayLog, 'dateRange': dateRange, 'Games': gamesList, 'WhiteWins': whiteWins, 'BlackWins': blackWins}
 
 def WriteToDisk(input, path):
+    rootDir = 'G:\TruncatedLogs\PythonDatasets\Datastructures\\'
     date = str(path [
-                    len(r'G:\TruncatedLogs') + 1:len(path) - len(r'\selfPlayLogsBreakthroughN')])
-    outputFile = open(path + r'DataPython.p', 'wb')
+                    len(r'G:\TruncatedLogs')+1:len(path) - len(r'\selfPlayLogsBreakthroughN')])
+    outputFile = open(rootDir +
+                      date + #prepend data to name of server
+                      path[len(path) - len(r'\selfPlayLogsBreakthroughN')+1:len(path)] #name of the server
+                      + r'DataPython.p', 'wb')#append data qualifier
     pickle.dump(input, outputFile)
 
 def FindFiles(path, filter):  # recursively find files at path with filter extension; pulled from StackOverflow
@@ -301,7 +305,7 @@ def ConvertBoardTo1DArray(boardState, playerColor):
         else:
             #player == black positions and opponent = white positions;
             assert (oneDArray[i] == oneDArray[i+192] and oneDArray[i+64] == oneDArray[i+128])
-    newBoardState = [oneDArray, boardState[1]]  # [x vector, y scalar]
+    newBoardState = [oneDArray, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
     return newBoardState
 
 def ConvertBoardTo1DArrayPolicyNet(boardState, playerColor):# 12/22 removed White/Black to avoid Curse of Dimensionality.
@@ -312,7 +316,7 @@ def ConvertBoardTo1DArrayPolicyNet(boardState, playerColor):# 12/22 removed Whit
   GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Empty') # 64-127 empty
   for i in range(0, 64):  # error checking block
     assert (oneDArray[i] ^ oneDArray[i + 64] ^ oneDArray[i + 128])  # ensure at most 1 bit is on at each board position for player/opponent/empty
-  newBoardState = [oneDArray, boardState[2]]  # [x vector, y scalar]
+  newBoardState = [oneDArray, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
   return newBoardState
 
 def GenerateBinaryPlane(state, arrayToAppend, playerColor, whoToFilter):

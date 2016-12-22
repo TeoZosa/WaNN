@@ -121,22 +121,28 @@ def InitialState(moveList, playerColor, win):
 
 def GenerateBoardStates(moveList, playerColor, win):
     state = InitialState(moveList,playerColor,win)
-    boardStates = {'Win': win, 'States': [state]}
-
+    if playerColor == 'White':
+       playerPOV = [state]
+    else:
+       playerPOV = []
+    boardStates = {'Win': win, 'States': [state], 'PlayerPOV': playerPOV}
     for i in range(0, len(moveList)):
         assert (moveList[i]['#'] == i + 1)
-        if isinstance(moveList[i]['White'], dict):  # if string, then == resign or NIL
-            if isinstance(moveList[i]['Black'], dict):  # if no move => white won
+        #structure kept for symmetry
+        if isinstance(moveList[i]['White'], dict):  #for self-play, this should always happen.
+            if isinstance(moveList[i]['Black'], dict):  # if no black move => white won
                 blackTransitionVector = generateTransitionVector(moveList[i]['Black']['To'], moveList[i]['Black']['From'], 'Black')
                 #can't put black move block in here as it would execute before white's move
             else:
-                blackTransitionVector = [0]*154#
+                blackTransitionVector = [0]*154
             state = [MovePiece(state[0], moveList[i]['White']['To'], moveList[i]['White']['From'], whoseMove='White'),
                      win,
                      blackTransitionVector] #Black's response to the generated state
+            if playerColor == 'Black': #reflect positions tied to black transitions
+               boardStates['PlayerPOV'].append(ReflectBoardState(state))
             boardStates['States'].append(state)
         if isinstance(moveList[i]['Black'], dict):  # if string, then == resign or NIL
-            if i+1 == len(moveList):# if no moves left => black won
+            if i+1 == len(moveList):# if no next white move => black won
                 whiteTransitionVector = [0]*154 # no white move from the next generated state
             else:
                 whiteTransitionVector = generateTransitionVector(moveList[i+1]['White']['To'], moveList[i+1]['White']['From'], 'White')
@@ -144,6 +150,8 @@ def GenerateBoardStates(moveList, playerColor, win):
                      win,
                      whiteTransitionVector]  # White's response to the generated state
             boardStates['States'].append(state)
+            if playerColor == 'White':
+                boardStates['PlayerPOV'].append(state)
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
     boardStates = ConvertBoardStatesToArrays(boardStates, playerColor)
     return boardStates
@@ -202,7 +210,6 @@ def MirrorMove(move):
     #else 'Black' == NIL, don't change it
     return mirrorMove
 
-
 def MirrorColumn(columnChar):
     mirrorDict ={'a': 'h',
                  'b': 'g',
@@ -214,6 +221,19 @@ def MirrorColumn(columnChar):
                  'h': 'a'
                  }
     return mirrorDict[columnChar]
+
+def ReflectBoardState(state):#since black needs to have a POV representation
+  semiReflectedState = MirrorBoardState(state)
+  reflectedState = copy.deepcopy(semiReflectedState)
+  reflectedState[0][1] = semiReflectedState[0][8]
+  reflectedState[0][2] = semiReflectedState[0][7]
+  reflectedState[0][3] = semiReflectedState[0][6]
+  reflectedState[0][4] = semiReflectedState[0][5]
+  reflectedState[0][5] = semiReflectedState[0][4]
+  reflectedState[0][6] = semiReflectedState[0][3]
+  reflectedState[0][7] = semiReflectedState[0][2]
+  reflectedState[0][8] = semiReflectedState[0][1]
+  return reflectedState
 
 def MirrorBoardState(state):#since a mirror image has the same strategic value
     mirrorStateWithWin = copy.deepcopy(state)  # edit copy of boardState
@@ -244,10 +264,14 @@ def MirrorBoardState(state):#since a mirror image has the same strategic value
 
 def ConvertBoardStatesToArrays(boardStates, playerColor):
     newBoardStates = boardStates
+    POVStates = boardStates['PlayerPOV']
     states = boardStates['States']
     newBoardStates['States'] = []
-    for i in range (0, len (states)):
-        newBoardStates['States'].append(ConvertBoardTo1DArray(states[i], playerColor))
+    newBoardStates['PlayerPOV'] = []
+    for state in states:
+        newBoardStates['States'].append(ConvertBoardTo1DArray(state, playerColor)) #These can be inputs to value net
+    for POVState in POVStates:
+        newBoardStates['PlayerPOV'].append(ConvertBoardTo1DArrayPolicyNet(POVState, playerColor)) #these can be inputs to policy net
     return newBoardStates
 
 def ConvertBoardTo1DArray(boardState, playerColor):
@@ -255,11 +279,16 @@ def ConvertBoardTo1DArray(boardState, playerColor):
     isWhiteIndex = 9
     whiteMoveIndex = 10
     oneDArray = []
+
+    # do we need White/Black if black is a flipped representation? we are only asking the net "from my POV, these are my pieces and my opponent's pieces what move should I take?
+    #if not, the net sees homogenous data. My fear is seeing black in a flipped representation may mess things up as, if you are white, black being in a lower row is not good
+    #but would the Player/Opponent features cancel this out?
+
     #if player color == white, player and white states are mirrors; else, player and black states are mirrors
     GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='White')#0-63 white
     GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Black')#64-127 black
-    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Player')# 128-191 black
-    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Opponent')# 192-255 black
+    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Player')# 128-191 player
+    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Opponent')# 192-255 opponent
     GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Empty')#256-319 empty
     moveFlag = [state[whiteMoveIndex]]*64 #duplicate across 64 features since CNN needs same dimensions
     oneDArray+= moveFlag #320-383 is a flag indicating if the transition came from a white move
@@ -274,6 +303,17 @@ def ConvertBoardTo1DArray(boardState, playerColor):
             assert (oneDArray[i] == oneDArray[i+192] and oneDArray[i+64] == oneDArray[i+128])
     newBoardState = [oneDArray, boardState[1]]  # [x vector, y scalar]
     return newBoardState
+
+def ConvertBoardTo1DArrayPolicyNet(boardState, playerColor):# 12/22 removed White/Black to avoid Curse of Dimensionality.
+  state = boardState[0]
+  oneDArray = []
+  GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Player')#0-63 player
+  GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Opponent')#64-127 opponent
+  GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Empty') # 64-127 empty
+  for i in range(0, 64):  # error checking block
+    assert (oneDArray[i] ^ oneDArray[i + 64] ^ oneDArray[i + 128])  # ensure at most 1 bit is on at each board position for player/opponent/empty
+  newBoardState = [oneDArray, boardState[2]]  # [x vector, y scalar]
+  return newBoardState
 
 def GenerateBinaryPlane(state, arrayToAppend, playerColor, whoToFilter):
     isWhiteIndex = 9

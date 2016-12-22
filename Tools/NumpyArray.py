@@ -96,9 +96,9 @@ def SplitArraytoXMatrixAndYVector(arrayToSplit, convertY = True):
 def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):
     X = []
     y = []
-    for trainingExample in arrayToSplit:  # -1 & 1 binary outcomes; better if we want NN output to be in terms of cost/reward?
+    for trainingExample in arrayToSplit:  # probability space for transitions
         X.append(trainingExample[0] + ([1] * 64))  # 1 bias plane
-        y.append(trainingExample[1])
+        y.append(trainingExample[2])#transition vector
     return X, y
 def generateArray(playerListDataFriendly, filter):
         if filter =='Win Ratio':

@@ -27,21 +27,21 @@ def SelfPlayLogsToDataStructures():
    
 def AggregateSelfPlayDataStructures():
   path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\\'
-  files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxSelfPlayDataPython.p',
-    r'0802-0805selfPlayLogsWorkstationxxSelfPlayDataPython.p',
-    r'0806-0824selfPlayLogsBreakthrough4SelfPlayDataPython.p',
-    r'0824-1006selfPlayLogsBreakthrough1SelfPlayDataPython.p',
-    r'0824-1006selfPlayLogsBreakthrough2SelfPlayDataPython.p',
-    r'0824-1006selfPlayLogsBreakthrough3SelfPlayDataPython.p',
-    r'0824-1006selfPlayLogsBreakthrough4SelfPlayDataPython.p',
-    r'1018-1024selfPlayLogsBreakthrough1SelfPlayDataPython.p',
-    r'1018-1024selfPlayLogsBreakthrough2SelfPlayDataPython.p',
-    r'1018-1024selfPlayLogsBreakthrough3SelfPlayDataPython.p',
-    r'1018-1024selfPlayLogsBreakthrough4SelfPlayDataPython.p',
-    r'1024-1129selfPlayLogsBreakthrough1SelfPlayDataPython.p',
-    r'1024-1129selfPlayLogsBreakthrough2SelfPlayDataPython.p',
-    r'1024-1129selfPlayLogsBreakthrough3SelfPlayDataPython.p',
-    r'1024-1129selfPlayLogsBreakthrough4SelfPlayDataPython.p']
+  files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
+    r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
+    r'0806-0824selfPlayLogsBreakthrough4DataPython.p',
+    r'0824-1006selfPlayLogsBreakthrough1DataPython.p',
+    r'0824-1006selfPlayLogsBreakthrough2DataPython.p',
+    r'0824-1006selfPlayLogsBreakthrough3DataPython.p',
+    r'0824-1006selfPlayLogsBreakthrough4DataPython.p',
+    r'1018-1024selfPlayLogsBreakthrough1DataPython.p',
+    r'1018-1024selfPlayLogsBreakthrough2DataPython.p',
+    r'1018-1024selfPlayLogsBreakthrough3DataPython.p',
+    r'1018-1024selfPlayLogsBreakthrough4DataPython.p',
+    r'1024-1129selfPlayLogsBreakthrough1DataPython.p',
+    r'1024-1129selfPlayLogsBreakthrough2DataPython.p',
+    r'1024-1129selfPlayLogsBreakthrough3DataPython.p',
+    r'1024-1129selfPlayLogsBreakthrough4DataPython.p']
   combinedList =[]
   for fileName in files:
     file = open(path+fileName,'r+b')

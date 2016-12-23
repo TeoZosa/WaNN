@@ -114,7 +114,7 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
     X = []
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
-        X.append(trainingExample[0] + ([1] * 64))  # 1 bias plane
+        X.append(trainingExample[0].append([1] * 64))  # 1 bias plane
         y.append(trainingExample[2])#transition vector
     return X, y
 

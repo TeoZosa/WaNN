@@ -332,7 +332,10 @@ X, y = LoadXAndy(inputPath)# row vector X[i] has scalar outcome y[i]
 #for final run
 X, y = shuffle(X, y, random_state= 777)
 
-
+# 't' is [
+# [[1, 1, 1], [2, 2, 2]],
+# [[3, 3, 3], [4, 4, 4]]
+# ]
 config = run_config.RunConfig( num_cores=-1)
 
 #print (len(np.asarray(X[0], np.int8)[0]))

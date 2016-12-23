@@ -282,46 +282,48 @@ def ConvertBoardTo1DArray(boardState, playerColor):
     state = boardState[0]
     isWhiteIndex = 9
     whiteMoveIndex = 10
-    oneDArray = []
+    oneHotBoard = []
 
     # do we need White/Black if black is a flipped representation? we are only asking the net "from my POV, these are my pieces and my opponent's pieces what move should I take?
     #if not, the net sees homogenous data. My fear is seeing black in a flipped representation may mess things up as, if you are white, black being in a lower row is not good
     #but would the Player/Opponent features cancel this out?
 
     #if player color == white, player and white states are mirrors; else, player and black states are mirrors
-    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='White')#0-63 white
-    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Black')#64-127 black
-    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Player')# 128-191 player
-    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Opponent')# 192-255 opponent
-    GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Empty')#256-319 empty
+    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='White'))#[0] white
+    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Black'))#[1] black
+    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Player'))#[2]player
+    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Opponent'))# [3] opponent
+    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Empty'))#[4] empty
     moveFlag = [state[whiteMoveIndex]]*64 #duplicate across 64 features since CNN needs same dimensions
-    oneDArray+= moveFlag #320-383 is a flag indicating if the transition came from a white move
+    oneHotBoard.append(moveFlag) #320-383 is a flag indicating if the transition came from a white move
     for i in range (0, 64):  #error checking block
-        assert (oneDArray[i]^oneDArray[i+64]^oneDArray[i+256])#ensure at most 1 bit is on at each board position for white/black/empty
-        assert (oneDArray[i+128] ^ oneDArray[i + 192] ^ oneDArray[i + 256])  # ensure at most 1 bit is on at each board position for player/opponent/empty
+        assert (oneHotBoard[0][i]^oneHotBoard[1][i]^oneHotBoard[4][i])#ensure at most 1 bit is on at each board position for white/black/empty
+        assert (oneHotBoard[2][i] ^ oneHotBoard[3][i] ^ oneHotBoard[4][i])  # ensure at most 1 bit is on at each board position for player/opponent/empty
         if playerColor == 'White':
-            #player == white positions and opponent = black positions;
-            assert (oneDArray[i] == oneDArray[i+128] and oneDArray[i+64] == oneDArray[i+192])
+            #white positions == player and black positions == opponent;
+            assert (oneHotBoard[0][i] == oneHotBoard[2][i] and oneHotBoard[1][i] == oneHotBoard[3][i])
         else:
-            #player == black positions and opponent = white positions;
-            assert (oneDArray[i] == oneDArray[i+192] and oneDArray[i+64] == oneDArray[i+128])
-    newBoardState = [oneDArray, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
+            #  white positions == opponent and player == black positions;
+            assert (oneHotBoard[0][i] == oneHotBoard[3][i] and oneHotBoard[1][i] == oneHotBoard[2][i])
+    newBoardState = [oneHotBoard, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
     return newBoardState
 
 def ConvertBoardTo1DArrayPolicyNet(boardState, playerColor):# 12/22 removed White/Black to avoid Curse of Dimensionality.
   state = boardState[0]
-  oneDArray = []
-  GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Player')#0-63 player
-  GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Opponent')#64-127 opponent
-  GenerateBinaryPlane(state, arrayToAppend=oneDArray, playerColor=playerColor, whoToFilter='Empty') # 64-127 empty
+  oneHotBoard = []
+  oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Player'))#[0] player
+  oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Opponent'))#[1] opponent
+  oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Empty')) # [2] empty
   for i in range(0, 64):  # error checking block
-    assert (oneDArray[i] ^ oneDArray[i + 64] ^ oneDArray[i + 128])  # ensure at most 1 bit is on at each board position for player/opponent/empty
-  newBoardState = [oneDArray, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
+    assert (oneHotBoard[0][i] ^ oneHotBoard[1][i] ^ oneHotBoard[2][i])  # ensure at most 1 bit is on at each board position for player/opponent/empty
+  newBoardState = [oneHotBoard, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
   return newBoardState
+
 
 def GenerateBinaryPlane(state, arrayToAppend, playerColor, whoToFilter):
     isWhiteIndex = 9
     whiteMoveIndex = 10
+    oneHotIndexes = []
     if whoToFilter == 'White':
         whiteDict = {
             'e': 0,
@@ -387,6 +389,7 @@ def GenerateBinaryPlane(state, arrayToAppend, playerColor, whoToFilter):
                     arrayToAppend.append(emptyDict[state[row][column]])
     else:
         print("Error, GenerateBinaryPlane needs a valid argument to filter")
+    return arrayToAppend
 
 def MovePiece(boardState, To, From, whoseMove):
     empty = 'e'

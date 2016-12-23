@@ -310,7 +310,7 @@ def LoadXAndy_1to1(path):
 # Step #142600, epoch #4, avg. train loss: 0.18319
 # Step #142700, epoch #4, avg. train loss: 0.18157
 #TODO: construct CNN and select models.
-#TODO: refactor, prep for self-play data, excise code to be run in main script.
+#TODO: excise code to be run in main script.
    #main script
 inputPath = AssignPath('MBP2014')
 device = AssignDevice(inputPath)

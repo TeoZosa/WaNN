@@ -65,15 +65,15 @@ def FilterByWinRatio(playerList):
 def FilterForSelfPlay(selfPlayDataList, NNType):
     X = []
     if NNType == 'Policy':
-      for serverNodeByDate in selfPlayDataList:
-          for selfPlayLog in serverNodeByDate:
-              for game in selfPlayLog['Games']:
-                  states = game['BoardStates']['PlayerPOV']
-                  mirrorStates = game['MirrorBoardStates']['PlayerPOV']
-                  assert len(states) == len(mirrorStates)
-                  for i in range(0, len(states)):
-                      X.append(states[i])
-                      X.append(mirrorStates[i])
+      # for serverNodeByDate in selfPlayDataList:
+      for selfPlayLog in selfPlayDataList:
+          for game in selfPlayLog['Games']:
+              states = game['BoardStates']['PlayerPOV']
+              mirrorStates = game['MirrorBoardStates']['PlayerPOV']
+              assert len(states) == len(mirrorStates)
+              for i in range(0, len(states)):
+                  X.append(states[i])
+                  X.append(mirrorStates[i])
       print('# of States for Self-Play Policy Net: {states}'.format(states=len(X)))
     else:
       for serverNodeByDate in selfPlayDataList:
@@ -114,46 +114,53 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
     X = []
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
-        trainingExample[0].append([1] * 64)# 1 bias plane
-        X.append(trainingExample[0])
+        x = []
+        trainingExample[0].append([1] * 64)  # 1 bias plane
+        for plane in trainingExample[0]:
+            x += plane #flatten 2d matrix
+       # x = np.matrix(trainingExample, dtype=np.int8)
+        X.append(x)
         y.append(trainingExample[2])#transition vector
     return X, y
 
 def generateArray(playerListDataFriendly, filter, NNType):
         if filter =='Win Ratio':
-            X = FilterByWinRatio(playerListDataFriendly)
+            trainingExamples = FilterByWinRatio(playerListDataFriendly)
         elif filter =='Rank':
-            X = FilterByRank(playerListDataFriendly)
+            trainingExamples = FilterByRank(playerListDataFriendly)
         elif filter =='Self-Play':
-            X = FilterForSelfPlay(playerListDataFriendly, NNType)
+            trainingExamples = FilterForSelfPlay(playerListDataFriendly, NNType)
         else:
-            X=[]
+            trainingExamples=[]
             print('Invalid Filter Specified')
             exit(-2)
-        # Xcopy = copy.deepcopy(X)
-        # shuffle(X)  # to break symmetry/prevent overfitting
-        # assert (Xcopy != X)
-        #split into X array and y vectors
+        # Xcopy = copy.deepcopy(trainingExamples)
+        # shuffle(trainingExamples)  # to break symmetry/prevent overfitting
+        # assert (Xcopy != trainingExamples)
+        #split into trainingExamples array and y vectors
         #
         if NNType =='Policy':
-            splitX, y = SplitArraytoXMatrixAndYTransitionVector(X)
+            X, y = SplitArraytoXMatrixAndYTransitionVector(trainingExamples)
         else: # Value Net
-            splitX, y = SplitArraytoXMatrixAndYVector(X, convertY= True)
-        # X = np.matrix(splitX, dtype=np.int8)
+            X, y = SplitArraytoXMatrixAndYVector(trainingExamples, convertY= True)
+        # trainingExamples = np.matrix(X, dtype=np.int8)
 
-        # transform to m x 64 numpy array; 8-bit ints since legal values are -1, 0, 1 or 0, 1
-        splitX = np.matrix(splitX, dtype=np.int8)
+        # transform to TrainingExamples x( m x 64) numpy array; 8-bit ints since legal values are -1, 0, 1 or 0, 1
+        X = np.matrix(X, dtype=np.int8)
         # transform to m x 1 numpy array; 8-bit ints since legal values are -1, 1 or 0, 1
-        y = np.matrix(y, dtype=np.int8)
-        # test to make sure y values map to corresponding row vectors in X
-        # GenerateCSV(splitX)
+        if NNType =='Policy':
+            y = np.matrix(y, dtype=np.int8)
+        else:
+            y = np.array(y, dtype=np.int8)
+        # test to make sure y values map to corresponding row vectors in trainingExamples
+        # GenerateCSV(X)
         # GenerateCSV(y, isX=False)
 
         # for i in range(0, len(y)):
-        #     compare = splitX[i].tolist()
-        #     assert (X[i][0] == compare[0])
-        #     assert (X[i][1] == y[i] or y[i] == 0)
-        return splitX, y
+        #     compare = X[i].tolist()
+        #     assert (trainingExamples[i][0] == compare[0])
+        #     assert (trainingExamples[i][1] == y[i] or y[i] == 0)
+        return X, y
 def GenerateCSV(X, isX = True):
     if isX == True:
      np.savetxt(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDatasets/WBPOEUnshuffledBinaryFeaturePlanesWBPOETrainingExamples.csv', X, delimiter=',', fmt='%1i')

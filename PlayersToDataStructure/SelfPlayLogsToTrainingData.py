@@ -52,4 +52,5 @@ def AggregateSelfPlayDataStructures():
   outputList.close()
 
 def SelfPlayDataStructuresToNumpyArrays():
-  NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDatasets\Datastructures\\', "07xx-1129SelfPlayGames.p")
+  # NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDatasets\Datastructures\\', "07xx-1129SelfPlayGames.p")
+  NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDatasets\Datastructures\\', r'1018-1024selfPlayLogsBreakthrough1DataPython.p')

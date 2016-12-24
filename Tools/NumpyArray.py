@@ -114,7 +114,8 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
     X = []
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
-        X.append(trainingExample[0].append([1] * 64))  # 1 bias plane
+        trainingExample[0].append([1] * 64)# 1 bias plane
+        X.append(trainingExample[0])
         y.append(trainingExample[2])#transition vector
     return X, y
 
@@ -143,7 +144,7 @@ def generateArray(playerListDataFriendly, filter, NNType):
         # transform to m x 64 numpy array; 8-bit ints since legal values are -1, 0, 1 or 0, 1
         splitX = np.matrix(splitX, dtype=np.int8)
         # transform to m x 1 numpy array; 8-bit ints since legal values are -1, 1 or 0, 1
-        y = np.array(y, dtype=np.int8)
+        y = np.matrix(y, dtype=np.int8)
         # test to make sure y values map to corresponding row vectors in X
         # GenerateCSV(splitX)
         # GenerateCSV(y, isX=False)

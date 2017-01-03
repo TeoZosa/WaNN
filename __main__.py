@@ -28,6 +28,6 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   # startTime = time.time()
   # SelfPlayLogsToTrainingData.AggregateSelfPlayDataStructures()
   # print("Minutes to aggregate: {time}".format(time=(time.time() - startTime) / (60)))
-  # startTime = time.time()
+  startTime = time.time()
   SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()
   print("Minutes to numpy array: {time}".format(time=(time.time() - startTime) / (60)))

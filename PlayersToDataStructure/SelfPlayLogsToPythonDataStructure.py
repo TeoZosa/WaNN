@@ -1,105 +1,107 @@
 import re as re  # regular expressions
 import os, fnmatch  # to retrieve file information from path
 import pickle  # serialize the data structure
-import mmap #read entire files into memory for (only for workstation)
+import mmap  # read entire files into memory for (only for workstation)
 import copy
 import math
-from psutil import virtual_memory
 
-def ProcessDirectoryOfBreakthroughFiles(path, playerList):
-    for selfPlayGames in FindFiles(path, '*.txt'):
-        playerList.append(ProcessBreakthroughFile(path, selfPlayGames))
 
-def ProcessBreakthroughFile(path, selfPlayGames):
-    fileName = selfPlayGames[
-               len(path):len(selfPlayGames) - len('.txt')]  # trim path & extension
-    fileName = fileName.split('_SelfPlayLog')  # BreakthroughN_SelfPlayLog00-> ['BreakthroughN',00]
-    serverName = str(fileName[0].strip('\\'))
-    selfPlayLog = str(fileName[1]).strip('(').strip(')')
-    dateRange = str(selfPlayGames[
+def process_directory_of_breakthrough_files(path, player_list):
+    for self_play_games in find_files(path, '*.txt'):
+        player_list.append(process_breakthrough_file(path, self_play_games))
+
+
+def process_breakthrough_file(path, self_play_games):
+    file_name = self_play_games[
+               len(path):len(self_play_games) - len('.txt')]  # trim path & extension
+    file_name = file_name.split('_SelfPlayLog')  # BreakthroughN_SelfPlayLog00-> ['BreakthroughN',00]
+    server_name = str(file_name[0].strip('\\'))
+    self_play_log = str(file_name[1]).strip('(').strip(')')
+    date_range = str(self_play_games[
                     len(r'G:\TruncatedLogs') + 1:len(path) - len(r'\selfPlayLogsBreakthroughN')])
-    gamesList, whiteWins, blackWins = FormatGameList(selfPlayGames, serverName)
-    return {'ServerNode': serverName, 'selfPlayLog': selfPlayLog, 'dateRange': dateRange, 'Games': gamesList, 'WhiteWins': whiteWins, 'BlackWins': blackWins}
+    games_list, white_wins, black_wins = format_game_list(self_play_games, server_name)
+    return {'ServerNode': server_name, 'Self-PlayLog': self_play_log, 'DateRange': date_range, 'Games': games_list, 'WhiteWins': white_wins, 'BlackWins': black_wins}
 
-def WriteToDisk(input, path):
-    rootDir = 'G:\TruncatedLogs\PythonDatasets\Datastructures\\'
-    date = str(path [
-                    len(r'G:\TruncatedLogs')+1:len(path) - len(r'\selfPlayLogsBreakthroughN')])
-    outputFile = open(rootDir +
-                      date + #prepend data to name of server
-                      path[len(path) - len(r'\selfPlayLogsBreakthroughN')+1:len(path)] #name of the server
-                      + r'DataPython.p', 'wb')#append data qualifier
-    pickle.dump(input, outputFile)
 
-def FindFiles(path, filter):  # recursively find files at path with filter extension; pulled from StackOverflow
+def write_to_disk(input, path):
+    root_directory = 'G:\TruncatedLogs\PythonDatasets\Datastructures\\'
+    date = str(path[len(r'G:\TruncatedLogs')+1:len(path)
+                    - len(r'\selfPlayLogsBreakthroughN')])
+    server_name = path[len(path) - len(r'\selfPlayLogsBreakthroughN')+1:len(path)]
+    output_file = open(root_directory
+                       + date  #prepend data to name of server
+                       + server_name
+                       + r'DataPython.p', 'wb')#append data qualifier
+    pickle.dump(input, output_file)
+
+def find_files(path, filter):  # recursively find files at path with filter extension; pulled from StackOverflow
     for root, dirs, files in os.walk(path):
         for file in fnmatch.filter(files, filter):
             yield os.path.join(root, file)
 
-def FormatGameList(selfPlayGames, serverName):
+def format_game_list(self_play_games, server_name):
     games = []
-    blackWin = None
-    whiteWin = None
-    endRegex = re.compile(r'.* End')
-    startRegex = re.compile(r'.* Start')
-    moveRegex = re.compile(r'\*play (.*)')
-    blackWinRegex = re.compile(r'Black Wins:.*')
-    whiteWinRegex = re.compile(r'White Wins:.*')
-    numWhiteWins = 0
-    numBlackWins = 0
-    file = open(selfPlayGames, "r+b")# read in file
+    black_win = None
+    white_win = None
+    end_regex = re.compile(r'.* End')
+    move_regex = re.compile(r'\*play (.*)')
+    black_win_regex = re.compile(r'Black Wins:.*')
+    white_win_regex = re.compile(r'White Wins:.*')
+    num_white_wins = 0
+    num_black_wins = 0
+    file = open(self_play_games, "r+b")# read in file
     file = mmap.mmap(file.fileno(),length=0, access= mmap.ACCESS_READ)#prot=PROT_READ only in Unix
-    #iterate over list of the form:
-    #Game N Start
-    #...
-    #(Black|White) Wins: \d
-    #[Game N End]
-    unformattedMoveList = []
+                #iterate over list of the form:
+                #Game N Start
+                #...
+                #(Black|White) Wins: \d
+                #[Game N End]
+    unformatted_move_list = []
     while True:
         line = file.readline().decode('utf-8')#convert to string
         if line=='':break#EOF
-        if moveRegex.match(line):#put plays into move list
-            unformattedMoveList.append(moveRegex.search(line).group(1))
-        elif blackWinRegex.match(line):
-            blackWin = True
-            whiteWin = False
-        elif whiteWinRegex.match(line):
-            whiteWin = True
-            blackWin = False
-        elif endRegex.match(line):
+        if move_regex.match(line):#put plays into move list
+            unformatted_move_list.append(move_regex.search(line).group(1))
+        elif black_win_regex.match(line):
+            black_win = True
+            white_win = False
+        elif white_win_regex.match(line):
+            white_win = True
+            black_win = False
+        elif end_regex.match(line):
             #Format move list
-            moveList, mirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink = FormatMoveListsAndURLs(unformattedMoveList)
-            whiteBoardStates = GenerateBoardStates(moveList, 'White', whiteWin)  # generate board states from moveList
-            whiteMirrorBoardStates = GenerateBoardStates(mirrorMoveList, 'White', whiteWin)
-            blackBoardStates = GenerateBoardStates(moveList,'Black', blackWin)  # self-play => same states, but win under policy for A=> lose under policy for B
-            blackMirrorBoardStates = GenerateBoardStates(mirrorMoveList, 'Black', blackWin)
-            if whiteWin:
-                numWhiteWins += 1
-            elif blackWin:
-                numBlackWins += 1
-            games.append({'Win': whiteWin,
-                          'Moves': moveList,
+            move_list, mirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink = FormatMoveListsAndURLs(unformatted_move_list)
+            whiteBoardStates = GenerateBoardStates(move_list, 'White', white_win)  # generate board states from move_list
+            whiteMirrorBoardStates = GenerateBoardStates(mirrorMoveList, 'White', white_win)
+            blackBoardStates = GenerateBoardStates(move_list,'Black', black_win)  # self-play => same states, but win under policy for A=> lose under policy for B
+            blackMirrorBoardStates = GenerateBoardStates(mirrorMoveList, 'Black', black_win)
+            if white_win:
+                num_white_wins += 1
+            elif black_win:
+                num_black_wins += 1
+            games.append({'Win': white_win,
+                          'Moves': move_list,
                           'MirrorMoves': mirrorMoveList,
                           'BoardStates': whiteBoardStates,
                           'MirrorBoardStates': whiteMirrorBoardStates,
                           'OriginalVisualizationURL': originalWebVisualizerLink,
                           'MirrorVisualizationURL': mirrorWebVisualizerLink}
                          )  # append new white game
-            games.append({'Win': blackWin,
-                          'Moves': moveList,
+            games.append({'Win': black_win,
+                          'Moves': move_list,
                           'MirrorMoves': mirrorMoveList,
                           'BoardStates': blackBoardStates,
                           'MirrorBoardStates': blackMirrorBoardStates,
                           'OriginalVisualizationURL': originalWebVisualizerLink,
                           'MirrorVisualizationURL': mirrorWebVisualizerLink}
                          )  # append new black game
-            unformattedMoveList = []#reset moveList for next game
-            whiteWin = None #not necessary;redundant, but good practice
-            blackWin = None
+            unformatted_move_list = []#reset move_list for next game
+            white_win = None #not necessary;redundant, but good practice
+            black_win = None
     file.close()
-    return games, numWhiteWins, numBlackWins
+    return games, num_white_wins, num_black_wins
 
-def InitialState(moveList, playerColor, win):
+def InitialState(move_list, playerColor, win):
     empty = 'e'
     white = 'w'
     black = 'b'
@@ -121,36 +123,36 @@ def InitialState(moveList, playerColor, win):
             1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
         },
         win,
-        generateTransitionVector(moveList[0]['White']['To'], moveList[0]['White']['From'], 'White')]#White's opening move
+        generateTransitionVector(move_list[0]['White']['To'], move_list[0]['White']['From'], 'White')]#White's opening move
 
-def GenerateBoardStates(moveList, playerColor, win):
-    state = InitialState(moveList,playerColor,win)
+def GenerateBoardStates(move_list, playerColor, win):
+    state = InitialState(move_list,playerColor,win)
     if playerColor == 'White':
        playerPOV = [state]
     else:
        playerPOV = []
     boardStates = {'Win': win, 'States': [state], 'PlayerPOV': playerPOV}
-    for i in range(0, len(moveList)):
-        assert (moveList[i]['#'] == i + 1)
+    for i in range(0, len(move_list)):
+        assert (move_list[i]['#'] == i + 1)
         #structure kept for symmetry
-        if isinstance(moveList[i]['White'], dict):  #for self-play, this should always happen.
-            if isinstance(moveList[i]['Black'], dict):  # if no black move => white won
-                blackTransitionVector = generateTransitionVector(moveList[i]['Black']['To'], moveList[i]['Black']['From'], 'Black')
+        if isinstance(move_list[i]['White'], dict):  #for self-play, this should always happen.
+            if isinstance(move_list[i]['Black'], dict):  # if no black move => white won
+                blackTransitionVector = generateTransitionVector(move_list[i]['Black']['To'], move_list[i]['Black']['From'], 'Black')
                 #can't put black move block in here as it would execute before white's move
             else:
                 blackTransitionVector = [0]*154
-            state = [MovePiece(state[0], moveList[i]['White']['To'], moveList[i]['White']['From'], whoseMove='White'),
+            state = [MovePiece(state[0], move_list[i]['White']['To'], move_list[i]['White']['From'], whoseMove='White'),
                      win,
                      blackTransitionVector] #Black's response to the generated state
             if playerColor == 'Black': #reflect positions tied to black transitions
                boardStates['PlayerPOV'].append(ReflectBoardState(state))
             boardStates['States'].append(state)
-        if isinstance(moveList[i]['Black'], dict):  # if string, then == resign or NIL
-            if i+1 == len(moveList):# if no next white move => black won
+        if isinstance(move_list[i]['Black'], dict):  # if string, then == resign or NIL
+            if i+1 == len(move_list):# if no next white move => black won
                 whiteTransitionVector = [0]*154 # no white move from the next generated state
             else:
-                whiteTransitionVector = generateTransitionVector(moveList[i+1]['White']['To'], moveList[i+1]['White']['From'], 'White')
-            state = [MovePiece(state[0], moveList[i]['Black']['To'], moveList[i]['Black']['From'], whoseMove='Black'),
+                whiteTransitionVector = generateTransitionVector(move_list[i+1]['White']['To'], move_list[i+1]['White']['From'], 'White')
+            state = [MovePiece(state[0], move_list[i]['Black']['To'], move_list[i]['Black']['From'], whoseMove='Black'),
                      win,
                      whiteTransitionVector]  # White's response to the generated state
             boardStates['States'].append(state)
@@ -308,7 +310,7 @@ def ConvertBoardTo1DArray(boardState, playerColor):
     newBoardState = [oneHotBoard, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
     return newBoardState
 
-def ConvertBoardTo1DArrayPolicyNet(boardState, playerColor):# 12/22 removed White/Black to avoid Curse of Dimensionality.
+def ConvertBoardTo1DArrayPolicyNet(boardState, playerColor):# 12/22 removed White/Black to avoid Curse of Dimensionality. TODO: use dict for board representations so later analysis can identify without looking at this code?
   state = boardState[0]
   oneHotBoard = []
   oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Player'))#[0] player
@@ -403,20 +405,20 @@ def MovePiece(boardState, To, From, whoseMove):
         nextBoardState[whiteMoveIndex] = 0
     return nextBoardState
 
-def FormatMoveListsAndURLs(unformattedMoveList):
-    moveRegex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
+def FormatMoveListsAndURLs(unformatted_move_list):
+    move_regex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
                            re.IGNORECASE)
     originalWebVisualizerLink = mirrorWebVisualizerLink = r'http://www.trmph.com/breakthrough/board#8,'
-    moveList = list(map(lambda a: moveRegex.search(a).group(1), unformattedMoveList))
+    move_list = list(map(lambda a: move_regex.search(a).group(1), unformatted_move_list))
     moveNum = 0
     newMoveList=[]
     newMirrorMoveList=[]
     move = [None] * 3
-    for i in range(0, len(moveList)):
+    for i in range(0, len(move_list)):
         moveNum += 1
         move[0] = math.ceil(moveNum/2)
-        From = str(moveList[i][0:2]).lower()
-        to = str(moveList[i][3:5]).lower()
+        From = str(move_list[i][0:2]).lower()
+        to = str(move_list[i][3:5]).lower()
         fromColumn = From[0]
         fromRow = From[1]
         toColumn = to[0]
@@ -426,7 +428,7 @@ def FormatMoveListsAndURLs(unformattedMoveList):
         if i % 2 == 0:#white move
             assert(fromRow < toRow)#white should go forward
             move[1] = {'From': From, 'To': to}  # set White's moves
-            if i==len(moveList)-1:#white makes last move of game; black lost
+            if i==len(move_list)-1:#white makes last move of game; black lost
                 move[2] = "NIL"
                 tempMove = {'#': move[0], 'White': move[1], 'Black': move[2]}
                 newMoveList.append(tempMove)
@@ -442,6 +444,6 @@ def FormatMoveListsAndURLs(unformattedMoveList):
     return newMoveList, newMirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink
 
 def Driver(path):
-    playerList = []
-    ProcessDirectoryOfBreakthroughFiles(path, playerList)
-    WriteToDisk(playerList, path)
+    player_list = []
+    process_directory_of_breakthrough_files(path, player_list)
+    write_to_disk(player_list, path)

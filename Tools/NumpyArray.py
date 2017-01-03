@@ -26,8 +26,10 @@ def WriteNPArrayToDisk(path, X, y, filterType, NNType):
         if NNType == 'Policy':
           XMatrix = open(path + r'XMatrixSelfPlayPOEBias.p', 'wb')
           pickle.dump(X, XMatrix)
+          X.tofile(open(path + r'XMatrixSelfPlayPOEBiasNPBinary.np', 'wb'))
           yVector = open(path + r'yVectorSelfPlayPOEBias.p', 'wb')
           pickle.dump(y, yVector)
+          y.tofile((open(path + r'yVectorSelfPlayPOEBiasNPBinary.np', 'wb')))
         else:#value net
           XMatrix = open(path + r'XMatrixSelfPlayWBPOEBiasNoZero.p', 'wb')
           pickle.dump(X, XMatrix)
@@ -65,15 +67,15 @@ def FilterByWinRatio(playerList):
 def FilterForSelfPlay(selfPlayDataList, NNType):
     X = []
     if NNType == 'Policy':
-      # for serverNodeByDate in selfPlayDataList:
-      for selfPlayLog in selfPlayDataList:
-          for game in selfPlayLog['Games']:
-              states = game['BoardStates']['PlayerPOV']
-              mirrorStates = game['MirrorBoardStates']['PlayerPOV']
-              assert len(states) == len(mirrorStates)
-              for i in range(0, len(states)):
-                  X.append(states[i])
-                  X.append(mirrorStates[i])
+      for serverNodeByDate in selfPlayDataList:
+          for selfPlayLog in serverNodeByDate:
+              for game in selfPlayLog['Games']:
+                  states = game['BoardStates']['PlayerPOV']
+                  mirrorStates = game['MirrorBoardStates']['PlayerPOV']
+                  assert len(states) == len(mirrorStates)
+                  for i in range(0, len(states)):
+                      X.append(states[i])
+                      X.append(mirrorStates[i])
       print('# of States for Self-Play Policy Net: {states}'.format(states=len(X)))
     else:
       for serverNodeByDate in selfPlayDataList:
@@ -115,10 +117,9 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
         x = []
-        trainingExample[0].append([1] * 64)  # 1 bias plane
         for plane in trainingExample[0]:
             x += plane #flatten 2d matrix
-       # x = np.matrix(trainingExample, dtype=np.int8)
+        x += [1] * 64 # 1 bias plane
         X.append(x)
         y.append(trainingExample[2])#transition vector
     return X, y

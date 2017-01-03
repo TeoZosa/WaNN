@@ -220,23 +220,6 @@ def BuildRegressionNetwork(num_hidden_units = 2048, num_hidden_layers = 2, activ
         # fully connected NN with all hidden layers containing the same number of hidden units.
         hidden_layers = [num_hidden_units] * num_hidden_layers
 
-    # if activation == 'relu':#defailt activation function
-    #     # estimator = learn.TensorFlowDNNRegressor(hidden_units=hidden_layers,
-    #     #                                  steps=100000, optimizer='Adam', learning_rate=0.1,
-    #     #                                  batch_size=32)  # changed to Adam as cursory literature search shows better results
-    #     estimator = CustomRegressionNetwork.TensorFlowDNNRegressor(hidden_units=hidden_layers,
-    #                                                                steps=100000, optimizer='Adam', learning_rate=0.1,
-    #                                                                batch_size=32, activation=nn.relu)
-    # elif activation =='sigmoid':
-    #     estimator = CustomRegressionNetwork.TensorFlowDNNRegressor(hidden_units=hidden_layers,
-    #                                      steps=100000, optimizer='Adam', learning_rate=0.1,
-    #                                      batch_size=32, activation=nn.sigmoid)
-    # elif activation =='tanh':
-    #     estimator = CustomRegressionNetwork.TensorFlowDNNRegressor(hidden_units=hidden_layers,
-    #                                      steps=100000, optimizer='Adam', learning_rate=0.1,
-    #                                      batch_size=32, activation=nn.tanh)
-    # else:
-    #     "Error: invalid activation function"
     return CustomRegressionNetwork.TensorFlowDNNRegressor(hidden_units=hidden_layers,
                                                       steps=500000, optimizer='Adam', learning_rate=0.1,
                                                       batch_size=32, activation=activation)
@@ -411,7 +394,7 @@ timerObj = time.perf_counter()
 # outputFile.close()
 # regressor3.save('12Int')
 
-#WriteToDisk(inputPath, regressor)
+#write_to_disk(inputPath, regressor)
 
 
 

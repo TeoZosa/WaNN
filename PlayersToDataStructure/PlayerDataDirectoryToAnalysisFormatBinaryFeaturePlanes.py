@@ -307,7 +307,7 @@ def FormatMoveList(moveListString):
 # playerList = []
 # pathToCheck = r'/Users/TeofiloZosa/BreakthroughData/AutomatedData/'
 # ProcessDirectoryOfBreakthroughFiles(pathToCheck, playerList)
-# WriteToDisk(playerList, pathToCheck)
+# write_to_disk(playerList, pathToCheck)
 
 # Verified Working.
 # #double check

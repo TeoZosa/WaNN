@@ -23,7 +23,7 @@ def process_breakthrough_file(path, self_play_games):
     date_range = str(self_play_games[len(r'G:\TruncatedLogs')
                                      + 1:len(path)
                                      - len(r'\selfPlayLogsBreakthroughN')])
-    games_list, white_wins, black_wins = format_game_list(self_play_games, server_name)
+    games_list, white_wins, black_wins = format_game_list(self_play_games)
     return {'ServerNode': server_name, 'Self-PlayLog': self_play_log, 'DateRange': date_range, 'Games': games_list,
             'WhiteWins': white_wins, 'BlackWins': black_wins}
 
@@ -47,7 +47,7 @@ def find_files(path, extension):  # recursively find files at path with extensio
             yield os.path.join(root, file)
 
 
-def format_game_list(self_play_games, server_name):
+def format_game_list(self_play_games):
     games = []
     black_win = None
     white_win = None
@@ -79,8 +79,8 @@ def format_game_list(self_play_games, server_name):
             black_win = False
         elif end_regex.match(line):
             # Format move list
-            move_list, mirror_move_list, \
-            original_visualizer_URL, mirror_visualizer_URL = format_move_lists_and_URLs(unformatted_move_list)
+            move_list, mirror_move_list, original_visualizer_link, mirror_visualizer_link \
+                = format_move_lists_and_links(unformatted_move_list)
             white_board_states = generate_board_states(move_list, 'White', white_win)
             white_mirror_board_states = generate_board_states(mirror_move_list, 'White', white_win)
             # self-play => same states, but win under policy for W <=> lose under policy for B
@@ -95,16 +95,16 @@ def format_game_list(self_play_games, server_name):
                           'MirrorMoves': mirror_move_list,
                           'BoardStates': white_board_states,
                           'MirrorBoardStates': white_mirror_board_states,
-                          'OriginalVisualizationURL': original_visualizer_URL,
-                          'MirrorVisualizationURL': mirror_visualizer_URL}
+                          'OriginalVisualizationURL': original_visualizer_link,
+                          'MirrorVisualizationURL': mirror_visualizer_link}
                          )  # append new white game
             games.append({'Win': black_win,
                           'Moves': move_list,
                           'MirrorMoves': mirror_move_list,
                           'BoardStates': black_board_states,
                           'MirrorBoardStates': black_mirror_board_states,
-                          'OriginalVisualizationURL': original_visualizer_URL,
-                          'MirrorVisualizationURL': mirror_visualizer_URL}
+                          'OriginalVisualizationURL': original_visualizer_link,
+                          'MirrorVisualizationURL': mirror_visualizer_link}
                          )  # append new black game
             unformatted_move_list = []  # reset move_list for next game
             white_win = None  # not necessary; redundant, but good practice
@@ -123,7 +123,7 @@ def initial_state(move_list, player_color, win):
         is_white = 0
     return [
         {
-            10: -1,  # (-1 for a for initial state, 0 for if black achieved state, 1 if white achieved state)
+            10: -1,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
             9: is_white,  # is player_color white
             8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
             7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
@@ -135,7 +135,7 @@ def initial_state(move_list, player_color, win):
             1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
         },
         win,
-        generate_transition_vector(move_list[0]['White']['to'], move_list[0]['White']['_from'],
+        generate_transition_vector(move_list[0]['White']['To'], move_list[0]['White']['From'],
                                    'White')]  # White's opening move
 
 
@@ -151,13 +151,13 @@ def generate_board_states(move_list, player_color, win):
         # structure kept for symmetry
         if isinstance(move_list[i]['White'], dict):  # for self-play, this should always happen.
             if isinstance(move_list[i]['Black'], dict):  # if no black move => white won
-                black_transition_vector = generate_transition_vector(move_list[i]['Black']['to'],
-                                                                     move_list[i]['Black']['_from'], 'Black')
+                black_transition_vector = generate_transition_vector(move_list[i]['Black']['To'],
+                                                                     move_list[i]['Black']['From'], 'Black')
                 # can't put black move block in here as it would execute before white's move
             else:
                 black_transition_vector = [0] * 154
             state = [
-                move_piece(state[0], move_list[i]['White']['to'], move_list[i]['White']['_from'], whose_move='White'),
+                move_piece(state[0], move_list[i]['White']['To'], move_list[i]['White']['From'], whose_move='White'),
                 win,
                 black_transition_vector]  # Black's response to the generated state
             if player_color == 'Black':  # reflect positions tied to black transitions
@@ -167,10 +167,10 @@ def generate_board_states(move_list, player_color, win):
             if i + 1 == len(move_list):  # if no next white move => black won
                 white_transition_vector = [0] * 154  # no white move from the next generated state
             else:
-                white_transition_vector = generate_transition_vector(move_list[i + 1]['White']['to'],
-                                                                   move_list[i + 1]['White']['_from'], 'White')
+                white_transition_vector = generate_transition_vector(move_list[i + 1]['White']['To'],
+                                                                   move_list[i + 1]['White']['From'], 'White')
             state = [
-                move_piece(state[0], move_list[i]['Black']['to'], move_list[i]['Black']['_from'], whose_move='Black'),
+                move_piece(state[0], move_list[i]['Black']['To'], move_list[i]['Black']['From'], whose_move='Black'),
                 win,
                 white_transition_vector]  # White's response to the generated state
             board_states['States'].append(state)
@@ -199,17 +199,17 @@ def generate_transition_vector(to, _from, player_color):
     to_column = to[0]
     from_row = int(_from[1])
     to_row = int(to[1])
-    columnOffset = (ord(from_column) - ord(
-        'a')) * 3  # ex if white and from_column = b=> 1*3; moves starting from b are [2] or [3] or [4];makes sense in context of formula
+    # ex if white and from_column is b => 1*3; moves starting from b are [2] or [3] or [4];
+    column_offset = (ord(from_column) - ord('a')) * 3  
     if player_color == 'Black':
         row_offset = (to_row - 1) * 22  # 22 possible moves per row
         assert (row_offset == (from_row - 2) * 22)  # double check
         index = 153 - (
-        ord(to_column) - ord(from_column) + columnOffset + row_offset)  # 153 reverses the board for black
+        ord(to_column) - ord(from_column) + column_offset + row_offset)  # 153 reverses the board for black
     else:
         row_offset = (from_row - 1) * 22  # 22 possible moves per row
         assert (row_offset == (to_row - 2) * 22)  # double check
-        index = ord(to_column) - ord(from_column) + columnOffset + row_offset
+        index = ord(to_column) - ord(from_column) + column_offset + row_offset
     transition_vector = [0] * 154
     transition_vector[index] = 1
     return transition_vector
@@ -217,24 +217,24 @@ def generate_transition_vector(to, _from, player_color):
 
 def mirror_move(move):
     mirrored_move = copy.deepcopy(move)
-    white_to = move['White']['to']
-    white_from = move['White']['_from']
+    white_to = move['White']['To']
+    white_from = move['White']['From']
     white_from_column = white_from[0]
     white_to_column = white_to[0]
     white_from_row = int(white_from[1])
     white_to_row = int(white_to[1])
-    mirrored_move['White']['to'] = mirror_column(white_to_column) + str(white_to_row)
-    mirrored_move['White']['_from'] = mirror_column(white_from_column) + str(white_from_row)
+    mirrored_move['White']['To'] = mirror_column(white_to_column) + str(white_to_row)
+    mirrored_move['White']['From'] = mirror_column(white_from_column) + str(white_from_row)
 
     if isinstance(move['Black'], dict):
-        black_to = move['Black']['to']
-        black_from = move['Black']['_from']
+        black_to = move['Black']['To']
+        black_from = move['Black']['From']
         black_from_column = black_from[0]
         black_to_column = black_to[0]
         black_from_row = int(black_from[1])
         black_to_row = int(black_to[1])
-        mirrored_move['Black']['to'] = mirror_column(black_to_column) + str(black_to_row)
-        mirrored_move['Black']['_from'] = mirror_column(black_from_column) + str(black_from_row)
+        mirrored_move['Black']['To'] = mirror_column(black_to_column) + str(black_to_row)
+        mirrored_move['Black']['From'] = mirror_column(black_from_column) + str(black_from_row)
     # else 'Black' == NIL, don't change it
     return mirrored_move
 
@@ -311,9 +311,7 @@ def convert_board_states_to_arrays(board_states, player_color):
 
 def convert_board_to_1d_array_value_net(board_state, player_color):
     state = board_state[0]
-    is_white_index = 9
     white_move_index = 10
-
 
     # Do we need White/Black if black is a flipped representation? we are only asking the net "from my POV, these are
     # my pieces and my opponent's pieces what move should I take? If not, the net sees homogeneous data.
@@ -439,20 +437,20 @@ def generate_binary_plane(state, array_to_append, player_color, who_to_filter):
 def move_piece(board_state, to, _from, whose_move):
     empty = 'e'
     white_move_index = 10
-    nextBoardState = copy.deepcopy(board_state)  # edit copy of board_state
-    nextBoardState[int(to[1])][to[0]] = nextBoardState[int(_from[1])][_from[0]]
-    nextBoardState[int(_from[1])][_from[0]] = empty
+    next_board_state = copy.deepcopy(board_state)  # edit copy of board_state
+    next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
+    next_board_state[int(_from[1])][_from[0]] = empty
     if whose_move == 'White':
-        nextBoardState[white_move_index] = 1
+        next_board_state[white_move_index] = 1
     else:
-        nextBoardState[white_move_index] = 0
-    return nextBoardState
+        next_board_state[white_move_index] = 0
+    return next_board_state
 
 
-def format_move_lists_and_URLs(unformatted_move_list):
+def format_move_lists_and_links(unformatted_move_list):
     move_regex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
                             re.IGNORECASE)
-    original_visualizer_URL = mirror_visualizer_URL = r'http://www.trmph.com/breakthrough/board#8,'
+    original_visualizer_link = mirror_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     move_list = list(map(lambda a: move_regex.search(a).group(1), unformatted_move_list))
     move_num = 0
     new_move_list = []
@@ -471,7 +469,7 @@ def format_move_lists_and_URLs(unformatted_move_list):
         mirror_to = mirror_column(to_column) + to_row
         if i % 2 == 0:  # white move
             assert (from_row < to_row)  # white should go forward
-            move[1] = {'_from': _from, 'to': to}  # set White's moves
+            move[1] = {'From': _from, 'To': to}  # set White's moves
             if i == len(move_list) - 1:  # white makes last move of game; black lost
                 move[2] = "NIL"
                 temp_move = {'#': move[0], 'White': move[1], 'Black': move[2]}
@@ -479,13 +477,13 @@ def format_move_lists_and_URLs(unformatted_move_list):
                 new_mirror_move_list.append(mirror_move(temp_move))
         else:  # black move
             assert (from_row > to_row)  # black should go backward
-            move[2] = {'_from': _from, 'to': to}  # set Black's moves
+            move[2] = {'From': _from, 'To': to}  # set Black's moves
             temp_move = {'#': move[0], 'White': move[1], 'Black': move[2]}
             new_move_list.append(temp_move)
             new_mirror_move_list.append(mirror_move(temp_move))
-        original_visualizer_URL = original_visualizer_URL + _from + to
-        mirror_visualizer_URL = mirror_visualizer_URL + mirror_from + mirror_to
-    return new_move_list, new_mirror_move_list, original_visualizer_URL, mirror_visualizer_URL
+        original_visualizer_link = original_visualizer_link + _from + to
+        mirror_visualizer_link = mirror_visualizer_link + mirror_from + mirror_to
+    return new_move_list, new_mirror_move_list, original_visualizer_link, mirror_visualizer_link
 
 
 def driver(path):

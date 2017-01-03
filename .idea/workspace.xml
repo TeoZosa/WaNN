@@ -80,8 +80,8 @@
       <file leaf-file-name="SelfPlayLogsToPythonDataStructure.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="784">
-              <caret line="334" column="39" lean-forward="false" selection-start-line="334" selection-start-column="39" selection-end-line="334" selection-end-column="39" />
+            <state relative-caret-position="-1116">
+              <caret line="147" column="68" lean-forward="false" selection-start-line="147" selection-start-column="68" selection-end-line="147" selection-end-column="68" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -127,7 +127,6 @@
       <find>pool</find>
       <find>moveList[i][3:5]</find>
       <find>From</find>
-      <find>to</find>
       <find>white</find>
       <find>SelfPlay</find>
       <find>oneDArray</find>
@@ -137,6 +136,7 @@
       <find>Datastructures</find>
       <find>Datasets</find>
       <find>filter</find>
+      <find>to</find>
     </findStrings>
     <replaceStrings>
       <replace>dateRange</replace>
@@ -166,6 +166,8 @@
       <replace>DataStructures</replace>
       <replace>DataSets</replace>
       <replace>data_to_write</replace>
+      <replace>To</replace>
+      <replace>'To</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\damon\PycharmProjects\BreakthroughANN</dir>
@@ -750,13 +752,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00015" summary="Changes outcomes of games to 0 for losses (previously: -1). Generated corresponding Numpy Arrays. Split up grid search to run on the different computers.">
-      <created>1465276298989</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1465276298989</updated>
-    </task>
     <task id="LOCAL-00016" summary="Added separate gridsearch functions for each computer">
       <created>1465276498587</created>
       <option name="number" value="00016" />
@@ -1093,7 +1088,14 @@
       <option name="project" value="LOCAL" />
       <updated>1483466900110</updated>
     </task>
-    <option name="localTasksCounter" value="64" />
+    <task id="LOCAL-00064" summary="better readability">
+      <created>1483467872697</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1483467872697</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1146,7 +1148,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="added functionality to generate game visualizations via http://www.trmph.com/breakthrough/board#8," />
     <MESSAGE value="removed unused imports" />
     <MESSAGE value="added transition vector computation for policy net data" />
     <MESSAGE value="redid mirror states to account for the transition vector" />
@@ -1171,7 +1172,8 @@
     <MESSAGE value="Datastructures to DataStructures" />
     <MESSAGE value="continuing refactor by hand" />
     <MESSAGE value="refactored all function/variable names" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactored all function/variable names" />
+    <MESSAGE value="better readability" />
+    <option name="LAST_COMMIT_MESSAGE" value="better readability" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1588,8 +1590,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="784">
-          <caret line="334" column="39" lean-forward="false" selection-start-line="334" selection-start-column="39" selection-end-line="334" selection-end-column="39" />
+        <state relative-caret-position="-1116">
+          <caret line="147" column="68" lean-forward="false" selection-start-line="147" selection-start-column="68" selection-end-line="147" selection-end-column="68" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>

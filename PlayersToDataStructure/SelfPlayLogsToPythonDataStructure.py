@@ -303,9 +303,9 @@ def convert_board_states_to_arrays(board_states, player_color):
     for state in states:
         new_board_states['States'].append(
             convert_board_to_1d_array_value_net(state, player_color))  # These can be inputs to value net
-    for POVState in POV_states:
+    for POV_state in POV_states:
         new_board_states['PlayerPOV'].append(
-            convert_board_to_1d_array_policy_net(POVState, player_color))  # These can be inputs to policy net
+            convert_board_to_1d_array_policy_net(POV_state, player_color))  # These can be inputs to policy net
     return new_board_states
 
 

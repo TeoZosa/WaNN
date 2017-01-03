@@ -73,12 +73,14 @@ def format_game_list(self_play_games, server_name):
             white_win = True
             black_win = False
         elif end_regex.match(line):
-            #Format move list
-            move_list, mirror_move_list, original_web_visualizer_link, mirror_web_visualizer_link = format_move_lists_and_URLs(unformatted_move_list)
-            white_board_states = GenerateBoardStates(move_list, 'White', white_win)  # generate board states from move_list
-            white_mirror_board_states = GenerateBoardStates(mirror_move_list, 'White', white_win)
-            black_board_states = GenerateBoardStates(move_list,'Black', black_win)  # self-play => same states, but win under policy for A=> lose under policy for B
-            black_mirror_board_states = GenerateBoardStates(mirror_move_list, 'Black', black_win)
+            # Format move list
+            move_list, mirror_move_list, \
+             original_visualizer_URL, mirror_visualizer_URL = format_move_lists_and_URLs(unformatted_move_list)
+            white_board_states = generate_board_states(move_list, 'White', white_win)  
+            white_mirror_board_states = generate_board_states(mirror_move_list, 'White', white_win)
+            # self-play => same states, but win under policy for W <=> lose under policy for B
+            black_board_states = generate_board_states(move_list, 'Black', black_win)  
+            black_mirror_board_states = generate_board_states(mirror_move_list, 'Black', black_win)
             if white_win:
                 num_white_wins += 1
             elif black_win:
@@ -88,35 +90,35 @@ def format_game_list(self_play_games, server_name):
                           'MirrorMoves': mirror_move_list,
                           'BoardStates': white_board_states,
                           'MirrorBoardStates': white_mirror_board_states,
-                          'OriginalVisualizationURL': original_web_visualizer_link,
-                          'MirrorVisualizationURL': mirror_web_visualizer_link}
+                          'OriginalVisualizationURL': original_visualizer_URL,
+                          'MirrorVisualizationURL': mirror_visualizer_URL}
                          )  # append new white game
             games.append({'Win': black_win,
                           'Moves': move_list,
                           'MirrorMoves': mirror_move_list,
                           'BoardStates': black_board_states,
                           'MirrorBoardStates': black_mirror_board_states,
-                          'OriginalVisualizationURL': original_web_visualizer_link,
-                          'MirrorVisualizationURL': mirror_web_visualizer_link}
+                          'OriginalVisualizationURL': original_visualizer_URL,
+                          'MirrorVisualizationURL': mirror_visualizer_URL}
                          )  # append new black game
-            unformatted_move_list = []#reset move_list for next game
-            white_win = None #not necessary;redundant, but good practice
+            unformatted_move_list = []  # reset move_list for next game
+            white_win = None  # not necessary; redundant, but good practice
             black_win = None
     file.close()
     return games, num_white_wins, num_black_wins
 
-def InitialState(move_list, playerColor, win):
+def InitialState(move_list, player_color, win):
     empty = 'e'
     white = 'w'
     black = 'b'
-    if playerColor == 'White':
-        isWhite = 1
+    if player_color == 'White':
+        is_white = 1
     else:
-        isWhite = 0
+        is_white = 0
     return [
         {
             10: -1,  # did White's move achieve this state (-1 for a for initial state, 0 for if black achieved this state)
-            9: isWhite,  # is playerColor white
+            9: is_white,  # is player_color white
             8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
             7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
             6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
@@ -127,46 +129,46 @@ def InitialState(move_list, playerColor, win):
             1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
         },
         win,
-        generateTransitionVector(move_list[0]['White']['To'], move_list[0]['White']['From'], 'White')]#White's opening move
+        generate_transition_vector(move_list[0]['White']['to'], move_list[0]['White']['From'], 'White')]#White's opening move
 
-def GenerateBoardStates(move_list, playerColor, win):
-    state = InitialState(move_list,playerColor,win)
-    if playerColor == 'White':
-       playerPOV = [state]
+def generate_board_states(move_list, player_color, win):
+    state = InitialState(move_list,player_color,win)
+    if player_color == 'White':
+       player_POV = [state]
     else:
-       playerPOV = []
-    boardStates = {'Win': win, 'States': [state], 'PlayerPOV': playerPOV}
+       player_POV = []
+    board_states = {'Win': win, 'States': [state], 'PlayerPOV': player_POV}
     for i in range(0, len(move_list)):
         assert (move_list[i]['#'] == i + 1)
         #structure kept for symmetry
         if isinstance(move_list[i]['White'], dict):  #for self-play, this should always happen.
             if isinstance(move_list[i]['Black'], dict):  # if no black move => white won
-                blackTransitionVector = generateTransitionVector(move_list[i]['Black']['To'], move_list[i]['Black']['From'], 'Black')
+                blackTransitionVector = generate_transition_vector(move_list[i]['Black']['to'], move_list[i]['Black']['From'], 'Black')
                 #can't put black move block in here as it would execute before white's move
             else:
                 blackTransitionVector = [0]*154
-            state = [MovePiece(state[0], move_list[i]['White']['To'], move_list[i]['White']['From'], whoseMove='White'),
+            state = [move_piece(state[0], move_list[i]['White']['to'], move_list[i]['White']['From'], whose_move='White'),
                      win,
                      blackTransitionVector] #Black's response to the generated state
-            if playerColor == 'Black': #reflect positions tied to black transitions
-               boardStates['PlayerPOV'].append(ReflectBoardState(state))
-            boardStates['States'].append(state)
+            if player_color == 'Black': #reflect positions tied to black transitions
+               board_states['PlayerPOV'].append(reflect_board_State(state))
+            board_states['States'].append(state)
         if isinstance(move_list[i]['Black'], dict):  # if string, then == resign or NIL
             if i+1 == len(move_list):# if no next white move => black won
                 whiteTransitionVector = [0]*154 # no white move from the next generated state
             else:
-                whiteTransitionVector = generateTransitionVector(move_list[i+1]['White']['To'], move_list[i+1]['White']['From'], 'White')
-            state = [MovePiece(state[0], move_list[i]['Black']['To'], move_list[i]['Black']['From'], whoseMove='Black'),
+                whiteTransitionVector = generate_transition_vector(move_list[i+1]['White']['to'], move_list[i+1]['White']['From'], 'White')
+            state = [move_piece(state[0], move_list[i]['Black']['to'], move_list[i]['Black']['From'], whose_move='Black'),
                      win,
                      whiteTransitionVector]  # White's response to the generated state
-            boardStates['States'].append(state)
-            if playerColor == 'White':
-                boardStates['PlayerPOV'].append(state)
+            board_states['States'].append(state)
+            if player_color == 'White':
+                board_states['PlayerPOV'].append(state)
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
-    boardStates = ConvertBoardStatesToArrays(boardStates, playerColor)
-    return boardStates
+    board_states = convert_board_states_to_arrays(board_states, player_color)
+    return board_states
 
-def generateTransitionVector(to, From, playerColor):
+def generate_transition_vector(to, From, player_color):
   # probability distribution over the 154 possible (vs legal) moves from the POV of the player.
     # Reasoning: six center columns where, if a piece was present, it could move one of three ways.
     # A piece in one of the two side columns can move one of two ways.
@@ -180,48 +182,48 @@ def generateTransitionVector(to, From, playerColor):
     # <=> transition[0] = 1, transition[1:len(transition)] = 0
 
     # Notes: when calling NN, just reverse board state if black and decode output with black's table
-    fromColumn = From[0]
-    toColumn = to[0]
-    fromRow = int(From[1])
-    toRow = int(to[1])
-    columnOffset = (ord(fromColumn) - ord('a')) * 3 #ex if white and fromColumn = b=> 1*3; moves starting from b are [2] or [3] or [4];makes sense in context of formula
-    if playerColor == 'Black':
-        rowOffset = (toRow - 1) * 22 #22 possible moves per row
-        assert (rowOffset == (fromRow - 2) * 22)  # double check
-        index = 153 - (ord(toColumn) - ord(fromColumn) + columnOffset + rowOffset)#153 reverses the board for black
+    from_column = From[0]
+    to_column = to[0]
+    from_row = int(From[1])
+    to_row = int(to[1])
+    columnOffset = (ord(from_column) - ord('a')) * 3 #ex if white and from_column = b=> 1*3; moves starting from b are [2] or [3] or [4];makes sense in context of formula
+    if player_color == 'Black':
+        row_offset = (to_row - 1) * 22 #22 possible moves per row
+        assert (row_offset == (from_row - 2) * 22)  # double check
+        index = 153 - (ord(to_column) - ord(from_column) + columnOffset + row_offset)#153 reverses the board for black
     else:
-        rowOffset = (fromRow - 1) * 22 #22 possible moves per row
-        assert (rowOffset == (toRow - 2) * 22)  # double check
-        index = ord(toColumn) - ord(fromColumn) + columnOffset + rowOffset
-    transitionVector = [0] * 154
-    transitionVector[index] = 1
-    return transitionVector
+        row_offset = (from_row - 1) * 22 #22 possible moves per row
+        assert (row_offset == (to_row - 2) * 22)  # double check
+        index = ord(to_column) - ord(from_column) + columnOffset + row_offset
+    transition_vector = [0] * 154
+    transition_vector[index] = 1
+    return transition_vector
 
-def MirrorMove(move):
-    mirrorMove = copy.deepcopy(move)
-    whiteTo = move['White']['To']
-    whiteFrom = move['White']['From']
-    whiteFromColumn = whiteFrom[0]
-    whiteToColumn = whiteTo[0]
-    whiteFromRow = int(whiteFrom[1])
-    whiteToRow = int(whiteTo[1])
-    mirrorMove['White']['To'] = MirrorColumn(whiteToColumn) + str(whiteToRow)
-    mirrorMove['White']['From'] = MirrorColumn(whiteFromColumn) + str(whiteFromRow)
+def mirror_move(move):
+    mirrored_move = copy.deepcopy(move)
+    white_to = move['White']['to']
+    white_from = move['White']['From']
+    white_from_column = white_from[0]
+    white_to_column = white_to[0]
+    white_from_row = int(white_from[1])
+    white_to_row = int(white_to[1])
+    mirrored_move['White']['to'] = mirror_column(white_to_column) + str(white_to_row)
+    mirrored_move['White']['From'] = mirror_column(white_from_column) + str(white_from_row)
 
     if isinstance(move['Black'], dict):
-        blackTo = move['Black']['To']
-        blackFrom = move['Black']['From']
-        blackFromColumn = blackFrom[0]
-        blackToColumn = blackTo[0]
-        blackFromRow = int(blackFrom[1])
-        blackToRow = int(blackTo[1])
-        mirrorMove['Black']['To'] = MirrorColumn(blackToColumn) + str(blackToRow)
-        mirrorMove['Black']['From'] = MirrorColumn(blackFromColumn) + str(blackFromRow)
+        black_to = move['Black']['to']
+        black_from = move['Black']['From']
+        black_from_column = black_from[0]
+        black_to_column = black_to[0]
+        black_from_row = int(black_from[1])
+        black_to_row = int(black_to[1])
+        mirrored_move['Black']['to'] = mirror_column(black_to_column) + str(black_to_row)
+        mirrored_move['Black']['From'] = mirror_column(black_from_column) + str(black_from_row)
     #else 'Black' == NIL, don't change it
-    return mirrorMove
+    return mirrored_move
 
-def MirrorColumn(columnChar):
-    mirrorDict ={'a': 'h',
+def mirror_column(column_char):
+    mirror_dict ={'a': 'h',
                  'b': 'g',
                  'c': 'f',
                  'd': 'e',
@@ -230,224 +232,238 @@ def MirrorColumn(columnChar):
                  'g': 'b',
                  'h': 'a'
                  }
-    return mirrorDict[columnChar]
+    return mirror_dict[column_char]
 
-def ReflectBoardState(state):#since black needs to have a POV representation
-  semiReflectedState = MirrorBoardState(state)
-  reflectedState = copy.deepcopy(semiReflectedState)
-  reflectedState[0][1] = semiReflectedState[0][8]
-  reflectedState[0][2] = semiReflectedState[0][7]
-  reflectedState[0][3] = semiReflectedState[0][6]
-  reflectedState[0][4] = semiReflectedState[0][5]
-  reflectedState[0][5] = semiReflectedState[0][4]
-  reflectedState[0][6] = semiReflectedState[0][3]
-  reflectedState[0][7] = semiReflectedState[0][2]
-  reflectedState[0][8] = semiReflectedState[0][1]
-  return reflectedState
+def reflect_board_State(state):#since black needs to have a POV representation
+  semi_reflected_state = mirror_board_state(state)
+  reflected_state = copy.deepcopy(semi_reflected_state)
+  reflected_state[0][1] = semi_reflected_state[0][8]
+  reflected_state[0][2] = semi_reflected_state[0][7]
+  reflected_state[0][3] = semi_reflected_state[0][6]
+  reflected_state[0][4] = semi_reflected_state[0][5]
+  reflected_state[0][5] = semi_reflected_state[0][4]
+  reflected_state[0][6] = semi_reflected_state[0][3]
+  reflected_state[0][7] = semi_reflected_state[0][2]
+  reflected_state[0][8] = semi_reflected_state[0][1]
+  return reflected_state
 
-def MirrorBoardState(state):#since a mirror image has the same strategic value
-    mirrorStateWithWin = copy.deepcopy(state)  # edit copy of boardState
-    mirrorState = mirrorStateWithWin[0]
+def mirror_board_state(state):#since a mirror image has the same strategic value
+    mirror_state_with_win = copy.deepcopy(state)  # edit copy of board_state
+    mirror_state = mirror_state_with_win[0]
     state = state[0] #the board state; state[1] is the win or loss value, state [2] is the transition vector
-    isWhiteIndex = 9
-    whiteMoveIndex = 10
+    is_white_index = 9
+    white_move_index = 10
     for row in sorted(state):
-        if row != isWhiteIndex and row != whiteMoveIndex:  #these indexes don't change
+        if row != is_white_index and row != white_move_index:  #these indexes don't change
             for column in sorted(state[row]):
                 if column == 'a':
-                    mirrorState[row]['h'] = state[row][column]
+                    mirror_state[row]['h'] = state[row][column]
                 elif column == 'b':
-                    mirrorState[row]['g'] = state[row][column]
+                    mirror_state[row]['g'] = state[row][column]
                 elif column == 'c':
-                    mirrorState[row]['f'] = state[row][column]
+                    mirror_state[row]['f'] = state[row][column]
                 elif column == 'd':
-                    mirrorState[row]['e'] = state[row][column]
+                    mirror_state[row]['e'] = state[row][column]
                 elif column == 'e':
-                    mirrorState[row]['d'] = state[row][column]
+                    mirror_state[row]['d'] = state[row][column]
                 elif column == 'f':
-                    mirrorState[row]['c'] = state[row][column]
+                    mirror_state[row]['c'] = state[row][column]
                 elif column == 'g':
-                    mirrorState[row]['b'] = state[row][column]
+                    mirror_state[row]['b'] = state[row][column]
                 elif column == 'h':
-                    mirrorState[row]['a'] = state[row][column]
-    return mirrorStateWithWin
+                    mirror_state[row]['a'] = state[row][column]
+    return mirror_state_with_win
 
-def ConvertBoardStatesToArrays(boardStates, playerColor):
-    newBoardStates = boardStates
-    POVStates = boardStates['PlayerPOV']
-    states = boardStates['States']
-    newBoardStates['States'] = []
-    newBoardStates['PlayerPOV'] = []
+def convert_board_states_to_arrays(board_states, player_color):
+    new_board_states = board_states
+    POV_states = board_states['PlayerPOV']
+    states = board_states['States']
+    new_board_states['States'] = []
+    new_board_states['PlayerPOV'] = []
     for state in states:
-        newBoardStates['States'].append(ConvertBoardTo1DArray(state, playerColor)) #These can be inputs to value net
-    for POVState in POVStates:
-        newBoardStates['PlayerPOV'].append(ConvertBoardTo1DArrayPolicyNet(POVState, playerColor)) #these can be inputs to policy net
-    return newBoardStates
+        new_board_states['States'].append(
+            convert_board_to_1d_array_value_net(state, player_color))  # These can be inputs to value net
+    for POVState in POV_states:
+        new_board_states['PlayerPOV'].append(
+            convert_board_to_1d_array_policy_net(POVState, player_color))  # These can be inputs to policy net
+    return new_board_states
 
-def ConvertBoardTo1DArray(boardState, playerColor):
-    state = boardState[0]
-    isWhiteIndex = 9
-    whiteMoveIndex = 10
-    oneHotBoard = []
+def convert_board_to_1d_array_value_net(board_state, player_color):
+    state = board_state[0]
+    is_white_index = 9
+    white_move_index = 10
+    one_hot_board = []
 
-    # do we need White/Black if black is a flipped representation? we are only asking the net "from my POV, these are my pieces and my opponent's pieces what move should I take?
-    #if not, the net sees homogenous data. My fear is seeing black in a flipped representation may mess things up as, if you are white, black being in a lower row is not good
-    #but would the Player/Opponent features cancel this out?
+    # Do we need White/Black if black is a flipped representation? we are only asking the net "from my POV, these are
+    # my pieces and my opponent's pieces what move should I take? If not, the net sees homogeneous data.
+    # My fear is seeing black in a flipped representation may mess things up as, if you are white, black being in a 
+    # lower row is not good, but would the Player/Opponent features cancel this out?
 
-    #if player color == white, player and white states are mirrors; else, player and black states are mirrors
-    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='White'))#[0] white
-    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Black'))#[1] black
-    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Player'))#[2]player
-    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Opponent'))# [3] opponent
-    oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Empty'))#[4] empty
-    moveFlag = [state[whiteMoveIndex]]*64 #duplicate across 64 features since CNN needs same dimensions
-    oneHotBoard.append(moveFlag) #320-383 is a flag indicating if the transition came from a white move
-    for i in range (0, 64):  #error checking block
-        assert (oneHotBoard[0][i]^oneHotBoard[1][i]^oneHotBoard[4][i])#ensure at most 1 bit is on at each board position for white/black/empty
-        assert (oneHotBoard[2][i] ^ oneHotBoard[3][i] ^ oneHotBoard[4][i])  # ensure at most 1 bit is on at each board position for player/opponent/empty
-        if playerColor == 'White':
-            #white positions == player and black positions == opponent;
-            assert (oneHotBoard[0][i] == oneHotBoard[2][i] and oneHotBoard[1][i] == oneHotBoard[3][i])
+    # if player color == white, player and white states are mirrors; else, player and black states are mirrors
+    one_hot_board.append(
+        generate_binary_plane(
+            state, array_to_append=[], player_color=player_color, who_to_filter='White'))  # [0] white
+    one_hot_board.append(
+        generate_binary_plane(
+            state, array_to_append=[], player_color=player_color, who_to_filter='Black'))  # [1] black
+    one_hot_board.append(
+        generate_binary_plane(
+            state, array_to_append=[], player_color=player_color, who_to_filter='Player'))  # [2] player
+    one_hot_board.append(
+        generate_binary_plane(
+            state, array_to_append=[], player_color=player_color, who_to_filter='Opponent'))  # [3] opponent
+    one_hot_board.append(
+        generate_binary_plane(
+            state, array_to_append=[], player_color=player_color, who_to_filter='Empty'))  # [4] empty
+    move_flag = [state[white_move_index]]*64  # duplicate across 64 features since CNN needs same dimensions
+    one_hot_board.append(move_flag) #320-383 is a flag indicating if the transition came from a white move
+    for i in range (0, 64):  # error checking block
+        # ensure at most 1 bit is on at each board position for white/black/empty
+        assert (one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[4][i])
+        # ensure at most 1 bit is on at each board position for player/opponent/empty
+        assert (one_hot_board[2][i] ^ one_hot_board[3][i] ^ one_hot_board[4][i])  
+        if player_color == 'White':
+            # white positions == player and black positions == opponent;
+            assert (one_hot_board[0][i] == one_hot_board[2][i] and one_hot_board[1][i] == one_hot_board[3][i])
         else:
             #  white positions == opponent and player == black positions;
-            assert (oneHotBoard[0][i] == oneHotBoard[3][i] and oneHotBoard[1][i] == oneHotBoard[2][i])
-    newBoardState = [oneHotBoard, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
-    return newBoardState
+            assert (one_hot_board[0][i] == one_hot_board[3][i] and one_hot_board[1][i] == one_hot_board[2][i])
+    new_board_state = [one_hot_board, board_state[1], board_state[2]]  # [x vector, win, y transition vector]
+    return new_board_state
 
-def ConvertBoardTo1DArrayPolicyNet(boardState, playerColor):# 12/22 removed White/Black to avoid Curse of Dimensionality. TODO: use dict for board representations so later analysis can identify without looking at this code?
-  state = boardState[0]
-  oneHotBoard = []
-  oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Player'))#[0] player
-  oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Opponent'))#[1] opponent
-  oneHotBoard.append(GenerateBinaryPlane(state, arrayToAppend=[], playerColor=playerColor, whoToFilter='Empty')) # [2] empty
+def convert_board_to_1d_array_policy_net(board_state, player_color):# 12/22 removed White/Black to avoid Curse of Dimensionality. TODO: use dict for board representations so later analysis can identify without looking at this code?
+  state = board_state[0]
+  one_hot_board = []
+  one_hot_board.append(generate_binary_plane(state, array_to_append=[], player_color=player_color, who_to_filter='Player'))#[0] player
+  one_hot_board.append(generate_binary_plane(state, array_to_append=[], player_color=player_color, who_to_filter='Opponent'))#[1] opponent
+  one_hot_board.append(generate_binary_plane(state, array_to_append=[], player_color=player_color, who_to_filter='Empty')) # [2] empty
   for i in range(0, 64):  # error checking block
-    assert (oneHotBoard[0][i] ^ oneHotBoard[1][i] ^ oneHotBoard[2][i])  # ensure at most 1 bit is on at each board position for player/opponent/empty
-  newBoardState = [oneHotBoard, boardState[1], boardState[2]]  # [x vector, win, y transition vector]
-  return newBoardState
+    assert (one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i])  # ensure at most 1 bit is on at each board position for player/opponent/empty
+  new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
+  return new_board_state
 
 
-def GenerateBinaryPlane(state, arrayToAppend, playerColor, whoToFilter):
-    isWhiteIndex = 9
-    whiteMoveIndex = 10
-    oneHotIndexes = []
-    if whoToFilter == 'White':
-        whiteDict = {
-            'e': 0,
-            'w': 1,
-            'b': 0}
+def generate_binary_plane(state, array_to_append, player_color, who_to_filter):
+    is_white_index = 9
+    white_move_index = 10
+    if who_to_filter == 'White':
+        white_dict = {
+                     'e': 0,
+                     'w': 1,
+                     'b': 0}
         for row in sorted(state):
-            if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
+            if row != is_white_index and row != white_move_index:  # don't touch these indexes
                 for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
-                    arrayToAppend.append(whiteDict[state[row][column]])
-    elif whoToFilter == 'Black':
-        blackDict = {
-            'e': 0,
-            'w': 0,
-            'b': 1}
+                    array_to_append.append(white_dict[state[row][column]])
+    elif who_to_filter == 'Black':
+        black_dict = {
+                     'e': 0,
+                     'w': 0,
+                     'b': 1}
         for row in sorted(state):
-            if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
+            if row != is_white_index and row != white_move_index:  # don't touch these indexes
                 for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
-                    arrayToAppend.append(blackDict[state[row][column]])
-    elif whoToFilter == 'Player':
-        if playerColor == 'White':
-            playerDict = {
-            'e': 0,
-            'w': 1,
-            'b': 0}
-        elif playerColor == 'Black':
-            playerDict = {
-                'e': 0,
-                'w': 0,
-                'b': 1}
+                    array_to_append.append(black_dict[state[row][column]])
+    elif who_to_filter == 'Player':
+        if player_color == 'White':
+            player_dict = {
+                          'e': 0,
+                          'w': 1,
+                          'b': 0}
+        elif player_color == 'Black':
+            player_dict = {
+                          'e': 0,
+                          'w': 0,
+                          'b': 1}
+        else: 
+            print("error in convertBoard")
+            exit(-190)
+        for row in sorted(state):
+            if row != is_white_index and row != white_move_index:  # don't touch these indexes
+                for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
+                    array_to_append.append(player_dict[state[row][column]])
+    elif who_to_filter == 'Opponent':
+        if player_color == 'White':
+            opponent_dict = {
+                            'e': 0,
+                            'w': 0,
+                            'b': 1}
+        elif player_color == 'Black':
+            opponent_dict = {
+                            'e': 0,
+                            'w': 1,
+                            'b': 0}
         else:
             print("error in convertBoard")
             exit(-190)
         for row in sorted(state):
-            if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
+            if row != is_white_index and row != white_move_index:  # don't touch these indexes
                 for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
-                    arrayToAppend.append(playerDict[state[row][column]])
-    elif whoToFilter == 'Opponent':
-        if playerColor == 'White':
-            opponentDict = {
-            'e': 0,
-            'w': 0,
-            'b': 1}
-        elif playerColor == 'Black':
-            opponentDict = {
-                'e': 0,
-                'w': 1,
-                'b': 0}
-        else:
-            print("error in convertBoard")
-            exit(-190)
+                    array_to_append.append(opponent_dict[state[row][column]])
+    elif who_to_filter == 'Empty':
+        empty_dict = {
+                    'e': 1,
+                    'w': 0,
+                    'b': 0}
         for row in sorted(state):
-            if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
-                for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
-                    arrayToAppend.append(opponentDict[state[row][column]])
-    elif whoToFilter == 'Empty':
-        emptyDict = {
-            'e': 1,
-            'w': 0,
-            'b': 0}
-        for row in sorted(state):
-            if row != isWhiteIndex and row != whiteMoveIndex:  # don't touch the index that shows whose move generated this state
-                for column in sorted(state[row]): # needs to be sorted to traverse dictionary in lexicographical order
-                    arrayToAppend.append(emptyDict[state[row][column]])
+            if row != is_white_index and row != white_move_index:  # don't touch these indexes
+                for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+                    array_to_append.append(empty_dict[state[row][column]])
     else:
-        print("Error, GenerateBinaryPlane needs a valid argument to filter")
-    return arrayToAppend
+        print("Error, generate_binary_plane needs a valid argument to filter")
+    return array_to_append
 
-def MovePiece(boardState, To, From, whoseMove):
+def move_piece(board_state, to, From, whose_move):
     empty = 'e'
-    whiteMoveIndex = 10
-    nextBoardState = copy.deepcopy(boardState)  # edit copy of boardState
-    nextBoardState[int(To[1])][To[0]] = nextBoardState[int(From[1])][From[0]]
+    white_move_index = 10
+    nextBoardState = copy.deepcopy(board_state)  # edit copy of board_state
+    nextBoardState[int(to[1])][to[0]] = nextBoardState[int(From[1])][From[0]]
     nextBoardState[int(From[1])][From[0]] = empty
-    if whoseMove == 'White':
-        nextBoardState[whiteMoveIndex] = 1
+    if whose_move == 'White':
+        nextBoardState[white_move_index] = 1
     else:
-        nextBoardState[whiteMoveIndex] = 0
+        nextBoardState[white_move_index] = 0
     return nextBoardState
 
 def format_move_lists_and_URLs(unformatted_move_list):
     move_regex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
                            re.IGNORECASE)
-    original_web_visualizer_link = mirror_web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
+    original_visualizer_URL = mirror_visualizer_URL = r'http://www.trmph.com/breakthrough/board#8,'
     move_list = list(map(lambda a: move_regex.search(a).group(1), unformatted_move_list))
-    moveNum = 0
-    newMoveList=[]
-    newMirrorMoveList=[]
+    move_num = 0
+    new_move_list=[]
+    new_mirror_move_list=[]
     move = [None] * 3
     for i in range(0, len(move_list)):
-        moveNum += 1
-        move[0] = math.ceil(moveNum/2)
+        move_num += 1
+        move[0] = math.ceil(move_num/2)
         From = str(move_list[i][0:2]).lower()
         to = str(move_list[i][3:5]).lower()
-        fromColumn = From[0]
-        fromRow = From[1]
-        toColumn = to[0]
-        toRow = to[1]
-        mirrorFrom = MirrorColumn(fromColumn)+fromRow
-        mirrorTo = MirrorColumn(toColumn)+toRow
+        from_column = From[0]
+        from_row = From[1]
+        to_column = to[0]
+        to_row = to[1]
+        mirror_from = mirror_column(from_column)+from_row
+        mirror_to = mirror_column(to_column)+to_row
         if i % 2 == 0:#white move
-            assert(fromRow < toRow)#white should go forward
-            move[1] = {'From': From, 'To': to}  # set White's moves
+            assert(from_row < to_row)#white should go forward
+            move[1] = {'From': From, 'to': to}  # set White's moves
             if i==len(move_list)-1:#white makes last move of game; black lost
                 move[2] = "NIL"
-                tempMove = {'#': move[0], 'White': move[1], 'Black': move[2]}
-                newMoveList.append(tempMove)
-                newMirrorMoveList.append(MirrorMove(tempMove))
+                temp_move = {'#': move[0], 'White': move[1], 'Black': move[2]}
+                new_move_list.append(temp_move)
+                new_mirror_move_list.append(mirror_move(temp_move))
         else:#black move
-            assert (fromRow > toRow)#black should go backward
-            move[2] = {'From': From, 'To': to}# set Black's moves
-            tempMove = {'#': move[0], 'White': move[1], 'Black': move[2]}
-            newMoveList.append(tempMove)
-            newMirrorMoveList.append(MirrorMove(tempMove))
-        original_web_visualizer_link = original_web_visualizer_link + From + to
-        mirror_web_visualizer_link = mirror_web_visualizer_link + mirrorFrom + mirrorTo
-    return newMoveList, newMirrorMoveList, original_web_visualizer_link, mirror_web_visualizer_link
+            assert (from_row > to_row)#black should go backward
+            move[2] = {'From': From, 'to': to}# set Black's moves
+            temp_move = {'#': move[0], 'White': move[1], 'Black': move[2]}
+            new_move_list.append(temp_move)
+            new_mirror_move_list.append(mirror_move(temp_move))
+        original_visualizer_URL = original_visualizer_URL + From + to
+        mirror_visualizer_URL = mirror_visualizer_URL + mirror_from + mirror_to
+    return new_move_list, new_mirror_move_list, original_visualizer_URL, mirror_visualizer_URL
 
-def Driver(path):
+def driver(path):
     player_list = []
     process_directory_of_breakthrough_files(path, player_list)
     write_to_disk(player_list, path)

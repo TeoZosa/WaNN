@@ -80,8 +80,8 @@
       <file leaf-file-name="SelfPlayLogsToPythonDataStructure.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="604">
-              <caret line="466" column="20" lean-forward="true" selection-start-line="466" selection-start-column="20" selection-end-line="466" selection-end-column="20" />
+            <state relative-caret-position="784">
+              <caret line="334" column="39" lean-forward="false" selection-start-line="334" selection-start-column="39" selection-end-line="334" selection-end-column="39" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -750,13 +750,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00014" summary="Added Win Rank Accuracy (Number of Training Samples)">
-      <created>1465100636520</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1465100636520</updated>
-    </task>
     <task id="LOCAL-00015" summary="Changes outcomes of games to 0 for losses (previously: -1). Generated corresponding Numpy Arrays. Split up grid search to run on the different computers.">
       <created>1465276298989</created>
       <option name="number" value="00015" />
@@ -1093,7 +1086,14 @@
       <option name="project" value="LOCAL" />
       <updated>1483465078665</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <task id="LOCAL-00063" summary="refactored all function/variable names">
+      <created>1483466900110</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1483466900110</updated>
+    </task>
+    <option name="localTasksCounter" value="64" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1146,7 +1146,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="properly named main method. Exchanged threading with multiprocessing; much better performance. 50 minutes vs 5 hours. Could be further reduced by enumerating the files vs their directories." />
     <MESSAGE value="added functionality to generate game visualizations via http://www.trmph.com/breakthrough/board#8," />
     <MESSAGE value="removed unused imports" />
     <MESSAGE value="added transition vector computation for policy net data" />
@@ -1171,7 +1170,8 @@
     <MESSAGE value="refactoring pep8 starting from self-play to python data structures" />
     <MESSAGE value="Datastructures to DataStructures" />
     <MESSAGE value="continuing refactor by hand" />
-    <option name="LAST_COMMIT_MESSAGE" value="continuing refactor by hand" />
+    <MESSAGE value="refactored all function/variable names" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactored all function/variable names" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1588,8 +1588,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="604">
-          <caret line="466" column="20" lean-forward="true" selection-start-line="466" selection-start-column="20" selection-end-line="466" selection-end-column="20" />
+        <state relative-caret-position="784">
+          <caret line="334" column="39" lean-forward="false" selection-start-line="334" selection-start-column="39" selection-end-line="334" selection-end-column="39" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>

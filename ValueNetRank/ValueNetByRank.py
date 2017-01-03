@@ -5,7 +5,7 @@ from __future__ import print_function
 
 import matplotlib.pyplot as plot
 from tensorflow.contrib import skflow
-from sklearn import datasets, cross_validation, metrics
+from sklearn import DataSets, cross_validation, metrics
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.learning_curve import learning_curve

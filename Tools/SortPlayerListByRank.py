@@ -6,19 +6,19 @@ def AllPlayersData(path):
     playerList = pickle.load(open(path+r'PlayerDataPython.p', 'rb'))
     return outputFile, playerList
 def AnalysisFormatData(path):
-    outputFile = open(path + r'PlayerDataPythonDatasetSorted.p', 'wb')
+    outputFile = open(path + r'PlayerDataPythonDataSetsorted.p', 'wb')
     playerList = pickle.load(open(path + r'PlayerDataPythonDataset.p', 'rb'))
     return outputFile, playerList
 def AnalysisFormatBinaryFeaturesData(path):
-    outputFile = open(path + r'PlayerDataBinaryFeaturesDatasetSorted.p', 'wb')
+    outputFile = open(path + r'PlayerDataBinaryFeaturesDataSetsorted.p', 'wb')
     playerList = pickle.load(open(path + r'PlayerDataBinaryFeaturesDataset.p', 'rb'))
     return outputFile, playerList
 def AnalysisFormatBinaryFeaturesWBEData(path):
-    outputFile = open(path + r'PlayerDataBinaryFeaturesWBEDatasetSorted.p', 'wb')
+    outputFile = open(path + r'PlayerDataBinaryFeaturesWBEDataSetsorted.p', 'wb')
     playerList = pickle.load(open(path + r'PlayerDataBinaryFeaturesWBEDataset.p', 'rb'))
     return outputFile, playerList
 def AnalysisFormatBinaryFeaturesWBPOEData(path):
-    outputFile = open(path + r'PlayerDataBinaryFeaturesWBPOEDatasetSorted.p', 'wb')
+    outputFile = open(path + r'PlayerDataBinaryFeaturesWBPOEDataSetsorted.p', 'wb')
     playerList = pickle.load(open(path + r'PlayerDataBinaryFeaturesWBPOEDataset.p', 'rb'))
     return outputFile, playerList
 def AllPlayersDataNoSpurriousGames(path):

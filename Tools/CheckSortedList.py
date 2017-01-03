@@ -173,9 +173,9 @@ def TestAnalysisVsAnalysisWithTransition(originalAnalysisList, transitionAnalysi
 # #Original format
 # playerList = pickle.load(open(path + r'PlayerDataPythonNonSpurriousGamesSorted.p', 'rb'))
 # #Analysis format
-# playerList2 = pickle.load(open(path + r'PlayerDataPythonDatasetSorted.p', 'rb'))
+# playerList2 = pickle.load(open(path + r'PlayerDataPythonDataSetsorted.p', 'rb'))
 # #PlayerDataBinaryFeaturesDataset
-# playerList3 = pickle.load(open(path + r'PlayerDataBinaryFeaturesWBEDatasetSorted.p', 'rb'))
+# playerList3 = pickle.load(open(path + r'PlayerDataBinaryFeaturesWBEDataSetsorted.p', 'rb'))
 # TestOriginalVsMirrorStates(playerList3)
 #TestAnalysisVsMirrors(playerList2)
 #TestAnalysisVsOriginal(playerList, playerList2)

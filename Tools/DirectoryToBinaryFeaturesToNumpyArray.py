@@ -16,7 +16,7 @@ path = r'/Users/TeofiloZosa/BreakthroughData/AutomatedData/'
 pd.ProcessDirectoryOfBreakthroughFiles(path, playerList)
 #sort list
 playerList = sl.SortByRank(playerList)
-fileName = r'PlayerDataBinaryFeaturesDatasetSorted.p'
+fileName = r'PlayerDataBinaryFeaturesDataSetsorted.p'
 #check list
 #cl.TestOriginalVsMirrorStates(playerList) #the only test currently for this state list
 #convert to Numpy data structures

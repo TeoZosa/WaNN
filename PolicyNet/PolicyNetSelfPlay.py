@@ -12,7 +12,7 @@ import tensorflow as tf
 from tensorflow.contrib import learn
 from tensorflow.python.ops import nn
 from tensorflow.python.framework import  dtypes
-from sklearn import datasets, cross_validation, metrics, grid_search
+from sklearn import DataSets, cross_validation, metrics, grid_search
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.utils import shuffle
@@ -281,12 +281,12 @@ def AssignPath(deviceName ='AWS'):
         path = ''#todo:error checking
     return path
 def LoadXAndy(path):
-    X = pickle.load(open(path + r'ValueNetRankBinary/NPDatasets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
-    y = pickle.load(open(path + r'ValueNetRankBinary/NPDatasets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
+    X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
+    y = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
     return X, y
 def LoadXAndy_1to1(path):
-    X = pickle.load(open(path + r'ValueNetRankBinary/NPDatasets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
-    y = pickle.load(open(path + r'ValueNetRankBinary/NPDatasets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
+    X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
+    y = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
     return X, y
 # Step #50000, epoch #1, avg. train loss: 0.32184 MSE: 0.664601
 # Step #142500, epoch #4, avg. train loss: 0.18429

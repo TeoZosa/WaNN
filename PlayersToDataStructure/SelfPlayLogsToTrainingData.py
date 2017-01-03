@@ -26,7 +26,7 @@ def SelfPlayLogsToDataStructures():
   processes.map(convertLog.Driver, paths)#map processes to arg lists
    
 def AggregateSelfPlayDataStructures():
-  path = r'G:\TruncatedLogs\PythonDatasets\DataStructures\\'
+  path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
   files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
     r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
     r'0806-0824selfPlayLogsBreakthrough4DataPython.p',
@@ -52,5 +52,5 @@ def AggregateSelfPlayDataStructures():
   outputList.close()
 
 def SelfPlayDataStructuresToNumpyArrays():
-  NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDatasets\DataStructures\\', "07xx-1129SelfPlayGames.p")
-  # NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDatasets\DataStructures\\', r'1018-1024selfPlayLogsBreakthrough1DataPython.p')
+  NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDataSets\DataStructures\\', "07xx-1129SelfPlayGames.p")
+  # NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDataSets\DataStructures\\', r'1018-1024selfPlayLogsBreakthrough1DataPython.p')

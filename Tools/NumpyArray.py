@@ -18,9 +18,9 @@ def WriteNPArrayToDisk(path, X, y, filterType, NNType):
         yVector = open(path + r'yVectorByWinRatio.p', 'wb')
         pickle.dump(y, yVector)
     elif filterType == r'Binary Rank':
-        XMatrix = open(path + r'ValueNetRankBinary/NPDatasets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
+        XMatrix = open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
         pickle.dump(X, XMatrix)
-        yVector = open(path + r'ValueNetRankBinary/NPDatasets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
+        yVector = open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
         pickle.dump(y, yVector)
     elif filterType == r'Self-Play':
         if NNType == 'Policy':
@@ -164,10 +164,10 @@ def generateArray(playerListDataFriendly, filter, NNType):
         return X, y
 def GenerateCSV(X, isX = True):
     if isX == True:
-     np.savetxt(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDatasets/WBPOEUnshuffledBinaryFeaturePlanesWBPOETrainingExamples.csv', X, delimiter=',', fmt='%1i')
+     np.savetxt(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDataSets/WBPOEUnshuffledBinaryFeaturePlanesWBPOETrainingExamples.csv', X, delimiter=',', fmt='%1i')
     else:
         np.savetxt(
-            r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDatasets/WBPOE/UnshuffledBinaryFeaturePlanesWBPOETrainingExampleOutcomes.csv',
+            r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesWBPOETrainingExampleOutcomes.csv',
             X, delimiter=',', fmt='%1i')
 def SplitListInHalf(a_list):
     half = len(a_list)//2
@@ -195,16 +195,16 @@ def GenerateXLSX(X, which=1):
     columns.append('Outcome')
     frame = pd.DataFrame(X, columns=columns)
     if which==1:
-        writer = pd.ExcelWriter(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDatasets/WBPOE/UnshuffledBinaryFeaturePlanesDataset1.xlsx', engine='xlsxwriter')
+        writer = pd.ExcelWriter(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesDataset1.xlsx', engine='xlsxwriter')
     else:
-        writer = pd.ExcelWriter(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDatasets/WBPOE/UnshuffledBinaryFeaturePlanesDataset2.xlsx', engine='xlsxwriter')
+        writer = pd.ExcelWriter(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesDataset2.xlsx', engine='xlsxwriter')
 
     frame.to_excel(writer, 'Sheet1')
     writer.save()
 def AssignFilter(fileName):
-    if fileName == r'PlayerDataPythonDatasetSorted.p':
+    if fileName == r'PlayerDataPythonDataSetsorted.p':
         filter = r'Rank'
-    elif fileName == r'PlayerDataBinaryFeaturesWBPOEDatasetSorted.p':
+    elif fileName == r'PlayerDataBinaryFeaturesWBPOEDataSetsorted.p':
         filter = r'Binary Rank'
     else:
         filter = r'UNDEFINED'
@@ -217,7 +217,7 @@ def AssignPath(deviceName ='AWS'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path ='G:\TruncatedLogs\PythonDatasets\DataStructures\\'
+        path ='G:\TruncatedLogs\PythonDataSets\DataStructures\\'
     else:
         path = ''#todo:error checking
     return path

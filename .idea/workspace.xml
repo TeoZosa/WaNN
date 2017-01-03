@@ -5,8 +5,13 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" afterPath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" afterPath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/HumanReadableBoardPrinting.py" afterPath="$PROJECT_DIR$/Tools/HumanReadableBoardPrinting.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" afterPath="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/CheckSortedList.py" afterPath="$PROJECT_DIR$/Tools/CheckSortedList.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/DirectoryToBinaryFeaturesToNumpyArray.py" afterPath="$PROJECT_DIR$/Tools/DirectoryToBinaryFeaturesToNumpyArray.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/NumpyArray.py" afterPath="$PROJECT_DIR$/Tools/NumpyArray.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/SortPlayerListByRank.py" afterPath="$PROJECT_DIR$/Tools/SortPlayerListByRank.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ValueNetRank/ValueNetByRank.py" afterPath="$PROJECT_DIR$/ValueNetRank/ValueNetByRank.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ValueNetRankBinary/ValueNetByRankBinaryFeaturePlanes.py" afterPath="$PROJECT_DIR$/ValueNetRankBinary/ValueNetByRankBinaryFeaturePlanes.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -62,8 +67,8 @@
             <file leaf-file-name="NumpyArray.py" pinned="false" current-in-tab="true">
               <entry file="file://$PROJECT_DIR$/Tools/NumpyArray.py">
                 <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="1004">
-                    <caret line="219" column="47" lean-forward="false" selection-start-line="219" selection-start-column="47" selection-end-line="219" selection-end-column="47" />
+                  <state relative-caret-position="315">
+                    <caret line="20" column="53" lean-forward="false" selection-start-line="20" selection-start-column="53" selection-end-line="20" selection-end-column="53" />
                     <folding />
                   </state>
                 </provider>
@@ -80,11 +85,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="SelfPlayLogsToPythonDataStructure.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="SelfPlayLogsToPythonDataStructure.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="284">
-              <caret line="26" column="54" lean-forward="false" selection-start-line="26" selection-start-column="54" selection-end-line="26" selection-end-column="54" />
+            <state relative-caret-position="709">
+              <caret line="96" column="59" lean-forward="false" selection-start-line="96" selection-start-column="59" selection-end-line="96" selection-end-column="59" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -95,28 +100,8 @@
       <file leaf-file-name="SelfPlayLogsToTrainingData.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="8" column="18" lean-forward="false" selection-start-line="8" selection-start-column="18" selection-end-line="8" selection-end-column="18" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="HumanReadableBoardPrinting.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Tools/HumanReadableBoardPrinting.py">
-          <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="380">
-              <caret line="27" column="13" lean-forward="false" selection-start-line="27" selection-start-column="13" selection-end-line="27" selection-end-column="13" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="__main__.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/__main__.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="476">
-              <caret line="32" column="74" lean-forward="false" selection-start-line="32" selection-start-column="74" selection-end-line="32" selection-end-column="74" />
+              <caret line="28" column="34" lean-forward="false" selection-start-line="28" selection-start-column="34" selection-end-line="28" selection-end-column="34" />
               <folding />
             </state>
           </provider>
@@ -158,6 +143,8 @@
       <find>classifier</find>
       <find>selfPlayLog</find>
       <find>Datastructures</find>
+      <find>Datasets</find>
+      <find>filter</find>
     </findStrings>
     <replaceStrings>
       <replace>dateRange</replace>
@@ -185,6 +172,8 @@
       <replace>learn</replace>
       <replace>self_play_log</replace>
       <replace>DataStructures</replace>
+      <replace>DataSets</replace>
+      <replace>data_to_write</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\damon\PycharmProjects\BreakthroughANN</dir>
@@ -224,28 +213,30 @@
         <option value="$PROJECT_DIR$/NumpyArray.py" />
         <option value="$PROJECT_DIR$/ValueNetByRankBinaryFeaturePlanes.py" />
         <option value="$PROJECT_DIR$/PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes.py" />
-        <option value="$PROJECT_DIR$/Tools/SortPlayerListByRank.py" />
         <option value="$PROJECT_DIR$/probeDatasets.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure1.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/ThreadedSelfPlayDatastructureDriver.py" />
-        <option value="$PROJECT_DIR$/Tools/CheckSortedList.py" />
         <option value="$PROJECT_DIR$/Tools/ThreadedSelfPlayDatastructureToNumpyDriver.py" />
         <option value="$PROJECT_DIR$/Tools/AggregateSelfPlayDataStructures.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/ThreadedSelfPlayLogToDatastructureDriver.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/main.py" />
-        <option value="$PROJECT_DIR$/ValueNetRankBinary/ValueNetByRankBinaryFeaturePlanes.py" />
         <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
         <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
         <option value="C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/contrib/learn/python/learn/datasets/text_datasets.py" />
-        <option value="$PROJECT_DIR$/CharCNNExample.py" />
         <option value="$PROJECT_DIR$/ValueNetRankBinary/ValueNetByRankBinaryFeaturePlanes.py" />
-        <option value="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" />
-        <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
-        <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" />
         <option value="$PROJECT_DIR$/Tools/HumanReadableBoardPrinting.py" />
         <option value="$PROJECT_DIR$/__main__.py" />
+        <option value="$PROJECT_DIR$/CharCNNExample.py" />
+        <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" />
+        <option value="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" />
+        <option value="$PROJECT_DIR$/Tools/CheckSortedList.py" />
+        <option value="$PROJECT_DIR$/Tools/DirectoryToBinaryFeaturesToNumpyArray.py" />
+        <option value="$PROJECT_DIR$/Tools/SortPlayerListByRank.py" />
+        <option value="$PROJECT_DIR$/ValueNetRankBinary/ValueNetByRankBinaryFeaturePlanes.py" />
+        <option value="$PROJECT_DIR$/ValueNetRank/ValueNetByRank.py" />
+        <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
       </list>
     </option>
   </component>
@@ -767,13 +758,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00012" summary="Added modules for the one-hot encoding model">
-      <created>1464794339865</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1464794339865</updated>
-    </task>
     <task id="LOCAL-00013" summary="readded NP files since they are all &lt;100 Mb">
       <created>1464797376233</created>
       <option name="number" value="00013" />
@@ -1110,7 +1094,14 @@
       <option name="project" value="LOCAL" />
       <updated>1483464231291</updated>
     </task>
-    <option name="localTasksCounter" value="61" />
+    <task id="LOCAL-00061" summary="Datastructures to DataStructures">
+      <created>1483464409047</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1483464409047</updated>
+    </task>
+    <option name="localTasksCounter" value="62" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1128,16 +1119,16 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24821003" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3278272" sideWeight="0.48708752" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11671088" sideWeight="0.68591887" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11671088" sideWeight="0.6873508" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11671088" sideWeight="0.31408113" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.11671088" sideWeight="0.31264916" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3963538" sideWeight="0.4640952" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.48497853" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.116304345" sideWeight="0.5197285" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -1163,7 +1154,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="Added TODOs" />
     <MESSAGE value="Fixed bug in SelfPlayLogsToPythonDataStructure. Added new methods and format for HumanReadableBoardPrinting" />
     <MESSAGE value="properly named main method. Exchanged threading with multiprocessing; much better performance. 50 minutes vs 5 hours. Could be further reduced by enumerating the files vs their directories." />
     <MESSAGE value="added functionality to generate game visualizations via http://www.trmph.com/breakthrough/board#8," />
@@ -1188,7 +1178,8 @@
     <MESSAGE value="fixing NumpyArray bugs due to data representation changes" />
     <MESSAGE value="fixed by flattening out matrix again, but now in NumpyArray" />
     <MESSAGE value="refactoring pep8 starting from self-play to python data structures" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactoring pep8 starting from self-play to python data structures" />
+    <MESSAGE value="Datastructures to DataStructures" />
+    <option name="LAST_COMMIT_MESSAGE" value="Datastructures to DataStructures" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1246,25 +1237,10 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages/seaborn/distributions.py" />
-    <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/PlayerDataDirectoryToAnalysisFormat.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-396">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Tools/LittleGolemWebScraper.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="527">
           <caret line="31" column="4" lean-forward="false" selection-start-line="31" selection-start-column="4" selection-end-line="33" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Tools/DirectoryToBinaryFeaturesToNumpyArray.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="27" column="16" lean-forward="true" selection-start-line="27" selection-start-column="16" selection-end-line="27" selection-end-column="16" />
         </state>
       </provider>
     </entry>
@@ -1292,24 +1268,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Tools/CheckSortedList.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-540">
-          <caret line="126" column="23" lean-forward="false" selection-start-line="126" selection-start-column="23" selection-end-line="126" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.PyCharm2016.3/system/python_stubs/-1282051629/builtins.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="311">
           <caret line="5004" column="8" lean-forward="false" selection-start-line="5004" selection-start-column="8" selection-end-line="5004" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Tools/SortPlayerListByRank.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="7" column="29" lean-forward="false" selection-start-line="7" selection-start-column="29" selection-end-line="7" selection-end-column="29" />
         </state>
       </provider>
     </entry>
@@ -1495,13 +1457,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CharCNNExample.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="847">
-          <caret line="71" column="0" lean-forward="false" selection-start-line="70" selection-start-column="65" selection-end-line="71" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/sklearn/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1531,48 +1486,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ValueNetRankBinary/ValueNetByRankBinaryFeaturePlanes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="663">
-          <caret line="239" column="50" lean-forward="true" selection-start-line="239" selection-start-column="45" selection-end-line="239" selection-end-column="57" />
-          <folding>
-            <element signature="e#1#39#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1901">
-          <caret line="221" column="0" lean-forward="false" selection-start-line="221" selection-start-column="0" selection-end-line="221" selection-end-column="0" />
-          <folding>
-            <element signature="e#1#39#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/PlayerDataDirectoryToPythonDataStructure.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="5" column="9" lean-forward="true" selection-start-line="5" selection-start-column="9" selection-end-line="5" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="284">
-          <caret line="26" column="54" lean-forward="false" selection-start-line="26" selection-start-column="54" selection-end-line="26" selection-end-column="54" />
-          <folding>
-            <element signature="e#0#38#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="8" column="18" lean-forward="false" selection-start-line="8" selection-start-column="18" selection-end-line="8" selection-end-column="18" />
           <folding />
         </state>
       </provider>
@@ -1585,19 +1502,105 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Tools/NumpyArray.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1004">
-          <caret line="219" column="47" lean-forward="false" selection-start-line="219" selection-start-column="47" selection-end-line="219" selection-end-column="47" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/__main__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="476">
           <caret line="32" column="74" lean-forward="false" selection-start-line="32" selection-start-column="74" selection-end-line="32" selection-end-column="74" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CharCNNExample.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="319">
+          <caret line="87" column="18" lean-forward="false" selection-start-line="87" selection-start-column="18" selection-end-line="87" selection-end-column="18" />
+          <folding>
+            <element signature="e#1016#1054#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Tools/CheckSortedList.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="720">
+          <caret line="175" column="58" lean-forward="false" selection-start-line="175" selection-start-column="58" selection-end-line="175" selection-end-column="58" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Tools/DirectoryToBinaryFeaturesToNumpyArray.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="18" column="37" lean-forward="false" selection-start-line="18" selection-start-column="37" selection-end-line="18" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Tools/NumpyArray.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="20" column="53" lean-forward="false" selection-start-line="20" selection-start-column="53" selection-end-line="20" selection-end-column="53" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ValueNetRank/ValueNetByRank.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="20" lean-forward="false" selection-start-line="7" selection-start-column="20" selection-end-line="7" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ValueNetRankBinary/ValueNetByRankBinaryFeaturePlanes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" column="20" lean-forward="false" selection-start-line="14" selection-start-column="20" selection-end-line="14" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ValueNetWinRatio/ValueNetByWinRatio.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" column="18" lean-forward="true" selection-start-line="11" selection-start-column="18" selection-end-line="11" selection-end-column="18" />
+          <folding>
+            <element signature="e#1#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Tools/SortPlayerListByRank.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="8" column="47" lean-forward="false" selection-start-line="8" selection-start-column="47" selection-end-line="8" selection-end-column="47" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="380">
+          <caret line="28" column="34" lean-forward="false" selection-start-line="28" selection-start-column="34" selection-end-line="28" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="709">
+          <caret line="96" column="59" lean-forward="false" selection-start-line="96" selection-start-column="59" selection-end-line="96" selection-end-column="59" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

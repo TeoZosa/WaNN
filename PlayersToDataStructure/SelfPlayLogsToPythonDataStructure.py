@@ -1,5 +1,6 @@
 import re as re  # regular expressions
-import os, fnmatch  # to retrieve file information from path
+import os
+import fnmatch  # to retrieve file information from path
 import pickle  # serialize the data structure
 import mmap  # read entire files into memory for (only for workstation)
 import copy
@@ -20,24 +21,25 @@ def process_breakthrough_file(path, self_play_games):
     date_range = str(self_play_games[
                     len(r'G:\TruncatedLogs') + 1:len(path) - len(r'\selfPlayLogsBreakthroughN')])
     games_list, white_wins, black_wins = format_game_list(self_play_games, server_name)
-    return {'ServerNode': server_name, 'Self-PlayLog': self_play_log, 'DateRange': date_range, 'Games': games_list, 'WhiteWins': white_wins, 'BlackWins': black_wins}
+    return {'ServerNode': server_name, 'Self-PlayLog': self_play_log, 'DateRange': date_range, 'Games': games_list, 
+            'WhiteWins': white_wins, 'BlackWins': black_wins}
 
 
-def write_to_disk(input, path):
-    root_directory = 'G:\TruncatedLogs\PythonDatasets\DataStructures\\'
+def write_to_disk(data_to_write, path):
+    root_directory = 'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
     date = str(path[len(r'G:\TruncatedLogs')+1:len(path)
                     - len(r'\selfPlayLogsBreakthroughN')])
     server_name = path[len(path) - len(r'\selfPlayLogsBreakthroughN')+1:len(path)]
     output_file = open(root_directory
-                       + date  #prepend data to name of server
+                       + date  # prepend data to name of server
                        + server_name
-                       + r'DataPython.p', 'wb')#append data qualifier
-    pickle.dump(input, output_file)
+                       + r'DataPython.p', 'wb')  # append data qualifier
+    pickle.dump(data_to_write, output_file)
 
 
-def find_files(path, filter):  # recursively find files at path with filter extension; pulled from StackOverflow
+def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
     for root, dirs, files in os.walk(path):
-        for file in fnmatch.filter(files, filter):
+        for file in fnmatch.filter(files, extension):
             yield os.path.join(root, file)
 
 
@@ -51,18 +53,18 @@ def format_game_list(self_play_games, server_name):
     white_win_regex = re.compile(r'White Wins:.*')
     num_white_wins = 0
     num_black_wins = 0
-    file = open(self_play_games, "r+b")# read in file
-    file = mmap.mmap(file.fileno(),length=0, access= mmap.ACCESS_READ)#prot=PROT_READ only in Unix
-                #iterate over list of the form:
-                #Game N Start
-                #...
-                #(Black|White) Wins: \d
-                #[Game N End]
+    file = open(self_play_games, "r+b")  # read in file
+    file = mmap.mmap(file.fileno(), length=0, access= mmap.ACCESS_READ)  # prot = PROT_READ only in Unix
+    # iterate over list of the form:
+    # Game N Start
+    # ...
+    # (Black|White) Wins: \d
+    # [Game N End]
     unformatted_move_list = []
     while True:
-        line = file.readline().decode('utf-8')#convert to string
-        if line=='':break#EOF
-        if move_regex.match(line):#put plays into move list
+        line = file.readline().decode('utf-8')  # convert to string
+        if line == '': break  # EOF
+        if move_regex.match(line):  # put plays into move list
             unformatted_move_list.append(move_regex.search(line).group(1))
         elif black_win_regex.match(line):
             black_win = True
@@ -72,30 +74,30 @@ def format_game_list(self_play_games, server_name):
             black_win = False
         elif end_regex.match(line):
             #Format move list
-            move_list, mirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink = FormatMoveListsAndURLs(unformatted_move_list)
-            whiteBoardStates = GenerateBoardStates(move_list, 'White', white_win)  # generate board states from move_list
-            whiteMirrorBoardStates = GenerateBoardStates(mirrorMoveList, 'White', white_win)
-            blackBoardStates = GenerateBoardStates(move_list,'Black', black_win)  # self-play => same states, but win under policy for A=> lose under policy for B
-            blackMirrorBoardStates = GenerateBoardStates(mirrorMoveList, 'Black', black_win)
+            move_list, mirror_move_list, original_web_visualizer_link, mirror_web_visualizer_link = format_move_lists_and_URLs(unformatted_move_list)
+            white_board_states = GenerateBoardStates(move_list, 'White', white_win)  # generate board states from move_list
+            white_mirror_board_states = GenerateBoardStates(mirror_move_list, 'White', white_win)
+            black_board_states = GenerateBoardStates(move_list,'Black', black_win)  # self-play => same states, but win under policy for A=> lose under policy for B
+            black_mirror_board_states = GenerateBoardStates(mirror_move_list, 'Black', black_win)
             if white_win:
                 num_white_wins += 1
             elif black_win:
                 num_black_wins += 1
             games.append({'Win': white_win,
                           'Moves': move_list,
-                          'MirrorMoves': mirrorMoveList,
-                          'BoardStates': whiteBoardStates,
-                          'MirrorBoardStates': whiteMirrorBoardStates,
-                          'OriginalVisualizationURL': originalWebVisualizerLink,
-                          'MirrorVisualizationURL': mirrorWebVisualizerLink}
+                          'MirrorMoves': mirror_move_list,
+                          'BoardStates': white_board_states,
+                          'MirrorBoardStates': white_mirror_board_states,
+                          'OriginalVisualizationURL': original_web_visualizer_link,
+                          'MirrorVisualizationURL': mirror_web_visualizer_link}
                          )  # append new white game
             games.append({'Win': black_win,
                           'Moves': move_list,
-                          'MirrorMoves': mirrorMoveList,
-                          'BoardStates': blackBoardStates,
-                          'MirrorBoardStates': blackMirrorBoardStates,
-                          'OriginalVisualizationURL': originalWebVisualizerLink,
-                          'MirrorVisualizationURL': mirrorWebVisualizerLink}
+                          'MirrorMoves': mirror_move_list,
+                          'BoardStates': black_board_states,
+                          'MirrorBoardStates': black_mirror_board_states,
+                          'OriginalVisualizationURL': original_web_visualizer_link,
+                          'MirrorVisualizationURL': mirror_web_visualizer_link}
                          )  # append new black game
             unformatted_move_list = []#reset move_list for next game
             white_win = None #not necessary;redundant, but good practice
@@ -407,10 +409,10 @@ def MovePiece(boardState, To, From, whoseMove):
         nextBoardState[whiteMoveIndex] = 0
     return nextBoardState
 
-def FormatMoveListsAndURLs(unformatted_move_list):
+def format_move_lists_and_URLs(unformatted_move_list):
     move_regex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
                            re.IGNORECASE)
-    originalWebVisualizerLink = mirrorWebVisualizerLink = r'http://www.trmph.com/breakthrough/board#8,'
+    original_web_visualizer_link = mirror_web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     move_list = list(map(lambda a: move_regex.search(a).group(1), unformatted_move_list))
     moveNum = 0
     newMoveList=[]
@@ -441,9 +443,9 @@ def FormatMoveListsAndURLs(unformatted_move_list):
             tempMove = {'#': move[0], 'White': move[1], 'Black': move[2]}
             newMoveList.append(tempMove)
             newMirrorMoveList.append(MirrorMove(tempMove))
-        originalWebVisualizerLink = originalWebVisualizerLink + From + to
-        mirrorWebVisualizerLink = mirrorWebVisualizerLink + mirrorFrom + mirrorTo
-    return newMoveList, newMirrorMoveList, originalWebVisualizerLink, mirrorWebVisualizerLink
+        original_web_visualizer_link = original_web_visualizer_link + From + to
+        mirror_web_visualizer_link = mirror_web_visualizer_link + mirrorFrom + mirrorTo
+    return newMoveList, newMirrorMoveList, original_web_visualizer_link, mirror_web_visualizer_link
 
 def Driver(path):
     player_list = []

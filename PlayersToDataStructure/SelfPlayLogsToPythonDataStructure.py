@@ -24,7 +24,7 @@ def process_breakthrough_file(path, self_play_games):
 
 
 def write_to_disk(input, path):
-    root_directory = 'G:\TruncatedLogs\PythonDatasets\Datastructures\\'
+    root_directory = 'G:\TruncatedLogs\PythonDatasets\DataStructures\\'
     date = str(path[len(r'G:\TruncatedLogs')+1:len(path)
                     - len(r'\selfPlayLogsBreakthroughN')])
     server_name = path[len(path) - len(r'\selfPlayLogsBreakthroughN')+1:len(path)]
@@ -34,10 +34,12 @@ def write_to_disk(input, path):
                        + r'DataPython.p', 'wb')#append data qualifier
     pickle.dump(input, output_file)
 
+
 def find_files(path, filter):  # recursively find files at path with filter extension; pulled from StackOverflow
     for root, dirs, files in os.walk(path):
         for file in fnmatch.filter(files, filter):
             yield os.path.join(root, file)
+
 
 def format_game_list(self_play_games, server_name):
     games = []

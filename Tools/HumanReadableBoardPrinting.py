@@ -25,7 +25,7 @@ def PrintTypicalRow(boardState,index):
 def PrintHumanReadableBoardConfiguration(boardState):
     index = 8
     while index > 0:  # print row in descending order
-        PrintDataStructureStyleRow(boardState, index)
+        PrintDataStructurestyleRow(boardState, index)
         index -= 1
 def PrintAnalysisFormat(boardState):
     print("\n")  # print extra newline for readability
@@ -34,7 +34,7 @@ def PrintAnalysisFormat(boardState):
          print("\n")  # print extra newline for readability
          print(str(index) + ": ", end="")
        print(boardState[index], end="")
-def PrintDataStructureStyleRow(boardState, index):
+def PrintDataStructurestyleRow(boardState, index):
     if index == 8:
         print("\n")  # print extra newline for readability
     print(str(index) + ": ", end="")

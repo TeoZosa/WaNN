@@ -217,7 +217,7 @@ def AssignPath(deviceName ='AWS'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path ='G:\TruncatedLogs\PythonDatasets\Datastructures\\'
+        path ='G:\TruncatedLogs\PythonDatasets\DataStructures\\'
     else:
         path = ''#todo:error checking
     return path

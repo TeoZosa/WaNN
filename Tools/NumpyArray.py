@@ -25,10 +25,10 @@ def WriteNPArrayToDisk(path, X, y, filterType, NNType):
     elif filterType == r'Self-Play':
         if NNType == 'Policy':
           XMatrix = open(path + r'XMatrixSelfPlayPOEBias.p', 'wb')
-          pickle.dump(X, XMatrix)
+          pickle.dump(X, XMatrix, protocol=4)  #specify protocol 4 to write more than 4 GB to disk
           X.tofile(open(path + r'XMatrixSelfPlayPOEBiasNPBinary.np', 'wb'))
           yVector = open(path + r'yVectorSelfPlayPOEBias.p', 'wb')
-          pickle.dump(y, yVector)
+          pickle.dump(y, yVector, protocol=4)
           y.tofile((open(path + r'yVectorSelfPlayPOEBiasNPBinary.np', 'wb')))
         else:#value net
           XMatrix = open(path + r'XMatrixSelfPlayWBPOEBiasNoZero.p', 'wb')
@@ -48,7 +48,7 @@ def FilterByRank(playerList):
                 for i in range (0, len(states)):
                   X.append(states[i])
                   X.append(mirrorStates[i])
-    print ('# of States If We Filter by Rank: {states}'.format(states = len(X)))
+    print ('# of States If We Filter by Rank: {states}'.format(states=len(X)))
     return X
 def FilterByWinRatio(playerList):
     X = []
@@ -117,11 +117,26 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
         x = []
+        one_hot_indices = []
         for plane in trainingExample[0]:
             x += plane #flatten 2d matrix
         x += [1] * 64 # 1 bias plane
-        X.append(x)
-        y.append(trainingExample[2])#transition vector
+        # for position_index in range(0, len(x)):  # pass indices to tf.one_hot
+        #     if x[position_index] == 1:
+        #         one_hot_indices.append(position_index)
+        # X.append(one_hot_indices)
+        one_hot_transitions = None
+        for transition in range(0, len(trainingExample[2])):
+            if trainingExample[2][transition] == 1:
+                one_hot_transitions = transition
+                break
+        if one_hot_transitions == None:  # no move
+            # one_hot_transitions = -1  # tf.one_hot will return a vector of all 0s
+            one_hot_transitions = 155  # tf.one_hot will return a vector of all 0s
+        y.append(one_hot_transitions)  # transition vector
+
+        X.append(np.array(x, dtype=np.int32))
+        # y.append(trainingExample[2])#transition vector
     return X, y
 
 def generateArray(playerListDataFriendly, filter, NNType):
@@ -147,12 +162,12 @@ def generateArray(playerListDataFriendly, filter, NNType):
         # trainingExamples = np.matrix(X, dtype=np.int8)
 
         # transform to TrainingExamples x( m x 64) numpy array; 8-bit ints since legal values are -1, 0, 1 or 0, 1
-        X = np.matrix(X, dtype=np.int8)
+        X = np.array(X, dtype=np.int32)
         # transform to m x 1 numpy array; 8-bit ints since legal values are -1, 1 or 0, 1
-        if NNType =='Policy':
-            y = np.matrix(y, dtype=np.int8)
+        if NNType =='Policy1':
+            y = np.matrix(y, dtype=np.int32)
         else:
-            y = np.array(y, dtype=np.int8)
+            y = np.array(y, dtype=np.int32)
         # test to make sure y values map to corresponding row vectors in trainingExamples
         # GenerateCSV(X)
         # GenerateCSV(y, isX=False)

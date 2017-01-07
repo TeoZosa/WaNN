@@ -3,7 +3,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import Tools.CustomRegressionNetwork as CustomRegressionNetwork
 import matplotlib.pyplot as plot
 import numpy as np
 import pandas as pd
@@ -12,7 +11,8 @@ import tensorflow as tf
 from tensorflow.contrib import learn
 from tensorflow.python.ops import nn
 from tensorflow.python.framework import  dtypes
-from sklearn import DataSets, cross_validation, metrics, grid_search
+from sklearn import model_selection, metrics, grid_search, datasets
+#DataSets
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.utils import shuffle
@@ -39,7 +39,7 @@ def K_FoldValidation(estimator, XMatrix, yVector, numFolds):
     elif K > numTrainingExamples:
         print("Error, K must be less than or equal to the number of training examples")
         exit(-11)
-    K_folds = cross_validation.KFold(numTrainingExamples, K, shuffle=False,)
+    K_folds = model_selection.KFold(numTrainingExamples, K)
 
     for k, (train_index, test_index) in enumerate(K_folds):
         X_train, X_test = XMatrix[train_index], XMatrix[test_index]
@@ -53,7 +53,7 @@ def K_FoldValidation(estimator, XMatrix, yVector, numFolds):
 
 def StratifiedK_FoldValidation(XMatrix, yVector, learningModel, numFolds):
     num_cores = -1#use all cores
-    scores = cross_validation.cross_val_score(estimator=learningModel,
+    scores = model_selection.cross_val_score(estimator=learningModel,
                                               X=XMatrix, y=yVector, cv = numFolds, n_jobs=num_cores)
     print('CV accuracy scores: {score}'.format(score = scores))
 
@@ -99,7 +99,7 @@ def GenerateValidationCurve(estimator, X, y):
     hidden_units_range5 = [512]*num_hidden_layers
     hidden_units_range6 = [1024]*num_hidden_layers
     hidden_units_range7 = [2048]*num_hidden_layers
-    hidden_units_range8 = [4056]*num_hidden_layers
+    hidden_units_range8 = [4096]*num_hidden_layers
     hidden_units_range = [hidden_units_range1, hidden_units_range2, hidden_units_range3, hidden_units_range4,
                           hidden_units_range5, hidden_units_range6, hidden_units_range7, hidden_units_range8]
 
@@ -212,17 +212,6 @@ def GridSearch(estimator, X, y, X_test, y_test, whichDevice ='AWS'):
     score = metrics.mean_squared_error(grid.predict(X_test), y_test)
     print('Best Estimator MSE on Holdout Set: {0:f}'.format(score))
 
-def BuildRegressionNetwork(num_hidden_units = 2048, num_hidden_layers = 2, activation = nn.relu):
-    if num_hidden_layers == 0:
-        #passed in hidden units list which has heterogenous hidden layers
-        hidden_layers = num_hidden_units
-    else:
-        # fully connected NN with all hidden layers containing the same number of hidden units.
-        hidden_layers = [num_hidden_units] * num_hidden_layers
-
-    return CustomRegressionNetwork.TensorFlowDNNRegressor(hidden_units=hidden_layers,
-                                                      steps=500000, optimizer='Adam', learning_rate=0.1,
-                                                      batch_size=32, activation=activation)
 
 def PrintTable(X, y):
     columns = []
@@ -281,8 +270,8 @@ def AssignPath(deviceName ='AWS'):
         path = ''#todo:error checking
     return path
 def LoadXAndy(path):
-    X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
-    y = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
+    X = pickle.load(open(path + r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\07xx-1129SelfPlayGamesXMatrixSelfPlayPOEBias.p', 'rb'))
+    y = pickle.load(open(path + r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\07xx-1129SelfPlayGamesyVectorSelfPlayPOEBias.p', 'rb'))
     return X, y
 def LoadXAndy_1to1(path):
     X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
@@ -295,7 +284,8 @@ def LoadXAndy_1to1(path):
 #TODO: construct CNN and select models.
 #TODO: excise code to be run in main script.
    #main script
-inputPath = AssignPath('MBP2014')
+config = run_config.RunConfig(num_cores=-1)
+inputPath = AssignPath('')
 device = AssignDevice(inputPath)
 X, y = LoadXAndy(inputPath)# row vector X[i] has scalar outcome y[i]
 # X_1, y_1 = LoadXAndy_1to1(inputPath)
@@ -308,18 +298,48 @@ X, y = LoadXAndy(inputPath)# row vector X[i] has scalar outcome y[i]
 # writePath5 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingSoftsignDropout'
 
 #Train/validation/test split or reducing number of training examples
-# X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y,
-#     test_size=0, random_state=42)#change random state?
-# X_1train, X_1test, y_1train, y_1test = cross_validation.train_test_split(X_1, y_1,
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
+    test_size=0.2, random_state=42)#change random state?
+# X_1train, X_1test, y_1train, y_1test = model_selection.train_test_split(X_1, y_1,
 #     test_size=0.1, random_state=42)#change random state?
 #for final run
-X, y = shuffle(X, y, random_state= 777)
+# X, y = shuffle(X, y, random_state= 777)
+
+#doesn't work with learn
+# X_train = tf.one_hot(indices=X_train, depth=256, on_value=1, off_value=0, axis=-1)
+# X_test = tf.one_hot(indices=X_test, depth=256, on_value=1, off_value=0, axis=-1)
+# y_train = tf.one_hot(indices=y_train, depth=154, on_value=1, off_value=0, axis=-1)
+# y_test = tf.one_hot(indices=y_test, depth=154, on_value=1, off_value=0, axis=-1)
+
+# Specify that all features have real-value data
+feature_columns = [tf.contrib.layers.real_valued_column("", dimension=256)]
+# sparse_column = tf.contrib.layers.sparse_column_with_integerized_feature("", bucket_size=2, dtype=tf.int32)
+# feature_columns = [tf.contrib.layers.one_hot_column(sparse_column)]
+
+# Build 3 layer DNN with 10, 20, 10 units respectively.
+classifier = learn.SKCompat(tf.contrib.learn.DNNClassifier(feature_columns=feature_columns,
+                                            hidden_units=[10, 20, 10],
+                                            n_classes=155,#including no move
+                                            model_dir="/tmp/breakthrough_model",
+                                            optimizer=tf.train.AdamOptimizer(),
+                                            config=config))
+
+# Fit model.
+classifier.fit(x=X_train,
+               y=y_train,
+               steps=2000)
+
+# Evaluate accuracy.
+accuracy_score = classifier.evaluate(x=X_test,
+                                     y=y_test)["accuracy"]
+print('Accuracy: {0:f}'.format(accuracy_score))
+
 
 # 't' is [
 # [[1, 1, 1], [2, 2, 2]],
 # [[3, 3, 3], [4, 4, 4]]
 # ]
-config = run_config.RunConfig( num_cores=-1)
+
 
 #print (len(np.asarray(X[0], np.int8)[0]))
 
@@ -339,10 +359,10 @@ config = run_config.RunConfig( num_cores=-1)
 #
 
 #regressor3.fit(X, y, logdir=inputPath+r"ValueNetRankBinary/12IntegrationReluAdam1x400_eta0009")
-optimizer = tf.train.AdamOptimizer()
-regressor3 = learn.DNNRegressor(hidden_units=[400], model_dir=inputPath+r'/finalIntegration', optimizer=tf.train.AdamOptimizer())
-regressor3.fit(X, y, batch_size=256, steps=20000)
-timerObj = time.perf_counter()
+# optimizer = tf.train.AdamOptimizer()
+# regressor3 = learn.DNNRegressor(hidden_units=[400], model_dir=inputPath+r'/finalIntegration', optimizer=tf.train.AdamOptimizer())
+# regressor3.fit(X, y, batch_size=256, steps=20000)
+# timerObj = time.perf_counter()
 #print("{predict} vs {actual} in {time} seconds.".format(actual = y_train[0], predict = regressor3.predict(X_train[0]), time= time.perf_counter()-timerObj))
 # Dist = sns.distplot(regressor3.predict(X))
 # plot.show(Dist)

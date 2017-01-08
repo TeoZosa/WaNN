@@ -139,6 +139,27 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
         # y.append(trainingExample[2])#transition vector
     return X, y
 
+def SplitArraytoXMatrixAndYTransitionVectorCNN(arrayToSplit):# TODO: will have to redo Numpy code
+    X = []
+    y = []
+    for trainingExample in arrayToSplit:  # probability space for transitions
+        x = []
+        for plane in trainingExample[0]:
+            x.append(plane.as_matrix()) #convert pd dataframe to np array
+        board_dimensions = (8, 8)
+        x.append(np.ones(board_dimensions, dtype=np.int32)) # 1 bias plane
+        one_hot_transitions = None
+        for transition in range(0, len(trainingExample[2])):
+            if trainingExample[2][transition] == 1:
+                one_hot_transitions = transition
+                break
+        if one_hot_transitions == None:  # no move
+            # one_hot_transitions = -1  # tf.one_hot will return a vector of all 0s
+            one_hot_transitions = 155  # DNNClassifier => 155 == no move category
+        y.append(one_hot_transitions)  # transition vector
+        X.append(np.array(x, dtype=np.int32))
+    return X, y
+
 def generateArray(playerListDataFriendly, filter, NNType):
         if filter =='Win Ratio':
             trainingExamples = FilterByWinRatio(playerListDataFriendly)
@@ -156,7 +177,7 @@ def generateArray(playerListDataFriendly, filter, NNType):
         #split into trainingExamples array and y vectors
         #
         if NNType =='Policy':
-            X, y = SplitArraytoXMatrixAndYTransitionVector(trainingExamples)
+            X, y = SplitArraytoXMatrixAndYTransitionVectorCNN(trainingExamples)
         else: # Value Net
             X, y = SplitArraytoXMatrixAndYVector(trainingExamples, convertY= True)
         # trainingExamples = np.matrix(X, dtype=np.int8)

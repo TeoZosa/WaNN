@@ -177,7 +177,7 @@ def generate_board_states(move_list, player_color, win):
             if player_color == 'White':
                 board_states['PlayerPOV'].append(state)
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
-    board_states = convert_board_states_to_arrays(board_states, player_color)
+    board_states = convert_board_states_to_matrices(board_states, player_color)
     return board_states
 
 
@@ -327,17 +327,19 @@ def convert_board_to_2d_matrix_value_net(board_state, player_color):
                                             who_to_filter='Empty'),  # [4] empty
                      generate_binary_plane(state, player_color=player_color,
                                            who_to_filter='MoveFlag')]  # [5] flag indicating if the transition came from a white move
-    # for i in range(0, 64):  # error checking block
-    #     # ensure at most 1 bit is on at each board position for white/black/empty
-    #     assert (one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[4][i])
-    #     # ensure at most 1 bit is on at each board position for player/opponent/empty
-    #     assert (one_hot_board[2][i] ^ one_hot_board[3][i] ^ one_hot_board[4][i])
-    #     if player_color == 'White':
-    #         # white positions == player and black positions == opponent;
-    #         assert (one_hot_board[0][i] == one_hot_board[2][i] and one_hot_board[1][i] == one_hot_board[3][i])
-    #     else:
-    #         #  white positions == opponent and player == black positions;
-    #         assert (one_hot_board[0][i] == one_hot_board[3][i] and one_hot_board[1][i] == one_hot_board[2][i])
+    
+    # ensure at most 1 bit is on at each board position for white/black/empty
+    assert ((one_hot_board[0] ^ one_hot_board[1] ^ one_hot_board[4]).all().all() and
+            not (one_hot_board[0] & one_hot_board[1] & one_hot_board[4]).all().all())
+    # ensure at most 1 bit is on at each board position for player/opponent/empty
+    assert ((one_hot_board[2] ^ one_hot_board[3] ^ one_hot_board[4]).all().all() and
+            not (one_hot_board[2] & one_hot_board[3] & one_hot_board[4]).all().all())
+    if player_color == 'White':
+        # white positions == player and black positions == opponent;
+        assert (one_hot_board[0].equals(one_hot_board[2]) and one_hot_board[1].equals(one_hot_board[3]))
+    else:
+        #  white positions == opponent and player == black positions;
+        assert (one_hot_board[0].equals(one_hot_board[3]) and one_hot_board[1].equals(one_hot_board[2]))
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # [x vector, win, y transition vector]
     return new_board_state
 
@@ -350,9 +352,10 @@ def convert_board_to_2d_matrix_policy_net(board_state, player_color):
                                             who_to_filter='Opponent'),  # [1] opponent
                      generate_binary_plane(state, player_color=player_color,
                                             who_to_filter='Empty')]  # [2] empty
-    # for i in range(0, 64):  # error checking block
-    #     # ensure at most 1 bit is on at each board position for player/opponent/empty
-    #     assert (one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i])
+
+    # ensure at most 1 bit is on at each board position for player/opponent/empty
+    assert ((one_hot_board[0] ^ one_hot_board[1] ^ one_hot_board[2]).all().all() and
+                not(one_hot_board[0] & one_hot_board[1] & one_hot_board[2]).all().all())
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
     return new_board_state
 
@@ -451,9 +454,11 @@ def convert_board_to_1d_array_value_net(board_state, player_color):
                      move_flag]  # [5] flag indicating if the transition came from a white move
     for i in range(0, 64):  # error checking block
         # ensure at most 1 bit is on at each board position for white/black/empty
-        assert (one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[4][i])
+        assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[4][i]) and
+                not (one_hot_board[0][i] & one_hot_board[1][i] & one_hot_board[4][i]))
         # ensure at most 1 bit is on at each board position for player/opponent/empty
-        assert (one_hot_board[2][i] ^ one_hot_board[3][i] ^ one_hot_board[4][i])
+        assert ((one_hot_board[2][i] ^ one_hot_board[3][i] ^ one_hot_board[4][i]) and
+                not (one_hot_board[2][i] & one_hot_board[3][i] & one_hot_board[4][i]))
         if player_color == 'White':
             # white positions == player and black positions == opponent;
             assert (one_hot_board[0][i] == one_hot_board[2][i] and one_hot_board[1][i] == one_hot_board[3][i])
@@ -476,7 +481,8 @@ def convert_board_to_1d_array_policy_net(board_state, player_color):
                                             who_to_filter='Empty')]  # [2] empty
     for i in range(0, 64):  # error checking block
         # ensure at most 1 bit is on at each board position for player/opponent/empty
-        assert (one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i])
+        assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
+                not (one_hot_board[0][i] & one_hot_board[1][i] & one_hot_board[2][i]))
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
     return new_board_state
 

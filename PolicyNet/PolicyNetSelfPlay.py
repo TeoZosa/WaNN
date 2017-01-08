@@ -312,22 +312,28 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
 # y_test = tf.one_hot(indices=y_test, depth=154, on_value=1, off_value=0, axis=-1)
 
 # Specify that all features have real-value data
-feature_columns = [tf.contrib.layers.real_valued_column("", dimension=256)]
-# sparse_column = tf.contrib.layers.sparse_column_with_integerized_feature("", bucket_size=2, dtype=tf.int32)
-# feature_columns = [tf.contrib.layers.one_hot_column(sparse_column)]
+feature_columns = []
+for i in range (0, 256):
+    column = tf.contrib.layers.sparse_column_with_hash_bucket("{number}".format(number=i), hash_bucket_size=2, dtype=tf.int32)
+    sparse_column = tf.contrib.layers.embedding_column(sparse_id_column=column, dimension=2)
+    # sparse_column = tf.contrib.layers.sparse_column_with_integerized_feature("{number}".format(number=i), bucket_size=2, dtype=tf.int32)
+    #feature_columns = [tf.contrib.layers.one_hot_column(sparse_column)]
+    feature_columns.append(sparse_column)
+
 
 # Build 3 layer DNN with 10, 20, 10 units respectively.
-classifier = learn.SKCompat(tf.contrib.learn.DNNClassifier(feature_columns=feature_columns,
-                                            hidden_units=[10, 20, 10],
+classifier = tf.contrib.learn.DNNClassifier(feature_columns=feature_columns,
+                                            hidden_units=[1024, 2056, 1024],
                                             n_classes=155,#including no move
-                                            model_dir="/tmp/breakthrough_model",
-                                            optimizer=tf.train.AdamOptimizer(),
-                                            config=config))
+                                            activation_fn=tf.nn.relu,
+                                            #model_dir="/tmp/breakthrough_model_Adam",
+                                            optimizer=tf.train.AdamOptimizer(learning_rate=0.000000001))
 
 # Fit model.
 classifier.fit(x=X_train,
                y=y_train,
-               steps=2000)
+               steps=2000,
+               batch_size=2056)
 
 # Evaluate accuracy.
 accuracy_score = classifier.evaluate(x=X_test,

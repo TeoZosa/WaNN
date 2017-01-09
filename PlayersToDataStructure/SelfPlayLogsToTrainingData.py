@@ -1,31 +1,45 @@
 import  pickle
-from multiprocessing import Process, Pool, TimeoutError, freeze_support
+from multiprocessing import Process, pool, Pool, TimeoutError, freeze_support
 from PlayersToDataStructure import SelfPlayLogsToPythonDataStructure as convertLog
 from Tools import NumpyArray
 
+class NoDaemonProcess(Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
 
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+class MyPool(pool.Pool):  # Had to make a special class to allow for an inner process pool
+    Process = NoDaemonProcess
 
 #15 processes
 def SelfPlayLogsToDataStructures():
-  processes = Pool(processes=15)
-  paths = [r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx',
-    r'G:\TruncatedLogs\0802-0805\selfPlayLogsWorkstationxx',
+  processes = MyPool(processes=15)
+  paths = [
+    # r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx',
+    # r'G:\TruncatedLogs\0802-0805\selfPlayLogsWorkstationxx',
     r'G:\TruncatedLogs\0806-0824\selfPlayLogsBreakthrough4',
-    r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough1',
-    r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough2',
-    r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough3',
-    r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough4',
-    r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough1',
-    r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough2',
-    r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough3',
-    r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough4',
-    r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough1',
-    r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough2',
-    r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
-    r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4']
+    # r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough1',
+    # r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough2',
+    # r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough3',
+    # r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough4',
+    # r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough1',
+    # r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough2',
+    # r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough3',
+    # r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough4',
+    # r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough1',
+    # r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough2',
+    # r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
+    # r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4'
+  ]
   processes.map(convertLog.driver, paths)#map processes to arg lists
+  processes.join()
    
-def AggregateSelfPlayDataStructures():
+def AggregateSelfPlayDataStructures(): #TODO: Don't aggregate and keep multiprocessing throughout the pipeline? => batches of training data vs one monolithic file
   path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
   files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
     r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
@@ -48,9 +62,10 @@ def AggregateSelfPlayDataStructures():
     combinedList.append(pickle.load(file))
     file.close()
   outputList = open(path + r'07xx-1129SelfPlayGames.p', 'wb')
-  pickle.dump(combinedList, outputList)
+  pickle.dump(combinedList, outputList, protocol=4)
   outputList.close()
 
 def SelfPlayDataStructuresToNumpyArrays():
+  #if multithreading, check if file exists, else sleep for 1 minute and check again.
   NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDataSets\DataStructures\\', "07xx-1129SelfPlayGames.p")
   # NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDataSets\DataStructures\\', r'1018-1024selfPlayLogsBreakthrough1DataPython.p')

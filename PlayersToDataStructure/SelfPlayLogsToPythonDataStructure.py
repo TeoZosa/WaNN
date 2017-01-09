@@ -6,10 +6,15 @@ import mmap  # read entire files into memory for (only for workstation)
 import copy
 import math
 import pandas as pd
+from multiprocessing import Pool, freeze_support
 
 def process_directory_of_breakthrough_files(path, player_list):
-    for self_play_games in find_files(path, '*.txt'):
-        player_list.append(process_breakthrough_file(path, self_play_games))
+    arg_list = [tuple([path, self_play_games]) for self_play_games in find_files(path, '*.txt')]#TODO: debug this
+    # if __name__ == '__main__':  # for Windows since it lacks os.fork
+    freeze_support()
+    process_pool = Pool(processes=16)
+    player_list.append(process_pool.starmap(process_breakthrough_file, arg_list))
+        # player_list.append(process_breakthrough_file(path, self_play_games))
 
 
 def process_breakthrough_file(path, self_play_games):
@@ -29,16 +34,16 @@ def process_breakthrough_file(path, self_play_games):
 
 
 def write_to_disk(data_to_write, path):
-    root_directory = 'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
+    write_directory = 'G:\TruncatedLogs\PythonDataSets\DataStructures'
     date = str(path[len(r'G:\TruncatedLogs') + 1:len(path)
                     - len(r'\selfPlayLogsBreakthroughN')])
     server_name = path[len(path) - len(r'\selfPlayLogsBreakthroughN')
                        + 1:len(path)]
-    output_file = open(root_directory
-                       + date  # prepend data to name of server
+    output_file = open(os.path.join(write_directory, (
+                         date  # prepend data to name of server
                        + server_name
-                       + r'DataPython.p', 'wb')  # append data qualifier
-    pickle.dump(data_to_write, output_file)
+                       + r'DataPython.p')), 'wb')  # append data qualifier
+    pickle.dump(data_to_write, output_file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
@@ -299,7 +304,7 @@ def convert_board_states_to_matrices(board_states, player_color):
     states = board_states['States']
     new_board_states['States'] = []
     new_board_states['PlayerPOV'] = []
-    for state in states:
+    for state in states:  #TODO: slow with use of pd dataframe; use multiprocessing here too? ~40% cpu usage, 40% memory @ 1 hour in/10 processes running
         new_board_states['States'].append(
             convert_board_to_2d_matrix_value_net(state, player_color))  # These can be inputs to value net
     for POV_state in POV_states:

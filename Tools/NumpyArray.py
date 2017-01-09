@@ -25,11 +25,13 @@ def WriteNPArrayToDisk(path, X, y, filterType, NNType):
     elif filterType == r'Self-Play':
         if NNType == 'Policy':
           XMatrix = open(path + r'XMatrixSelfPlayPOEBias.p', 'wb')
-          pickle.dump(X, XMatrix, protocol=4)  #specify protocol 4 to write more than 4 GB to disk
+          # pickle.dump(X, XMatrix, protocol=4)  #specify protocol 4 to write more than 4 GB to disk
           X.tofile(open(path + r'XMatrixSelfPlayPOEBiasNPBinary.np', 'wb'))
+          np.save(XMatrix, X)
           yVector = open(path + r'yVectorSelfPlayPOEBias.p', 'wb')
-          pickle.dump(y, yVector, protocol=4)
+          # pickle.dump(y, yVector, protocol=4)
           y.tofile((open(path + r'yVectorSelfPlayPOEBiasNPBinary.np', 'wb')))
+          np.save(yVector, y)
         else:#value net
           XMatrix = open(path + r'XMatrixSelfPlayWBPOEBiasNoZero.p', 'wb')
           pickle.dump(X, XMatrix)

@@ -67,7 +67,7 @@ def AggregateSelfPlayDataStructures():
     combinedList =[]
     for fileName in files:
         file = open(path+fileName,'r+b')
-        combinedList.append(pickle.load(file))
+        combinedList.extend(pickle.load(file))
         file.close()
     outputList = open(path + r'07xx-1129SelfPlayGames.p', 'wb')
     pickle.dump(combinedList, outputList, protocol=4)
@@ -75,7 +75,8 @@ def AggregateSelfPlayDataStructures():
 
 def SelfPlayDataStructuresToNumpyArrays():
   path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
-  files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
+  files = [
+           r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
            r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
            r'0806-0824selfPlayLogsBreakthrough4DataPython.p',
            r'0824-1006selfPlayLogsBreakthrough1DataPython.p',
@@ -89,16 +90,10 @@ def SelfPlayDataStructuresToNumpyArrays():
            r'1024-1129selfPlayLogsBreakthrough1DataPython.p',
            r'1024-1129selfPlayLogsBreakthrough2DataPython.p',
            r'1024-1129selfPlayLogsBreakthrough3DataPython.p',
-           r'1024-1129selfPlayLogsBreakthrough4DataPython.p']
+           r'1024-1129selfPlayLogsBreakthrough4DataPython.p'
+           ]
   arg_lists = [[r'Self-Play', r'Policy', path, file] for file in files]
-  # for file in files:
-  #     thisFile = open(os.path.join(path, file), 'r+b')
-  #     theFile = pickle.load(thisFile)
-  #     for log in theFile:
-  #         for game in log:
-  #           print (game['Self-PlayLog'])
-  #     thisFile.close()
-  processes = Pool(processes=len(files))
+  processes = Pool(processes=len(arg_lists))
   processes.starmap_async(NumpyArray.SelfPlayDriver, arg_lists)#map processes to arg lists
   processes.close()
   processes.join()

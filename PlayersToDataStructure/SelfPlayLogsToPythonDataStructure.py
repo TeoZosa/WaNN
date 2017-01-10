@@ -12,10 +12,10 @@ from multiprocessing import Pool, freeze_support
 
 def process_directory_of_breakthrough_files(path):
     player_list = []
-    arg_list = [[path, self_play_games] for self_play_games in find_files(path, '*.txt')]
+    arg_lists = [[path, self_play_games] for self_play_games in find_files(path, '*.txt')]
     freeze_support()
-    process_pool = Pool(processes=len(arg_list))
-    player_list.append(process_pool.starmap(process_breakthrough_file, arg_list))
+    process_pool = Pool(processes=len(arg_lists))
+    player_list.extend(process_pool.starmap(process_breakthrough_file, arg_lists))
     process_pool.close()
     process_pool.join()
     return player_list

@@ -6,6 +6,7 @@ import  pprint
 import copy
 import warnings
 from multiprocessing import Pool, freeze_support, Lock
+import h5py
 
 #TODO: redo logic and paths after directory restructuring
 def WriteNPArrayToDisk(path, X, y, filterType, NNType):
@@ -26,10 +27,14 @@ def WriteNPArrayToDisk(path, X, y, filterType, NNType):
         pickle.dump(y, yVector)
     elif filterType == r'Self-Play':
         if NNType == 'Policy':
-          XMatrix = open(path + r'XMatrixSelfPlayPOEBias.npy', 'wb')
-          np.save(XMatrix, X)
-          yVector = open(path + r'yVectorSelfPlayPOEBias.npy', 'wb')
-          np.save(yVector, y)
+          h5f = h5py.File(path + r'SelfPlayPOEBias.hdf5', 'w', driver='core')
+          h5f.create_dataset(r'X', data=X)
+          h5f.create_dataset(r'y', data=y)
+          h5f.close()
+          # XMatrix = open(path + r'XMatrixSelfPlayPOEBias.npy', 'wb')
+          # np.save(XMatrix, X)
+          # yVector = open(path + r'yVectorSelfPlayPOEBias.npy', 'wb')
+          # np.save(yVector, y)
         else:#value net
           XMatrix = open(path + r'XMatrixSelfPlayWBPOEBiasNoZero.p', 'wb')
           pickle.dump(X, XMatrix)

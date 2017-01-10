@@ -27,6 +27,6 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
   print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
 
-  # startTime = time.time()
-  # SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()
-  # print("Minutes to numpy array: {time}".format(time=(time.time() - startTime) / (60)))
+  startTime = time.time()
+  SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()
+  print("Minutes to numpy array: {time}".format(time=(time.time() - startTime) / (60)))

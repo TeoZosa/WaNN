@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="deprecated aggregation phase (it was just extra time to write a big file to disk); pipeline is now 1. convert logs by date to data structures 2. convert data structures to numpy arrays 3. TODO: aggregate/put in queue immediately prior to being fed to policy net. multiprocessing in data structure to numpy array">
+    <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" afterPath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -84,8 +85,8 @@
       <file leaf-file-name="SelfPlayLogsToTrainingData.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="203">
-              <caret line="44" column="38" lean-forward="false" selection-start-line="44" selection-start-column="38" selection-end-line="44" selection-end-column="38" />
+            <state relative-caret-position="266">
+              <caret line="47" column="98" lean-forward="false" selection-start-line="47" selection-start-column="98" selection-end-line="47" selection-end-column="98" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -782,13 +783,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00025" summary="Added Numpy Datasets">
-      <created>1465861735505</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1465861735505</updated>
-    </task>
     <task id="LOCAL-00026" summary="Added WBPOE Datasets. Adjusted hidden layers in tests">
       <created>1466000116319</created>
       <option name="number" value="00026" />
@@ -1125,7 +1119,14 @@
       <option name="project" value="LOCAL" />
       <updated>1484072895438</updated>
     </task>
-    <option name="localTasksCounter" value="74" />
+    <task id="LOCAL-00074" summary="forgot to mention, added multiprocessing to numpy array conversion since aggregation phase has been deprecated">
+      <created>1484073301524</created>
+      <option name="number" value="00074" />
+      <option name="presentableId" value="LOCAL-00074" />
+      <option name="project" value="LOCAL" />
+      <updated>1484073301524</updated>
+    </task>
+    <option name="localTasksCounter" value="75" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1178,7 +1179,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="added TODO" />
     <MESSAGE value="pulled mirrorstates to game entry, made GenerateBoardStates and Generate1dArraymore general. refactored FormatMoveList. turned GenerateBinaryPlane logic into dicts" />
     <MESSAGE value="added POVStates for policy net training data (white is original, black sees a reflected board state), made special conversion to 1d array for POV states (Player/Opponent/Empty &amp; transition vector). normal states can still be used for a value net (each state of a game with a win value; consecutive white/black games will have the same states, but opposite win values)." />
     <MESSAGE value="added policy net stuff for NumpyArray" />
@@ -1203,7 +1203,8 @@
     <MESSAGE value="deprecation warnings for pd dataframe related coded, made list indexing more idiomatic, made numpy conversion row x column x feature plane for CNN" />
     <MESSAGE value="deprecated aggregation phase (it was just extra time to write a big file to disk); pipeline is now 1. convert logs by date to data structures 2. convert data structures to numpy arrays 3. TODO: aggregate/put in queue immediately prior to being fed to policy net" />
     <MESSAGE value="deprecation message in aggregation phase. cleaned up unused code" />
-    <option name="LAST_COMMIT_MESSAGE" value="deprecation message in aggregation phase. cleaned up unused code" />
+    <MESSAGE value="forgot to mention, added multiprocessing to numpy array conversion since aggregation phase has been deprecated" />
+    <option name="LAST_COMMIT_MESSAGE" value="forgot to mention, added multiprocessing to numpy array conversion since aggregation phase has been deprecated" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1655,8 +1656,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="203">
-          <caret line="44" column="38" lean-forward="false" selection-start-line="44" selection-start-column="38" selection-end-line="44" selection-end-column="38" />
+        <state relative-caret-position="266">
+          <caret line="47" column="98" lean-forward="false" selection-start-line="47" selection-start-column="98" selection-end-line="47" selection-end-column="98" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>

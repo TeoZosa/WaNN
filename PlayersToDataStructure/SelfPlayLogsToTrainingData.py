@@ -45,7 +45,7 @@ def SelfPlayLogsToDataStructures():
 def AggregateSelfPlayDataStructures():
     warnings.warn("Removed in favor of aggregating/queuing later in the pipeline. "
                   "Else, this is time consuming, creates a large, redundant file, "
-                  "and precludes the use of trivial parallelization later in pipeline."
+                  "and precludes the possibility of embarrassingly parallel numpy array conversion."
                   , DeprecationWarning)
     path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
     files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',

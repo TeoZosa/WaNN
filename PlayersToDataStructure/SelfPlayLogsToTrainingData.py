@@ -1,4 +1,5 @@
 import  pickle
+import warnings
 from multiprocessing import Process, pool, Pool, TimeoutError, freeze_support
 from PlayersToDataStructure import SelfPlayLogsToPythonDataStructure as convertLog
 from Tools import NumpyArray
@@ -41,9 +42,13 @@ def SelfPlayLogsToDataStructures():
   processes.join()
 
    
-def AggregateSelfPlayDataStructures(): #TODO: Don't aggregate and keep multiprocessing throughout the pipeline? => batches of training data vs one monolithic file
-  path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
-  files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
+def AggregateSelfPlayDataStructures():
+    warnings.warn("Removed in favor of aggregating/queuing later in the pipeline. "
+                  "Else, this is time consuming, creates a large, redundant file, "
+                  "and precludes the use of trivial parallelization later in pipeline."
+                  , DeprecationWarning)
+    path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
+    files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
     r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
     r'0806-0824selfPlayLogsBreakthrough4DataPython.p',
     r'0824-1006selfPlayLogsBreakthrough1DataPython.p',
@@ -58,14 +63,14 @@ def AggregateSelfPlayDataStructures(): #TODO: Don't aggregate and keep multiproc
     r'1024-1129selfPlayLogsBreakthrough2DataPython.p',
     r'1024-1129selfPlayLogsBreakthrough3DataPython.p',
     r'1024-1129selfPlayLogsBreakthrough4DataPython.p']
-  combinedList =[]
-  for fileName in files:
-    file = open(path+fileName,'r+b')
-    combinedList.append(pickle.load(file))
-    file.close()
-  outputList = open(path + r'07xx-1129SelfPlayGames.p', 'wb')
-  pickle.dump(combinedList, outputList, protocol=4)
-  outputList.close()
+    combinedList =[]
+    for fileName in files:
+        file = open(path+fileName,'r+b')
+        combinedList.append(pickle.load(file))
+        file.close()
+    outputList = open(path + r'07xx-1129SelfPlayGames.p', 'wb')
+    pickle.dump(combinedList, outputList, protocol=4)
+    outputList.close()
 
 def SelfPlayDataStructuresToNumpyArrays():
   path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
@@ -89,6 +94,4 @@ def SelfPlayDataStructuresToNumpyArrays():
   processes.starmap(NumpyArray.SelfPlayDriver, arg_lists)#map processes to arg lists
   processes.close()
   processes.join()
-  #if multithreading, check if file exists, else sleep for 1 minute and check again.
-  # NumpyArray.SelfPlayDriver("Self-Play", 'Policy', path, r'07xx-1129SelfPlayGames.p')
-  # NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDataSets\DataStructures\\', r'1018-1024selfPlayLogsBreakthrough1DataPython.p')
+

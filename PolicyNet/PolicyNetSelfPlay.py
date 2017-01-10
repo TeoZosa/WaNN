@@ -270,8 +270,8 @@ def AssignPath(deviceName ='AWS'):
         path = ''#todo:error checking
     return path
 def LoadXAndy(path):
-    X = pickle.load(open(path + r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\07xx-1129SelfPlayGamesXMatrixSelfPlayPOEBias.p', 'rb'))
-    y = pickle.load(open(path + r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\07xx-1129SelfPlayGamesyVectorSelfPlayPOEBias.p', 'rb'))
+    X = np.load(open(path + r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\07xx-1129SelfPlayGamesXMatrixSelfPlayPOEBias.npy', 'rb'))
+    y = np.load(open(path + r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\07xx-1129SelfPlayGamesyVectorSelfPlayPOEBias.npy', 'rb'))
     return X, y
 def LoadXAndy_1to1(path):
     X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
@@ -298,6 +298,7 @@ X, y = LoadXAndy(inputPath)# row vector X[i] has scalar outcome y[i]
 # writePath5 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingSoftsignDropout'
 
 #Train/validation/test split or reducing number of training examples
+sampTrans = X[2].transpose()
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
     test_size=0.2, random_state=42)#change random state?
 # X_1train, X_1test, y_1train, y_1test = model_selection.train_test_split(X_1, y_1,

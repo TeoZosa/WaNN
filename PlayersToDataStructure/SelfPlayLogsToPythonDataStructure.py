@@ -5,16 +5,18 @@ import pickle  # serialize the data structure
 import mmap  # read entire files into memory for (only for workstation)
 import copy
 import math
+import warnings
+
 import pandas as pd
 from multiprocessing import Pool, freeze_support
 
 def process_directory_of_breakthrough_files(path, player_list):
-    arg_list = [tuple([path, self_play_games]) for self_play_games in find_files(path, '*.txt')]#TODO: debug this
-    # if __name__ == '__main__':  # for Windows since it lacks os.fork
+    arg_list = [tuple([path, self_play_games]) for self_play_games in find_files(path, '*.txt')]
     freeze_support()
     process_pool = Pool(processes=16)
     player_list.append(process_pool.starmap(process_breakthrough_file, arg_list))
-        # player_list.append(process_breakthrough_file(path, self_play_games))
+    process_pool.close()
+    process_pool.join()
 
 
 def process_breakthrough_file(path, self_play_games):
@@ -22,9 +24,11 @@ def process_breakthrough_file(path, self_play_games):
                 len(path):
                 len(self_play_games)
                 - len('.txt')]  # trim path & extension
-    file_name = file_name.split('_SelfPlayLog')  # BreakthroughN_SelfPlayLog00-> ['BreakthroughN',00]
-    server_name = str(file_name[0].strip('\\'))
-    self_play_log = str(file_name[1]).strip('(').strip(')')
+    file_name = file_name.split('_SelfPlayLog')  # \BreakthroughN_SelfPlayLog00-> ['\BreakthroughN',00]
+    server_name = str(file_name[0].strip('\\'))  # '\BreakthroughN' -> 'BreakthroughN'
+    self_play_log = str(file_name[1]).strip(
+                        '(').strip(
+                        ')')  # if file_name was originally \BreakthroughN_SelfPlayLog(xy)
     date_range = str(self_play_games[len(r'G:\TruncatedLogs')
                                      + 1:len(path)
                                      - len(r'\selfPlayLogsBreakthroughN')])
@@ -35,10 +39,10 @@ def process_breakthrough_file(path, self_play_games):
 
 def write_to_disk(data_to_write, path):
     write_directory = 'G:\TruncatedLogs\PythonDataSets\DataStructures'
-    date = str(path[len(r'G:\TruncatedLogs') + 1:len(path)
-                    - len(r'\selfPlayLogsBreakthroughN')])
-    server_name = path[len(path) - len(r'\selfPlayLogsBreakthroughN')
-                       + 1:len(path)]
+    date = str(path[len(r'G:\TruncatedLogs') + 1
+                    :- len(r'\selfPlayLogsBreakthroughN')])
+    server_name = path[- len(r'\selfPlayLogsBreakthroughN') + 1
+                       :-1]
     output_file = open(os.path.join(write_directory, (
                          date  # prepend data to name of server
                        + server_name
@@ -182,7 +186,7 @@ def generate_board_states(move_list, player_color, win):
             if player_color == 'White':
                 board_states['PlayerPOV'].append(state)
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
-    board_states = convert_board_states_to_matrices(board_states, player_color)
+    board_states = convert_board_states_to_arrays(board_states, player_color)
     return board_states
 
 
@@ -299,12 +303,16 @@ def mirror_board_state(state):  # since a mirror image has the same strategic va
     return mirror_state_with_win
 
 def convert_board_states_to_matrices(board_states, player_color):
+    warnings.warn("Removed in favor of performing conversion later in the pipeline. "
+                  "Else, this stage of the pipeline will be computationally expensive, "
+                  "memory intensive, and require large amounts of disk space "
+                  , DeprecationWarning)
     new_board_states = board_states
     POV_states = board_states['PlayerPOV']
     states = board_states['States']
     new_board_states['States'] = []
     new_board_states['PlayerPOV'] = []
-    for state in states:  #TODO: slow with use of pd dataframe; use multiprocessing here too? ~40% cpu usage, 40% memory @ 1 hour in/10 processes running
+    for state in states:
         new_board_states['States'].append(
             convert_board_to_2d_matrix_value_net(state, player_color))  # These can be inputs to value net
     for POV_state in POV_states:
@@ -417,7 +425,7 @@ def generate_binary_plane(state, player_color, who_to_filter):
             'b': white_move}
     else:
         print("Error, generate_binary_plane needs a valid argument to filter")
-    return panda_board.apply(lambda x: x.apply(lambda y: who_dict[y]))#filtered to binary
+    return panda_board.apply(lambda x: x.apply(lambda y: who_dict[y]))#filter board positions to binary
 
 
 def convert_board_states_to_arrays(board_states, player_color):

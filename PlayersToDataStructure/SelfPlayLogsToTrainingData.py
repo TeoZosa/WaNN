@@ -20,24 +20,26 @@ class MyPool(pool.Pool):  # Had to make a special class to allow for an inner pr
 def SelfPlayLogsToDataStructures():
   processes = MyPool(processes=15)
   paths = [
-    # r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx',
-    # r'G:\TruncatedLogs\0802-0805\selfPlayLogsWorkstationxx',
+    r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx',
+    r'G:\TruncatedLogs\0802-0805\selfPlayLogsWorkstationxx',
     r'G:\TruncatedLogs\0806-0824\selfPlayLogsBreakthrough4',
-    # r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough1',
-    # r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough2',
-    # r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough3',
-    # r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough4',
-    # r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough1',
-    # r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough2',
-    # r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough3',
-    # r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough4',
-    # r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough1',
-    # r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough2',
-    # r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
-    # r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4'
+    r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough1',
+    r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough2',
+    r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough3',
+    r'G:\TruncatedLogs\0824-1006\selfPlayLogsBreakthrough4',
+    r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough1',
+    r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough2',
+    r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough3',
+    r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough4',
+    r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough1',
+    r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough2',
+    r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
+    r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4'
   ]
   processes.map(convertLog.driver, paths)#map processes to arg lists
+  processes.close()
   processes.join()
+
    
 def AggregateSelfPlayDataStructures(): #TODO: Don't aggregate and keep multiprocessing throughout the pipeline? => batches of training data vs one monolithic file
   path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'

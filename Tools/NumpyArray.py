@@ -4,6 +4,7 @@ import pandas as pd
 from random import shuffle
 import  pprint
 import copy
+import warnings
 
 #TODO: redo logic and paths after directory restructuring
 def WriteNPArrayToDisk(path, X, y, filterType, NNType):
@@ -24,11 +25,11 @@ def WriteNPArrayToDisk(path, X, y, filterType, NNType):
         pickle.dump(y, yVector)
     elif filterType == r'Self-Play':
         if NNType == 'Policy':
-          XMatrix = open(path + r'XMatrixSelfPlayPOEBias.p', 'wb')
+          XMatrix = open(path + r'XMatrixSelfPlayPOEBias.npy', 'wb')
           # pickle.dump(X, XMatrix, protocol=4)  #specify protocol 4 to write more than 4 GB to disk
           X.tofile(open(path + r'XMatrixSelfPlayPOEBiasNPBinary.np', 'wb'))
           np.save(XMatrix, X)
-          yVector = open(path + r'yVectorSelfPlayPOEBias.p', 'wb')
+          yVector = open(path + r'yVectorSelfPlayPOEBias.npy', 'wb')
           # pickle.dump(y, yVector, protocol=4)
           y.tofile((open(path + r'yVectorSelfPlayPOEBiasNPBinary.np', 'wb')))
           np.save(yVector, y)
@@ -118,15 +119,20 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
     X = []
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
+        #TODO: multiprocessing here?
         x = []
         one_hot_indices = []
         for plane in trainingExample[0]:
             x += plane #flatten 2d matrix
         x += [1] * 64 # 1 bias plane
+        reshaped = np.reshape(np.array(x, dtype=np.float32), (len(x) // 64, 8, 8))
+        for i in range(0, len(reshaped)):
+            reshaped[i] = reshaped[i].transpose() #transpose (row x col) to get (col x row) x features
+        reshaped = reshaped.transpose()# convert to CNN board and transpose to get proper dimensions row x cols  x position_feature
         # for position_index in range(0, len(x)):  # pass indices to tf.one_hot
         #     if x[position_index] == 1:
         #         one_hot_indices.append(position_index)
-        # X.append(one_hot_indices)
+        X.append(reshaped)
         one_hot_transitions = None
         for transition in range(0, len(trainingExample[2])):
             if trainingExample[2][transition] == 1:
@@ -137,11 +143,16 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit):# TODO: will have to r
             one_hot_transitions = 155  # tf.one_hot will return a vector of all 0s
         y.append(one_hot_transitions)  # transition vector
 
-        X.append(np.array(x, dtype=np.int32))
+        # X.append(np.array(x, dtype=np.int32))
         # y.append(trainingExample[2])#transition vector
     return X, y
 
-def SplitArraytoXMatrixAndYTransitionVectorCNN(arrayToSplit):# TODO: will have to redo Numpy code
+def SplitArraytoXMatrixAndYTransitionVectorCNN(arrayToSplit):  # only for boards with pd dataframe
+    warnings.warn("Only for use with PD Dataframe data; "
+                  "Removed in favor of performing conversion later in the pipeline. "
+                  "Else, earlier stages of pipeline will be computationally expensive, "
+                  "memory intensive, and require large amounts of disk space "
+                  , DeprecationWarning)
     X = []
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
@@ -179,18 +190,18 @@ def generateArray(playerListDataFriendly, filter, NNType):
         #split into trainingExamples array and y vectors
         #
         if NNType =='Policy':
-            X, y = SplitArraytoXMatrixAndYTransitionVectorCNN(trainingExamples)
+            X, y = SplitArraytoXMatrixAndYTransitionVector(trainingExamples)
         else: # Value Net
             X, y = SplitArraytoXMatrixAndYVector(trainingExamples, convertY= True)
         # trainingExamples = np.matrix(X, dtype=np.int8)
 
         # transform to TrainingExamples x( m x 64) numpy array; 8-bit ints since legal values are -1, 0, 1 or 0, 1
-        X = np.array(X, dtype=np.int32)
+        X = np.array(X, dtype=np.float32)
         # transform to m x 1 numpy array; 8-bit ints since legal values are -1, 1 or 0, 1
         if NNType =='Policy1':
-            y = np.matrix(y, dtype=np.int32)
+            y = np.matrix(y, dtype=np.float32)
         else:
-            y = np.array(y, dtype=np.int32)
+            y = np.array(y, dtype=np.float32)
         # test to make sure y values map to corresponding row vectors in trainingExamples
         # GenerateCSV(X)
         # GenerateCSV(y, isX=False)
@@ -265,5 +276,5 @@ def SelfPlayDriver(filter, NNType, path, fileName):
     playerListDataFriendly = pickle.load(file)
     file.close()
     X, y = generateArray(playerListDataFriendly, filter, NNType)
-    writePath = path+"NumpyArrays\\"+fileName[0:len(fileName)-2]
+    writePath = path+"NumpyArrays\\"+fileName[0:-2]
     WriteNPArrayToDisk(writePath, X, y, filter, NNType)

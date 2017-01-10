@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
+    <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="deprecated aggregation phase (it was just extra time to write a big file to disk); pipeline is now 1. convert logs by date to data structures 2. convert data structures to numpy arrays 3. TODO: aggregate/put in queue immediately prior to being fed to policy net. multiprocessing in data structure to numpy array">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" afterPath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" afterPath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/NumpyArray.py" afterPath="$PROJECT_DIR$/Tools/NumpyArray.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/__main__.py" afterPath="$PROJECT_DIR$/__main__.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -76,8 +72,8 @@
       <file leaf-file-name="NumpyArray.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Tools/NumpyArray.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="354">
-              <caret line="91" column="41" lean-forward="true" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
+            <state relative-caret-position="65">
+              <caret line="149" column="4" lean-forward="false" selection-start-line="149" selection-start-column="4" selection-end-line="153" selection-end-column="39" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -88,8 +84,8 @@
       <file leaf-file-name="SelfPlayLogsToTrainingData.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="518">
-              <caret line="89" column="19" lean-forward="true" selection-start-line="89" selection-start-column="19" selection-end-line="89" selection-end-column="19" />
+            <state relative-caret-position="203">
+              <caret line="44" column="38" lean-forward="false" selection-start-line="44" selection-start-column="38" selection-end-line="44" selection-end-column="38" />
               <folding>
                 <element signature="e#0#14#0" expanded="true" />
               </folding>
@@ -262,9 +258,9 @@
         <option value="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
         <option value="$PROJECT_DIR$/__main__.py" />
+        <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
+        <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" />
-        <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
-        <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
       </list>
     </option>
   </component>
@@ -275,8 +271,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="621" />
-    <option name="y" value="500" />
+    <option name="x" value="728" />
+    <option name="y" value="262" />
     <option name="width" value="2320" />
     <option name="height" value="1241" />
   </component>
@@ -786,20 +782,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00023" summary="changed dataset to white/black/empty &amp; index 192 indicates if the player is white,  index 193 indicates if the board state was achieved by a white move">
-      <created>1465856519542</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1465856519542</updated>
-    </task>
-    <task id="LOCAL-00024" summary="separated Value Net batch jobs so they can output scores before fitting the next model">
-      <created>1465860358766</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1465860358766</updated>
-    </task>
     <task id="LOCAL-00025" summary="Added Numpy Datasets">
       <created>1465861735505</created>
       <option name="number" value="00025" />
@@ -1129,7 +1111,21 @@
       <option name="project" value="LOCAL" />
       <updated>1484067906714</updated>
     </task>
-    <option name="localTasksCounter" value="72" />
+    <task id="LOCAL-00072" summary="deprecated aggregation phase (it was just extra time to write a big file to disk); pipeline is now 1. convert logs by date to data structures 2. convert data structures to numpy arrays 3. TODO: aggregate/put in queue immediately prior to being fed to policy net">
+      <created>1484072556017</created>
+      <option name="number" value="00072" />
+      <option name="presentableId" value="LOCAL-00072" />
+      <option name="project" value="LOCAL" />
+      <updated>1484072556017</updated>
+    </task>
+    <task id="LOCAL-00073" summary="deprecation message in aggregation phase. cleaned up unused code">
+      <created>1484072895438</created>
+      <option name="number" value="00073" />
+      <option name="presentableId" value="LOCAL-00073" />
+      <option name="project" value="LOCAL" />
+      <updated>1484072895438</updated>
+    </task>
+    <option name="localTasksCounter" value="74" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1142,20 +1138,20 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="621" y="500" width="2320" height="1241" extended-state="0" />
+    <frame x="728" y="262" width="2320" height="1241" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15058611" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3270565" sideWeight="0.48154762" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29335976" sideWeight="0.33408475" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.39544103" sideWeight="0.5414788" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39544103" sideWeight="0.46190476" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.39544103" sideWeight="0.4585212" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32804757" sideWeight="0.45904955" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29335976" sideWeight="0.66591525" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29335976" sideWeight="0.66591525" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.115956396" sideWeight="0.5172619" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47373638" sideWeight="0.8733093" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47373638" sideWeight="0.8701533" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1182,8 +1178,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="reordered where program mirrors states, put mirror visualization URLs, mirrorMoveList  in 'Games'  dictionary, more comments/self-commenting code" />
-    <MESSAGE value="comments" />
     <MESSAGE value="added TODO" />
     <MESSAGE value="pulled mirrorstates to game entry, made GenerateBoardStates and Generate1dArraymore general. refactored FormatMoveList. turned GenerateBinaryPlane logic into dicts" />
     <MESSAGE value="added POVStates for policy net training data (white is original, black sees a reflected board state), made special conversion to 1d array for POV states (Player/Opponent/Empty &amp; transition vector). normal states can still be used for a value net (each state of a game with a win value; consecutive white/black games will have the same states, but opposite win values)." />
@@ -1207,7 +1201,9 @@
     <MESSAGE value="new method in NumpyArrays to deal with 3d boards. fixed error testing logic in SelfPlayLogsToPythonDataStructure" />
     <MESSAGE value="pd dataframing is making the conversion to data structures slow, playing with more multiprocessing." />
     <MESSAGE value="deprecation warnings for pd dataframe related coded, made list indexing more idiomatic, made numpy conversion row x column x feature plane for CNN" />
-    <option name="LAST_COMMIT_MESSAGE" value="deprecation warnings for pd dataframe related coded, made list indexing more idiomatic, made numpy conversion row x column x feature plane for CNN" />
+    <MESSAGE value="deprecated aggregation phase (it was just extra time to write a big file to disk); pipeline is now 1. convert logs by date to data structures 2. convert data structures to numpy arrays 3. TODO: aggregate/put in queue immediately prior to being fed to policy net" />
+    <MESSAGE value="deprecation message in aggregation phase. cleaned up unused code" />
+    <option name="LAST_COMMIT_MESSAGE" value="deprecation message in aggregation phase. cleaned up unused code" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1649,8 +1645,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Tools/NumpyArray.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="354">
-          <caret line="91" column="41" lean-forward="true" selection-start-line="91" selection-start-column="41" selection-end-line="91" selection-end-column="41" />
+        <state relative-caret-position="65">
+          <caret line="149" column="4" lean-forward="false" selection-start-line="149" selection-start-column="4" selection-end-line="153" selection-end-column="39" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
@@ -1659,8 +1655,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="518">
-          <caret line="89" column="19" lean-forward="true" selection-start-line="89" selection-start-column="19" selection-end-line="89" selection-end-column="19" />
+        <state relative-caret-position="203">
+          <caret line="44" column="38" lean-forward="false" selection-start-line="44" selection-start-column="38" selection-end-line="44" selection-end-column="38" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>

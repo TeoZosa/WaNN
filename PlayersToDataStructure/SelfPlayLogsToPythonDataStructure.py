@@ -13,7 +13,7 @@ from multiprocessing import Pool, freeze_support
 def process_directory_of_breakthrough_files(path, player_list):
     arg_list = [tuple([path, self_play_games]) for self_play_games in find_files(path, '*.txt')]
     freeze_support()
-    process_pool = Pool(processes=16)
+    process_pool = Pool(processes=16) # can't guarantee which order files will be appended to list?
     player_list.append(process_pool.starmap(process_breakthrough_file, arg_list))
     process_pool.close()
     process_pool.join()

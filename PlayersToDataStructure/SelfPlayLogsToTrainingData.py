@@ -18,7 +18,6 @@ class MyPool(pool.Pool):  # Had to make a special class to allow for an inner pr
 
 #15 processes
 def SelfPlayLogsToDataStructures():
-  processes = MyPool(processes=15)
   paths = [
     r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx',
     r'G:\TruncatedLogs\0802-0805\selfPlayLogsWorkstationxx',
@@ -36,6 +35,7 @@ def SelfPlayLogsToDataStructures():
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4'
   ]
+  processes = MyPool(processes=15)
   processes.map(convertLog.driver, paths)#map processes to arg lists
   processes.close()
   processes.join()
@@ -68,6 +68,27 @@ def AggregateSelfPlayDataStructures(): #TODO: Don't aggregate and keep multiproc
   outputList.close()
 
 def SelfPlayDataStructuresToNumpyArrays():
+  path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
+  files = [r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
+           r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
+           r'0806-0824selfPlayLogsBreakthrough4DataPython.p',
+           r'0824-1006selfPlayLogsBreakthrough1DataPython.p',
+           r'0824-1006selfPlayLogsBreakthrough2DataPython.p',
+           r'0824-1006selfPlayLogsBreakthrough3DataPython.p',
+           r'0824-1006selfPlayLogsBreakthrough4DataPython.p',
+           r'1018-1024selfPlayLogsBreakthrough1DataPython.p',
+           r'1018-1024selfPlayLogsBreakthrough2DataPython.p',
+           r'1018-1024selfPlayLogsBreakthrough3DataPython.p',
+           r'1018-1024selfPlayLogsBreakthrough4DataPython.p',
+           r'1024-1129selfPlayLogsBreakthrough1DataPython.p',
+           r'1024-1129selfPlayLogsBreakthrough2DataPython.p',
+           r'1024-1129selfPlayLogsBreakthrough3DataPython.p',
+           r'1024-1129selfPlayLogsBreakthrough4DataPython.p']
+  arg_lists = [[r'Self-Play', r'Policy', path, file] for file in files]
+  processes = Pool(processes=16)
+  processes.starmap(NumpyArray.SelfPlayDriver, arg_lists)#map processes to arg lists
+  processes.close()
+  processes.join()
   #if multithreading, check if file exists, else sleep for 1 minute and check again.
-  NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDataSets\DataStructures\\', "07xx-1129SelfPlayGames.p")
+  # NumpyArray.SelfPlayDriver("Self-Play", 'Policy', path, r'07xx-1129SelfPlayGames.p')
   # NumpyArray.SelfPlayDriver("Self-Play", 'Policy', r'G:\TruncatedLogs\PythonDataSets\DataStructures\\', r'1018-1024selfPlayLogsBreakthrough1DataPython.p')

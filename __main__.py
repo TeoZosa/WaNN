@@ -22,16 +22,7 @@ import time
 
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
-  # path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
-  # newFile = open(path + r'0806-0824selfPlayLogsBreakthrough4DataPython.p', 'r+b')
-  # oldFile = open(path + r'0806-0824selfPlayLogsBreakthrough4DataPython0.p', 'r+b')
-  # newOpen = pickle.load(newFile)
-  # newFile.close()
-  # oldOpen = pickle.load(oldFile)
-  # oldFile.close()
-  # for i in range(0, len(newOpen)):
-  #   print("new: " + newOpen[i]['Self-PlayLog'])
-  #   print("old: " + oldOpen[i]['Self-PlayLog'])
+
   # startTime = time.time()
   # SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
   # print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))

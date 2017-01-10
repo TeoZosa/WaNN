@@ -10,20 +10,18 @@ import warnings
 import pandas as pd
 from multiprocessing import Pool, freeze_support
 
-def process_directory_of_breakthrough_files(path, player_list):
-    arg_list = [tuple([path, self_play_games]) for self_play_games in find_files(path, '*.txt')]
+def process_directory_of_breakthrough_files(path):
+    player_list = []
+    arg_list = [[path, self_play_games] for self_play_games in find_files(path, '*.txt')]
     freeze_support()
-    process_pool = Pool(processes=16) # can't guarantee which order files will be appended to list?
+    process_pool = Pool(processes=len(arg_list))
     player_list.append(process_pool.starmap(process_breakthrough_file, arg_list))
     process_pool.close()
     process_pool.join()
-
+    return player_list
 
 def process_breakthrough_file(path, self_play_games):
-    file_name = self_play_games[
-                len(path):
-                len(self_play_games)
-                - len('.txt')]  # trim path & extension
+    file_name = self_play_games[len(path):- len('.txt')]  # trim path & extension
     file_name = file_name.split('_SelfPlayLog')  # \BreakthroughN_SelfPlayLog00-> ['\BreakthroughN',00]
     server_name = str(file_name[0].strip('\\'))  # '\BreakthroughN' -> 'BreakthroughN'
     self_play_log = str(file_name[1]).strip(
@@ -42,7 +40,7 @@ def write_to_disk(data_to_write, path):
     date = str(path[len(r'G:\TruncatedLogs') + 1
                     :- len(r'\selfPlayLogsBreakthroughN')])
     server_name = path[- len(r'\selfPlayLogsBreakthroughN') + 1
-                       :-1]
+                       :]
     output_file = open(os.path.join(write_directory, (
                          date  # prepend data to name of server
                        + server_name
@@ -624,6 +622,5 @@ def format_move_lists_and_links(unformatted_move_list):
 
 
 def driver(path):
-    player_list = []
-    process_directory_of_breakthrough_files(path, player_list)
+    player_list = process_directory_of_breakthrough_files(path)
     write_to_disk(player_list, path)

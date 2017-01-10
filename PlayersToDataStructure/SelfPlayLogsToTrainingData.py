@@ -1,3 +1,4 @@
+import os
 import  pickle
 import warnings
 from multiprocessing import Process, pool, Pool, TimeoutError, freeze_support
@@ -36,8 +37,8 @@ def SelfPlayLogsToDataStructures():
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4'
   ]
-  processes = MyPool(processes=15)
-  processes.map(convertLog.driver, paths)#map processes to arg lists
+  processes = MyPool(processes=len(paths))
+  processes.map_async(convertLog.driver, paths)#map processes to arg lists
   processes.close()
   processes.join()
 
@@ -90,8 +91,15 @@ def SelfPlayDataStructuresToNumpyArrays():
            r'1024-1129selfPlayLogsBreakthrough3DataPython.p',
            r'1024-1129selfPlayLogsBreakthrough4DataPython.p']
   arg_lists = [[r'Self-Play', r'Policy', path, file] for file in files]
-  processes = Pool(processes=16)
-  processes.starmap(NumpyArray.SelfPlayDriver, arg_lists)#map processes to arg lists
+  # for file in files:
+  #     thisFile = open(os.path.join(path, file), 'r+b')
+  #     theFile = pickle.load(thisFile)
+  #     for log in theFile:
+  #         for game in log:
+  #           print (game['Self-PlayLog'])
+  #     thisFile.close()
+  processes = Pool(processes=len(files))
+  processes.starmap_async(NumpyArray.SelfPlayDriver, arg_lists)#map processes to arg lists
   processes.close()
   processes.join()
 

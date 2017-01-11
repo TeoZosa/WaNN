@@ -23,9 +23,9 @@ import time
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
 
-  startTime = time.time()
-  SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
-  print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
+  # startTime = time.time()
+  # SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
+  # print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
 
   startTime = time.time()
   SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()

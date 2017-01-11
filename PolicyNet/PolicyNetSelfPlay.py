@@ -24,6 +24,8 @@ import seaborn as sns
 from Tools import utils
 import h5py
 import os
+from PIL import Image
+
 
 sns.set(color_codes=True)
 
@@ -215,6 +217,34 @@ def GridSearch(estimator, X, y, X_test, y_test, whichDevice ='AWS'):
     score = metrics.mean_squared_error(grid.predict(X_test), y_test)
     print('Best Estimator MSE on Holdout Set: {0:f}'.format(score))
 
+def PolicyNet():
+    X = tf.placeholder(tf.float32, [None, 8, 8, None]) # in demo, this was reshaped afterwards; I don't need to since I know shape?
+    y = tf.placeholder(tf.float32, [None, 155])#TODO: pass it the tf.one_hot or redo conversion
+    filter_size = 3
+    n_filters_in = 1
+    n_filters_out = 128
+    y_pred = 1 #  TODO: adapt code from demo
+    cross_entropy = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+    optimizer = tf.train.AdamOptimizer(0.001).minimize(cross_entropy)
+
+    weight_1 = tf.get_variable(name='weight_1',
+                          shape=[filter_size, filter_size, n_filters_in, n_filters_out],
+                          initializer=tf.random_normal_initializer()
+                          )
+    bias_1 = tf.get_variable(name='bias_1',
+                             shape=[n_filters_out],
+                             initializer=tf.constant_initializer())
+    layer_1 = tf.nn.relu(
+        tf.nn.bias_add(
+            tf.nn.conv2d(input=X,
+                         filter=weight_1,
+                         strides=[1, 1, 1, 1],
+                         padding='SAME'),
+            bias_1
+        )
+    )
+    #TODO: repeat 11 more times for rest of CNN
+
 
 def PrintTable(X, y):
     columns = []
@@ -285,12 +315,9 @@ def LoadXAndy_1to1(path):
     X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
     y = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
     return X, y
-# Step #50000, epoch #1, avg. train loss: 0.32184 MSE: 0.664601
-# Step #142500, epoch #4, avg. train loss: 0.18429
-# Step #142600, epoch #4, avg. train loss: 0.18319
-# Step #142700, epoch #4, avg. train loss: 0.18157
 #TODO: construct CNN and select models.
 #TODO: excise code to be run in main script.
+
    #main script
 config = run_config.RunConfig(num_cores=-1)
 inputPath = AssignPath()
@@ -298,7 +325,79 @@ device = AssignDevice(inputPath)
 X, y = LoadXAndy(inputPath)  # X[i] is a 3D matrix corresponding to label at y[i]
 
 #Train/validation/test split or reducing number of training examples
-# sampTrans = X[2].transpose()
+sampleInput = X[30]
+who_dict = {
+            1.0: 127,
+            0.0: 0,
+            }
+who_dict1 = {
+            1.0: 255,
+            0.0: 0,
+            }
+mean_player = np.mean(X, axis=0)
+std_ = np.std(X, axis=0)
+var = np.mean(std_, axis=2)
+
+
+mode_args = ['CMYK', 'RGB', 'YCbCr']
+for mode_arg in mode_args:
+    plot.figure()
+    plot.imshow(Image.fromarray(mean_player[:,:,0], mode=mode_arg))
+    plot.figure()
+    plot.imshow(Image.fromarray(std_[:, :, 0], mode=mode_arg))
+
+    plot.figure()
+    plot.imshow(Image.fromarray(mean_player[:,:,1], mode=mode_arg))
+    plot.figure()
+    plot.imshow(Image.fromarray(std_[:, :, 1], mode=mode_arg))
+
+    plot.figure()
+    plot.imshow(Image.fromarray(mean_player[:,:,2], mode=mode_arg))
+    plot.figure()
+    plot.imshow(Image.fromarray(std_[:, :, 2], mode=mode_arg))
+
+    plot.figure()
+    plot.imshow(Image.fromarray(var[:, :], mode=mode_arg))
+
+
+
+sampleInput = sampleInput.transpose()
+colorE = pd.DataFrame(sampleInput[2]).apply(lambda x: x.apply(lambda y: who_dict[y])).as_matrix()
+colorO = pd.DataFrame(sampleInput[1]).apply(lambda x: x.apply(lambda y: who_dict1[y])).as_matrix()
+sampleInput[2] = colorE
+sampleInput[1] = colorO
+sampleInput = sampleInput.transpose()
+
+normal = sampleInput.transpose()
+player = normal[0].transpose()
+opponent = normal[1].transpose()
+empty = normal[2].transpose()
+fr_p = (pd.DataFrame(player))
+fr_o = pd.DataFrame(opponent)
+fr_e = pd.DataFrame(empty)
+
+
+print(fr_p, '\n', fr_o, '\n', fr_e )
+mode_arg = 'CMYK'
+POEB_img = Image.fromarray(sampleInput, mode_arg)
+P_img = Image.fromarray(sampleInput[:, :, 0], mode_arg)
+O_img = Image.fromarray(sampleInput[:, :, 1], mode_arg)
+E_img = Image.fromarray(sampleInput[:, :, 2], mode_arg)
+OE_img = Image.fromarray(sampleInput[:, :, 1:3], mode_arg)
+
+# plot.figure()
+# plot.imshow(P_img)
+# plot.figure()
+# plot.imshow(O_img)
+# plot.figure()
+# plot.imshow(OE_img)
+# plot.figure()
+# plot.imshow(POE_img)
+# plot.figure()
+# plot.imshow(POEB_img)
+
+
+time.sleep(600)
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
     test_size=0.2, random_state=42)#change random state?
 # X_1train, X_1test, y_1train, y_1test = model_selection.train_test_split(X_1, y_1,

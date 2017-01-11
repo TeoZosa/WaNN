@@ -21,6 +21,9 @@ from tensorflow.contrib.learn.python.learn.estimators import run_config
 import time
 from scipy import stats ,integrate
 import seaborn as sns
+from Tools import utils
+import h5py
+import os
 
 sns.set(color_codes=True)
 
@@ -257,22 +260,27 @@ def AssignDevice(path):
     else:
         device = 'AWS'#todo: configure AWS path
     return device
-def AssignPath(deviceName ='AWS'):
+def AssignPath(deviceName ='Workstation'):
     if  deviceName == 'MBP2011_':
        path =  r'/Users/teofilozosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2014':
        path = r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
-    elif deviceName == 'AWS':
-        path =''#todo: configure AWS path
+    elif deviceName == 'Workstation':
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays'
     else:
         path = ''#todo:error checking
     return path
 def LoadXAndy(path):
-    X = np.load(open(path + r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\07xx-1129SelfPlayGamesXMatrixSelfPlayPOEBias.npy', 'rb'))
-    y = np.load(open(path + r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\07xx-1129SelfPlayGamesyVectorSelfPlayPOEBias.npy', 'rb'))
-    return X, y
+    files = [file_name for file_name in utils.find_files(path, "*.hdf5")]
+    X, y = ([] for i in range (2))
+    for file in files:  # add training examples and corresponding labels from each file to associated arrays
+        training_data = h5py.File(file, 'r')
+        X.extend(training_data['X'][:])
+        y.extend(training_data['y'][:])
+        training_data.close()
+    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)  # b x r x c x f & label
 def LoadXAndy_1to1(path):
     X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
     y = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
@@ -285,20 +293,12 @@ def LoadXAndy_1to1(path):
 #TODO: excise code to be run in main script.
    #main script
 config = run_config.RunConfig(num_cores=-1)
-inputPath = AssignPath('')
+inputPath = AssignPath()
 device = AssignDevice(inputPath)
-X, y = LoadXAndy(inputPath)# row vector X[i] has scalar outcome y[i]
-# X_1, y_1 = LoadXAndy_1to1(inputPath)
-
-# writePath = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingReluDropout'
-# writePath1 = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingSoftplusDropout'
-# writePath2 = inputPath+'Models/WBPOE/Skflow-1to1AdamNoScalingSoftsignDropout'
-# writePath3 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingRelu0009'
-# writePath4 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingSoftplusDropout'
-# writePath5 = inputPath+'Models/WBPOE/Skflow-1to1SGDNoScalingSoftsignDropout'
+X, y = LoadXAndy(inputPath)  # X[i] is a 3D matrix corresponding to label at y[i]
 
 #Train/validation/test split or reducing number of training examples
-sampTrans = X[2].transpose()
+# sampTrans = X[2].transpose()
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
     test_size=0.2, random_state=42)#change random state?
 # X_1train, X_1test, y_1train, y_1test = model_selection.train_test_split(X_1, y_1,

@@ -7,6 +7,7 @@ import copy
 import warnings
 from multiprocessing import Pool, freeze_support, Lock
 import h5py
+import os
 
 #TODO: redo logic and paths after directory restructuring
 def WriteNPArrayToDisk(path, X, y, filterType, NNType):
@@ -272,7 +273,7 @@ def AssignPath(deviceName ='AWS'):
     return path
 
 def SelfPlayDriver(filter, NNType, path, fileName):
-    file = open(path + fileName, 'r+b')
+    file = open(os.path.join(path, fileName), 'r+b')
     playerListDataFriendly = pickle.load(file)
     file.close()
     X, y = generateArray(playerListDataFriendly, filter, NNType)

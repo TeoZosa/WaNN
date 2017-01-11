@@ -6,13 +6,14 @@ import mmap  # read entire files into memory for (only for workstation)
 import copy
 import math
 import warnings
+from Tools import utils
 
 import pandas as pd
 from multiprocessing import Pool, freeze_support
 
 def process_directory_of_breakthrough_files(path):
     player_list = []
-    arg_lists = [[path, self_play_games] for self_play_games in find_files(path, '*.txt')]
+    arg_lists = [[path, self_play_games] for self_play_games in utils.find_files(path, '*.txt')]
     freeze_support()
     process_pool = Pool(processes=len(arg_lists))
     player_list.extend(process_pool.starmap(process_breakthrough_file, arg_lists))
@@ -46,13 +47,6 @@ def write_to_disk(data_to_write, path):
                        + server_name
                        + r'DataPython.p')), 'wb')  # append data qualifier
     pickle.dump(data_to_write, output_file, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
-    for root, dirs, files in os.walk(path):
-        for file in fnmatch.filter(files, extension):
-            yield os.path.join(root, file)
-
 
 def format_game_list(self_play_games):
     games = []

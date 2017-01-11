@@ -18,7 +18,6 @@ class NoDaemonProcess(Process):
 class MyPool(pool.Pool):  # Had to make a special class to allow for an inner process pool
     Process = NoDaemonProcess
 
-#15 processes
 def SelfPlayLogsToDataStructures():
   paths = [
     r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx',
@@ -66,7 +65,7 @@ def AggregateSelfPlayDataStructures():
     r'1024-1129selfPlayLogsBreakthrough4DataPython.p']
     combinedList =[]
     for fileName in files:
-        file = open(path+fileName,'r+b')
+        file = open(os.path.join(path, fileName),'r+b')
         combinedList.extend(pickle.load(file))
         file.close()
     outputList = open(path + r'07xx-1129SelfPlayGames.p', 'wb')
@@ -74,7 +73,7 @@ def AggregateSelfPlayDataStructures():
     outputList.close()
 
 def SelfPlayDataStructuresToNumpyArrays():
-  path = r'G:\TruncatedLogs\PythonDataSets\DataStructures\\'
+  path = r'G:\TruncatedLogs\PythonDataSets\DataStructures'
   files = [
            r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
            r'0802-0805selfPlayLogsWorkstationxxDataPython.p',

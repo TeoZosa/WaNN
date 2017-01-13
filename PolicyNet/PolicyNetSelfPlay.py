@@ -25,7 +25,7 @@ from Tools import utils
 import h5py
 import os
 from PIL import Image
-
+import random
 
 sns.set(color_codes=True)
 
@@ -217,69 +217,6 @@ def GridSearch(estimator, X, y, X_test, y_test, whichDevice ='AWS'):
     score = metrics.mean_squared_error(grid.predict(X_test), y_test)
     print('Best Estimator MSE on Holdout Set: {0:f}'.format(score))
 
-def PolicyNet():
-    X = tf.placeholder(tf.float32, [None, 8, 8, None]) # in demo, this was reshaped afterwards; I don't need to since I know shape?
-    y = tf.placeholder(tf.float32, [None, 155])#TODO: pass it the tf.one_hot or redo conversion
-    filter_size = 3
-    n_filters_in = 1
-    n_filters_out = 128
-    y_pred = 1 #  TODO: adapt code from demo
-    cross_entropy = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-    optimizer = tf.train.AdamOptimizer(0.001).minimize(cross_entropy)
-
-    weight_1 = tf.get_variable(name='weight_1',
-                          shape=[filter_size, filter_size, n_filters_in, n_filters_out],
-                          initializer=tf.random_normal_initializer()
-                          )
-    bias_1 = tf.get_variable(name='bias_1',
-                             shape=[n_filters_out],
-                             initializer=tf.constant_initializer())
-    layer_1 = tf.nn.relu(
-        tf.nn.bias_add(
-            tf.nn.conv2d(input=X,
-                         filter=weight_1,
-                         strides=[1, 1, 1, 1],
-                         padding='SAME'),
-            bias_1
-        )
-    )
-    #TODO: repeat 11 more times for rest of CNN
-
-
-def PrintTable(X, y):
-    columns = []
-    #generate column names
-    for dimension in ['Player', 'Opponent', 'Empty']:
-        for i in range (1, 9):
-            for char in 'abcdefgh':
-                position = 'Position: ' + char + str(i) + ' (' + dimension +')'
-                columns.append(position)
-    columns.append('Player Turn')
-    columns.append('Outcome')
-    combined_matrix = np.column_stack((X, y))
-    frame = pd.DataFrame(combined_matrix, columns=columns)
-    pprint.pprint(frame.tail())
-    WriteNPArrayToCSV(combined_matrix)
-    WriteDataFrameToXLSX(frame)
-
-
-def WriteDataFrameToXLSX(frame, file_name ='output.xlsx'):#human readable table
-    writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
-    frame.to_excel(writer, 'Sheet1')
-    writer.save()
-
-def WriteDataFrameToCSV(frame, file_name ='output.csv'):
-    frame.to_csv(file_name)
-
-    checkFrame = pd.read_csv(file_name, header = None)
-    pprint.pprint(checkFrame)
-
-def WriteNPArrayToCSV(array, file_name='output.csv'):
-    np.savetxt(file_name, array, delimiter=',', fmt='%1i')
-
-def ReadCSVfile(file_name='BinaryFeaturePlanesDataset.csv', columns=None):#to import data back in.
-    frame = pd.read_csv(file_name, header=None, names=columns)
-    return frame
 def AssignDevice(path):
     if path == r'/Users/teofilozosa/PycharmProjects/BreakthroughANN/':
         device = 'MBP2011_'
@@ -298,7 +235,7 @@ def AssignPath(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)'
     else:
         path = ''#todo:error checking
     return path
@@ -315,95 +252,143 @@ def LoadXAndy_1to1(path):
     X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
     y = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
     return X, y
+
+def image_stuff():
+    #Train/validation/test split or reducing number of training examples
+    sampleInput = X[30]
+    who_dict = {
+                1.0: 127,
+                0.0: 0,
+                }
+    who_dict1 = {
+                1.0: 255,
+                0.0: 0,
+                }
+    mean_player = np.mean(X, axis=0)
+    std_ = np.std(X, axis=0)
+    var = np.mean(std_, axis=2)
+
+
+    mode_args = ['CMYK', 'RGB', 'YCbCr']
+    for mode_arg in mode_args:
+        plot.figure()
+        plot.imshow(Image.fromarray(mean_player[:,:,0], mode=mode_arg))
+        plot.figure()
+        plot.imshow(Image.fromarray(std_[:, :, 0], mode=mode_arg))
+
+        plot.figure()
+        plot.imshow(Image.fromarray(mean_player[:,:,1], mode=mode_arg))
+        plot.figure()
+        plot.imshow(Image.fromarray(std_[:, :, 1], mode=mode_arg))
+
+        plot.figure()
+        plot.imshow(Image.fromarray(mean_player[:,:,2], mode=mode_arg))
+        plot.figure()
+        plot.imshow(Image.fromarray(std_[:, :, 2], mode=mode_arg))
+
+        plot.figure()
+        plot.imshow(Image.fromarray(var[:, :], mode=mode_arg))
+
+
+
+    sampleInput = sampleInput.transpose()
+    colorE = pd.DataFrame(sampleInput[2]).apply(lambda x: x.apply(lambda y: who_dict[y])).as_matrix()
+    colorO = pd.DataFrame(sampleInput[1]).apply(lambda x: x.apply(lambda y: who_dict1[y])).as_matrix()
+    sampleInput[2] = colorE
+    sampleInput[1] = colorO
+    sampleInput = sampleInput.transpose()
+
+    normal = sampleInput.transpose()
+    player = normal[0].transpose()
+    opponent = normal[1].transpose()
+    empty = normal[2].transpose()
+    fr_p = (pd.DataFrame(player))
+    fr_o = pd.DataFrame(opponent)
+    fr_e = pd.DataFrame(empty)
+
+
+    print(fr_p, '\n', fr_o, '\n', fr_e )
+    mode_arg = 'CMYK'
+    POEB_img = Image.fromarray(sampleInput, mode_arg)
+    P_img = Image.fromarray(sampleInput[:, :, 0], mode_arg)
+    O_img = Image.fromarray(sampleInput[:, :, 1], mode_arg)
+    E_img = Image.fromarray(sampleInput[:, :, 2], mode_arg)
+    OE_img = Image.fromarray(sampleInput[:, :, 1:3], mode_arg)
+
+    # plot.figure()
+    # plot.imshow(P_img)
+    # plot.figure()
+    # plot.imshow(O_img)
+    # plot.figure()
+    # plot.imshow(OE_img)
+    # plot.figure()
+    # plot.imshow(POE_img)
+    # plot.figure()
+    # plot.imshow(POEB_img)
+
+
+    time.sleep(600)
 #TODO: construct CNN and select models.
 #TODO: excise code to be run in main script.
 
+
+def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name=None, activation=tf.nn.relu, reuse=None):
+     # of filters in each layer ranged from 64-192
+    with tf.variable_scope(name or 'hidden_layer', reuse=reuse):
+        weight = tf.get_variable(name='weight',
+                                   shape=[filter_size, filter_size,   # h x w
+                                          n_filters_in,
+                                          n_filters_out],
+                                   initializer=tf.random_normal_initializer(mean=0.0, stddev=0.02)#mean, std?
+                                   )
+        bias = tf.get_variable(name='bias',
+                                 shape=[n_filters_out],
+                                 initializer=tf.constant_initializer())
+        hidden_layer = activation(
+            tf.nn.bias_add(
+                tf.nn.conv2d(input=prev_layer,
+                             filter=weight,
+                             strides=[1, 1, 1, 1],
+                             padding='SAME'),
+                bias
+            )
+        )
+        return hidden_layer
+
+def output_layer_init(layer_in, name='output_layer_init', reuse=None):
+    layer_in = tf.reshape(layer_in, [-1, 8*8])
+    activation = tf.nn.softmax
+    n_features = layer_in.get_shape().as_list()[1]
+    with tf.variable_scope(name or 'output_layer_init', reuse=reuse):
+        weight = tf.get_variable(
+            name='weight',
+            shape=[n_features, 155], # 1 x 64 filter in, 155 classes out
+            dtype=tf.float32,
+            initializer=tf.contrib.layers.xavier_initializer())
+
+        bias = tf.get_variable(
+            name='bias',
+            shape=[155],
+            dtype=tf.float32,
+            initializer=tf.constant_initializer(0.0))
+
+        predicted_output = activation(tf.nn.bias_add(
+            name='output',
+            value=tf.matmul(layer_in, weight),
+            bias=bias))
+        return predicted_output, weight
+
    #main script
+
 config = run_config.RunConfig(num_cores=-1)
 inputPath = AssignPath()
 device = AssignDevice(inputPath)
-X, y = LoadXAndy(inputPath)  # X[i] is a 3D matrix corresponding to label at y[i]
+X, y = LoadXAndy(inputPath)
 
-#Train/validation/test split or reducing number of training examples
-sampleInput = X[30]
-who_dict = {
-            1.0: 127,
-            0.0: 0,
-            }
-who_dict1 = {
-            1.0: 255,
-            0.0: 0,
-            }
-mean_player = np.mean(X, axis=0)
-std_ = np.std(X, axis=0)
-var = np.mean(std_, axis=2)
-
-
-mode_args = ['CMYK', 'RGB', 'YCbCr']
-for mode_arg in mode_args:
-    plot.figure()
-    plot.imshow(Image.fromarray(mean_player[:,:,0], mode=mode_arg))
-    plot.figure()
-    plot.imshow(Image.fromarray(std_[:, :, 0], mode=mode_arg))
-
-    plot.figure()
-    plot.imshow(Image.fromarray(mean_player[:,:,1], mode=mode_arg))
-    plot.figure()
-    plot.imshow(Image.fromarray(std_[:, :, 1], mode=mode_arg))
-
-    plot.figure()
-    plot.imshow(Image.fromarray(mean_player[:,:,2], mode=mode_arg))
-    plot.figure()
-    plot.imshow(Image.fromarray(std_[:, :, 2], mode=mode_arg))
-
-    plot.figure()
-    plot.imshow(Image.fromarray(var[:, :], mode=mode_arg))
-
-
-
-sampleInput = sampleInput.transpose()
-colorE = pd.DataFrame(sampleInput[2]).apply(lambda x: x.apply(lambda y: who_dict[y])).as_matrix()
-colorO = pd.DataFrame(sampleInput[1]).apply(lambda x: x.apply(lambda y: who_dict1[y])).as_matrix()
-sampleInput[2] = colorE
-sampleInput[1] = colorO
-sampleInput = sampleInput.transpose()
-
-normal = sampleInput.transpose()
-player = normal[0].transpose()
-opponent = normal[1].transpose()
-empty = normal[2].transpose()
-fr_p = (pd.DataFrame(player))
-fr_o = pd.DataFrame(opponent)
-fr_e = pd.DataFrame(empty)
-
-
-print(fr_p, '\n', fr_o, '\n', fr_e )
-mode_arg = 'CMYK'
-POEB_img = Image.fromarray(sampleInput, mode_arg)
-P_img = Image.fromarray(sampleInput[:, :, 0], mode_arg)
-O_img = Image.fromarray(sampleInput[:, :, 1], mode_arg)
-E_img = Image.fromarray(sampleInput[:, :, 2], mode_arg)
-OE_img = Image.fromarray(sampleInput[:, :, 1:3], mode_arg)
-
-# plot.figure()
-# plot.imshow(P_img)
-# plot.figure()
-# plot.imshow(O_img)
-# plot.figure()
-# plot.imshow(OE_img)
-# plot.figure()
-# plot.imshow(POE_img)
-# plot.figure()
-# plot.imshow(POEB_img)
-
-
-time.sleep(600)
+# X[i] is a 3D matrix corresponding to label at y[i]
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
-    test_size=0.2, random_state=42)#change random state?
-# X_1train, X_1test, y_1train, y_1test = model_selection.train_test_split(X_1, y_1,
-#     test_size=0.1, random_state=42)#change random state?
-#for final run
-# X, y = shuffle(X, y, random_state= 777)
+    test_size=0.0001, random_state=42)#change random state?
+
 
 #doesn't work with learn
 # X_train = tf.one_hot(indices=X_train, depth=256, on_value=1, off_value=0, axis=-1)
@@ -412,34 +397,116 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
 # y_test = tf.one_hot(indices=y_test, depth=154, on_value=1, off_value=0, axis=-1)
 
 # Specify that all features have real-value data
-feature_columns = []
-for i in range (0, 256):
-    column = tf.contrib.layers.sparse_column_with_hash_bucket("{number}".format(number=i), hash_bucket_size=2, dtype=tf.int32)
-    sparse_column = tf.contrib.layers.embedding_column(sparse_id_column=column, dimension=2)
-    # sparse_column = tf.contrib.layers.sparse_column_with_integerized_feature("{number}".format(number=i), bucket_size=2, dtype=tf.int32)
-    #feature_columns = [tf.contrib.layers.one_hot_column(sparse_column)]
-    feature_columns.append(sparse_column)
 
 
-# Build 3 layer DNN with 10, 20, 10 units respectively.
-classifier = tf.contrib.learn.DNNClassifier(feature_columns=feature_columns,
-                                            hidden_units=[1024, 2056, 1024],
-                                            n_classes=155,#including no move
-                                            activation_fn=tf.nn.relu,
-                                            #model_dir="/tmp/breakthrough_model_Adam",
-                                            optimizer=tf.train.AdamOptimizer(learning_rate=0.000000001))
 
-# Fit model.
-classifier.fit(x=X_train,
-               y=y_train,
-               steps=2000,
-               batch_size=2056)
 
-# Evaluate accuracy.
-accuracy_score = classifier.evaluate(x=X_test,
-                                     y=y_test)["accuracy"]
-print('Accuracy: {0:f}'.format(accuracy_score))
 
+
+X = tf.placeholder(tf.float32, [None, 8, 8, 4]) # in demo, this was reshaped afterwards; I don't need to since I know shape?
+# TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
+y = tf.placeholder(tf.float32, [None, 155])#TODO: pass it the tf.one_hot or redo conversion
+filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
+#TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
+n_filters_out = [128]*11 + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
+
+n_layers = 12
+h_layers = [hidden_layer_init(X, X.get_shape()[-1],  # n_filters in == n_feature_planes
+                              n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
+for i in range(0, n_layers-1):
+    h_layers.append(hidden_layer_init(h_layers[i], n_filters_out[i], n_filters_out[i+1], filter_size, name='hidden_layer/{num}'.format(num=i+2), reuse=None))
+
+#  output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
+y_pred, _ = output_layer_init(h_layers[-1], reuse=None)
+
+learning_rate = 0.001
+batch_size = 1024
+cross_entropy = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+# cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(y_pred, y))
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cross_entropy)
+correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+
+sess = tf.Session()
+sess.run(tf.global_variables_initializer())
+
+# We first get the graph that we used to compute the network
+g = tf.get_default_graph()
+
+# And can inspect everything inside of it
+print ([op.name for op in g.get_operations()])
+
+n_epochs = 100
+
+for epoch_i in range(n_epochs):
+    X_train1, X_valid, y_train1, y_valid = model_selection.train_test_split(X_train, y_train,
+                                                                        test_size=0.0001,
+                                                                        random_state=random.randint(1, 1024))  # change random state?
+
+    X_train_batches = [X_train1[:batch_size]]
+    y_train_batches = [y_train1[:batch_size]]
+    remaining_x_train = X_train1[batch_size:]
+    remaining_y_train = y_train1[batch_size:]
+    for i in range(1, len(X_train1)//batch_size):
+        X_train_batches.append(remaining_x_train[:batch_size])
+        y_train_batches.append(remaining_y_train[:batch_size])
+        remaining_x_train = remaining_x_train[batch_size:]
+        remaining_y_train = remaining_y_train[batch_size:]
+    X_train_batches.append(remaining_x_train)  # append remaining training examples
+    y_train_batches.append(remaining_y_train)
+
+    startTime = time.time()
+    for i in range (0, len(X_train_batches)):
+        sess.run(optimizer, feed_dict={
+            X: X_train_batches[i],
+            y: y_train_batches[i]
+        })
+
+
+
+    print ('Epoch: {} Accuracy: '.format(epoch_i))
+    print(sess.run(accuracy,
+                   feed_dict={
+                       X: X_valid,
+                       y: y_valid
+                   }))
+    print("Minutes between epochs: {time}".format(time=(time.time() - startTime) / (60)))
+# Print final test accuracy:
+X_test1 = X_test
+y_test1 = y_test
+print(sess.run(accuracy,
+               feed_dict={
+                   X: X_test1,
+                   y: y_test1
+               }))
+
+# feature_columns = []
+# for i in range (0, 256):
+#     column = tf.contrib.layers.sparse_column_with_hash_bucket("{number}".format(number=i), hash_bucket_size=2, dtype=tf.int32)
+#     sparse_column = tf.contrib.layers.embedding_column(sparse_id_column=column, dimension=2)
+#     # sparse_column = tf.contrib.layers.sparse_column_with_integerized_feature("{number}".format(number=i), bucket_size=2, dtype=tf.int32)
+#     #feature_columns = [tf.contrib.layers.one_hot_column(sparse_column)]
+#     feature_columns.append(sparse_column)
+#
+#
+# # Build 3 layer DNN with 10, 20, 10 units respectively.
+# classifier = tf.contrib.learn.DNNClassifier(feature_columns=feature_columns,
+#                                             hidden_units=[1024, 2056, 1024],
+#                                             n_classes=155,#including no move
+#                                             activation_fn=tf.nn.relu,
+#                                             #model_dir="/tmp/breakthrough_model_Adam",
+#                                             optimizer=tf.train.AdamOptimizer(learning_rate=0.000000001))
+#
+# # Fit model.
+# classifier.fit(x=X_train,
+#                y=y_train,
+#                steps=2000,
+#                batch_size=2056)
+#
+# # Evaluate accuracy.
+# accuracy_score = classifier.evaluate(x=X_test,y=y_test)["accuracy"]
+# print('Accuracy: {0:f}'.format(accuracy_score))
+#
 
 # 't' is [
 # [[1, 1, 1], [2, 2, 2]],

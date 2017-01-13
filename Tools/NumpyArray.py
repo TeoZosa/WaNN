@@ -24,7 +24,7 @@ def WriteNPArrayToDisk(path, X, y, filterType, NNType):
         pickle.dump(y, yVector)
     elif filterType == r'Self-Play':
         if NNType == 'Policy':
-          h5f = h5py.File(os.path.join(path, r'POEBias.hdf5'), 'w', driver='core')
+          h5f = h5py.File(path + r'POEBias.hdf5', 'w', driver='core')
           h5f.create_dataset(r'X', data=X)
           h5f.create_dataset(r'y', data=y)
           h5f.close()
@@ -124,22 +124,26 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit, cnn_format=True):
             x = np.reshape(np.array(x, dtype=np.float32), (len(x) // 64, 8, 8))  # feature_plane x row x co)
             for i in range(0, len(x)):
                 x[i] = x[i].transpose() #transpose (row x col) to get feature_plane x col x row
-            x = x.transpose()# convert to CNN board and transpose to get proper dimensions (row x cols  x feature plane)
+            x = x.transpose()#  transpose to get proper dimensions (row x cols  x feature plane)
         # one_hot_indices = []
         # for position_index in range(0, len(x)):  # pass indices to tf.one_hot
         #     if x[position_index] == 1:
         #         one_hot_indices.append(position_index)
         one_hot_transitions = None
-        transition_vector = trainingExample[2]
-        for transition in range(0, len(transition_vector)):
-            if transition_vector[transition] == 1:
-                one_hot_transitions = transition
-                break
-        if one_hot_transitions == None:  # no move made
-            # one_hot_transitions = -1  # tf.one_hot will return a vector of all 0s
-            one_hot_transitions = 155  # DNNClassifier => 155 == no move category
+        transition_vector = np.array(trainingExample[2], dtype=np.float32)
+        if not transition_vector.any():
+            transition_vector = np.array([0]*154 + [1], dtype=np.float32)
+        else:
+            transition_vector = np.append(transition_vector, [0])
+        # for transition in range(0, len(transition_vector)):
+        #     if transition_vector[transition] == 1:
+        #         one_hot_transitions = transition
+        #         break
+        # if one_hot_transitions == None:  # no move made
+        #     # one_hot_transitions = -1  # tf.one_hot will return a vector of all 0s
+        #     one_hot_transitions = 154  # DNNClassifier => 154 == no move category
         X.append(x)
-        y.append(one_hot_transitions)  # transition number
+        y.append(transition_vector)  # transition number
         # X.append(np.array(x, dtype=np.int32)) #1d board
         # y.append(trainingExample[2])#transition vector
     return X, y

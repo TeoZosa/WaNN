@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+
 import matplotlib.pyplot as plot
 import numpy as np
 import pandas as pd
@@ -26,6 +27,9 @@ import h5py
 import os
 from PIL import Image
 import random
+from tensorflow.python.framework.ops import reset_default_graph
+
+reset_default_graph()
 
 sns.set(color_codes=True)
 
@@ -359,7 +363,7 @@ def output_layer_init(layer_in, name='output_layer_init', reuse=None):
     layer_in = tf.reshape(layer_in, [-1, 8*8])
     activation = tf.nn.softmax
     n_features = layer_in.get_shape().as_list()[1]
-    with tf.variable_scope(name or 'output_layer_init', reuse=reuse):
+    with tf.variable_scope(name or 'output_layer', reuse=reuse):
         weight = tf.get_variable(
             name='weight',
             shape=[n_features, 155], # 1 x 64 filter in, 155 classes out
@@ -372,7 +376,7 @@ def output_layer_init(layer_in, name='output_layer_init', reuse=None):
             dtype=tf.float32,
             initializer=tf.constant_initializer(0.0))
 
-        predicted_output = activation(tf.nn.bias_add(
+        predicted_output = (tf.nn.bias_add(
             name='output',
             value=tf.matmul(layer_in, weight),
             bias=bias))
@@ -389,97 +393,138 @@ X, y = LoadXAndy(inputPath)
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
     test_size=0.0001, random_state=42)#change random state?
 
-
-#doesn't work with learn
-# X_train = tf.one_hot(indices=X_train, depth=256, on_value=1, off_value=0, axis=-1)
-# X_test = tf.one_hot(indices=X_test, depth=256, on_value=1, off_value=0, axis=-1)
-# y_train = tf.one_hot(indices=y_train, depth=154, on_value=1, off_value=0, axis=-1)
-# y_test = tf.one_hot(indices=y_test, depth=154, on_value=1, off_value=0, axis=-1)
-
-# Specify that all features have real-value data
+import sys
 
 
 
+file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamTestsTFCrossEntropy.txt'), 'a')
+# file = sys.stdout
+for batch_size in [16, 32, 64,
+                   128, 256, 512]:
+    for learning_rate in [0.0009, 0.001, 0.0011, 0.0012]:
+        reset_default_graph()
+        X = tf.placeholder(tf.float32, [None, 8, 8, 4])
+        # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
+        y = tf.placeholder(tf.float32, [None, 155])
+        filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
+        #TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
+        n_filters_out = [128]*11 + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
+
+        n_layers = 12
+        h_layers = [hidden_layer_init(X, X.get_shape()[-1],  # n_filters in == n_feature_planes
+                                      n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
+        for i in range(0, n_layers-1):
+            h_layers.append(hidden_layer_init(h_layers[i], n_filters_out[i], n_filters_out[i+1], filter_size, name='hidden_layer/{num}'.format(num=i+2), reuse=None))
+
+        #  output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
+        outer_layer, _ = output_layer_init(h_layers[-1], reuse=None)
+
+        #using tf's internal softmax; else, put softmax back in output layer
+        cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
+        y_pred = tf.nn.softmax(outer_layer)
+
+        #kadenze cost function
+        # cross_entropy = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+
+        #alternative implementation
+        # cost = tf.reduce_mean(cross_entropy)
+
+        #way better performance
+        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+
+        #SGD used in AlphaGO
+        # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+
+        correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+
+        sess = tf.Session()
+        sess.run(tf.global_variables_initializer())
+
+        # # We first get the graph that we used to compute the network
+        # g = tf.get_default_graph()
+        #
+        # # And can inspect everything inside of it
+        # pprint.pprint([op.name for op in g.get_operations()])
+
+        n_epochs = 5
+        print("\nAdam Optimizer"
+              "\nLearning Rate: {learning_rate}"
+              "\nBatch Size: {batch_size}"
+              "\n# of Epochs: {n_epochs}".format(
+            learning_rate=learning_rate, batch_size = batch_size, n_epochs=n_epochs), end="\n", file=file)
+        X_train1, X_valid, y_train1, y_valid = model_selection.train_test_split(X_train, y_train,
+                                                                                test_size=0.0001,
+                                                                                random_state=random.randint(1, 1024))  # keep validation outside
+        for epoch_i in range(n_epochs):
+            X_train1, y_train1 = shuffle(X_train1, y_train1,
+                                               random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
+
+            X_train_batches = [X_train1[:batch_size]]
+            y_train_batches = [y_train1[:batch_size]]
+            remaining_x_train = X_train1[batch_size:]
+            remaining_y_train = y_train1[batch_size:]
+            for i in range(1, len(X_train1)//batch_size):
+                X_train_batches.append(remaining_x_train[:batch_size])
+                y_train_batches.append(remaining_y_train[:batch_size])
+                remaining_x_train = remaining_x_train[batch_size:]
+                remaining_y_train = remaining_y_train[batch_size:]
+            X_train_batches.append(remaining_x_train)  # append remaining training examples
+            y_train_batches.append(remaining_y_train)
+
+            startTime = time.time()
+            for i in range (0, len(X_train_batches)):
+                sess.run(optimizer, feed_dict={
+                    X: X_train_batches[i],
+                    y: y_train_batches[i]
+                })
+                if (i+1)%(len(X_train_batches)//10)==0:  # show loss at every 1/10th interval
+                    print("Loss: ", end="", file=file)
+                    print(sess.run(cost, feed_dict={
+                        X: X_train_batches[i],
+                        y: y_train_batches[i]
+                    }), end="\n", file=file)
+                    print("Loss Reduced Mean: ", end="", file=file)
+                    print(sess.run(tf.reduce_mean(cost), feed_dict={
+                        X: X_train_batches[i],
+                        y: y_train_batches[i]
+                    }), end="\n", file=file)
+                    print("Loss Reduced Sum: ", end="", file=file)
+                    print(sess.run(tf.reduce_sum(cost), feed_dict={
+                        X: X_train_batches[i],
+                        y: y_train_batches[i]
+                    }), end="\n", file=file)
 
 
 
-X = tf.placeholder(tf.float32, [None, 8, 8, 4]) # in demo, this was reshaped afterwards; I don't need to since I know shape?
-# TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
-y = tf.placeholder(tf.float32, [None, 155])#TODO: pass it the tf.one_hot or redo conversion
-filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
-#TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
-n_filters_out = [128]*11 + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
-
-n_layers = 12
-h_layers = [hidden_layer_init(X, X.get_shape()[-1],  # n_filters in == n_feature_planes
-                              n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
-for i in range(0, n_layers-1):
-    h_layers.append(hidden_layer_init(h_layers[i], n_filters_out[i], n_filters_out[i+1], filter_size, name='hidden_layer/{num}'.format(num=i+2), reuse=None))
-
-#  output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
-y_pred, _ = output_layer_init(h_layers[-1], reuse=None)
-
-learning_rate = 0.001
-batch_size = 1024
-cross_entropy = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-# cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(y_pred, y))
-optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cross_entropy)
-correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
-
-sess = tf.Session()
-sess.run(tf.global_variables_initializer())
-
-# We first get the graph that we used to compute the network
-g = tf.get_default_graph()
-
-# And can inspect everything inside of it
-print ([op.name for op in g.get_operations()])
-
-n_epochs = 100
-
-for epoch_i in range(n_epochs):
-    X_train1, X_valid, y_train1, y_valid = model_selection.train_test_split(X_train, y_train,
-                                                                        test_size=0.0001,
-                                                                        random_state=random.randint(1, 1024))  # change random state?
-
-    X_train_batches = [X_train1[:batch_size]]
-    y_train_batches = [y_train1[:batch_size]]
-    remaining_x_train = X_train1[batch_size:]
-    remaining_y_train = y_train1[batch_size:]
-    for i in range(1, len(X_train1)//batch_size):
-        X_train_batches.append(remaining_x_train[:batch_size])
-        y_train_batches.append(remaining_y_train[:batch_size])
-        remaining_x_train = remaining_x_train[batch_size:]
-        remaining_y_train = remaining_y_train[batch_size:]
-    X_train_batches.append(remaining_x_train)  # append remaining training examples
-    y_train_batches.append(remaining_y_train)
-
-    startTime = time.time()
-    for i in range (0, len(X_train_batches)):
-        sess.run(optimizer, feed_dict={
-            X: X_train_batches[i],
-            y: y_train_batches[i]
-        })
+            print ('Epoch {} Accuracy: '.format(epoch_i+1), end="", file=file)
+            print(sess.run(accuracy,
+                           feed_dict={
+                               X: X_valid,
+                               y: y_valid
+                           }), end="\n", file=file)
 
 
 
-    print ('Epoch: {} Accuracy: '.format(epoch_i))
-    print(sess.run(accuracy,
-                   feed_dict={
-                       X: X_valid,
-                       y: y_valid
-                   }))
-    print("Minutes between epochs: {time}".format(time=(time.time() - startTime) / (60)))
-# Print final test accuracy:
-X_test1 = X_test
-y_test1 = y_test
-print(sess.run(accuracy,
-               feed_dict={
-                   X: X_test1,
-                   y: y_test1
-               }))
-
+            print("Sample Predicted y = "
+                  "\n{y_pred}"
+                  "\nActual y = "
+                  "\n{y_act}".format(
+                y_pred = sess.run(y_pred,
+                                  feed_dict={X:[X_valid[0]]}),
+                y_act =y_valid[0]), end="\n", file=file)
+            print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / (60)), end="\n", file=file)
+        # Print final test accuracy:
+        X_test1 = X_test
+        y_test1 = y_test
+        print("Final Test Accuracy: ", end="", file=file)
+        print(sess.run(accuracy,
+                       feed_dict={
+                           X: X_test1,
+                           y: y_test1
+                       }), end="\n", file=file)
+        sess.close()
+file.close()
 # feature_columns = []
 # for i in range (0, 256):
 #     column = tf.contrib.layers.sparse_column_with_hash_bucket("{number}".format(number=i), hash_bucket_size=2, dtype=tf.int32)
@@ -514,122 +559,3 @@ print(sess.run(accuracy,
 # ]
 
 
-#print (len(np.asarray(X[0], np.int8)[0]))
-
-# regressor3 = learn.TensorFlowDNNRegressor(hidden_units=[400],
-#                                            optimizer='Adam', learning_rate=0.0009, steps=20000,
-#                                            batch_size=256)  # AlphaGo uses SGD
-# GridSearch(regressor3, X_train, y_train, X_test, y_test, whichDevice="MBP2014")
-
-# regressor2 = learn.TensorFlowDNNRegressor(hidden_units=[400, 400],
-#                                            optimizer='Adam', learning_rate=0.0019, steps=20000,
-#                                            batch_size=256)
-# scaler = ('scaler', StandardScaler())
-# DNNR = ('regressor', regressor2)
-# pipe_DNNR = Pipeline([scaler, DNNR])
-# GridSearch(pipe_DNNR, X_train, y_train, X_test, y_test, whichDevice="MBP2014_Scaled")
-# pipe_DNNR.fit(X_1train, y_1train)
-#
-
-#regressor3.fit(X, y, logdir=inputPath+r"ValueNetRankBinary/12IntegrationReluAdam1x400_eta0009")
-# optimizer = tf.train.AdamOptimizer()
-# regressor3 = learn.DNNRegressor(hidden_units=[400], model_dir=inputPath+r'/finalIntegration', optimizer=tf.train.AdamOptimizer())
-# regressor3.fit(X, y, batch_size=256, steps=20000)
-# timerObj = time.perf_counter()
-#print("{predict} vs {actual} in {time} seconds.".format(actual = y_train[0], predict = regressor3.predict(X_train[0]), time= time.perf_counter()-timerObj))
-# Dist = sns.distplot(regressor3.predict(X))
-# plot.show(Dist)
-#score = metrics.mean_squared_error(regressor3.predict(X_test), y_test)
-#print('#Relu Adam 0to1 Best Estimator MSE on Holdout Set: {0:f}'.format(score))
-# print(regressor3.get_variable_value('hiddenlayer_0/weights'))
-#
-# # writeOut = np.asarray(regressor3.get_variable_value('hiddenlayer_0/weights'))
-# # WriteNPArrayToCSV(writeOut)
-# weights = regressor3.get_variable_value('hiddenlayer_0/weights')
-# weightList = []
-# for weight in weights:
-#     weightList.append(weight)
-# pprint.pprint(weightList)
-# biases = regressor3.get_variable_value('hiddenlayer_0/bias')
-# biasList = []
-# for bias in biases:
-#     biasList.append(bias)
-# pprint.pprint(biasList)
-# outputFile = open("hiddenUnitWeights.txt", 'w')
-# outputFile.write(str(weightList))
-# outputFile.close()
-# outputFile = open("HiddenUnitBias.txt", 'w')
-# outputFile.write(str(biasList))
-# outputFile.close()
-# weights = regressor3.get_variable_value('dnn_logit/weights')
-# weightList = []
-# for weight in weights:
-#     weightList.append(weight)
-# pprint.pprint(weightList)
-# biases = regressor3.get_variable_value('dnn_logit/bias')
-# biasList = []
-# for bias in biases:
-#     biasList.append(bias)
-# pprint.pprint(biasList)
-# outputFile = open("dnn_logitWeights.txt", 'w')
-# outputFile.write(str(weightList))
-# outputFile.close()
-# outputFile = open("dnn_logitBias.txt", 'w')
-# outputFile.write(str(biasList))
-# outputFile.close()
-# biases = regressor3.get_variable_value(r'centered_bias_weight')
-# biasList = []
-# for bias in biases:
-#     biasList.append(bias)
-# pprint.pprint(biasList)
-# outputFile = open("centeredBias.txt", 'w')
-# outputFile.write(str(biasList))
-# outputFile.close()
-# regressor3.save('12Int')
-
-#write_to_disk(inputPath, regressor)
-
-
-
-# saver = tf.train.Saver()
-#
-# with tf.Session() as sess:
-#     checkpoint = tf.train.get_checkpoint_state(inputPath+r"ValueNetRankBinary/12IntegrationReluAdam1x400_eta0009")
-#     if checkpoint and checkpoint.model_checkpoint_path:
-#         saver.restore(sess, inputPath+r"ValueNetRankBinary/12IntegrationReluAdam1x400_eta0009")
-#         print("model Loaded")
-#     else:
-#         print("no checkpoint found")
-#     sess.
-
-  ####ON Player opponent empty dataset
-#Skflow Adam 50k steps, batch size 32, 4096x2 hidden units Best Estimator MSE on Holdout Set: 0.164951
-#ReluScaled Adam Best Estimator MSE on Holdout Set: 0.178168
-#Softplus Adam Best Estimator MSE on Holdout Set: 0.165375
-#softsign Adam Best Estimator MSE on Holdout Set: 0.280076
-#reluNoScaling Adam Best Estimator MSE on Holdout Set: 0.165375
-
-#Relu Adam 0to100 Best Estimator MSE on Holdout Set: 1777.574707
-#Sofplus Adam 0to100 Best Estimator MSE on Holdout Set: 1661.274536
-#SoftSign Adam 0to100 Best Estimator MSE on Holdout Set: 1694.384521
-
-#WBEPOE Bias [4096, 4096] Dropout p =0.5
-#Relu Adam -1to1 Best Estimator MSE on Holdout Set: 0.163439[2048, 2048]
-#Sofplus Adam -1to1 Best Estimator MSE on Holdout Set: 0.163352
-#SoftSign Adam -1to1 Best Estimator MSE on Holdout Set: 43.901260
-#Relu SGD -1to1 Best Estimator MSE on Holdout Set: 0.178721
-
-
-
-#Relu SGD -1to1 Best Estimator MSE on Holdout Set: 0.149449 [4096] a = 0.0007
-
-
-
-#BiasWBPOE...
-
-#Relu Adagrad -1to1 Best Estimator MSE on Holdout Set: 0.144799
-#Relu Adam -1to1 Best Estimator MSE on Holdout Set: 0.082600!!
-#Relu SGD -1to1 Best Estimator MSE on Holdout Set: 0.085655 #at 1024x1 hidden units!
-
-#WBPOENoBias
-#Relu Adam 0to1 Best Estimator MSE on Holdout Set: 0.069541 #at 1024x1 hidden units! 0to1 with no bias

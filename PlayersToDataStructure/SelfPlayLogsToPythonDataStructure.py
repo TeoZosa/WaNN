@@ -156,7 +156,7 @@ def generate_board_states(move_list, player_color, win):
                                                                      move_list[i]['Black']['From'], 'Black')
                 # can't put black move block in here as it would execute before white's move
             else:
-                black_transition_vector = [0] * 154
+                black_transition_vector = [0] * 154 + [1]
             state = [
                 move_piece(state[0], move_list[i]['White']['To'], move_list[i]['White']['From'], whose_move='White'),
                 win,
@@ -166,7 +166,7 @@ def generate_board_states(move_list, player_color, win):
             board_states['States'].append(state)
         if isinstance(move_list[i]['Black'], dict):  # if string, then == resign or NIL
             if i + 1 == len(move_list):  # if no next white move => black won
-                white_transition_vector = [0] * 154  # no white move from the next generated state
+                white_transition_vector = [0] * 154 + [1]  # no white move from the next generated state
             else:
                 white_transition_vector = generate_transition_vector(move_list[i + 1]['White']['To'],
                                                                    move_list[i + 1]['White']['From'], 'White')
@@ -196,6 +196,8 @@ def generate_transition_vector(to, _from, player_color):
     # <=> transition[0] = 1, transition[1:len(transition)] = 0
 
     # Notes: when calling NN, just reverse board state if black and decode output with black's table
+    #1/14/17: since NN sees sorted r x c, we actually need to reverse if white..
+
     from_column = _from[0]
     to_column = to[0]
     from_row = int(_from[1])
@@ -211,7 +213,7 @@ def generate_transition_vector(to, _from, player_color):
         row_offset = (from_row - 1) * 22  # 22 possible moves per row
         assert (row_offset == (to_row - 2) * 22)  # double check
         index = ord(to_column) - ord(from_column) + column_offset + row_offset
-    transition_vector = [0] * 154
+    transition_vector = [0] * 155 #  last index is the no move index
     transition_vector[index] = 1
     return transition_vector
 

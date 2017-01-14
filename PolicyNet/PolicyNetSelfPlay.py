@@ -409,6 +409,9 @@ for batch_size in [16, 32, 64,
         filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
 
         #TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
+        #Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
+        # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
+        # "...same size for all layers worked generally better or the same as..."
         n_filters_out = [128]*11 + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
         n_layers = 12
 

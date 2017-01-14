@@ -466,6 +466,7 @@ for batch_size in [16, 32, 64,
             X_train1, y_train1 = shuffle(X_train1, y_train1,
                                                random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
 
+            #lazily split into training batches of size batch_size
             X_train_batches = [X_train1[:batch_size]]
             y_train_batches = [y_train1[:batch_size]]
             remaining_x_train = X_train1[batch_size:]
@@ -478,64 +479,64 @@ for batch_size in [16, 32, 64,
             X_train_batches.append(remaining_x_train)  # append remaining training examples
             y_train_batches.append(remaining_y_train)
 
-            startTime = time.time()
+            startTime = time.time()  #start timer
+
+            #train model
             for i in range (0, len(X_train_batches)):
                 sess.run(optimizer, feed_dict={
                     X: X_train_batches[i],
                     y: y_train_batches[i]
                 })
 
-                if (i+1)%(len(X_train_batches)//10)==0:  # show loss at every 1/10th interval
-                    print("Loss: ", end="", file=file)
-                    print(sess.run(cost, feed_dict={
+                # show stats at every 1/10th interval of epoch
+                if (i+1)%(len(X_train_batches)//10)==0:
+                    loss = sess.run(cost, feed_dict={
                         X: X_train_batches[i],
                         y: y_train_batches[i]
-                    }), end="\n", file=file)
-                    print("Loss Reduced Mean: ", end="", file=file)
-                    print(sess.run(tf.reduce_mean(cost), feed_dict={
-                        X: X_train_batches[i],
-                        y: y_train_batches[i]
-                    }), end="\n", file=file)
-                    print("Loss Reduced Sum: ", end="", file=file)
-                    print(sess.run(tf.reduce_sum(cost), feed_dict={
-                        X: X_train_batches[i],
-                        y: y_train_batches[i]
-                    }), end="\n", file=file)
-                    print('Interval {} of 10 Accuracy: '.format((i+1)/(len(X_train_batches)//10)), end="", file=file)
-                    print(sess.run(accuracy,
-                                   feed_dict={
-                                       X: X_valid,
-                                       y: y_valid
-                                   }), end="\n", file=file)
+                        })
+                    accuracy_score = sess.run(accuracy, feed_dict={
+                                   X: X_valid,
+                                   y: y_valid
+                                   })
+                    print("Loss: {}".format(loss), end="\n", file=file)
+                    print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
+                    print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
+                    print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
+                        interval=(i+1)/(len(X_train_batches)//10),
+                        accuracy=accuracy_score), end="\n", file=file)
 
 
+            #show accuracy at end of epoch
+            print ('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
+                epoch_num=epoch_i+1,
+                accuracy_score=sess.run(accuracy,
+                               feed_dict={
+                                   X: X_valid,
+                                   y: y_valid
+                               })), end="\n", file=file)
 
-            print ('Epoch {} Accuracy: '.format(epoch_i+1), end="", file=file)
-            print(sess.run(accuracy,
-                           feed_dict={
-                               X: X_valid,
-                               y: y_valid
-                           }), end="\n", file=file)
-
-
-
-            print("Sample Predicted y = "
+            #show example of what network is predicting vs the move oracle
+            y_pred_vector = y_pred=sess.run(y_pred, feed_dict={X:[X_valid[0]]})
+            print("Sample Predicted Probabilities = "
                   "\n{y_pred}"
-                  "\nActual y = "
-                  "\n{y_act}".format(
-                y_pred = sess.run(y_pred,
-                                  feed_dict={X:[X_valid[0]]}),
-                y_act =y_valid[0]), end="\n", file=file)
+                  "\nPredicted vs. Actual Move = "
+                  "\nIf white: {y_pred_white} vs. {y_act_white}"
+                  "\nIf black: {y_pred_black} vs. {y_act_black}".format(
+                    y_pred=y_pred_vector,
+                    y_pred_white=utils.move_lookup(np.argmax(y_pred_vector), 'White'),
+                    y_pred_black=utils.move_lookup(np.argmax(y_pred_vector), 'Black'),
+                    y_act_white=utils.move_lookup(np.argmax(y_valid[0]), 'White'),
+                    y_act_black=utils.move_lookup(np.argmax(y_valid[0]), 'Black')),
+                end="\n", file=file)
+
             print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / (60)), end="\n", file=file)
+
         # Print final test accuracy:
-        X_test1 = X_test
-        y_test1 = y_test
-        print("Final Test Accuracy: ", end="", file=file)
-        print(sess.run(accuracy,
+        print("Final Test Accuracy: {}".format(sess.run(accuracy,
                        feed_dict={
-                           X: X_test1,
-                           y: y_test1
-                       }), end="\n", file=file)
+                           X: X_test,
+                           y: y_test
+                       })), end="\n", file=file)
         sess.close()
 file.close()
 # feature_columns = []

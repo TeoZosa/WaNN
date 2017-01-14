@@ -3,8 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/NumpyArray.py" afterPath="$PROJECT_DIR$/Tools/NumpyArray.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/utils.py" afterPath="$PROJECT_DIR$/Tools/utils.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" afterPath="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -59,11 +58,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="PolicyNetSelfPlay.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="PolicyNetSelfPlay.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="442">
-              <caret line="418" column="95" lean-forward="true" selection-start-line="418" selection-start-column="95" selection-end-line="418" selection-end-column="95" />
+            <state relative-caret-position="994">
+              <caret line="490" column="62" lean-forward="false" selection-start-line="490" selection-start-column="62" selection-end-line="490" selection-end-column="62" />
               <folding>
                 <element signature="e#1#39#0" expanded="true" />
               </folding>
@@ -71,10 +70,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="utils.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Tools/utils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-10940">
+            <state relative-caret-position="187">
               <caret line="11" column="43" lean-forward="false" selection-start-line="11" selection-start-column="43" selection-end-line="11" selection-end-column="43" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
@@ -295,11 +294,11 @@
         <option value="$PROJECT_DIR$/__main__.py" />
         <option value="$PROJECT_DIR$/PolicyNet/PolicyNet.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToTrainingData.py" />
-        <option value="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" />
         <option value="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
         <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
         <option value="$PROJECT_DIR$/Tools/NumpyArray.py" />
         <option value="$PROJECT_DIR$/Tools/utils.py" />
+        <option value="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" />
       </list>
     </option>
   </component>
@@ -821,13 +820,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00038" summary="properly named main method. Exchanged threading with multiprocessing; much better performance. 50 minutes vs 5 hours. Could be further reduced by enumerating the files vs their directories.">
-      <created>1482283388198</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1482283388198</updated>
-    </task>
     <task id="LOCAL-00039" summary="added functionality to generate game visualizations via http://www.trmph.com/breakthrough/board#8,">
       <created>1482339589260</created>
       <option name="number" value="00039" />
@@ -1164,7 +1156,14 @@
       <option name="project" value="LOCAL" />
       <updated>1484417502541</updated>
     </task>
-    <option name="localTasksCounter" value="87" />
+    <task id="LOCAL-00087" summary="cleaned up code. changed lookup table to list">
+      <created>1484419120865</created>
+      <option name="number" value="00087" />
+      <option name="presentableId" value="LOCAL-00087" />
+      <option name="project" value="LOCAL" />
+      <updated>1484419120865</updated>
+    </task>
+    <option name="localTasksCounter" value="88" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1217,7 +1216,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="refactoring pep8 starting from self-play to python data structures" />
     <MESSAGE value="Datastructures to DataStructures" />
     <MESSAGE value="continuing refactor by hand" />
     <MESSAGE value="refactored all function/variable names" />
@@ -1242,7 +1240,8 @@
     <MESSAGE value="checking accuracy inside each epoch every (1/10 * batch size) interval" />
     <MESSAGE value="generated a move lookup table in utils. changed logs to data structures code to add a no move index immediately instead of at the numpy array conversion" />
     <MESSAGE value="cleaned up code" />
-    <option name="LAST_COMMIT_MESSAGE" value="cleaned up code" />
+    <MESSAGE value="cleaned up code. changed lookup table to list" />
+    <option name="LAST_COMMIT_MESSAGE" value="cleaned up code. changed lookup table to list" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1284,12 +1283,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py</url>
-          <line>558</line>
+          <line>559</line>
           <option name="timeStamp" value="159" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py</url>
-          <line>543</line>
+          <line>544</line>
           <option name="timeStamp" value="160" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -1666,22 +1665,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
+    <entry file="file://$PROJECT_DIR$/Tools/utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="418" column="95" lean-forward="true" selection-start-line="418" selection-start-column="95" selection-end-line="418" selection-end-column="95" />
+        <state relative-caret-position="187">
+          <caret line="11" column="43" lean-forward="false" selection-start-line="11" selection-start-column="43" selection-end-line="11" selection-end-column="43" />
           <folding>
-            <element signature="e#1#39#0" expanded="true" />
+            <element signature="e#0#9#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Tools/utils.py">
+    <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-10940">
-          <caret line="11" column="43" lean-forward="false" selection-start-line="11" selection-start-column="43" selection-end-line="11" selection-end-column="43" />
+        <state relative-caret-position="994">
+          <caret line="490" column="62" lean-forward="false" selection-start-line="490" selection-start-column="62" selection-end-line="490" selection-end-column="62" />
           <folding>
-            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#1#39#0" expanded="true" />
           </folding>
         </state>
       </provider>

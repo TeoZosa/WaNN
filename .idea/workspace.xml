@@ -61,8 +61,8 @@
       <file leaf-file-name="PolicyNetSelfPlay.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="391">
-              <caret line="499" column="29" lean-forward="false" selection-start-line="499" selection-start-column="29" selection-end-line="499" selection-end-column="29" />
+            <state relative-caret-position="357">
+              <caret line="500" column="44" lean-forward="false" selection-start-line="500" selection-start-column="44" selection-end-line="500" selection-end-column="44" />
               <folding>
                 <element signature="e#1#39#0" expanded="true" />
               </folding>
@@ -818,13 +818,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00034" summary="Added methods to process self-play logs into NN-friendly training data. Refactored and pulled some scripts out as they were more appropriate for a dynamic main method.">
-      <created>1482191992296</created>
-      <option name="number" value="00034" />
-      <option name="presentableId" value="LOCAL-00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1482191992296</updated>
-    </task>
     <task id="LOCAL-00035" summary="updated README">
       <created>1482192169825</created>
       <option name="number" value="00035" />
@@ -1161,7 +1154,14 @@
       <option name="project" value="LOCAL" />
       <updated>1484272800181</updated>
     </task>
-    <option name="localTasksCounter" value="83" />
+    <task id="LOCAL-00083" summary="using tf's builtin softmax + cross_entropy, grid searching over promising parameter space.">
+      <created>1484411466034</created>
+      <option name="number" value="00083" />
+      <option name="presentableId" value="LOCAL-00083" />
+      <option name="project" value="LOCAL" />
+      <updated>1484411466034</updated>
+    </task>
+    <option name="localTasksCounter" value="84" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1214,7 +1214,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="changed 1d array to be list of one hot states" />
     <MESSAGE value="changed Numpy conversion to account for one hot boards" />
     <MESSAGE value="fixing NumpyArray bugs due to data representation changes" />
     <MESSAGE value="fixed by flattening out matrix again, but now in NumpyArray" />
@@ -1239,7 +1238,8 @@
     <MESSAGE value="changed write out name of files, made code work for CNN &amp; flattened version" />
     <MESSAGE value="messing with visualizing board as image, building CNN&#10;" />
     <MESSAGE value="rudimentary CNN implementation. need to class-ify it." />
-    <option name="LAST_COMMIT_MESSAGE" value="rudimentary CNN implementation. need to class-ify it." />
+    <MESSAGE value="using tf's builtin softmax + cross_entropy, grid searching over promising parameter space." />
+    <option name="LAST_COMMIT_MESSAGE" value="using tf's builtin softmax + cross_entropy, grid searching over promising parameter space." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1281,12 +1281,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py</url>
-          <line>545</line>
+          <line>555</line>
           <option name="timeStamp" value="159" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py</url>
-          <line>530</line>
+          <line>540</line>
           <option name="timeStamp" value="160" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -1676,8 +1676,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="499" column="29" lean-forward="false" selection-start-line="499" selection-start-column="29" selection-end-line="499" selection-end-column="29" />
+        <state relative-caret-position="357">
+          <caret line="500" column="44" lean-forward="false" selection-start-line="500" selection-start-column="44" selection-end-line="500" selection-end-column="44" />
           <folding>
             <element signature="e#1#39#0" expanded="true" />
           </folding>

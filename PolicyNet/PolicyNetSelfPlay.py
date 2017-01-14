@@ -407,12 +407,15 @@ for batch_size in [16, 32, 64,
         # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
         y = tf.placeholder(tf.float32, [None, 155])
         filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
+
         #TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
         n_filters_out = [128]*11 + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
-
         n_layers = 12
+
+        #input layer
         h_layers = [hidden_layer_init(X, X.get_shape()[-1],  # n_filters in == n_feature_planes
                                       n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
+        #hidden layers
         for i in range(0, n_layers-1):
             h_layers.append(hidden_layer_init(h_layers[i], n_filters_out[i], n_filters_out[i+1], filter_size, name='hidden_layer/{num}'.format(num=i+2), reuse=None))
 
@@ -478,6 +481,7 @@ for batch_size in [16, 32, 64,
                     X: X_train_batches[i],
                     y: y_train_batches[i]
                 })
+
                 if (i+1)%(len(X_train_batches)//10)==0:  # show loss at every 1/10th interval
                     print("Loss: ", end="", file=file)
                     print(sess.run(cost, feed_dict={
@@ -494,6 +498,12 @@ for batch_size in [16, 32, 64,
                         X: X_train_batches[i],
                         y: y_train_batches[i]
                     }), end="\n", file=file)
+                    print('Interval {} of 10 Accuracy: '.format((i+1)/(len(X_train_batches)//10)), end="", file=file)
+                    print(sess.run(accuracy,
+                                   feed_dict={
+                                       X: X_valid,
+                                       y: y_valid
+                                   }), end="\n", file=file)
 
 
 

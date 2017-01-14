@@ -112,7 +112,7 @@ def SplitArraytoXMatrixAndYVector(arrayToSplit, convertY = True):
     return X, y
 
 
-def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit, cnn_format=True):
+def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit, cnn_format=True, one_hot_indexes=False):
     X = []
     y = []
     for trainingExample in arrayToSplit:  # probability space for transitions
@@ -120,21 +120,20 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit, cnn_format=True):
         for plane in trainingExample[0]:
             x += plane #flatten 2d matrix
         x += [1] * 64 # 1 bias plane
-        # one_hot_feature_indexes = [index for index, has_piece in enumerate(x) if has_piece == 1]
-
-        # if we just want the transition index vs a pre-one-hotted vector
-        # one_hot_transition_index = trainingExample[2].index(1) # assumes no errors; only one value of 1
-
-        if cnn_format:
+        if one_hot_indexes:
+            #x still a 1d array; must stay one-hotted to be reshaped properly
+            x = np.array([index for index, has_piece in enumerate(x) if has_piece == 1], dtype=np.float32)
+            # if we just want the transition index vs a pre-one-hotted vector
+            transition_vector = trainingExample[2].index(1) # assumes no errors; y has a single value of 1
+        elif cnn_format:
             x = np.reshape(np.array(x, dtype=np.float32), (len(x) // 64, 8, 8))  # feature_plane x row x co)
             for i in range(0, len(x)):
                 x[i] = x[i].transpose() #transpose (row x col) to get feature_plane x col x row
-            x = x.transpose()#  transpose to get proper dimensions (row x cols  x feature plane)
+            x = x.transpose()#  transpose to get proper dimensions: row x col  x feature plane
+            transition_vector = np.array(trainingExample[2], dtype=np.float32)  # One hot transition vector
         else:
             x = np.array(x, dtype=np.float32)  # 1d board
-
-        # One hot transition vector
-        transition_vector = np.array(trainingExample[2], dtype=np.float32)
+            transition_vector = np.array(trainingExample[2], dtype=np.float32)  # One hot transition vector
         X.append(x)
         y.append(transition_vector)  # transition number
     return X, y

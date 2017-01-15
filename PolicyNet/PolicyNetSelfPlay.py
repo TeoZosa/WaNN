@@ -11,9 +11,8 @@ import  pprint
 import tensorflow as tf
 from tensorflow.contrib import learn
 from tensorflow.python.ops import nn
-from tensorflow.python.framework import  dtypes
+from tensorflow.python.framework import dtypes
 from sklearn import model_selection, metrics, grid_search, datasets
-#DataSets
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.utils import shuffle
@@ -28,13 +27,13 @@ import os
 from PIL import Image
 import random
 from tensorflow.python.framework.ops import reset_default_graph
-
-reset_default_graph()
+import sys
+import pickle
 
 sns.set(color_codes=True)
 
 
-import pickle
+
 def WriteToDisk(path, estimator):
     write_path = path + r'Models/'
     estimator.save(write_path)
@@ -231,6 +230,8 @@ def AssignDevice(path):
     else:
         device = 'AWS'#todo: configure AWS path
     return device
+
+
 def AssignPath(deviceName ='Workstation'):
     if  deviceName == 'MBP2011_':
        path =  r'/Users/teofilozosa/PycharmProjects/BreakthroughANN/'
@@ -243,6 +244,8 @@ def AssignPath(deviceName ='Workstation'):
     else:
         path = ''#todo:error checking
     return path
+
+
 def LoadXAndy(path):
     files = [file_name for file_name in utils.find_files(path, "*.hdf5")]
     X, y = ([] for i in range (2))
@@ -252,6 +255,8 @@ def LoadXAndy(path):
         y.extend(training_data['y'][:])
         training_data.close()
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)  # b x r x c x f & label
+
+
 def LoadXAndy_1to1(path):
     X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
     y = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
@@ -330,16 +335,10 @@ def image_stuff():
     # plot.figure()
     # plot.imshow(POEB_img)
 
-
-    time.sleep(600)
-#TODO: construct CNN and select models.
-#TODO: excise code to be run in main script.
-
-
 def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name=None, activation=tf.nn.relu, reuse=None):
      # of filters in each layer ranged from 64-192
     with tf.variable_scope(name or 'hidden_layer', reuse=reuse):
-        weight = tf.get_variable(name='weight',
+        kernel = tf.get_variable(name='weights',
                                    shape=[filter_size, filter_size,   # h x w
                                           n_filters_in,
                                           n_filters_out],
@@ -351,7 +350,7 @@ def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name
         hidden_layer = activation(
             tf.nn.bias_add(
                 tf.nn.conv2d(input=prev_layer,
-                             filter=weight,
+                             filter=kernel,
                              strides=[1, 1, 1, 1],
                              padding='SAME'),
                 bias
@@ -359,13 +358,13 @@ def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name
         )
         return hidden_layer
 
-def output_layer_init(layer_in, name='output_layer_init', reuse=None):
+def output_layer_init(layer_in, name='output_layer', reuse=None):
     layer_in = tf.reshape(layer_in, [-1, 8*8])
     activation = tf.nn.softmax
     n_features = layer_in.get_shape().as_list()[1]
     with tf.variable_scope(name or 'output_layer', reuse=reuse):
-        weight = tf.get_variable(
-            name='weight',
+        kernel = tf.get_variable(
+            name='weights',
             shape=[n_features, 155], # 1 x 64 filter in, 155 classes out
             dtype=tf.float32,
             initializer=tf.contrib.layers.xavier_initializer())
@@ -376,13 +375,21 @@ def output_layer_init(layer_in, name='output_layer_init', reuse=None):
             dtype=tf.float32,
             initializer=tf.constant_initializer(0.0))
 
-        predicted_output = (tf.nn.bias_add(
+        unscaled_output = (tf.nn.bias_add(
             name='output',
-            value=tf.matmul(layer_in, weight),
+            value=tf.matmul(layer_in, kernel),
             bias=bias))
-        return predicted_output, weight
+        return unscaled_output, kernel
 
-   #main script
+def loss(output_layer, labels):
+    with tf.name_scope("loss"):
+        losses = tf.nn.softmax_cross_entropy_with_logits(outer_layer, labels)
+        loss = tf.reduce_mean(losses)
+
+# TODO: construct CNN and select models.
+# TODO: excise code to be run in main script.
+
+        #main script
 
 config = run_config.RunConfig(num_cores=-1)
 inputPath = AssignPath()
@@ -391,18 +398,20 @@ X, y = LoadXAndy(inputPath)
 
 # X[i] is a 3D matrix corresponding to label at y[i]
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
-    test_size=0.0001, random_state=42)#change random state?
-
-import sys
+    test_size=0.0001, random_state=42)#sametrain/test split every time
 
 
 
-file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamTestsTFCrossEntropy.txt'), 'a')
+
+file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamTestsTFCrossEntropy01152017.txt'), 'a')
 # file = sys.stdout
-for batch_size in [16, 32, 64,
-                   128, 256, 512]:
-    for learning_rate in [0.0009, 0.001, 0.0011, 0.0012]:
+for n_filters in [16, 32, 64,
+                   128, 192]:
+    for learning_rate in [0.001, 0.0011, 0.0012]:
         reset_default_graph()
+        batch_size = 128
+
+        #build graph
         X = tf.placeholder(tf.float32, [None, 8, 8, 4])
         # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
         y = tf.placeholder(tf.float32, [None, 155])
@@ -412,7 +421,7 @@ for batch_size in [16, 32, 64,
         #Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
         # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
         # "...same size for all layers worked generally better or the same as..."
-        n_filters_out = [128]*11 + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
+        n_filters_out = [n_filters]*11 + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
         n_layers = 12
 
         #input layer
@@ -425,7 +434,7 @@ for batch_size in [16, 32, 64,
         #  output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
         outer_layer, _ = output_layer_init(h_layers[-1], reuse=None)
 
-        #using tf's internal softmax; else, put softmax back in output layer
+        #tf's internal softmax; else, put softmax back in output layer
         cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
         y_pred = tf.nn.softmax(outer_layer)
 
@@ -460,24 +469,13 @@ for batch_size in [16, 32, 64,
               "\n# of Epochs: {n_epochs}".format(
             learning_rate=learning_rate, batch_size = batch_size, n_epochs=n_epochs), end="\n", file=file)
         X_train1, X_valid, y_train1, y_valid = model_selection.train_test_split(X_train, y_train,
-                                                                                test_size=0.0001,
+                                                                                test_size=512,
                                                                                 random_state=random.randint(1, 1024))  # keep validation outside
         for epoch_i in range(n_epochs):
             X_train1, y_train1 = shuffle(X_train1, y_train1,
                                                random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
 
-            #lazily split into training batches of size batch_size
-            X_train_batches = [X_train1[:batch_size]]
-            y_train_batches = [y_train1[:batch_size]]
-            remaining_x_train = X_train1[batch_size:]
-            remaining_y_train = y_train1[batch_size:]
-            for i in range(1, len(X_train1)//batch_size):
-                X_train_batches.append(remaining_x_train[:batch_size])
-                y_train_batches.append(remaining_y_train[:batch_size])
-                remaining_x_train = remaining_x_train[batch_size:]
-                remaining_y_train = remaining_y_train[batch_size:]
-            X_train_batches.append(remaining_x_train)  # append remaining training examples
-            y_train_batches.append(remaining_y_train)
+            X_train_batches, y_train_batches = utils.batch_split(X_train1, y_train1, batch_size)
 
             startTime = time.time()  #start timer
 
@@ -502,7 +500,7 @@ for batch_size in [16, 32, 64,
                     print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
                     print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
                     print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
-                        interval=(i+1)/(len(X_train_batches)//10),
+                        interval=(i+1)//(len(X_train_batches)//10),
                         accuracy=accuracy_score), end="\n", file=file)
 
 
@@ -516,7 +514,7 @@ for batch_size in [16, 32, 64,
                                })), end="\n", file=file)
 
             #show example of what network is predicting vs the move oracle
-            y_pred_vector = y_pred=sess.run(y_pred, feed_dict={X:[X_valid[0]]})
+            y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[0]]})
             print("Sample Predicted Probabilities = "
                   "\n{y_pred}"
                   "\nPredicted vs. Actual Move = "

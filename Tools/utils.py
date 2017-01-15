@@ -7,7 +7,21 @@ def find_files(path, extension):  # recursively find files at path with extensio
         for file in fnmatch.filter(files, extension):
             yield os.path.join(root, file)
             
-        
+def batch_split(inputs, labels, batch_size):
+    # lazily split into training batches of size batch_size
+    X_train_batches = [inputs[:batch_size]]
+    y_train_batches = [labels[:batch_size]]
+    remaining_x_train = inputs[batch_size:]
+    remaining_y_train = labels[batch_size:]
+    for i in range(1, len(inputs) // batch_size):
+        X_train_batches.append(remaining_x_train[:batch_size])
+        y_train_batches.append(remaining_y_train[:batch_size])
+        remaining_x_train = remaining_x_train[batch_size:]
+        remaining_y_train = remaining_y_train[batch_size:]
+    X_train_batches.append(remaining_x_train)  # append remaining training examples
+    y_train_batches.append(remaining_y_train)
+    return X_train_batches, y_train_batches
+
 def move_lookup(index, player_color):
     # Enumerated the moves for lookup speed/visual reference (see commented out dictionary).
     # Code can be prettified by calling generate_move_lookup instead

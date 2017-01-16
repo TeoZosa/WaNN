@@ -22,7 +22,8 @@ class Policy_net(object):
 
           # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
         # TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
-        self.num_filters_out = [self.num_filters] * 11 + [1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
+        self.num_hidden_layers = 11
+        self.num_filters_out = [self.num_filters] * self.num_hidden_layers + [1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
 
         self.num_layers = len(self.num_filters_out)
         self.hidden_layers = []

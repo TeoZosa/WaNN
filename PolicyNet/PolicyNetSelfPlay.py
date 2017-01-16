@@ -337,16 +337,17 @@ def image_stuff():
 
 def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name=None, activation=tf.nn.relu, reuse=None):
      # of filters in each layer ranged from 64-192
+    std_dev_He = np.sqrt(2 / np.prod(prev_layer.get_shape().as_list()[1:]))
     with tf.variable_scope(name or 'hidden_layer', reuse=reuse):
         kernel = tf.get_variable(name='weights',
                                    shape=[filter_size, filter_size,   # h x w
                                           n_filters_in,
                                           n_filters_out],
-                                   initializer=tf.random_normal_initializer(mean=0.0, stddev=0.02)#mean, std?
+                                   initializer=tf.random_normal_initializer(mean=0.0, stddev=std_dev_He)#mean, std?
                                    )
         bias = tf.get_variable(name='bias',
                                  shape=[n_filters_out],
-                                 initializer=tf.constant_initializer())
+                                 initializer=tf.constant_initializer(0.01))#karpathy: for relu, 0.00 ensures all relus fire in the beginning
         hidden_layer = activation(
             tf.nn.bias_add(
                 tf.nn.conv2d(input=prev_layer,
@@ -403,11 +404,11 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
 
 
 
-file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamTestsTFCrossEntropy01152017.txt'), 'a')
+file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamTestsTFCrossEntropy01152017_He_et_al_weights_SUM_CE.txt'), 'a')
 # file = sys.stdout
 for n_filters in [16, 32, 64,
                    128, 192]:
-    for learning_rate in [0.001, 0.0011, 0.0012]:
+    for learning_rate in [0.001, 0.0011, 0.0012, 0.0013, 0.0014, 0.0015]:
         reset_default_graph()
         batch_size = 128
 
@@ -418,10 +419,12 @@ for n_filters in [16, 32, 64,
         filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
 
         #TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
+        #TODO: dropout? regularizers? different combinations of weight initialization, cost func, num_hidden, etc.
         #Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
         # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
         # "...same size for all layers worked generally better or the same as..."
-        n_filters_out = [n_filters]*11 + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
+        num_hidden = 11
+        n_filters_out = [n_filters]*num_hidden + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
         n_layers = 12
 
         #input layer
@@ -436,13 +439,14 @@ for n_filters in [16, 32, 64,
 
         #tf's internal softmax; else, put softmax back in output layer
         cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
+        # alternative implementation
+        cost = tf.reduce_mean(cost) #used in MNIST tensorflow
         y_pred = tf.nn.softmax(outer_layer)
 
         #kadenze cost function
         # cross_entropy = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
 
-        #alternative implementation
-        # cost = tf.reduce_mean(cross_entropy)
+
 
         #way better performance
         optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
@@ -464,10 +468,11 @@ for n_filters in [16, 32, 64,
 
         n_epochs = 5
         print("\nAdam Optimizer"
+              "\nNum Filters: {num_filters}"
               "\nLearning Rate: {learning_rate}"
               "\nBatch Size: {batch_size}"
               "\n# of Epochs: {n_epochs}".format(
-            learning_rate=learning_rate, batch_size = batch_size, n_epochs=n_epochs), end="\n", file=file)
+            learning_rate=learning_rate, batch_size = batch_size, n_epochs=n_epochs, num_filters=n_filters), end="\n", file=file)
         X_train1, X_valid, y_train1, y_valid = model_selection.train_test_split(X_train, y_train,
                                                                                 test_size=512,
                                                                                 random_state=random.randint(1, 1024))  # keep validation outside

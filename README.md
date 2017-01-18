@@ -1,6 +1,6 @@
 #Breakthrough ANN
-##### A Deep Neural Network for evaluating board positions in the game of Breakthrough. 
-Constructing neural networks for use in an agent utilizing a Monte Carlo tree search. 
+##### Deep Neural Networks for evaluating board positions in the game of Breakthrough. 
+For use in an agent utilizing a Monte Carlo tree search, but can also be used as a standalone player (python-based interface forthcoming). 
 Multiple auxiliary files for pulling the data from a website storing Breakthrough game data or self-play logs, and transforming that data into labeled training data for a neural network built using Tensorflow.
 <p><p>Currently running experiments on different models trained on self-play data.
 <p><p>A sample of a single input plane rendered as an image:

@@ -423,6 +423,7 @@ def generate_binary_plane(state, player_color, who_to_filter):
 
 
 def convert_board_states_to_arrays(board_states, player_color):
+    #TODO: more features: plane of 1s if next move == capture, plane of 1's on locations of possible captures? plane of 1s on locations of possible moves?
     new_board_states = board_states
     POV_states = board_states['PlayerPOV']
     states = board_states['States']
@@ -430,16 +431,17 @@ def convert_board_states_to_arrays(board_states, player_color):
     new_board_states['PlayerPOV'] = []
     for state in states:
         new_board_states['States'].append(
-            convert_board_to_1d_array_value_net(state, player_color))  # These can be inputs to value net
+            convert_board_to_1d_array_WBPOE(state, player_color))  # These can be inputs to value net
     for POV_state in POV_states:
         new_board_states['PlayerPOV'].append(
-            convert_board_to_1d_array_policy_net(POV_state, player_color))  # These can be inputs to policy net
+            convert_board_to_1d_array_WBPOE(POV_state, player_color))  # These can be inputs to policy net
     return new_board_states
 
 
-def convert_board_to_1d_array_value_net(board_state, player_color):
+def convert_board_to_1d_array_WBPOE(board_state, player_color):
     state = board_state[0]
     white_move_index = 10
+    from_white_move = state[white_move_index]
 
     # Do we need White/Black if black is a flipped representation? we are only asking the net "from my POV, these are
     # my pieces and my opponent's pieces what move should I take? If not, the net sees homogeneous data.
@@ -447,7 +449,8 @@ def convert_board_to_1d_array_value_net(board_state, player_color):
     # lower row is not good, but would the Player/Opponent features cancel this out?
 
     # if player color == white, player and white states are mirrors; else, player and black states are mirrors
-    move_flag = [state[white_move_index]] * 64  # duplicate across 64 features since CNN needs same dimensions
+    white_move_flag = [from_white_move]  * 64  # duplicate across 64 features since CNN needs same dimensions
+    black_move_flag = [from_white_move^1] *64
     one_hot_board = [generate_binary_vector(state, array_to_append=[], player_color=player_color,
                                             who_to_filter='White'),  # [0] white
                      generate_binary_vector(state, array_to_append=[], player_color=player_color,
@@ -458,7 +461,8 @@ def convert_board_to_1d_array_value_net(board_state, player_color):
                                             who_to_filter='Opponent'),  # [3] opponent
                      generate_binary_vector(state, array_to_append=[], player_color=player_color,
                                             who_to_filter='Empty'),  # [4] empty
-                     move_flag]  # [5] flag indicating if the transition came from a white move
+                     white_move_flag,
+                     black_move_flag]  # [5] flag indicating if the transition came from a white move
     for i in range(0, 64):  # error checking block
         # ensure at most 1 bit is on at each board position for white/black/empty
         assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[4][i]) and
@@ -476,7 +480,7 @@ def convert_board_to_1d_array_value_net(board_state, player_color):
     return new_board_state
 
 
-def convert_board_to_1d_array_policy_net(board_state, player_color):
+def convert_board_to_1d_array_POE(board_state, player_color):
     # 12/22 removed White/Black to avoid Curse of Dimensionality.
     # TODO: use dict for board representations so later analysis can identify without looking at this code?
     state = board_state[0]

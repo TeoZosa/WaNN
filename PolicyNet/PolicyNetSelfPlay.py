@@ -387,7 +387,6 @@ def loss(output_layer, labels):
         losses = tf.nn.softmax_cross_entropy_with_logits(outer_layer, labels)
         loss = tf.reduce_mean(losses)
 
-# TODO: construct CNN and select models.
 # TODO: excise code to be run in main script.
 
         #main script
@@ -402,145 +401,162 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
     test_size=0.0001, random_state=42)#sametrain/test split every time
 
 
+# Adam Optimizer
+# Num Filters: 192
+# Num Hidden Layers: 5
+# Learning Rate: 0.0014 && 0.0015
+# Batch Size: 128
+# # of Epochs: 5
 
-
-file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamTestsTFCrossEntropy01152017_He_et_al_weights_SUM_CE.txt'), 'a')
+file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamNumFiltersNumLayersNON-TFSumCrossEntropy01172017_He_weights.txt'), 'a')
 # file = sys.stdout
-for n_filters in [16, 32, 64,
-                   128, 192]:
-    for learning_rate in [0.001, 0.0011, 0.0012, 0.0013, 0.0014, 0.0015]:
-        reset_default_graph()
-        batch_size = 128
 
-        #build graph
-        X = tf.placeholder(tf.float32, [None, 8, 8, 4])
-        # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
-        y = tf.placeholder(tf.float32, [None, 155])
-        filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
+for num_hidden in [i for i in range(6, 7)]:
+    for n_filters in [
+                        16, 32, 64,
+                       128,
+                      192]:
+        for learning_rate in [
+            0.001, 0.0011, 0.0012, 0.0013,
+                              0.0014, 0.0015]:
+            reset_default_graph()
+            batch_size = 128
 
-        #TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
-        #TODO: dropout? regularizers? different combinations of weight initialization, cost func, num_hidden, etc.
-        #Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
-        # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
-        # "...same size for all layers worked generally better or the same as..."
-        num_hidden = 11
-        n_filters_out = [n_filters]*num_hidden + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
-        n_layers = 12
+            #build graph
+            X = tf.placeholder(tf.float32, [None, 8, 8, 4])
+            # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
+            y = tf.placeholder(tf.float32, [None, 155])
+            filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
 
-        #input layer
-        h_layers = [hidden_layer_init(X, X.get_shape()[-1],  # n_filters in == n_feature_planes
-                                      n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
-        #hidden layers
-        for i in range(0, n_layers-1):
-            h_layers.append(hidden_layer_init(h_layers[i], n_filters_out[i], n_filters_out[i+1], filter_size, name='hidden_layer/{num}'.format(num=i+2), reuse=None))
+            #TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
+            #TODO: dropout? regularizers? different combinations of weight initialization, cost func, num_hidden, etc.
+            #Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
+            # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
+            # "...same size for all layers worked generally better or the same as..."
+            # num_hidden = 11
+            n_filters_out = [n_filters]*num_hidden + [1] #  " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
+            n_layers = len(n_filters_out)
 
-        #  output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
-        outer_layer, _ = output_layer_init(h_layers[-1], reuse=None)
+            #input layer
+            h_layers = [hidden_layer_init(X, X.get_shape()[-1],  # n_filters in == n_feature_planes
+                                          n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
+            #hidden layers
+            for i in range(0, n_layers-1):
+                h_layers.append(hidden_layer_init(h_layers[i], n_filters_out[i], n_filters_out[i+1], filter_size, name='hidden_layer/{num}'.format(num=i+2), reuse=None))
 
-        #tf's internal softmax; else, put softmax back in output layer
-        cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
-        # alternative implementation
-        cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-        y_pred = tf.nn.softmax(outer_layer)
+            #  output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
+            outer_layer, _ = output_layer_init(h_layers[-1], reuse=None)
+            #TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
+            y_pred = tf.nn.softmax(outer_layer)
 
-        #kadenze cost function
-        # cross_entropy = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+            #tf's internal softmax; else, put softmax back in output layer
+            # cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
+            # # alternative implementation
+            # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
+
+            #kadenze cross_entropy cost function
+            cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
 
 
 
-        #way better performance
-        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+            #way better performance
+            optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
-        #SGD used in AlphaGO
-        # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+            #SGD used in AlphaGO
+            # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
 
-        correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+            correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
+            accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
 
-        sess = tf.Session()
-        sess.run(tf.global_variables_initializer())
+            sess = tf.Session()
+            sess.run(tf.global_variables_initializer())
 
-        # # We first get the graph that we used to compute the network
-        # g = tf.get_default_graph()
-        #
-        # # And can inspect everything inside of it
-        # pprint.pprint([op.name for op in g.get_operations()])
+            # # We first get the graph that we used to compute the network
+            # g = tf.get_default_graph()
+            #
+            # # And can inspect everything inside of it
+            # pprint.pprint([op.name for op in g.get_operations()])
 
-        n_epochs = 5
-        print("\nAdam Optimizer"
-              "\nNum Filters: {num_filters}"
-              "\nLearning Rate: {learning_rate}"
-              "\nBatch Size: {batch_size}"
-              "\n# of Epochs: {n_epochs}".format(
-            learning_rate=learning_rate, batch_size = batch_size, n_epochs=n_epochs, num_filters=n_filters), end="\n", file=file)
-        X_train1, X_valid, y_train1, y_valid = model_selection.train_test_split(X_train, y_train,
-                                                                                test_size=512,
-                                                                                random_state=random.randint(1, 1024))  # keep validation outside
-        for epoch_i in range(n_epochs):
-            X_train1, y_train1 = shuffle(X_train1, y_train1,
-                                               random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
+            n_epochs = 5
+            print("\nAdam Optimizer"
+                  "\nNum Filters: {num_filters}"
+                  "\nNum Hidden Layers: {num_hidden}"
+                  "\nLearning Rate: {learning_rate}"
+                  "\nBatch Size: {batch_size}"
+                  "\n# of Epochs: {n_epochs}".format(
+                learning_rate=learning_rate,
+                batch_size = batch_size,
+                n_epochs=n_epochs,
+                num_filters=n_filters,
+                num_hidden=num_hidden), end="\n", file=file)
+            X_train1, X_valid, y_train1, y_valid = model_selection.train_test_split(X_train, y_train,
+                                                                                    test_size=512,
+                                                                                    random_state=random.randint(1, 1024))  # keep validation outside
+            for epoch_i in range(n_epochs):
+                X_train1, y_train1 = shuffle(X_train1, y_train1,
+                                                   random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
 
-            X_train_batches, y_train_batches = utils.batch_split(X_train1, y_train1, batch_size)
+                X_train_batches, y_train_batches = utils.batch_split(X_train1, y_train1, batch_size)
 
-            startTime = time.time()  #start timer
+                startTime = time.time()  #start timer
 
-            #train model
-            for i in range (0, len(X_train_batches)):
-                sess.run(optimizer, feed_dict={
-                    X: X_train_batches[i],
-                    y: y_train_batches[i]
-                })
-
-                # show stats at every 1/10th interval of epoch
-                if (i+1)%(len(X_train_batches)//10)==0:
-                    loss = sess.run(cost, feed_dict={
+                #train model
+                for i in range (0, len(X_train_batches)):
+                    sess.run(optimizer, feed_dict={
                         X: X_train_batches[i],
                         y: y_train_batches[i]
-                        })
-                    accuracy_score = sess.run(accuracy, feed_dict={
-                                   X: X_valid,
-                                   y: y_valid
-                                   })
-                    print("Loss: {}".format(loss), end="\n", file=file)
-                    print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
-                    print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
-                    print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
-                        interval=(i+1)//(len(X_train_batches)//10),
-                        accuracy=accuracy_score), end="\n", file=file)
+                    })
+
+                    # show stats at every 1/10th interval of epoch
+                    if (i+1)%(len(X_train_batches)//10)==0:
+                        loss = sess.run(cost, feed_dict={
+                            X: X_train_batches[i],
+                            y: y_train_batches[i]
+                            })
+                        accuracy_score = sess.run(accuracy, feed_dict={
+                                       X: X_valid,
+                                       y: y_valid
+                                       })
+                        print("Loss: {}".format(loss), end="\n", file=file)
+                        print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
+                        print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
+                        print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
+                            interval=(i+1)//(len(X_train_batches)//10),
+                            accuracy=accuracy_score), end="\n", file=file)
 
 
-            #show accuracy at end of epoch
-            print ('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
-                epoch_num=epoch_i+1,
-                accuracy_score=sess.run(accuracy,
-                               feed_dict={
-                                   X: X_valid,
-                                   y: y_valid
-                               })), end="\n", file=file)
+                #show accuracy at end of epoch
+                print ('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
+                    epoch_num=epoch_i+1,
+                    accuracy_score=sess.run(accuracy,
+                                   feed_dict={
+                                       X: X_valid,
+                                       y: y_valid
+                                   })), end="\n", file=file)
 
-            #show example of what network is predicting vs the move oracle
-            y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[0]]})
-            print("Sample Predicted Probabilities = "
-                  "\n{y_pred}"
-                  "\nPredicted vs. Actual Move = "
-                  "\nIf white: {y_pred_white} vs. {y_act_white}"
-                  "\nIf black: {y_pred_black} vs. {y_act_black}".format(
-                    y_pred=y_pred_vector,
-                    y_pred_white=utils.move_lookup(np.argmax(y_pred_vector), 'White'),
-                    y_pred_black=utils.move_lookup(np.argmax(y_pred_vector), 'Black'),
-                    y_act_white=utils.move_lookup(np.argmax(y_valid[0]), 'White'),
-                    y_act_black=utils.move_lookup(np.argmax(y_valid[0]), 'Black')),
-                end="\n", file=file)
+                #show example of what network is predicting vs the move oracle
+                y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[0]]})
+                print("Sample Predicted Probabilities = "
+                      "\n{y_pred}"
+                      "\nPredicted vs. Actual Move = "
+                      "\nIf white: {y_pred_white} vs. {y_act_white}"
+                      "\nIf black: {y_pred_black} vs. {y_act_black}".format(
+                        y_pred=y_pred_vector,
+                        y_pred_white=utils.move_lookup(np.argmax(y_pred_vector), 'White'),
+                        y_pred_black=utils.move_lookup(np.argmax(y_pred_vector), 'Black'),
+                        y_act_white=utils.move_lookup(np.argmax(y_valid[0]), 'White'),
+                        y_act_black=utils.move_lookup(np.argmax(y_valid[0]), 'Black')),
+                    end="\n", file=file)
 
-            print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / (60)), end="\n", file=file)
+                print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / (60)), end="\n", file=file)
 
-        # Print final test accuracy:
-        print("Final Test Accuracy: {}".format(sess.run(accuracy,
-                       feed_dict={
-                           X: X_test,
-                           y: y_test
-                       })), end="\n", file=file)
-        sess.close()
+            # Print final test accuracy:
+            print("Final Test Accuracy: {}".format(sess.run(accuracy,
+                           feed_dict={
+                               X: X_test,
+                               y: y_test
+                           })), end="\n", file=file)
+            sess.close()
 file.close()
 # feature_columns = []
 # for i in range (0, 256):

@@ -7,14 +7,15 @@ import os
 import numpy as np
 
 class Policy_net(object):
-    def __init__(self, learning_rate=0.001, optimizer=tf.train.AdamOptimizer, activation=tf.nn.relu, filter_size=3, num_filters=128, epochs=100, batch_size=128):
+    def __init__(self, learning_rate=0.001, optimizer=tf.train.AdamOptimizer, activation=tf.nn.relu,
+                 kernel_dim=3, num_filters=128, num_hidden_layers=12, epochs=5, batch_size=128):
         self.learning_rate = learning_rate
         self.optimizer = optimizer
         self.activation = activation
         self.epochs = epochs
         self.batch_size = batch_size
         self.num_classes = 155 #154 moves + no move
-        self.filter_size = filter_size
+        self.kernel_dim = kernel_dim
         self.num_filters = num_filters
         self.input_image = tf.placeholder(tf.float32, [None, 8, 8, 4])  
         # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
@@ -22,7 +23,7 @@ class Policy_net(object):
 
           # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
         # TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
-        self.num_hidden_layers = 11
+        self.num_hidden_layers = num_hidden_layers
         self.num_filters_out = [self.num_filters] * self.num_hidden_layers + [1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
 
         self.num_layers = len(self.num_filters_out)
@@ -30,7 +31,7 @@ class Policy_net(object):
         # Hidden layer 1
         with tf.variable_scope('hidden_layer/1', reuse=None):
             kernel = tf.get_variable(name='weight',
-                                     shape=[filter_size, filter_size,  # h x w
+                                     shape=[kernel_dim, kernel_dim,  # h x w
                                             self.input_image.get_shape().as_list()[-1],
                                             self.num_filters_out[0]],
                                      initializer=tf.random_normal_initializer()  # mean, std?
@@ -53,7 +54,7 @@ class Policy_net(object):
         for i in range(0, self.num_layers):
             with tf.variable_scope('hidden_layer/{num}'.format(num=i + 2), reuse=None):
                 kernel = tf.get_variable(name='weight',
-                                         shape=[filter_size, filter_size,  # h x w
+                                         shape=[kernel_dim, kernel_dim,  # h x w
                                                 self.num_filters_out[i],
                                                 self.num_filters_out[i+1]],
                                          initializer=tf.random_normal_initializer()  # mean, std?

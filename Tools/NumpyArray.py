@@ -78,7 +78,7 @@ def FilterForSelfPlay(selfPlayDataList, NNType):
                   X.append(states[i])
                   X.append(mirrorStates[i])
       print('# of States for Self-Play Policy Net: {states}'.format(states=len(X)))
-    else:
+    else:  # value net
       for selfPlayLog in selfPlayDataList:
           for game in selfPlayLog['Games']:
               states = game['BoardStates']['States']
@@ -124,7 +124,7 @@ def SplitArraytoXMatrixAndYTransitionVector(arrayToSplit, cnn_format=True, one_h
             #x still a 1d array; must stay one-hotted to be reshaped properly
             x = np.array([index for index, has_piece in enumerate(x) if has_piece == 1], dtype=np.float32)
             # if we just want the transition index vs a pre-one-hotted vector
-            transition_vector = trainingExample[2].index(1) # assumes no errors; y has a single value of 1
+            transition_vector = trainingExample[2].index(1) # assumes no errors, y has a single value of 1
         elif cnn_format:
             x = np.reshape(np.array(x, dtype=np.float32), (len(x) // 64, 8, 8))  # feature_plane x row x co)
             for i in range(0, len(x)):

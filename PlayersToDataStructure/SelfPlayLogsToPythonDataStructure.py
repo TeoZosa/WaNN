@@ -431,14 +431,14 @@ def convert_board_states_to_arrays(board_states, player_color):
     new_board_states['PlayerPOV'] = []
     for state in states:
         new_board_states['States'].append(
-            convert_board_to_1d_array_WBPOE(state, player_color))  # These can be inputs to value net
+            convert_board_to_1d_array_WBPOEWmBm(state, player_color))  # These can be inputs to value net
     for POV_state in POV_states:
         new_board_states['PlayerPOV'].append(
-            convert_board_to_1d_array_WBPOE(POV_state, player_color))  # These can be inputs to policy net
+            convert_board_to_1d_array_WBPOEWmBm(POV_state, player_color))  # These can be inputs to policy net
     return new_board_states
 
 
-def convert_board_to_1d_array_WBPOE(board_state, player_color):
+def convert_board_to_1d_array_WBPOEWmBm(board_state, player_color):
     state = board_state[0]
     white_move_index = 10
     from_white_move = state[white_move_index]
@@ -479,6 +479,31 @@ def convert_board_to_1d_array_WBPOE(board_state, player_color):
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # [x vector, win, y transition vector]
     return new_board_state
 
+def convert_board_to_1d_array_POEPmOm(board_state, player_color):
+    state = board_state[0]
+    white_move_index = 10
+    from_white_move = state[white_move_index]
+
+    if player_color == 'White':
+        player_to_move = from_white_move ^ 1  # if from_white_move == 1, it's not white's move this turn
+    else: # player_color == 'Black'
+        player_to_move = from_white_move  #  black's move = 1 iff from_white_move = 1
+    player_move_flag = [player_to_move] * 64
+    opponent_move_flag = [player_to_move ^ 1] * 64
+    one_hot_board = [generate_binary_vector(state, array_to_append=[], player_color=player_color,
+                                            who_to_filter='Player'),  # [0] player
+                     generate_binary_vector(state, array_to_append=[], player_color=player_color,
+                                            who_to_filter='Opponent'),  # [1] opponent
+                     generate_binary_vector(state, array_to_append=[], player_color=player_color,
+                                            who_to_filter='Empty'),  # [3] empty
+                     player_move_flag,  # [4] flag indicating if players's turn to move
+                     opponent_move_flag]  # [5] flag indicating if opponent's turn to move
+    for i in range(0, 64):  # error checking block
+        # ensure at most 1 bit is on at each board position for player/opponent/empty
+        assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
+                not (one_hot_board[0][i] & one_hot_board[1][i] & one_hot_board[2][i]))
+    new_board_state = [one_hot_board, board_state[1], board_state[2]]  # [x vector, win, y transition vector]
+    return new_board_state
 
 def convert_board_to_1d_array_POE(board_state, player_color):
     # 12/22 removed White/Black to avoid Curse of Dimensionality.

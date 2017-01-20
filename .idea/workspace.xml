@@ -4,10 +4,6 @@
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" afterPath="$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PolicyNet/PolicyNet.py" afterPath="$PROJECT_DIR$/PolicyNet/PolicyNet.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" afterPath="$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Tools/NumpyArray.py" afterPath="$PROJECT_DIR$/Tools/NumpyArray.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/__main__.py" afterPath="$PROJECT_DIR$/__main__.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -65,7 +61,7 @@
       <file leaf-file-name="PolicyNetSelfPlay.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="7616">
+            <state relative-caret-position="1170">
               <caret line="448" column="146" lean-forward="false" selection-start-line="448" selection-start-column="146" selection-end-line="448" selection-end-column="146" />
               <folding>
                 <element signature="e#1#39#0" expanded="true" />
@@ -74,45 +70,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Tools/utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="119">
-              <caret line="9" column="44" lean-forward="false" selection-start-line="9" selection-start-column="44" selection-end-line="9" selection-end-column="44" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PolicyNet.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNet.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="10" column="78" lean-forward="false" selection-start-line="10" selection-start-column="78" selection-end-line="10" selection-end-column="78" />
-              <folding>
-                <element signature="e#0#23#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="breakthrough_player.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="124" lean-forward="false" selection-start-line="0" selection-start-column="124" selection-end-line="0" selection-end-column="124" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="SelfPlayLogsToPythonDataStructure.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="448">
-              <caret line="464" column="36" lean-forward="false" selection-start-line="464" selection-start-column="36" selection-end-line="464" selection-end-column="36" />
+            <state relative-caret-position="287">
+              <caret line="498" column="72" lean-forward="false" selection-start-line="498" selection-start-column="72" selection-end-line="498" selection-end-column="72" />
               <folding />
             </state>
           </provider>
@@ -121,7 +83,7 @@
       <file leaf-file-name="NumpyArray.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Tools/NumpyArray.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2159">
+            <state relative-caret-position="1103">
               <caret line="132" column="73" lean-forward="false" selection-start-line="132" selection-start-column="73" selection-end-line="132" selection-end-column="73" />
               <folding />
             </state>
@@ -840,13 +802,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00042" summary="redid mirror states to account for the transition vector">
-      <created>1482366126158</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1482366126158</updated>
-    </task>
     <task id="LOCAL-00043" summary="fixed bugs">
       <created>1482376844019</created>
       <option name="number" value="00043" />
@@ -1183,7 +1138,14 @@
       <option name="project" value="LOCAL" />
       <updated>1484587387268</updated>
     </task>
-    <option name="localTasksCounter" value="91" />
+    <task id="LOCAL-00091" summary="black move flag added to WBPOE&#10;">
+      <created>1484943936700</created>
+      <option name="number" value="00091" />
+      <option name="presentableId" value="LOCAL-00091" />
+      <option name="project" value="LOCAL" />
+      <updated>1484943936701</updated>
+    </task>
+    <option name="localTasksCounter" value="92" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1201,10 +1163,11 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22228809" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3261339" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3255578" sideWeight="0.57202137" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.47768763" sideWeight="0.6959099" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47768763" sideWeight="0.3040901" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.03171457" sideWeight="0.4524648" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3255578" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3255578" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11534391" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -1215,7 +1178,6 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2464503" sideWeight="0.7931239" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47768763" sideWeight="0.30586842" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36372647" sideWeight="0.80751175" order="3" side_tool="false" content_ui="tabs" />
     </layout>
@@ -1236,7 +1198,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="better readability" />
     <MESSAGE value="altered numpy array contents (indices vs pre-one-hotted arrays), for tf.contrib.learn's DNN Classifier, used one-hotted features(nd.array of nd.arrays vs. nd.matrix) and index for output &quot;class&quot;.  Dirty test code in policy net (testing a DNN classifier while reading documentation on building a CNN)." />
     <MESSAGE value="used pandas to maintain and convert 2d planes for CNN; will reshape later" />
     <MESSAGE value="new method in NumpyArrays to deal with 3d boards. fixed error testing logic in SelfPlayLogsToPythonDataStructure" />
@@ -1261,7 +1222,8 @@
     <MESSAGE value="better stats printing" />
     <MESSAGE value="moved batch split to utils, classes policy net" />
     <MESSAGE value="using He et al. std dev for weight initialization. almost finished classing Policy Net" />
-    <option name="LAST_COMMIT_MESSAGE" value="using He et al. std dev for weight initialization. almost finished classing Policy Net" />
+    <MESSAGE value="black move flag added to WBPOE&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="black move flag added to WBPOE&#10;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1657,17 +1619,7 @@
         <state relative-caret-position="68">
           <caret line="10" column="78" lean-forward="false" selection-start-line="10" selection-start-column="78" selection-end-line="10" selection-end-column="78" />
           <folding>
-            <element signature="e#0#23#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7616">
-          <caret line="448" column="146" lean-forward="false" selection-start-line="448" selection-start-column="146" selection-end-line="448" selection-end-column="146" />
-          <folding>
-            <element signature="e#1#39#0" expanded="true" />
+            <element signature="e#0#23#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1690,16 +1642,26 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Tools/NumpyArray.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2159">
+        <state relative-caret-position="1103">
           <caret line="132" column="73" lean-forward="false" selection-start-line="132" selection-start-column="73" selection-end-line="132" selection-end-column="73" />
           <folding />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/PolicyNet/PolicyNetSelfPlay.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1170">
+          <caret line="448" column="146" lean-forward="false" selection-start-line="448" selection-start-column="146" selection-end-line="448" selection-end-column="146" />
+          <folding>
+            <element signature="e#1#39#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/PlayersToDataStructure/SelfPlayLogsToPythonDataStructure.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="448">
-          <caret line="464" column="36" lean-forward="false" selection-start-line="464" selection-start-column="36" selection-end-line="464" selection-end-column="36" />
+        <state relative-caret-position="287">
+          <caret line="498" column="72" lean-forward="false" selection-start-line="498" selection-start-column="72" selection-end-line="498" selection-end-column="72" />
           <folding />
         </state>
       </provider>

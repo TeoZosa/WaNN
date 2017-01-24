@@ -240,7 +240,7 @@ def AssignPath(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)WBPOEWmBm'
     else:
         path = ''#todo:error checking
     return path
@@ -408,22 +408,24 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
 # Batch Size: 128
 # # of Epochs: 5
 
-file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamNumFiltersNumLayersNON-TFSumCrossEntropy01172017_He_weights.txt'), 'a')
+file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamNumFiltersNumLayersNON-TFSumCrossEntropy01212017_He_weightsWBPOEWmBm.txt'), 'a')
 # file = sys.stdout
 
-for num_hidden in [i for i in range(6, 7)]:
+for num_hidden in [i for i in range(12,13)]:
     for n_filters in [
                         16, 32, 64,
                        128,
                       192]:
         for learning_rate in [
-            0.001, 0.0011, 0.0012, 0.0013,
-                              0.0014, 0.0015]:
+            0.001,
+            # 0.0011, 0.0012, 0.0013,
+            #                   0.0014, 0.0015
+        ]:
             reset_default_graph()
             batch_size = 128
 
             #build graph
-            X = tf.placeholder(tf.float32, [None, 8, 8, 4])
+            X = tf.placeholder(tf.float32, [None, 8, 8, 8])
             # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
             y = tf.placeholder(tf.float32, [None, 155])
             filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
@@ -456,7 +458,6 @@ for num_hidden in [i for i in range(6, 7)]:
 
             #kadenze cross_entropy cost function
             cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-
 
 
             #way better performance
@@ -518,8 +519,8 @@ for num_hidden in [i for i in range(6, 7)]:
                                        y: y_valid
                                        })
                         print("Loss: {}".format(loss), end="\n", file=file)
-                        print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
-                        print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
+                        # print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
+                        # print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
                         print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
                             interval=(i+1)//(len(X_train_batches)//10),
                             accuracy=accuracy_score), end="\n", file=file)

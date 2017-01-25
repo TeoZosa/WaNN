@@ -4,9 +4,10 @@ import pandas as pd
 import warnings
 import h5py
 import os
+import random
 
 #TODO: redo logic and paths after directory restructuring
-def WriteNPArrayToDisk(path, X, y, filterType, NNType):
+def write_np_array_to_disk(path, X, y, filterType, NNType):
     if filterType == r'Rank':
         XMatrix = open(path + r'XMatrixByRank.p', 'wb')
         pickle.dump(X, XMatrix)
@@ -23,20 +24,10 @@ def WriteNPArrayToDisk(path, X, y, filterType, NNType):
         yVector = open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
         pickle.dump(y, yVector)
     elif filterType == r'Self-Play':
-        if NNType == 'Policy':
-          h5f = h5py.File(path + r'POEBias.hdf5', 'w', driver='core')
-          h5f.create_dataset(r'X', data=X)
-          h5f.create_dataset(r'y', data=y)
-          h5f.close()
-          # XMatrix = open(path + r'XMatrixSelfPlayPOEBias.npy', 'wb')
-          # np.save(XMatrix, X)
-          # yVector = open(path + r'yVectorSelfPlayPOEBias.npy', 'wb')
-          # np.save(yVector, y)
-        else:#value net
-          XMatrix = open(path + r'XMatrixSelfPlayWBPOEBiasNoZero.p', 'wb')
-          pickle.dump(X, XMatrix)
-          yVector = open(path + r'yVectorSelfPlayWBPOEBiasNoZero.p', 'wb')
-          pickle.dump(y, yVector)
+        h5f = h5py.File(path + r'POEBias.hdf5', 'w', driver='core')
+        h5f.create_dataset(r'X', data=X)
+        h5f.create_dataset(r'y', data=y)
+        h5f.close()
     else:
         print ("Error: You must specify a valid Filter")
 def FilterByRank(playerList):
@@ -68,49 +59,26 @@ def FilterByWinRatio(playerList):
 
 def filter_for_self_play(self_play_data, NNType):
     training_data = []
-    # if NNType == 'Policy':
-    for self_play_log in self_play_data:
-      for game in self_play_log['Games']:
-          states = game['BoardStates']['PlayerPOV']
-          mirror_states = game['MirrorBoardStates']['PlayerPOV']
-          assert len(states) == len(mirror_states)
-          for i in range(0, len(states)):
-              training_data.append(states[i])
-              training_data.append(mirror_states[i])
-      print('# of States for Self-Play {NNType} Net: {states}'.format(states=len(training_data), NNType=NNType))
-    # else:  # value net
-    #   for selfPlayLog in selfPlayDataList:
-    #       for game in selfPlayLog['Games']:
-    #           states = game['BoardStates']['States']
-    #           mirrorStates = game['MirrorBoardStates']['States']
-    #           assert len(states) == len(mirrorStates)
-    #           for i in range(0, len(states)):
-    #               X.append(states[i])
-    #               X.append(mirrorStates[i])
-    #   print('# of States for Self-Play Value Net: {states}'.format(states=len(X)))
+    if NNType == 'Policy':
+        for self_play_log in self_play_data:
+            for game in self_play_log['Games']:
+              states = game['BoardStates']['PlayerPOV']
+              mirror_states = game['MirrorBoardStates']['PlayerPOV']
+              assert len(states) == len(mirror_states)
+              for i in range(0, len(states)):
+                  training_data.append(states[i])
+                  training_data.append(mirror_states[i])
+    else:  # value net
+        for self_play_log in self_play_data:
+            for game in self_play_log['Games']: #TODO: experiment with the randomness
+                num_random_states = len(game['BoardStates']['PlayerPOV'])//10 #10% of the states of each game
+                states = random.sample(game['BoardStates']['PlayerPOV'], num_random_states)
+                mirror_states = random.sample(game['MirrorBoardStates']['PlayerPOV'], num_random_states)
+                for i in range(0, len(states)):
+                    training_data.append(states[i])
+                    training_data.append(mirror_states[i])
+    print('# of States for Self-Play {NNType} Net: {states}'.format(states=len(training_data), NNType=NNType))
     return training_data
-
-def SplitArraytoXMatrixAndYOutcomeVector(arrayToSplit, convertY = True):
-    X = []
-    y = []
-    if (convertY == True):
-        ##Much better MSE performance
-        for trainingExample in arrayToSplit:# 0 & 1 binary outcomes; more useful so we can view NN output as a probability?
-            X.append(trainingExample[0]+ ([1]*1))#1 bias node
-            if (trainingExample[1] == 1):
-                y.append(trainingExample[1])
-            elif (trainingExample[1] == -1):
-                y.append(0)
-            else:
-                print("Error: y[i] should be 1 or -1")
-                exit(-11)
-    else:
-        for trainingExample in arrayToSplit:# -1 & 1 binary outcomes; better if we want NN output to be in terms of cost/reward?
-            X.append(trainingExample[0] + ([1]*1))#1 bias node
-            # X.append(trainingExample[0])
-            y.append(trainingExample[1])
-    return X, y
-
 
 def split_data_to_training_examples_and_labels_for_CNN(array_to_split, NNType):
     training_examples = []
@@ -124,9 +92,9 @@ def split_data_to_training_examples_and_labels_for_CNN(array_to_split, NNType):
 def split_training_examples_and_labels(training_example, NNType):
     formatted_example = format_training_example(training_example[0])
     if NNType == 'Policy':
-         formatted_label = label_for_policy(label=training_example[2])
+         formatted_label = label_for_policy(transition_vector=training_example[2])
     else: # Value Net
-         formatted_label = label_for_value(label=training_example[1])
+         formatted_label = label_for_value(win=training_example[1])
     return formatted_example, formatted_label
 
 def format_training_example(training_example):
@@ -142,24 +110,20 @@ def format_training_example(training_example):
     formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
     return formatted_example
     
-def label_for_policy(label, one_hot_indexes=False):
+def label_for_policy(transition_vector, one_hot_indexes=False):
     # if one_hot_indexes:
     #     # x still a 1d array; must stay one-hotted to be reshaped properly
     #     formatted_example = np.array([index for index, has_piece in enumerate(formatted_example) if has_piece == 1], dtype=np.float32)
     #     # if we just want the transition index vs a pre-one-hotted vector
     #     formatted_label = label.index(1)  # assumes no errors, y has a single value of 1
-    formatted_label = np.array(label, dtype=np.float32)  # One hot transition vector
+    formatted_label = np.array(transition_vector, dtype=np.float32)  # One hot transition vector
     return formatted_label
 
-def label_for_value(label): 
-    if label == -1:
-        formatted_label = 0
-    elif label == 1:
-        formatted_label = label
+def label_for_value(win):
+    if win:
+        formatted_label = 1
     else:
-        formatted_label = None
-        print("Error: y[i] should be 1 or -1")
-        exit(-11)
+        formatted_label = 0
     return formatted_label
 
     
@@ -191,7 +155,7 @@ def SplitArraytoXMatrixAndYTransitionVectorCNN(arrayToSplit):  # only for boards
         X.append(np.array(x, dtype=np.int32))
     return X, y
 
-def generateArray(player_list, filter, NNType):
+def filter_training_examples_and_labels(player_list, filter, NNType):
         if filter =='Win Ratio':
             training_data = FilterByWinRatio(player_list)
         elif filter =='Rank':
@@ -245,7 +209,7 @@ def GenerateXLSX(X, which=1):
 
     frame.to_excel(writer, 'Sheet1')
     writer.save()
-def AssignFilter(fileName):
+def assign_filter(fileName):
     if fileName == r'PlayerDataPythonDataSetsorted.p':
         filter = r'Rank'
     elif fileName == r'PlayerDataBinaryFeaturesWBPOEDataSetsorted.p':
@@ -253,7 +217,7 @@ def AssignFilter(fileName):
     else:
         filter = r'UNDEFINED'
     return filter
-def AssignPath(deviceName ='Workstation'):
+def assign_path(deviceName ='Workstation'):
     if  deviceName == 'MBP2011_':
        path =  r'/Users/teofilozosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2014':
@@ -266,10 +230,10 @@ def AssignPath(deviceName ='Workstation'):
         path = ''#todo:error checking
     return path
 
-def SelfPlayDriver(filter, NNType, path, fileName):
+def self_player_driver(filter, NNType, path, fileName):
     file = open(os.path.join(path, fileName), 'r+b')
-    playerListDataFriendly = pickle.load(file)
+    player_list = pickle.load(file)
     file.close()
-    X, y = generateArray(playerListDataFriendly, filter, NNType)
-    writePath = os.path.join(path,"NumpyArrays",fileName[0:-len(r'DataPython.p')])
-    WriteNPArrayToDisk(writePath, X, y, filter, NNType)
+    training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType)
+    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POE{NNType}Net'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
+    write_np_array_to_disk(write_path, training_examples, labels, filter, NNType)

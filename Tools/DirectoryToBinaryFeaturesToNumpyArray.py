@@ -23,6 +23,6 @@ fileName = r'PlayerDataBinaryFeaturesDataSetsorted.p'
 filter = n2a.AssignFilter(fileName)
 X, y = n2a.generateArrayByFilter(playerList, filter)
 writePath = '' #cwd
-#n2a.WriteNPArrayToDisk(writePath, X, y, filter)
+#n2a.write_np_array_to_disk(writePath, X, y, filter)
 #todo: check to see if this script functions properly
 TestScript(X, y)

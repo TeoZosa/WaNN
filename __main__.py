@@ -8,11 +8,11 @@ import time
 # readPath = r'/Users/teofilozosa/BreakthroughData/AutomatedData/'
 # #readPath = ''#default directory for 2011 MBP 2
 # fileName = r'PlayerDataBinaryFeaturesWBPOEDatasetSorted.p'
-# filter = AssignFilter(fileName)
+# filter = assign_filter(fileName)
 # playerListDataFriendly = pickle.load(open(readPath + fileName, 'rb'))
-# X, y = generateArray(playerListDataFriendly, filter= filter)
-# writePath = AssignPath("MBP2014")
-# WriteNPArrayToDisk(writePath, X, y, filter)
+# X, y = filter_training_examples_and_labels(playerListDataFriendly, filter= filter)
+# writePath = assign_path("MBP2014")
+# write_np_array_to_disk(writePath, X, y, filter)
 
 #human readable testing
 #SelfPlayLogsToPythonDataStructure.Driver(r'G:\TruncatedLogs\07xx-07yy\selfPlayLogsMBP2011xxxxxx')
@@ -23,9 +23,9 @@ import time
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
 
-  startTime = time.time()
-  SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
-  print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
+  # startTime = time.time()
+  # SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
+  # print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
 
   startTime = time.time()
   SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()

@@ -390,8 +390,8 @@ inputPath = AssignPath()
 device = AssignDevice(inputPath)
 
 #for experiment with states from entire games, test data are totally separate games, ~10% of training data
-X_train, y_train = LoadXAndy(os.path.join(inputPath, r'TrainingData'))
-X_test, y_test = LoadXAndy(os.path.join(inputPath, r'TestData')) # 210659 states
+training_examples, training_labels = LoadXAndy(os.path.join(inputPath, r'TrainingData'))
+testing_examples, testing_labels = LoadXAndy(os.path.join(inputPath, r'TestData')) # 210659 states
 
 # X, y = LoadXAndy(inputPath)
 
@@ -486,40 +486,40 @@ for num_hidden in [i for i in range(1,3)]:
             #                                                                       test_size=128,
             #                                                                       random_state=random.randint(1, 1024))  # keep validation outside
 
-            #for entire dataset experiments, split the testing games into a validation and test split; 105330 & 105329 states each
-            X_test, X_valid, y_test, y_valid = model_selection.train_test_split(X_test, y_test, test_size=0.5,
-                                                                                random_state=42)
+            #for entire dataset experiments, split the testing games into a validation and test split; 105330 & 105329 states each; does randomness matter?
+            test_set_examples, validation_set_examples, test_set_labels, validation_set_labels = model_selection.train_test_split(testing_examples, testing_labels, test_size=0.5,
+                                                                                                                                  random_state=random.randint(1, 1024))
 
             for epoch_i in range(n_epochs):
-                X_train, y_train = shuffle(X_train, y_train,
-                                           random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
+                training_examples, training_labels = shuffle(training_examples, training_labels,
+                                                             random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
 
-                X_train_batches, y_train_batches = utils.batch_split(X_train, y_train, batch_size)
+                training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, batch_size)
 
                 startTime = time.time()  #start timer
 
                 #train model
-                for i in range (0, len(X_train_batches)):
+                for i in range (0, len(training_example_batches)):
                     sess.run(optimizer, feed_dict={
-                        X: X_train_batches[i],
-                        y: y_train_batches[i]
+                        X: training_example_batches[i],
+                        y: training_label_batches[i]
                     })
 
                     # show stats at every 1/10th interval of epoch
-                    if (i+1)%(len(X_train_batches)//10)==0:
+                    if (i+1)%(len(training_example_batches)//10)==0:
                         loss = sess.run(cost, feed_dict={
-                            X: X_train_batches[i],
-                            y: y_train_batches[i]
+                            X: training_example_batches[i],
+                            y: training_label_batches[i]
                             })
                         accuracy_score = sess.run(accuracy, feed_dict={
-                                       X: X_valid,
-                                       y: y_valid
+                                       X: validation_set_examples,
+                                       y: validation_set_labels
                                        })
                         print("Loss: {}".format(loss), end="\n", file=file)
                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
                         print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
                         print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
-                            interval=(i+1)//(len(X_train_batches)//10),
+                            interval=(i+1)//(len(training_example_batches) // 10),
                             accuracy=accuracy_score), end="\n", file=file)
 
 
@@ -528,20 +528,20 @@ for num_hidden in [i for i in range(1,3)]:
                     epoch_num=epoch_i+1,
                     accuracy_score=sess.run(accuracy,
                                    feed_dict={
-                                       X: X_valid,
-                                       y: y_valid
+                                       X: validation_set_examples,
+                                       y: validation_set_labels
                                    })), end="\n", file=file)
 
                 #show example of what network is predicting vs the move oracle
-                example = random.randrange(0, len(X_valid))
-                y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[example]]})
+                example = random.randrange(0, len(validation_set_examples))
+                y_pred_vector =sess.run(y_pred, feed_dict={X:[validation_set_examples[example]]})
                 print("Sample Predicted Probabilities = "
                       "\n{y_pred}"
                       "\nPredicted: {predicted_outcome}"
                       "\nActual:  {actual_outcome}".format(
                         y_pred=y_pred_vector,
                         predicted_outcome=utils.win_lookup(np.argmax(y_pred_vector)),
-                        actual_outcome=utils.win_lookup(np.argmax(y_valid[example]))),
+                        actual_outcome=utils.win_lookup(np.argmax(validation_set_labels[example]))),
                         end="\n", file=file)
 
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n", file=file)
@@ -549,8 +549,8 @@ for num_hidden in [i for i in range(1,3)]:
             # Print final test accuracy:
             print("Final Test Accuracy: {}".format(sess.run(accuracy,
                            feed_dict={
-                               X: X_test,
-                               y: y_test
+                               X: test_set_examples,
+                               y: test_set_labels
                            })), end="\n", file=file)
             sess.close()
 file.close()

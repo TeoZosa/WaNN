@@ -74,8 +74,8 @@
       <file leaf-file-name="value_net_script.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="443">
-              <caret line="488" column="155" lean-forward="false" selection-start-line="488" selection-start-column="155" selection-end-line="488" selection-end-column="155" />
+            <state relative-caret-position="-779">
+              <caret line="493" column="42" lean-forward="false" selection-start-line="493" selection-start-column="42" selection-end-line="493" selection-end-column="42" />
               <folding>
                 <element signature="e#1#39#0" expanded="true" />
               </folding>
@@ -851,13 +851,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00053" summary="changed diskWrite path to go to the DataStructure directory directly">
-      <created>1482445577858</created>
-      <option name="number" value="00053" />
-      <option name="presentableId" value="LOCAL-00053" />
-      <option name="project" value="LOCAL" />
-      <updated>1482445577858</updated>
-    </task>
     <task id="LOCAL-00054" summary="pipelined the conversion from txt to Numpy array">
       <created>1482454124655</created>
       <option name="number" value="00054" />
@@ -1194,7 +1187,14 @@
       <option name="project" value="LOCAL" />
       <updated>1485457430694</updated>
     </task>
-    <option name="localTasksCounter" value="102" />
+    <task id="LOCAL-00102" summary="fixed test/validation split bug">
+      <created>1485468804608</created>
+      <option name="number" value="00102" />
+      <option name="presentableId" value="LOCAL-00102" />
+      <option name="project" value="LOCAL" />
+      <updated>1485468804609</updated>
+    </task>
+    <option name="localTasksCounter" value="103" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1268,7 +1268,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="for numpy conversion, fixed logic in conversion; saving as hd5f (note: multiprocessing doesn't percolate the exception up the chain properly)" />
     <MESSAGE value="for numpy conversion, fixed logic in conversion; saving as hdf5 (note: multiprocessing doesn't percolate the exception up the chain properly)" />
     <MESSAGE value="changed some path opening operations, moved find files to a util file." />
     <MESSAGE value="changed write out name of files, made code work for CNN &amp; flattened version" />
@@ -1293,7 +1292,8 @@
     <MESSAGE value="clean up code" />
     <MESSAGE value="more restructuring and cleaning. altered policy net code for entire dataset experiment&#10;" />
     <MESSAGE value="cleaning code" />
-    <option name="LAST_COMMIT_MESSAGE" value="cleaning code" />
+    <MESSAGE value="fixed test/validation split bug" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed test/validation split bug" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1746,8 +1746,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="443">
-          <caret line="488" column="155" lean-forward="false" selection-start-line="488" selection-start-column="155" selection-end-line="488" selection-end-column="155" />
+        <state relative-caret-position="-779">
+          <caret line="493" column="42" lean-forward="false" selection-start-line="493" selection-start-column="42" selection-end-line="493" selection-end-column="42" />
           <folding>
             <element signature="e#1#39#0" expanded="true" />
           </folding>

@@ -491,6 +491,7 @@ for num_hidden in [i for i in range(1,3)]:
                                                                                                                                   random_state=random.randint(1, 1024))
 
             for epoch_i in range(n_epochs):
+                #TODO: move this to utils?
                 training_examples, training_labels = shuffle(training_examples, training_labels,
                                                              random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
 

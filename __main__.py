@@ -1,9 +1,9 @@
 #whatever scripts I want to run here.
-import pickle
-from multiprocessing import freeze_support
-from PlayersToDataStructure import  SelfPlayLogsToPythonDataStructure, SelfPlayLogsToTrainingData
-from Tools import HumanReadableBoardPrinting
 import time
+from multiprocessing import freeze_support
+
+from self_play_to_data_structure import SelfPlayLogsToTrainingData
+
 ##little golem player data to numpy array
 # readPath = r'/Users/teofilozosa/BreakthroughData/AutomatedData/'
 # #readPath = ''#default directory for 2011 MBP 2
@@ -23,9 +23,9 @@ import time
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
 
-  # startTime = time.time()
-  # SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
-  # print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
+  startTime = time.time()
+  SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
+  print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
 
   startTime = time.time()
   SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()

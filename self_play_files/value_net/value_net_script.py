@@ -391,7 +391,7 @@ device = AssignDevice(inputPath)
 
 #for experiment with states from entire games, test data are totally separate games, ~10% of training data
 X_train, y_train = LoadXAndy(os.path.join(inputPath, r'TrainingData'))
-X_test, y_test = LoadXAndy(os.path.join(inputPath, r'TestData'))
+X_test, y_test = LoadXAndy(os.path.join(inputPath, r'TestData')) # 210659 states
 
 # X, y = LoadXAndy(inputPath)
 
@@ -486,7 +486,7 @@ for num_hidden in [i for i in range(1,3)]:
             #                                                                       test_size=128,
             #                                                                       random_state=random.randint(1, 1024))  # keep validation outside
 
-            #for entire dataset experiments, split the testing games into a validation and test split
+            #for entire dataset experiments, split the testing games into a validation and test split; 105330 & 105329 states each
             X_test, X_valid, y_test, y_valid = model_selection.train_test_split(X_test, y_test, test_size=0.5,
                                                                                 random_state=42)
 
@@ -533,7 +533,7 @@ for num_hidden in [i for i in range(1,3)]:
                                    })), end="\n", file=file)
 
                 #show example of what network is predicting vs the move oracle
-                example = random.randint(0, 127)
+                example = random.randrange(0, len(X_valid))
                 y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[example]]})
                 print("Sample Predicted Probabilities = "
                       "\n{y_pred}"
@@ -544,7 +544,7 @@ for num_hidden in [i for i in range(1,3)]:
                         actual_outcome=utils.win_lookup(np.argmax(y_valid[example]))),
                         end="\n", file=file)
 
-                print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / (60)), end="\n", file=file)
+                print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n", file=file)
 
             # Print final test accuracy:
             print("Final Test Accuracy: {}".format(sess.run(accuracy,

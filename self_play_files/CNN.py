@@ -6,28 +6,24 @@ from tools import utils
 import os
 import numpy as np
 
-class Policy_net(object):
-    def __init__(self, learning_rate=0.001, optimizer=tf.train.AdamOptimizer, activation=tf.nn.relu,
+class CNN(object):
+    def __init__(self, num_input_planes, num_classes, learning_rate=0.001, optimizer=tf.train.AdamOptimizer, activation=tf.nn.relu,
                  kernel_dim=3, num_filters=128, num_hidden_layers=12, epochs=5, batch_size=128):
         self.learning_rate = learning_rate
         self.optimizer = optimizer
         self.activation = activation
         self.epochs = epochs
         self.batch_size = batch_size
-        self.num_classes = 155 #154 moves + no move
+        self.num_classes = num_classes
         self.kernel_dim = kernel_dim
         self.num_filters = num_filters
-        self.input_image = tf.placeholder(tf.float32, [None, 8, 8, 4])  
-        # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
-        self.labels = tf.placeholder(tf.float32, [None, 155])  # TODO: pass it the tf.one_hot or redo conversion
-
-          # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
-        # TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
+        self.input_image = tf.placeholder(tf.float32, [None, 8, 8, num_input_planes])
+        self.labels = tf.placeholder(tf.float32, [None, num_classes])
         self.num_hidden_layers = num_hidden_layers
         self.num_filters_out = [self.num_filters] * self.num_hidden_layers + [1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
-
         self.num_layers = len(self.num_filters_out)
         self.hidden_layers = []
+
         # Hidden layer 1
         with tf.variable_scope('hidden_layer/1', reuse=None):
             kernel = tf.get_variable(name='weight',

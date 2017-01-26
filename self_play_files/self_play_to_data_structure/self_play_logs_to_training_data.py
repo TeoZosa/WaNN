@@ -4,7 +4,7 @@ import warnings
 from multiprocessing import Process, pool, Pool
 
 from tools import numpy_array
-from self_play_to_data_structure import SelfPlayLogsToPythonDataStructure as convertLog
+from self_play_files.self_play_to_data_structure import self_play_logs_to_data_structures as convertLog
 
 
 class NoDaemonProcess(Process):
@@ -74,7 +74,7 @@ def AggregateSelfPlayDataStructures():
     pickle.dump(combinedList, outputList, protocol=4)
     outputList.close()
 
-def SelfPlayDataStructuresToNumpyArrays():
+def self_play_data_structures_to_numpy():
   path = r'G:\TruncatedLogs\PythonDataSets\DataStructures'
   files = [
            r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',

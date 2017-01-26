@@ -2,7 +2,7 @@ import pickle
 
 from tools import numpy_array as n2a
 from little_golem_players_files.tools import SortPlayerListByRank as sl
-from little_golem_players_files.PlayersToDataStructure import \
+from little_golem_players_files.players_to_data_structures import \
     PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes as pd
 
 

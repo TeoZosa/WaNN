@@ -7,13 +7,13 @@ def find_files(path, extension):  # recursively find files at path with extensio
         for file in fnmatch.filter(files, extension):
             yield os.path.join(root, file)
             
-def batch_split(inputs, labels, batch_size):
+def batch_split(training_examples, labels, batch_size):
     # lazily split into training batches of size batch_size
-    X_train_batches = [inputs[:batch_size]]
+    X_train_batches = [training_examples[:batch_size]]
     y_train_batches = [labels[:batch_size]]
-    remaining_x_train = inputs[batch_size:]
+    remaining_x_train = training_examples[batch_size:]
     remaining_y_train = labels[batch_size:]
-    for i in range(1, len(inputs) // batch_size):
+    for i in range(1, len(training_examples) // batch_size):
         X_train_batches.append(remaining_x_train[:batch_size])
         y_train_batches.append(remaining_y_train[:batch_size])
         remaining_x_train = remaining_x_train[batch_size:]
@@ -29,8 +29,10 @@ def win_lookup(index):
         return 'Lose'
 
 def move_lookup(index, player_color):
-    # Enumerated the moves for lookup speed/visual reference (see commented out dictionary).
-    # Code can be prettified by calling generate_move_lookup instead
+    """'
+    Enumerated the moves for lookup speed/visual reference (see commented out dictionary).
+    Code can be prettified by calling generate_move_lookup instead
+    ''"""
     if player_color.lower() == 'White'.lower():
         transitions = ['a1-a2', 'b1-a2', 'b1-c2', 'c1-c2', 'd1-c2', 'd1-e2', 'e1-e2', 'f1-e2', 'f1-g2', 'g1-g2', 
                        'h1-g2', 'a2-a3', 'b2-a3', 'b2-c3', 'c2-c3', 'd2-c3', 'd2-e3', 'e2-e3', 'f2-e3', 'f2-g3', 

@@ -2,7 +2,7 @@
 import time
 from multiprocessing import freeze_support
 
-from self_play_to_data_structure import SelfPlayLogsToTrainingData
+from self_play_files.self_play_to_data_structure import self_play_logs_to_training_data
 
 ##little golem player data to numpy array
 # readPath = r'/Users/teofilozosa/BreakthroughData/AutomatedData/'
@@ -23,10 +23,10 @@ from self_play_to_data_structure import SelfPlayLogsToTrainingData
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
 
-  startTime = time.time()
-  SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
-  print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
+  # startTime = time.time()
+  # SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
+  # print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
 
   startTime = time.time()
-  SelfPlayLogsToTrainingData.SelfPlayDataStructuresToNumpyArrays()
+  self_play_logs_to_training_data.self_play_data_structures_to_numpy()
   print("Minutes to numpy array: {time}".format(time=(time.time() - startTime) / (60)))

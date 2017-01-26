@@ -240,7 +240,7 @@ def AssignPath(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)WBPOEWmBm'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNetEntireDataSet'
     else:
         path = ''#todo:error checking
     return path
@@ -255,12 +255,6 @@ def LoadXAndy(path):
         y.extend(training_data['y'][:])
         training_data.close()
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)  # b x r x c x f & label
-
-
-def LoadXAndy_1to1(path):
-    X = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
-    y = pickle.load(open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'rb'))
-    return X, y
 
 def image_stuff():
     #Train/validation/test split or reducing number of training examples
@@ -347,7 +341,7 @@ def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name
                                    )
         bias = tf.get_variable(name='bias',
                                  shape=[n_filters_out],
-                                 initializer=tf.constant_initializer(0.01))#karpathy: for relu, 0.00 ensures all relus fire in the beginning
+                                 initializer=tf.constant_initializer(0.01))#karpathy: for relu, 0.01 ensures all relus fire in the beginning
         hidden_layer = activation(
             tf.nn.bias_add(
                 tf.nn.conv2d(input=prev_layer,
@@ -366,13 +360,13 @@ def output_layer_init(layer_in, name='output_layer', reuse=None):
     with tf.variable_scope(name or 'output_layer', reuse=reuse):
         kernel = tf.get_variable(
             name='weights',
-            shape=[n_features, 155], # 1 x 64 filter in, 155 classes out
+            shape=[n_features, 2], # 1 x 64 filter in, 1 class out
             dtype=tf.float32,
             initializer=tf.contrib.layers.xavier_initializer())
 
         bias = tf.get_variable(
             name='bias',
-            shape=[155],
+            shape=[2],
             dtype=tf.float32,
             initializer=tf.constant_initializer(0.0))
 
@@ -394,40 +388,38 @@ def loss(output_layer, labels):
 config = run_config.RunConfig(num_cores=-1)
 inputPath = AssignPath()
 device = AssignDevice(inputPath)
-X, y = LoadXAndy(inputPath)
+
+#for experiment with states from entire games, test data are totally separate games, ~10% of training data
+X_train, y_train = LoadXAndy(os.path.join(inputPath, r'TrainingData'))
+X_test, y_test = LoadXAndy(os.path.join(inputPath, r'TestData'))
+
+# X, y = LoadXAndy(inputPath)
 
 # X[i] is a 3D matrix corresponding to label at y[i]
-X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
-    test_size=0.0001, random_state=42)#sametrain/test split every time
+# X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
+#     test_size=128, random_state=42)#sametrain/test split every time
 
 
-# Adam Optimizer
-# Num Filters: 192
-# Num Hidden Layers: 5
-# Learning Rate: 0.0014 && 0.0015
-# Batch Size: 128
-# # of Epochs: 5
-
-file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamNumFiltersNumLayersNON-TFSumCrossEntropy01212017_He_weightsWBPOEWmBm.txt'), 'a')
+file = open(os.path.join(inputPath, r'ExperimentLogs', 'EntireDataSetAdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
 
-for num_hidden in [i for i in range(12,13)]:
+for num_hidden in [i for i in range(1,3)]:
     for n_filters in [
                         16, 32, 64,
                        128,
                       192]:
         for learning_rate in [
             0.001,
-            # 0.0011, 0.0012, 0.0013,
-            #                   0.0014, 0.0015
+            0.0011, 0.0012, 0.0013,
+                              0.0014, 0.0015
         ]:
             reset_default_graph()
             batch_size = 128
 
             #build graph
-            X = tf.placeholder(tf.float32, [None, 8, 8, 8])
+            X = tf.placeholder(tf.float32, [None, 8, 8, 4])
             # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0]
-            y = tf.placeholder(tf.float32, [None, 155])
+            y = tf.placeholder(tf.float32, [None,  2])
             filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
 
             #TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
@@ -452,12 +444,12 @@ for num_hidden in [i for i in range(12,13)]:
             y_pred = tf.nn.softmax(outer_layer)
 
             #tf's internal softmax; else, put softmax back in output layer
-            # cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
+            cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
             # # alternative implementation
             # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
 
             #kadenze cross_entropy cost function
-            cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+            # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
 
 
             #way better performance
@@ -490,14 +482,19 @@ for num_hidden in [i for i in range(12,13)]:
                 n_epochs=n_epochs,
                 num_filters=n_filters,
                 num_hidden=num_hidden), end="\n", file=file)
-            X_train1, X_valid, y_train1, y_valid = model_selection.train_test_split(X_train, y_train,
-                                                                                    test_size=512,
-                                                                                    random_state=random.randint(1, 1024))  # keep validation outside
-            for epoch_i in range(n_epochs):
-                X_train1, y_train1 = shuffle(X_train1, y_train1,
-                                                   random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
+            # X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X_train, y_train,
+            #                                                                       test_size=128,
+            #                                                                       random_state=random.randint(1, 1024))  # keep validation outside
 
-                X_train_batches, y_train_batches = utils.batch_split(X_train1, y_train1, batch_size)
+            #for entire dataset experiments, split the testing games into a validation and test split
+            X_test, X_valid, y_test, y_valid = model_selection.train_test_split(X_test, y_test, test_size=0.5,
+                                                                                random_state=42)
+
+            for epoch_i in range(n_epochs):
+                X_train, y_train = shuffle(X_train, y_train,
+                                           random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
+
+                X_train_batches, y_train_batches = utils.batch_split(X_train, y_train, batch_size)
 
                 startTime = time.time()  #start timer
 
@@ -519,8 +516,8 @@ for num_hidden in [i for i in range(12,13)]:
                                        y: y_valid
                                        })
                         print("Loss: {}".format(loss), end="\n", file=file)
-                        # print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
-                        # print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
+                        print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
+                        print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
                         print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
                             interval=(i+1)//(len(X_train_batches)//10),
                             accuracy=accuracy_score), end="\n", file=file)
@@ -536,18 +533,16 @@ for num_hidden in [i for i in range(12,13)]:
                                    })), end="\n", file=file)
 
                 #show example of what network is predicting vs the move oracle
-                y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[0]]})
+                example = random.randint(0, 127)
+                y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[example]]})
                 print("Sample Predicted Probabilities = "
                       "\n{y_pred}"
-                      "\nPredicted vs. Actual Move = "
-                      "\nIf white: {y_pred_white} vs. {y_act_white}"
-                      "\nIf black: {y_pred_black} vs. {y_act_black}".format(
+                      "\nPredicted: {predicted_outcome}"
+                      "\nActual:  {actual_outcome}".format(
                         y_pred=y_pred_vector,
-                        y_pred_white=utils.move_lookup(np.argmax(y_pred_vector), 'White'),
-                        y_pred_black=utils.move_lookup(np.argmax(y_pred_vector), 'Black'),
-                        y_act_white=utils.move_lookup(np.argmax(y_valid[0]), 'White'),
-                        y_act_black=utils.move_lookup(np.argmax(y_valid[0]), 'Black')),
-                    end="\n", file=file)
+                        predicted_outcome=utils.win_lookup(np.argmax(y_pred_vector)),
+                        actual_outcome=utils.win_lookup(np.argmax(y_valid[example]))),
+                        end="\n", file=file)
 
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / (60)), end="\n", file=file)
 
@@ -559,37 +554,6 @@ for num_hidden in [i for i in range(12,13)]:
                            })), end="\n", file=file)
             sess.close()
 file.close()
-# feature_columns = []
-# for i in range (0, 256):
-#     column = tf.contrib.layers.sparse_column_with_hash_bucket("{number}".format(number=i), hash_bucket_size=2, dtype=tf.int32)
-#     sparse_column = tf.contrib.layers.embedding_column(sparse_id_column=column, dimension=2)
-#     # sparse_column = tf.contrib.layers.sparse_column_with_integerized_feature("{number}".format(number=i), bucket_size=2, dtype=tf.int32)
-#     #feature_columns = [tf.contrib.layers.one_hot_column(sparse_column)]
-#     feature_columns.append(sparse_column)
-#
-#
-# # Build 3 layer DNN with 10, 20, 10 units respectively.
-# classifier = tf.contrib.learn.DNNClassifier(feature_columns=feature_columns,
-#                                             hidden_units=[1024, 2056, 1024],
-#                                             n_classes=155,#including no move
-#                                             activation_fn=tf.nn.relu,
-#                                             #model_dir="/tmp/breakthrough_model_Adam",
-#                                             optimizer=tf.train.AdamOptimizer(learning_rate=0.000000001))
-#
-# # Fit model.
-# classifier.fit(x=X_train,
-#                y=y_train,
-#                steps=2000,
-#                batch_size=2056)
-#
-# # Evaluate accuracy.
-# accuracy_score = classifier.evaluate(x=X_test,y=y_test)["accuracy"]
-# print('Accuracy: {0:f}'.format(accuracy_score))
-#
 
-# 't' is [
-# [[1, 1, 1], [2, 2, 2]],
-# [[3, 3, 3], [4, 4, 4]]
-# ]
 
 

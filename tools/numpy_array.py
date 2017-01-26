@@ -19,9 +19,9 @@ def write_np_array_to_disk(path, X, y, filterType, NNType):
         yVector = open(path + r'yVectorByWinRatio.p', 'wb')
         pickle.dump(y, yVector)
     elif filterType == r'Binary Rank':
-        XMatrix = open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
+        XMatrix = open(path + r'value_net_rank_binary/NPDataSets/WBPOE/XMatrixByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
         pickle.dump(X, XMatrix)
-        yVector = open(path + r'ValueNetRankBinary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
+        yVector = open(path + r'value_net_rank_binary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
         pickle.dump(y, yVector)
     elif filterType == r'Self-Play':
         h5f = h5py.File(path + r'POEBias.hdf5', 'w', driver='core')
@@ -87,7 +87,7 @@ def filter_for_self_play(self_play_data, NNType):
     elif NNType == 'Value':
         for self_play_log in self_play_data:
             for game in self_play_log['Games']: #TODO: experiment with the randomness
-                num_random_states = len(game['BoardStates']['PlayerPOV'])//10 #10% of the states of each game
+                num_random_states = len(game['BoardStates']['PlayerPOV']) #10% of the states of each game
                 states = random.sample(game['BoardStates']['PlayerPOV'], num_random_states)
                 mirror_states = random.sample(game['MirrorBoardStates']['PlayerPOV'], num_random_states)
                 for i in range(0, len(states)):
@@ -179,10 +179,10 @@ def SplitArraytoXMatrixAndYTransitionVectorCNN(arrayToSplit):  # only for boards
 
 def GenerateCSV(X, isX = True):
     if isX == True:
-     np.savetxt(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDataSets/WBPOEUnshuffledBinaryFeaturePlanesWBPOETrainingExamples.csv', X, delimiter=',', fmt='%1i')
+     np.savetxt(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/value_net_rank_binary/NPDataSets/WBPOEUnshuffledBinaryFeaturePlanesWBPOETrainingExamples.csv', X, delimiter=',', fmt='%1i')
     else:
         np.savetxt(
-            r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesWBPOETrainingExampleOutcomes.csv',
+            r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/value_net_rank_binary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesWBPOETrainingExampleOutcomes.csv',
             X, delimiter=',', fmt='%1i')
 def SplitListInHalf(a_list):
     half = len(a_list)//2
@@ -210,9 +210,9 @@ def GenerateXLSX(X, which=1):
     columns.append('Outcome')
     frame = pd.DataFrame(X, columns=columns)
     if which==1:
-        writer = pd.ExcelWriter(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesDataset1.xlsx', engine='xlsxwriter')
+        writer = pd.ExcelWriter(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/value_net_rank_binary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesDataset1.xlsx', engine='xlsxwriter')
     else:
-        writer = pd.ExcelWriter(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/ValueNetRankBinary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesDataset2.xlsx', engine='xlsxwriter')
+        writer = pd.ExcelWriter(r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/value_net_rank_binary/NPDataSets/WBPOE/UnshuffledBinaryFeaturePlanesDataset2.xlsx', engine='xlsxwriter')
 
     frame.to_excel(writer, 'Sheet1')
     writer.save()
@@ -242,5 +242,5 @@ def self_player_driver(filter, NNType, path, fileName):
     player_list = pickle.load(file)
     file.close()
     training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType)
-    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POE{NNType}Net'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
+    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POE{NNType}NetEntireDataSet'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
     write_np_array_to_disk(write_path, training_examples, labels, filter, NNType)

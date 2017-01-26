@@ -1,8 +1,7 @@
 import re as re  # regular expressions
 import os
-import fnmatch  # to retrieve file information from path
 import pickle  # serialize the data structure
-import mmap  # read entire files into memory for (only for workstation)
+import mmap  # read entire files into memory (only for workstation)
 import copy
 import math
 import warnings
@@ -10,6 +9,22 @@ from tools import utils
 
 import pandas as pd
 from multiprocessing import Pool, freeze_support
+
+def driver(path):
+    player_list = process_directory_of_breakthrough_files(path)
+    write_to_disk(player_list, path)
+
+def write_to_disk(data_to_write, path):
+    write_directory = 'G:\TruncatedLogs\PythonDataSets\DataStructures'
+    date = str(path[len(r'G:\TruncatedLogs') + 1
+    :- len(r'\selfPlayLogsBreakthroughN')])
+    server_name = path[- len(r'\selfPlayLogsBreakthroughN') + 1
+    :]
+    output_file = open(os.path.join(write_directory, (
+        date  # prepend data to name of server
+        + server_name
+        + r'DataPython.p')), 'wb')  # append data qualifier
+    pickle.dump(data_to_write, output_file, protocol=pickle.HIGHEST_PROTOCOL)
 
 def process_directory_of_breakthrough_files(path):
     player_list = []
@@ -36,17 +51,6 @@ def process_breakthrough_file(path, self_play_games):
             'WhiteWins': white_wins, 'BlackWins': black_wins}
 
 
-def write_to_disk(data_to_write, path):
-    write_directory = 'G:\TruncatedLogs\PythonDataSets\DataStructures'
-    date = str(path[len(r'G:\TruncatedLogs') + 1
-                    :- len(r'\selfPlayLogsBreakthroughN')])
-    server_name = path[- len(r'\selfPlayLogsBreakthroughN') + 1
-                       :]
-    output_file = open(os.path.join(write_directory, (
-                         date  # prepend data to name of server
-                       + server_name
-                       + r'DataPython.p')), 'wb')  # append data qualifier
-    pickle.dump(data_to_write, output_file, protocol=pickle.HIGHEST_PROTOCOL)
 
 def format_game_list(self_play_games):
     games = []
@@ -645,7 +649,3 @@ def format_move_lists_and_links(unformatted_move_list):
         mirror_visualizer_link = mirror_visualizer_link + mirror_from + mirror_to
     return new_move_list, new_mirror_move_list, original_visualizer_link, mirror_visualizer_link
 
-
-def driver(path):
-    player_list = process_directory_of_breakthrough_files(path)
-    write_to_disk(player_list, path)

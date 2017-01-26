@@ -122,9 +122,11 @@ def label_for_policy(transition_vector, one_hot_indexes=False):
 def label_for_value(win):
     if win:
         formatted_label = 1
+        complement = 0
     else:
         formatted_label = 0
-    return formatted_label
+        complement = 1
+    return np.array([formatted_label, complement], dtype=np.float32)
 
     
 

@@ -23,10 +23,10 @@ def batch_split(inputs, labels, batch_size):
     return X_train_batches, y_train_batches
 
 def win_lookup(index):
-    if index is 0:
+    if index == 0:
         return 'Win'
     else:
-        return 'Loss'
+        return 'Lose'
 
 def move_lookup(index, player_color):
     # Enumerated the moves for lookup speed/visual reference (see commented out dictionary).

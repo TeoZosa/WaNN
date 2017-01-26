@@ -408,10 +408,10 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
 # Batch Size: 128
 # # of Epochs: 5
 
-file = open(os.path.join(inputPath, r'ExperimentLogs', 'AdamNumFiltersNumLayersTFCrossEntropy01252017_He_weightsPOE.txt'), 'a')
+file = open(os.path.join(inputPath, r'ExperimentLogs', '10%RandomStatesPerGameAdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
 
-for num_hidden in [i for i in range(5,12)]:
+for num_hidden in [i for i in range(1,12)]:
     for n_filters in [
                         16, 32, 64,
                        128,
@@ -536,14 +536,15 @@ for num_hidden in [i for i in range(5,12)]:
                                    })), end="\n", file=file)
 
                 #show example of what network is predicting vs the move oracle
-                y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[0]]})
+                example = random.randint(0, 127)
+                y_pred_vector =sess.run(y_pred, feed_dict={X:[X_valid[example]]})
                 print("Sample Predicted Probabilities = "
                       "\n{y_pred}"
                       "\nPredicted: {predicted_win}"
                       "\nActual:  {actual_win}".format(
                         y_pred=y_pred_vector,
                         predicted_win=utils.win_lookup(np.argmax(y_pred_vector)),
-                        actual_win=utils.win_lookup(np.argmax(y_valid[0]))),
+                        actual_win=utils.win_lookup(np.argmax(y_valid[example]))),
                         end="\n", file=file)
 
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / (60)), end="\n", file=file)

@@ -239,8 +239,8 @@ def AssignPath(deviceName ='Workstation'):
        path = r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
-    elif deviceName == 'Workstation':
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNetEntireDataSet'
+    elif deviceName == 'Workstation':#TODO: testing Start-Game Value Net
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNet1stThirdEntireDataSet'
     else:
         path = ''#todo:error checking
     return path
@@ -392,7 +392,6 @@ device = AssignDevice(inputPath)
 #for experiment with states from entire games, test data are totally separate games, ~10% of training data
 training_examples, training_labels = LoadXAndy(os.path.join(inputPath, r'TrainingData'))
 testing_examples, testing_labels = LoadXAndy(os.path.join(inputPath, r'TestData')) # 210659 states
-
 # X, y = LoadXAndy(inputPath)
 
 # X[i] is a 3D matrix corresponding to label at y[i]
@@ -400,10 +399,10 @@ testing_examples, testing_labels = LoadXAndy(os.path.join(inputPath, r'TestData'
 #     test_size=128, random_state=42)#sametrain/test split every time
 
 
-file = open(os.path.join(inputPath, r'ExperimentLogs', 'EntireDataSetAdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
+file = open(os.path.join(inputPath, r'ExperimentLogs', '1stThirdDataSetAdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
-
-for num_hidden in [i for i in range(1,3)]:
+print ("# of Testing + Validation Examples: {}".format(len(testing_examples)), end='\n', file=file)
+for num_hidden in [i for i in range(11,12)]:
     for n_filters in [
                         16, 32, 64,
                        128,

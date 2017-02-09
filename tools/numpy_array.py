@@ -73,7 +73,7 @@ def filter_by_win_ratio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
-def filter_for_self_play(self_play_data, NNType):
+def filter_for_self_play(self_play_data, NNType, game_stage='End'):
     training_data = []
     if NNType == 'Policy':
         for self_play_log in self_play_data:
@@ -88,25 +88,30 @@ def filter_for_self_play(self_play_data, NNType):
         for self_play_log in self_play_data:
             for game in self_play_log['Games']: #TODO: experiment with the randomness
                 game_length = len(game['BoardStates']['PlayerPOV'])
-                temp_game = []
-                temp_game_mirror = []
-                # Start-Game Value Net
-                # for i in range(0, game_length//3):
-                #     temp_game.append(game['BoardStates']['PlayerPOV'][i])
-                #     temp_game_mirror.append(game['MirrorBoardStates']['PlayerPOV'][i])
-                # Mid-Game Value Net
-                # for i in range(game_length//3, (game_length//3) * 2):
-                #     temp_game.append(game['BoardStates']['PlayerPOV'][i])
-                #     temp_game_mirror.append(game['MirrorBoardStates']['PlayerPOV'][i])
-                # End-Game Value Net
-                # for i in range((game_length//3) * 2, game_length):
-                #     temp_game.append(game['BoardStates']['PlayerPOV'][i])
-                #     temp_game_mirror.append(game['MirrorBoardStates']['PlayerPOV'][i])
-                # num_random_states = len(temp_game)
-                num_random_states = game_length//10 #10% of the states of each game
-                #if num_random_states == len(states), mixes state order to decorrelate NN training examples
-                states = random.sample(temp_game, num_random_states)
-                mirror_states = random.sample(temp_game_mirror, num_random_states)
+                if game_stage == None:
+                    num_random_states = game_length // 10  # 10% of the states of each game
+                    states = random.sample(game['BoardStates']['PlayerPOV'], num_random_states)
+                    mirror_states = random.sample(game['MirrorBoardStates']['PlayerPOV'], num_random_states)
+                else:
+                    if game_stage == 'Start':
+                        # Start-Game Value Net
+                        start = 0
+                        end = game_length // 3
+                    elif game_stage == 'Mid':
+                        # Mid-Game Value Net
+                        start = game_length//3
+                        end = (game_length // 3) * 2
+                    elif game_stage == 'End':
+                        # End-Game Value Net
+                        start = (game_length//3) * 2
+                        end = game_length
+                    temp_states = game['BoardStates']['PlayerPOV'][start:end]
+                    temp_mirror_states = game['MirrorBoardStates']['PlayerPOV'][start:end]
+                    num_random_states = len(temp_states)//4 #25% of moves
+                    #TODO: sample some random # of states in corresponding 3rd of data
+                    #if num_random_states == len(states), mixes state order to decorrelate NN training examples
+                    states = random.sample(temp_states, num_random_states)
+                    mirror_states = random.sample(temp_mirror_states, num_random_states)
                 training_data.extend(states)
                 training_data.extend(mirror_states)
 
@@ -259,5 +264,5 @@ def self_player_driver(filter, NNType, path, fileName):
     player_list = pickle.load(file)
     file.close()
     training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType)
-    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POE{NNType}Net3rdThirdDataSet'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
+    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POE{NNType}Net3rdThird25%DataSet'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
     write_np_array_to_disk(write_path, training_examples, labels, filter, NNType)

@@ -240,7 +240,7 @@ def AssignPath(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':#TODO: testing Start-Game Value Net
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNet1stThirdEntireDataSet'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNet3rdThird50%DataSet'
     else:
         path = ''#todo:error checking
     return path
@@ -399,10 +399,10 @@ testing_examples, testing_labels = LoadXAndy(os.path.join(inputPath, r'TestData'
 #     test_size=128, random_state=42)#sametrain/test split every time
 
 
-file = open(os.path.join(inputPath, r'ExperimentLogs', '1stThirdDataSetAdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
+file = open(os.path.join(inputPath, r'ExperimentLogs', '3rdThird50%DataSetAdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
 print ("# of Testing + Validation Examples: {}".format(len(testing_examples)), end='\n', file=file)
-for num_hidden in [i for i in range(11,12)]:
+for num_hidden in [i for i in range(1,6)]:
     for n_filters in [
                         16, 32, 64,
                        128,

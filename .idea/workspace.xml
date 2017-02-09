@@ -33,9 +33,9 @@
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464305683673" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$SortPlayerListByRank.coverage" NAME="SortPlayerListByRank Coverage Results" MODIFIED="1465934883390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$ValueNetByRankBinaryFeaturePlanes__1_.coverage" NAME="ValueNetByRankBinaryFeaturePlanes (1) Coverage Results" MODIFIED="1466269717585" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/ValueNetRankBinary" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$ValueNet.coverage" NAME="ValueNet Coverage Results" MODIFIED="1486614359869" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/value_net" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$ValueNet.coverage" NAME="ValueNet Coverage Results" MODIFIED="1486653313707" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/value_net" />
     <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNet.coverage" NAME="PolicyNet Coverage Results" MODIFIED="1485040106040" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PolicyNet" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$main.coverage" NAME="main Coverage Results" MODIFIED="1486652221996" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$main.coverage" NAME="main Coverage Results" MODIFIED="1486652816268" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464194157435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$LittleGolemWebScraper.coverage" NAME="LittleGolemWebScraper Coverage Results" MODIFIED="1464145876852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$SortPlayerListByRank.coverage" NAME="SortPlayerListByRank Coverage Results" MODIFIED="1464189492627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -60,23 +60,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tools/utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="306">
-              <caret line="20" column="83" lean-forward="false" selection-start-line="20" selection-start-column="83" selection-end-line="20" selection-end-column="83" />
-              <folding>
-                <element signature="e#0#9#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="value_net_script.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="value_net_script.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="146">
-              <caret line="401" column="59" lean-forward="false" selection-start-line="401" selection-start-column="59" selection-end-line="401" selection-end-column="59" />
+            <state relative-caret-position="1530">
+              <caret line="492" column="16" lean-forward="false" selection-start-line="492" selection-start-column="16" selection-end-line="492" selection-end-column="16" />
               <folding>
                 <element signature="e#1#39#0" expanded="true" />
               </folding>
@@ -84,24 +72,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="numpy_array.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="numpy_array.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="714">
-              <caret line="108" column="38" lean-forward="false" selection-start-line="108" selection-start-column="38" selection-end-line="108" selection-end-column="38" />
+            <state relative-caret-position="223">
+              <caret line="97" column="33" lean-forward="true" selection-start-line="97" selection-start-column="33" selection-end-line="97" selection-end-column="33" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="__main__.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/__main__.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="476">
-              <caret line="31" column="87" lean-forward="false" selection-start-line="31" selection-start-column="87" selection-end-line="31" selection-end-column="87" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -241,8 +219,8 @@
         <option value="$PROJECT_DIR$/self_play_files/PolicyNet/CNN.py" />
         <option value="$PROJECT_DIR$/__main__.py" />
         <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" />
-        <option value="$PROJECT_DIR$/self_play_files/value_net/value_net_script.py" />
         <option value="$PROJECT_DIR$/tools/numpy_array.py" />
+        <option value="$PROJECT_DIR$/self_play_files/value_net/value_net_script.py" />
       </list>
     </option>
   </component>
@@ -253,8 +231,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="11" />
-    <option name="y" value="6" />
+    <option name="x" value="1413" />
+    <option name="y" value="130" />
     <option name="width" value="1981" />
     <option name="height" value="1973" />
   </component>
@@ -460,7 +438,7 @@
       <recent name="C:\Users\damon\PycharmProjects\BreakthroughANN\self_play_to_data_structure" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.main">
+  <component name="RunManager" selected="Python.ValueNet">
     <configuration default="false" name="ValueNetByRankBinaryFeaturePlanes" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -854,13 +832,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00056" summary="changed 1d array to be list of one hot states">
-      <created>1482518431339</created>
-      <option name="number" value="00056" />
-      <option name="presentableId" value="LOCAL-00056" />
-      <option name="project" value="LOCAL" />
-      <updated>1482518431340</updated>
-    </task>
     <task id="LOCAL-00057" summary="changed Numpy conversion to account for one hot boards">
       <created>1482519216998</created>
       <option name="number" value="00057" />
@@ -1197,7 +1168,14 @@
       <option name="project" value="LOCAL" />
       <updated>1486075694866</updated>
     </task>
-    <option name="localTasksCounter" value="105" />
+    <task id="LOCAL-00105" summary="refactored filter_for_self_play for easier use/changed for loops to array slicing">
+      <created>1486652740217</created>
+      <option name="number" value="00105" />
+      <option name="presentableId" value="LOCAL-00105" />
+      <option name="project" value="LOCAL" />
+      <updated>1486652740218</updated>
+    </task>
+    <option name="localTasksCounter" value="106" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1210,27 +1188,27 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="11" y="6" width="1981" height="1973" extended-state="0" />
+    <frame x="1413" y="130" width="1981" height="1973" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22565195" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3261339" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.50547266" sideWeight="0.47476527" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4767375" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.03144016" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22802986" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22802986" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.64330846" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11534391" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36308315" sideWeight="0.80751175" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36300975" sideWeight="0.80751175" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47727272" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -1271,7 +1249,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="changed write out name of files, made code work for CNN &amp; flattened version" />
     <MESSAGE value="messing with visualizing board as image, building CNN&#10;" />
     <MESSAGE value="rudimentary CNN implementation. need to class-ify it." />
     <MESSAGE value="using tf's builtin softmax + cross_entropy, grid searching over promising parameter space." />
@@ -1296,7 +1273,8 @@
     <MESSAGE value="fixed test/validation split bug" />
     <MESSAGE value="added todo" />
     <MESSAGE value="finished experiments on Value Net using entire dataset. Started experiments on Value Nets trained on different stages of the game." />
-    <option name="LAST_COMMIT_MESSAGE" value="finished experiments on Value Net using entire dataset. Started experiments on Value Nets trained on different stages of the game." />
+    <MESSAGE value="refactored filter_for_self_play for easier use/changed for loops to array slicing" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactored filter_for_self_play for easier use/changed for loops to array slicing" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1359,18 +1337,11 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="231" />
+      <option name="time" value="232" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/util/deprecation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="48">
-          <caret line="174" column="0" lean-forward="false" selection-start-line="174" selection-start-column="0" selection-end-line="174" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/contrib/layers/python/layers/initializers.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="201">
@@ -1569,13 +1540,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/ntpath.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1190">
-          <caret line="74" column="0" lean-forward="false" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/h5py/_hl/files.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4216">
@@ -1717,22 +1681,38 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
+    <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="146">
-          <caret line="401" column="59" lean-forward="false" selection-start-line="401" selection-start-column="59" selection-end-line="401" selection-end-column="59" />
+        <state relative-caret-position="223">
+          <caret line="97" column="33" lean-forward="true" selection-start-line="97" selection-start-column="33" selection-end-line="97" selection-end-column="33" />
           <folding>
-            <element signature="e#1#39#0" expanded="true" />
+            <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
+    <entry file="file://C:/Program Files/Anaconda3/Lib/ntpath.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="714">
-          <caret line="108" column="38" lean-forward="false" selection-start-line="108" selection-start-column="38" selection-end-line="108" selection-end-column="38" />
+        <state relative-caret-position="1034">
+          <caret line="74" column="0" lean-forward="false" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files/Anaconda3/Lib/_bootlocale.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1530">
+          <caret line="492" column="16" lean-forward="false" selection-start-line="492" selection-start-column="16" selection-end-line="492" selection-end-column="16" />
           <folding>
-            <element signature="e#0#13#0" expanded="true" />
+            <element signature="e#1#39#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -220,7 +220,7 @@ def GridSearch(estimator, X, y, X_test, y_test, whichDevice ='AWS'):
     score = metrics.mean_squared_error(grid.predict(X_test), y_test)
     print('Best Estimator MSE on Holdout Set: {0:f}'.format(score))
 
-def AssignDevice(path):
+def assign_device(path):
     if path == r'/Users/teofilozosa/PycharmProjects/BreakthroughANN/':
         device = 'MBP2011_'
     elif path == r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/':
@@ -232,7 +232,7 @@ def AssignDevice(path):
     return device
 
 
-def AssignPath(deviceName ='Workstation'):
+def assign_path(deviceName ='Workstation'):
     if  deviceName == 'MBP2011_':
        path =  r'/Users/teofilozosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2014':
@@ -240,21 +240,21 @@ def AssignPath(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':#TODO: testing Start-Game Value Net
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNet3rdThird50%DataSet'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNet1stThird25%DataSet'
     else:
         path = ''#todo:error checking
     return path
 
 
-def LoadXAndy(path):
+def load_examples_and_labels(path):
     files = [file_name for file_name in utils.find_files(path, "*.hdf5")]
-    X, y = ([] for i in range (2))
+    examples, labels = ([] for i in range (2))
     for file in files:  # add training examples and corresponding labels from each file to associated arrays
         training_data = h5py.File(file, 'r')
-        X.extend(training_data['X'][:])
-        y.extend(training_data['y'][:])
+        examples.extend(training_data['X'][:])
+        labels.extend(training_data['y'][:])
         training_data.close()
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)  # b x r x c x f & label
+    return np.array(examples, dtype=np.float32), np.array(labels, dtype=np.float32)  # b x r x c x f & label
 
 def image_stuff():
     #Train/validation/test split or reducing number of training examples
@@ -386,20 +386,20 @@ def loss(output_layer, labels):
         #main script
 
 config = run_config.RunConfig(num_cores=-1)
-inputPath = AssignPath()
-device = AssignDevice(inputPath)
+input_path = assign_path()
+device = assign_device(input_path)
 
 #for experiment with states from entire games, test data are totally separate games, ~10% of training data
-training_examples, training_labels = LoadXAndy(os.path.join(inputPath, r'TrainingData'))
-testing_examples, testing_labels = LoadXAndy(os.path.join(inputPath, r'TestData')) # 210659 states
-# X, y = LoadXAndy(inputPath)
+training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
+testing_examples, testing_labels = load_examples_and_labels(os.path.join(input_path, r'TestData')) # 210659 states
+# X, y = load_examples_and_labels(inputPath)
 
 # X[i] is a 3D matrix corresponding to label at y[i]
 # X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
 #     test_size=128, random_state=42)#sametrain/test split every time
 
 
-file = open(os.path.join(inputPath, r'ExperimentLogs', '3rdThird50%DataSetAdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
+file = open(os.path.join(input_path, r'ExperimentLogs', input_path[-18:] + 'AdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
 print ("# of Testing + Validation Examples: {}".format(len(testing_examples)), end='\n', file=file)
 for num_hidden in [i for i in range(1,6)]:
@@ -490,7 +490,7 @@ for num_hidden in [i for i in range(1,6)]:
                                                                                                                                   random_state=random.randint(1, 1024))
 
             for epoch_i in range(n_epochs):
-                #TODO: move this to utils?
+
                 training_examples, training_labels = shuffle(training_examples, training_labels,
                                                              random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
 

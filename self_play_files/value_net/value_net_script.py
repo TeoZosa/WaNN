@@ -399,7 +399,9 @@ testing_examples, testing_labels = load_examples_and_labels(os.path.join(input_p
 #     test_size=128, random_state=42)#sametrain/test split every time
 
 
-file = open(os.path.join(input_path, r'ExperimentLogs', input_path[-18:] + 'AdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
+file = open(os.path.join(input_path,
+                         r'ExperimentLogs',
+                         input_path[-18:] + 'AdamNumFiltersNumLayersTFCrossEntropy01262017_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
 print ("# of Testing + Validation Examples: {}".format(len(testing_examples)), end='\n', file=file)
 for num_hidden in [i for i in range(1,6)]:

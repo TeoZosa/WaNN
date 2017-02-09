@@ -5,6 +5,7 @@ import warnings
 import h5py
 import os
 import random
+import math
 
 #TODO: redo logic and paths after directory restructuring
 def write_np_array_to_disk(path, X, y, filterType, NNType):
@@ -73,7 +74,7 @@ def filter_by_win_ratio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
-def filter_for_self_play(self_play_data, NNType, game_stage='Start'):
+def filter_for_self_play(self_play_data, NNType, game_stage='Start', percent=10):
     training_data = []
     if NNType == 'Policy':
         for self_play_log in self_play_data:
@@ -89,25 +90,25 @@ def filter_for_self_play(self_play_data, NNType, game_stage='Start'):
             for game in self_play_log['Games']: #TODO: experiment with the randomness
                 game_length = len(game['BoardStates']['PlayerPOV'])
                 if game_stage == None:
-                    num_random_states = game_length // 10  # 10% of the states of each game
+                    num_random_states = math.floor(game_length * (percent/100))  # 10% of the states of each game
                     states = random.sample(game['BoardStates']['PlayerPOV'], num_random_states)
                     mirror_states = random.sample(game['MirrorBoardStates']['PlayerPOV'], num_random_states)
                 else:
                     if game_stage == 'Start':
                         # Start-Game Value Net
                         start = 0
-                        end = game_length // 3
+                        end = math.floor(game_length / 3)
                     elif game_stage == 'Mid':
                         # Mid-Game Value Net
-                        start = game_length//3
-                        end = (game_length // 3) * 2
+                        start = math.floor(game_length / 3)
+                        end = math.floor(game_length / 3) * 2
                     elif game_stage == 'End':
                         # End-Game Value Net
-                        start = (game_length//3) * 2
+                        start = math.floor(game_length / 3) * 2
                         end = game_length
                     temp_states = game['BoardStates']['PlayerPOV'][start:end]
                     temp_mirror_states = game['MirrorBoardStates']['PlayerPOV'][start:end]
-                    num_random_states = len(temp_states)//4 #25% of moves
+                    num_random_states = math.floor(len(temp_states) * (percent/100))   #25% of moves
                     #TODO: sample some random # of states in corresponding 3rd of data
                     #if num_random_states == len(states), mixes state order to decorrelate NN training examples
                     states = random.sample(temp_states, num_random_states)

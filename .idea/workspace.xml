@@ -33,7 +33,7 @@
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464305683673" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$SortPlayerListByRank.coverage" NAME="SortPlayerListByRank Coverage Results" MODIFIED="1465934883390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$ValueNetByRankBinaryFeaturePlanes__1_.coverage" NAME="ValueNetByRankBinaryFeaturePlanes (1) Coverage Results" MODIFIED="1466269717585" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/ValueNetRankBinary" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$ValueNet.coverage" NAME="ValueNet Coverage Results" MODIFIED="1486653313707" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/value_net" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$ValueNet.coverage" NAME="ValueNet Coverage Results" MODIFIED="1486663631972" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/value_net" />
     <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNet.coverage" NAME="PolicyNet Coverage Results" MODIFIED="1485040106040" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PolicyNet" />
     <SUITE FILE_PATH="coverage/BreakthroughANN$main.coverage" NAME="main Coverage Results" MODIFIED="1486652816268" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464194157435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -63,8 +63,8 @@
       <file leaf-file-name="value_net_script.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="646">
-              <caret line="482" column="34" lean-forward="true" selection-start-line="482" selection-start-column="34" selection-end-line="482" selection-end-column="34" />
+            <state relative-caret-position="544">
+              <caret line="233" column="0" lean-forward="true" selection-start-line="233" selection-start-column="0" selection-end-line="233" selection-end-column="0" />
               <folding>
                 <element signature="e#1#39#0" expanded="true" />
               </folding>
@@ -75,8 +75,8 @@
       <file leaf-file-name="numpy_array.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="789">
-              <caret line="92" column="41" lean-forward="false" selection-start-line="92" selection-start-column="41" selection-end-line="92" selection-end-column="41" />
+            <state relative-caret-position="721">
+              <caret line="112" column="43" lean-forward="false" selection-start-line="112" selection-start-column="43" selection-end-line="112" selection-end-column="43" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -231,8 +231,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1720" />
-    <option name="y" value="158" />
+    <option name="x" value="1736" />
+    <option name="y" value="197" />
     <option name="width" value="1981" />
     <option name="height" value="1973" />
   </component>
@@ -832,13 +832,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00058" summary="fixing NumpyArray bugs due to data representation changes">
-      <created>1482605880333</created>
-      <option name="number" value="00058" />
-      <option name="presentableId" value="LOCAL-00058" />
-      <option name="project" value="LOCAL" />
-      <updated>1482605880334</updated>
-    </task>
     <task id="LOCAL-00059" summary="fixed by flattening out matrix again, but now in NumpyArray">
       <created>1482610573283</created>
       <option name="number" value="00059" />
@@ -1175,7 +1168,14 @@
       <option name="project" value="LOCAL" />
       <updated>1486654103034</updated>
     </task>
-    <option name="localTasksCounter" value="107" />
+    <task id="LOCAL-00107" summary="changed int division to math.floor as results weren't as expected (i.e. 100 // (100/12) == 11, but 100 / (100/12) == 12)">
+      <created>1486655554315</created>
+      <option name="number" value="00107" />
+      <option name="presentableId" value="LOCAL-00107" />
+      <option name="project" value="LOCAL" />
+      <updated>1486655554315</updated>
+    </task>
+    <option name="localTasksCounter" value="108" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1188,7 +1188,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="1720" y="158" width="1981" height="1973" extended-state="0" />
+    <frame x="1736" y="197" width="1981" height="1973" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22565195" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -1197,8 +1197,8 @@
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4767375" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.03144016" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22802986" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.64330846" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22802986" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.64330846" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11534391" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -1249,7 +1249,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="rudimentary CNN implementation. need to class-ify it." />
     <MESSAGE value="using tf's builtin softmax + cross_entropy, grid searching over promising parameter space." />
     <MESSAGE value="checking accuracy inside each epoch every (1/10 * batch size) interval" />
     <MESSAGE value="generated a move lookup table in utils. changed logs to data structures code to add a no move index immediately instead of at the numpy array conversion" />
@@ -1274,7 +1273,8 @@
     <MESSAGE value="finished experiments on Value Net using entire dataset. Started experiments on Value Nets trained on different stages of the game." />
     <MESSAGE value="refactored filter_for_self_play for easier use/changed for loops to array slicing" />
     <MESSAGE value="refactored code to prevent changing file names in two places" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactored code to prevent changing file names in two places" />
+    <MESSAGE value="changed int division to math.floor as results weren't as expected (i.e. 100 // (100/12) == 11, but 100 / (100/12) == 12)" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed int division to math.floor as results weren't as expected (i.e. 100 // (100/12) == 11, but 100 / (100/12) == 12)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1699,8 +1699,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="646">
-          <caret line="482" column="34" lean-forward="true" selection-start-line="482" selection-start-column="34" selection-end-line="482" selection-end-column="34" />
+        <state relative-caret-position="544">
+          <caret line="233" column="0" lean-forward="true" selection-start-line="233" selection-start-column="0" selection-end-line="233" selection-end-column="0" />
           <folding>
             <element signature="e#1#39#0" expanded="true" />
           </folding>
@@ -1709,8 +1709,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="789">
-          <caret line="92" column="41" lean-forward="false" selection-start-line="92" selection-start-column="41" selection-end-line="92" selection-end-column="41" />
+        <state relative-caret-position="721">
+          <caret line="112" column="43" lean-forward="false" selection-start-line="112" selection-start-column="43" selection-end-line="112" selection-end-column="43" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
           </folding>

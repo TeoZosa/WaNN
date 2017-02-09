@@ -240,7 +240,7 @@ def assign_path(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':#TODO: testing Start-Game Value Net
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNet1stThird25%DataSet'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\4DArraysHDF5(RxCxF)POEValueNet2ndThird25%DataSet'
     else:
         path = ''#todo:error checking
     return path

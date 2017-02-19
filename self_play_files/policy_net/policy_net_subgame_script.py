@@ -221,43 +221,34 @@ net_type = get_net_type(game_stage)
 training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
 validation_examples, validation_labels = load_examples_and_labels(os.path.join(input_path, r'ValidationData'))
 if (net_type == 'Start'):
-    other_3rd_1 = 'Mid'
-    other_3rd_2 = 'End'
-    testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(
-        os.path.join(input_path, r'TestDataMid'))  # 210659 states
-    testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
+    partition_i = 'Mid'
+    partition_j = 'End'
+    testing_examples_partition_i, testing_labels_partition_i = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))  # 210659 states
+    testing_examples_partition_j, testing_labels_partition_j = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
 elif(net_type == 'Mid'):
-    other_3rd_1 = 'Start'
-    other_3rd_2 = 'End'
-    testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(
-        os.path.join(input_path, r'TestDataStart'))  # 210659 states
-    testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
+    partition_i = 'Start'
+    partition_j = 'End'
+    testing_examples_partition_i, testing_labels_partition_i = load_examples_and_labels(os.path.join(input_path, r'TestDataStart'))  # 210659 states
+    testing_examples_partition_j, testing_labels_partition_j = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
 elif(net_type == 'End'):
-    other_3rd_1 = 'Start'
-    other_3rd_2 = 'End'
-    testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(
-        os.path.join(input_path, r'TestDataStart'))  # 210659 states
-    testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
+    partition_i = 'Start'
+    partition_j = 'End'
+    testing_examples_partition_i, testing_labels_partition_i = load_examples_and_labels(os.path.join(input_path, r'TestDataStart'))  # 210659 states
+    testing_examples_partition_j, testing_labels_partition_j = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
 else:
-    other_3rd_1 = 'Start'
-    other_3rd_2 = 'Mid'
-    other_3rd_3 = 'End'
-    testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(os.path.join(input_path, r'TestDataStart')) # 210659 states
-    testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
-    testing_examples_other_3rd_3, testing_labels_other_3rd_3 = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
-
-# X, y = load_examples_and_labels(inputPath)
-
-# X[i] is a 3D matrix corresponding to label at y[i]
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
-#     test_size=128, random_state=42)#sametrain/test split every time
+    partition_i = 'Start'
+    partition_j = 'Mid'
+    partition_k = 'End'
+    testing_examples_partition_i, testing_labels_partition_i = load_examples_and_labels(os.path.join(input_path, r'TestDataStart')) # 210659 states
+    testing_examples_partition_j, testing_labels_partition_j = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
+    testing_examples_partition_k, testing_labels_partition_k = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
 
 
 file = open(os.path.join(input_path,
                          r'ExperimentLogs',
                          game_stage + 'AdamNumFiltersNumLayersTFCrossEntropy_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
-print ("# of Testing Examples: {}".format(len(testing_examples_other_3rd_1)), end='\n', file=file)
+print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
 for num_hidden in [i for i in range(1,10)]:
     for n_filters in [
                         16, 32, 64,
@@ -405,22 +396,22 @@ for num_hidden in [i for i in range(1,10)]:
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n", file=file)
 
             # Print final test accuracy:
-            print("Final Test Accuracy ({other_3rd_1}-states): {accuracy}".format(other_3rd_1=other_3rd_1, accuracy=sess.run(accuracy,
-                           feed_dict={
-                               X: testing_examples_other_3rd_1,
-                               y: testing_labels_other_3rd_1
+            print("Final Test Accuracy ({partition}-states): {accuracy}".format(partition=partition_i, accuracy=sess.run(accuracy,
+                                                                                                                         feed_dict={
+                               X: testing_examples_partition_i,
+                               y: testing_labels_partition_i
                            })), end="\n", file=file)
-            print("Final Test Accuracy ({other_3rd_2}-states): {accuracy}".format(other_3rd_2=other_3rd_2,accuracy=sess.run(accuracy,
-                                                                           feed_dict={
-                                                                               X: testing_examples_other_3rd_2,
-                                                                               y: testing_labels_other_3rd_2
+            print("Final Test Accuracy ({partition}-states): {accuracy}".format(partition=partition_j, accuracy=sess.run(accuracy,
+                                                                                                                         feed_dict={
+                                                                               X: testing_examples_partition_j,
+                                                                               y: testing_labels_partition_j
                                                                            })), end="\n", file=file)
             if (net_type == 'Full'):
-                print("Final Test Accuracy ({other_3rd_3}-states): {accuracy}".format(other_3rd_3=other_3rd_3,
-                                                                                      accuracy=sess.run(accuracy,
+                print("Final Test Accuracy ({partition}-states): {accuracy}".format(partition=partition_k,
+                                                                                    accuracy=sess.run(accuracy,
                                                                                                         feed_dict={
-                                                                                                            X: testing_examples_other_3rd_3,
-                                                                                                            y: testing_labels_other_3rd_3
+                                                                                                            X: testing_examples_partition_k,
+                                                                                                            y: testing_labels_partition_k
                                                                                                         })), end="\n",
                       file=file)
             sess.close()

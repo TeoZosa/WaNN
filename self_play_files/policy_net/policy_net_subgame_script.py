@@ -375,18 +375,21 @@ for num_hidden in [i for i in range(1,10)]:
                 #show example of what network is predicting vs the move oracle
                 example = random.randrange(0, len(validation_examples))
                 y_pred_vector = sess.run(y_pred, feed_dict={X:[validation_examples[example]]})
-                num_moves = 10
-                top_n_indexes = sorted(range(len(y_pred_vector[0])), key=lambda i: y_pred_vector[0][i], reverse=True)[:num_moves]
-                print(top_n_indexes)
-                if (np.argmax(validation_labels[example]) in top_n_indexes):
+                correct_move = np.argmax(validation_labels[example])
+                predicted_move = np.argmax(y_pred_vector)
+                num_top_moves = 10
+                top_n_indexes = sorted(range(len(y_pred_vector[0])), key=lambda i: y_pred_vector[0][i], reverse=True)[:num_top_moves]
+                if (correct_move in top_n_indexes):
+                    rank_in_prediction = top_n_indexes.index(correct_move)
                     in_top_n = True
                 else:
-                    in_top_n = False
+                    rank_in_prediction = in_top_n = False
                 top_n_white_moves = list(map(lambda index: utils.move_lookup(index, 'White'), top_n_indexes))
                 top_n_black_moves = list(map(lambda index: utils.move_lookup(index, 'Black'), top_n_indexes))
                 print("Sample Predicted Probabilities = "
                       "\n{y_pred}"
                       "\nIn top {num_top_moves} = {in_top_n}"
+                      "\nTop move's rank in prediction = {move_rank}"
                       "\nTop {num_top_moves} moves ranked first to last = "
                       "\nif White: \n {top_white_moves}"
                       "\nif Black: \n {top_black_moves}"
@@ -395,13 +398,14 @@ for num_hidden in [i for i in range(1,10)]:
                       "\nif Black: {y_act_black}".format(
                     y_pred=y_pred_vector,
                     in_top_n=in_top_n,
-                    num_top_moves=num_moves,
+                    num_top_moves=num_top_moves,
+                    move_rank = rank_in_prediction,
                     top_white_moves=top_n_white_moves,
                     top_black_moves=top_n_black_moves,
-                    y_pred_white=utils.move_lookup(np.argmax(y_pred_vector), 'White'),
-                    y_pred_black=utils.move_lookup(np.argmax(y_pred_vector), 'Black'),
-                    y_act_white=utils.move_lookup(np.argmax(validation_labels[example]), 'White'),
-                    y_act_black=utils.move_lookup(np.argmax(validation_labels[example]), 'Black')),
+                    y_pred_white=utils.move_lookup(predicted_move, 'White'),
+                    y_pred_black=utils.move_lookup(predicted_move, 'Black'),
+                    y_act_white=utils.move_lookup(correct_move, 'White'),
+                    y_act_black=utils.move_lookup(correct_move, 'Black')),
                     end="\n", file=file)
 
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n", file=file)

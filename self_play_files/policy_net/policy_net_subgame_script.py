@@ -328,12 +328,6 @@ for num_hidden in [i for i in range(1,10)]:
                 n_epochs=n_epochs,
                 num_filters=n_filters,
                 num_hidden=num_hidden), end="\n", file=file)
-            # X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X_train, y_train,
-            #                                                                       test_size=128,
-            #                                                                       random_state=random.randint(1, 1024))  # keep validation outside
-
-            #for entire dataset experiments, split the testing games into a validation and test split; 105330 & 105329 states each; does randomness matter?
-            # testing accuracy of full value net on begin and mid-game examples
 
             for epoch_i in range(n_epochs):
 
@@ -380,13 +374,29 @@ for num_hidden in [i for i in range(1,10)]:
 
                 #show example of what network is predicting vs the move oracle
                 example = random.randrange(0, len(validation_examples))
-                y_pred_vector =sess.run(y_pred, feed_dict={X:[validation_examples[example]]})
+                y_pred_vector = sess.run(y_pred, feed_dict={X:[validation_examples[example]]})
+                num_moves = 10
+                top_n_indexes = sorted(range(len(y_pred_vector)), key=lambda i: y_pred_vector[i], reverse=True)[:num_moves]
+                if (np.argmax(validation_labels[example]) in top_n_indexes):
+                    in_top_n = True
+                else:
+                    in_top_n = False
+                top_n_white_moves = list(map(lambda index: utils.move_lookup(index, 'White'), top_n_indexes))
+                top_n_black_moves = list(map(lambda index: utils.move_lookup(index, 'Black'), top_n_indexes))
                 print("Sample Predicted Probabilities = "
                       "\n{y_pred}"
-                      "\nPredicted vs. Actual Move = "
-                      "\nIf white: {y_pred_white} vs. {y_act_white}"
-                      "\nIf black: {y_pred_black} vs. {y_act_black}".format(
+                      "\nIn top {num_top_moves} = {in_top_n}"
+                      "\nTop {num_top_moves} moves ranked first to last = "
+                      "\nif White: \n {top_white_moves}"
+                      "\nif Black: \n {top_black_moves}"
+                      "\nActual Move = "
+                      "\nif White: {y_act_white}"
+                      "\nif Black: {y_act_black}".format(
                     y_pred=y_pred_vector,
+                    in_top_n=in_top_n,
+                    num_top_moves=num_moves,
+                    top_white_moves=top_n_white_moves,
+                    top_black_moves=top_n_black_moves,
                     y_pred_white=utils.move_lookup(np.argmax(y_pred_vector), 'White'),
                     y_pred_black=utils.move_lookup(np.argmax(y_pred_vector), 'Black'),
                     y_act_white=utils.move_lookup(np.argmax(validation_labels[example]), 'White'),

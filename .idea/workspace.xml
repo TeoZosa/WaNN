@@ -4,7 +4,6 @@
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" afterPath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/value_net/value_net_script.py" afterPath="$PROJECT_DIR$/self_play_files/value_net/value_net_script.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -28,7 +27,7 @@
     <SUITE FILE_PATH="coverage/BreakthroughANN$charCNN.coverage" NAME="charCNN Coverage Results" MODIFIED="1482956171783" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$LittleGolemWebScraper.coverage" NAME="LittleGolemWebScraper Coverage Results" MODIFIED="1465508934413" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$regexExample.coverage" NAME="regexExample Coverage Results" MODIFIED="1464189117689" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNetSubGames.coverage" NAME="PolicyNetSubGames Coverage Results" MODIFIED="1487541536987" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/policy_net" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNetSubGames.coverage" NAME="PolicyNetSubGames Coverage Results" MODIFIED="1487543421096" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/policy_net" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$NumpyArray.coverage" NAME="NumpyArray Coverage Results" MODIFIED="1465991406057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayerDataDirectoryToAnalysisFormatWBEBinaryFeaturePlanes.coverage" NAME="PlayerDataDirectoryToAnalysisFormatWBEBinaryFeaturePlanes Coverage Results" MODIFIED="1465933949273" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464305683673" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -61,23 +60,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="policy_net_subgame_script.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="policy_net_subgame_script.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="113">
-              <caret line="292" column="86" lean-forward="false" selection-start-line="292" selection-start-column="86" selection-end-line="292" selection-end-column="86" />
-              <folding>
-                <element signature="e#1#39#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="value_net_script.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-86">
-              <caret line="269" column="86" lean-forward="false" selection-start-line="269" selection-start-column="86" selection-end-line="269" selection-end-column="86" />
+            <state relative-caret-position="357">
+              <caret line="376" column="32" lean-forward="false" selection-start-line="376" selection-start-column="32" selection-end-line="376" selection-end-column="32" />
               <folding>
                 <element signature="e#1#39#0" expanded="true" />
               </folding>
@@ -93,6 +80,16 @@
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="self_play_logs_to_training_data.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="449">
+              <caret line="92" column="61" lean-forward="true" selection-start-line="92" selection-start-column="61" selection-end-line="92" selection-end-column="61" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -232,8 +229,8 @@
         <option value="$PROJECT_DIR$/self_play_files/policy_net/policy_net_script.py" />
         <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" />
         <option value="$PROJECT_DIR$/tools/numpy_array.py" />
-        <option value="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
         <option value="$PROJECT_DIR$/self_play_files/value_net/value_net_script.py" />
+        <option value="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
       </list>
     </option>
   </component>
@@ -244,8 +241,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="660" />
-    <option name="y" value="270" />
+    <option name="x" value="1603" />
+    <option name="y" value="110" />
     <option name="width" value="1789" />
     <option name="height" value="1218" />
   </component>
@@ -765,13 +762,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00063" summary="refactored all function/variable names">
-      <created>1483466900110</created>
-      <option name="number" value="00063" />
-      <option name="presentableId" value="LOCAL-00063" />
-      <option name="project" value="LOCAL" />
-      <updated>1483466900110</updated>
-    </task>
     <task id="LOCAL-00064" summary="better readability">
       <created>1483467872697</created>
       <option name="number" value="00064" />
@@ -1108,7 +1098,14 @@
       <option name="project" value="LOCAL" />
       <updated>1487538873186</updated>
     </task>
-    <option name="localTasksCounter" value="112" />
+    <task id="LOCAL-00112" summary="changed softmax args since tensorflow now throws error if unnamed">
+      <created>1487541603792</created>
+      <option name="number" value="00112" />
+      <option name="presentableId" value="LOCAL-00112" />
+      <option name="project" value="LOCAL" />
+      <updated>1487541603792</updated>
+    </task>
+    <option name="localTasksCounter" value="113" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1121,7 +1118,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="660" y="270" width="1789" height="1218" extended-state="0" />
+    <frame x="1603" y="110" width="1789" height="1218" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26970956" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -1129,8 +1126,8 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.50547266" sideWeight="0.47476527" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.03144016" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22802986" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.6146045" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22718053" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19168358" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11534391" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -1182,7 +1179,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="cleaned up code. changed lookup table to list" />
     <MESSAGE value="better stats printing" />
     <MESSAGE value="moved batch split to utils, classes policy net" />
     <MESSAGE value="using He et al. std dev for weight initialization. almost finished classing Policy Net" />
@@ -1207,7 +1203,8 @@
     <MESSAGE value="refactored self play to be more general. added script for subgame policy nets" />
     <MESSAGE value="fixed subgame policy net to work on global state space policy net" />
     <MESSAGE value="renamed&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="renamed&#10;" />
+    <MESSAGE value="changed softmax args since tensorflow now throws error if unnamed" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed softmax args since tensorflow now throws error if unnamed" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1609,12 +1606,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
+    <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="305">
-          <caret line="96" column="38" lean-forward="false" selection-start-line="96" selection-start-column="38" selection-end-line="96" selection-end-column="38" />
+        <state relative-caret-position="-1454">
+          <caret line="286" column="31" lean-forward="true" selection-start-line="286" selection-start-column="31" selection-end-line="286" selection-end-column="31" />
           <folding>
-            <element signature="e#0#9#0" expanded="false" />
+            <element signature="e#1#39#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1629,20 +1626,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
+    <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="113">
-          <caret line="292" column="86" lean-forward="false" selection-start-line="292" selection-start-column="86" selection-end-line="292" selection-end-column="86" />
-          <folding>
-            <element signature="e#1#39#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="449">
+          <caret line="92" column="61" lean-forward="true" selection-start-line="92" selection-start-column="61" selection-end-line="92" selection-end-column="61" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/self_play_files/value_net/value_net_script.py">
+    <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-86">
-          <caret line="269" column="86" lean-forward="false" selection-start-line="269" selection-start-column="86" selection-end-line="269" selection-end-column="86" />
+        <state relative-caret-position="357">
+          <caret line="376" column="32" lean-forward="false" selection-start-line="376" selection-start-column="32" selection-end-line="376" selection-end-column="32" />
           <folding>
             <element signature="e#1#39#0" expanded="true" />
           </folding>

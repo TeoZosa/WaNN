@@ -376,7 +376,8 @@ for num_hidden in [i for i in range(1,10)]:
                 example = random.randrange(0, len(validation_examples))
                 y_pred_vector = sess.run(y_pred, feed_dict={X:[validation_examples[example]]})
                 num_moves = 10
-                top_n_indexes = sorted(range(len(y_pred_vector)), key=lambda i: y_pred_vector[i], reverse=True)[:num_moves]
+                top_n_indexes = sorted(range(len(y_pred_vector[0])), key=lambda i: y_pred_vector[0][i], reverse=True)[:num_moves]
+                print(top_n_indexes)
                 if (np.argmax(validation_labels[example]) in top_n_indexes):
                     in_top_n = True
                 else:

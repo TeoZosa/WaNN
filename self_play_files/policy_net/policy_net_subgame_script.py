@@ -131,11 +131,17 @@ def assign_path(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':#TODO: testing Start-Game Value Net
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\ValueNet\4DArraysHDF5(RxCxF)POEValueNet50%DataSet'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\4DArraysHDF5(RxCxF)POEPolicyNet1stThird'
     else:
         path = ''#todo:error checking
     return path
 
+def get_net_type(type):
+    type_dict = {'1stThird': 'Start',
+                 '2ndtThird': 'Mid',
+                 '3rdThird': 'End',
+                 'tireGame': 'Full'}
+    return type_dict[type]
 
 def load_examples_and_labels(path):
     files = [file_name for file_name in utils.find_files(path, "*.hdf5")]
@@ -180,13 +186,13 @@ def output_layer_init(layer_in, name='output_layer', reuse=None):
     with tf.variable_scope(name or 'output_layer', reuse=reuse):
         kernel = tf.get_variable(
             name='weights',
-            shape=[n_features, 2], # 1 x 64 filter in, 1 class out
+            shape=[n_features, 155], # 1 x 64 filter in, 1 class out
             dtype=tf.float32,
             initializer=tf.contrib.layers.xavier_initializer())
 
         bias = tf.get_variable(
             name='bias',
-            shape=[2],
+            shape=[155],
             dtype=tf.float32,
             initializer=tf.constant_initializer(0.0))
 
@@ -208,12 +214,36 @@ def loss(output_layer, labels):
 # config = run_config.RunConfig(num_cores=-1)
 input_path = assign_path()
 device = assign_device(input_path)
+game_stage = input_path[-8:]#ex. 1stThird
+net_type = get_net_type(game_stage)
 
 #for experiment with states from entire games, test data are totally separate games
 training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
-testing_examples_start, testing_labels_start = load_examples_and_labels(os.path.join(input_path, r'TestDataStart')) # 210659 states
-testing_examples_mid, testing_labels_mid = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
 validation_examples, validation_labels = load_examples_and_labels(os.path.join(input_path, r'ValidationData'))
+if (net_type == 'Start'):
+    other_3rd_1 = 'Mid'
+    other_3rd_2 = 'End'
+    testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(
+        os.path.join(input_path, r'TestDataMid'))  # 210659 states
+    testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
+elif(net_type == 'Mid'):
+    other_3rd_1 = 'Start'
+    other_3rd_2 = 'End'
+    testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(
+        os.path.join(input_path, r'TestDataStart'))  # 210659 states
+    testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
+elif(net_type == 'End'):
+    other_3rd_1 = 'Start'
+    other_3rd_2 = 'End'
+    testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(
+        os.path.join(input_path, r'TestDataStart'))  # 210659 states
+    testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
+else:#TODO: make this able to test on unseen data from all thirds
+    other_3rd_1 = 'Start'
+    other_3rd_2 = 'End'
+    testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(os.path.join(input_path, r'TestDataStart')) # 210659 states
+    testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
+
 # X, y = load_examples_and_labels(inputPath)
 
 # X[i] is a 3D matrix corresponding to label at y[i]
@@ -223,9 +253,9 @@ validation_examples, validation_labels = load_examples_and_labels(os.path.join(i
 
 file = open(os.path.join(input_path,
                          r'ExperimentLogs',
-                         input_path[-10:] + 'AdamNumFiltersNumLayersTFCrossEntropy_He_weightsPOE.txt'), 'a')
+                         game_stage + 'AdamNumFiltersNumLayersTFCrossEntropy_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
-print ("# of Testing Examples: {}".format(len(testing_examples_start)), end='\n', file=file)
+print ("# of Testing Examples: {}".format(len(testing_examples_other_3rd_1)), end='\n', file=file)
 for num_hidden in [i for i in range(1,10)]:
     for n_filters in [
                         16, 32, 64,
@@ -242,7 +272,7 @@ for num_hidden in [i for i in range(1,10)]:
             #build graph
             X = tf.placeholder(tf.float32, [None, 8, 8, 4])
             # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
-            y = tf.placeholder(tf.float32, [None,  2])
+            y = tf.placeholder(tf.float32, [None,  155])
             filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
 
             #TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
@@ -311,12 +341,6 @@ for num_hidden in [i for i in range(1,10)]:
 
             #for entire dataset experiments, split the testing games into a validation and test split; 105330 & 105329 states each; does randomness matter?
             # testing accuracy of full value net on begin and mid-game examples
-            test_set_examples = testing_examples_start
-            test_set_labels = testing_labels_start
-            validation_set_examples = validation_examples
-            validation_set_labels = validation_labels
-            # test_set_examples, validation_set_examples, test_set_labels, validation_set_labels = model_selection.train_test_split(testing_examples, testing_labels, test_size=0.5,
-            #                                                                                                                       random_state=random.randint(1, 1024))
 
             for epoch_i in range(n_epochs):
 
@@ -341,8 +365,8 @@ for num_hidden in [i for i in range(1,10)]:
                             y: training_label_batches[i]
                             })
                         accuracy_score = sess.run(accuracy, feed_dict={
-                                       X: validation_set_examples,
-                                       y: validation_set_labels
+                                       X: validation_examples,
+                                       y: validation_labels
                                        })
                         print("Loss: {}".format(loss), end="\n", file=file)
                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
@@ -357,34 +381,37 @@ for num_hidden in [i for i in range(1,10)]:
                     epoch_num=epoch_i+1,
                     accuracy_score=sess.run(accuracy,
                                    feed_dict={
-                                       X: validation_set_examples,
-                                       y: validation_set_labels
+                                       X: validation_examples,
+                                       y: validation_labels
                                    })), end="\n", file=file)
 
                 #show example of what network is predicting vs the move oracle
-                example = random.randrange(0, len(validation_set_examples))
-                y_pred_vector =sess.run(y_pred, feed_dict={X:[validation_set_examples[example]]})
+                example = random.randrange(0, len(validation_examples))
+                y_pred_vector =sess.run(y_pred, feed_dict={X:[validation_examples[example]]})
                 print("Sample Predicted Probabilities = "
                       "\n{y_pred}"
-                      "\nPredicted: {predicted_outcome}"
-                      "\nActual:  {actual_outcome}".format(
-                        y_pred=y_pred_vector,
-                        predicted_outcome=utils.win_lookup(np.argmax(y_pred_vector)),
-                        actual_outcome=utils.win_lookup(np.argmax(validation_set_labels[example]))),
-                        end="\n", file=file)
+                      "\nPredicted vs. Actual Move = "
+                      "\nIf white: {y_pred_white} vs. {y_act_white}"
+                      "\nIf black: {y_pred_black} vs. {y_act_black}".format(
+                    y_pred=y_pred_vector,
+                    y_pred_white=utils.move_lookup(np.argmax(y_pred_vector), 'White'),
+                    y_pred_black=utils.move_lookup(np.argmax(y_pred_vector), 'Black'),
+                    y_act_white=utils.move_lookup(np.argmax(validation_labels[example]), 'White'),
+                    y_act_black=utils.move_lookup(np.argmax(validation_labels[example]), 'Black')),
+                    end="\n", file=file)
 
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n", file=file)
 
             # Print final test accuracy:
-            print("Final Test Accuracy (start-states): {}".format(sess.run(accuracy,
+            print("Final Test Accuracy ({other_3rd_1}-states): {accuracy}".format(other_3rd_1=other_3rd_1, accuracy=sess.run(accuracy,
                            feed_dict={
-                               X: test_set_examples,
-                               y: test_set_labels
+                               X: testing_examples_other_3rd_1,
+                               y: testing_labels_other_3rd_1
                            })), end="\n", file=file)
-            print("Final Test Accuracy (middle-states): {}".format(sess.run(accuracy,
+            print("Final Test Accuracy ({other_3rd_2}-states): {accuracy}".format(other_3rd_2=other_3rd_2,accuracy=sess.run(accuracy,
                                                                            feed_dict={
-                                                                               X: testing_examples_mid,
-                                                                               y: testing_labels_mid
+                                                                               X: testing_examples_other_3rd_2,
+                                                                               y: testing_labels_other_3rd_2
                                                                            })), end="\n", file=file)
             sess.close()
 file.close()

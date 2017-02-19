@@ -86,11 +86,15 @@ def format_game_list(self_play_games):
             # Format move list
             move_list, mirror_move_list, original_visualizer_link, mirror_visualizer_link \
                 = format_move_lists_and_links(unformatted_move_list)
+
             white_board_states = generate_board_states(move_list, 'White', white_win)
-            white_mirror_board_states = generate_board_states(mirror_move_list, 'White', white_win)
             # self-play => same states, but win under policy for W <=> lose under policy for B
             black_board_states = generate_board_states(move_list, 'Black', black_win)
+
+            # since a mirror image has the same strategic value
+            white_mirror_board_states = generate_board_states(mirror_move_list, 'White', white_win)
             black_mirror_board_states = generate_board_states(mirror_move_list, 'Black', black_win)
+
             if white_win:
                 num_white_wins += 1
             elif black_win:
@@ -153,6 +157,7 @@ def generate_board_states(move_list, player_color, win):
     board_states = {'Win': win, 'States': [state], 'PlayerPOV': player_POV}
     for i in range(0, len(move_list)):
         assert (move_list[i]['#'] == i + 1)
+
         # structure kept for symmetry
         if isinstance(move_list[i]['White'], dict):  # for self-play, this should always happen.
             if isinstance(move_list[i]['Black'], dict):  # if no black move => white won
@@ -168,6 +173,7 @@ def generate_board_states(move_list, player_color, win):
             if player_color == 'Black':  # reflect positions tied to black transitions
                 board_states['PlayerPOV'].append(reflect_board_state(state))
             board_states['States'].append(state)
+
         if isinstance(move_list[i]['Black'], dict):  # if string, then == resign or NIL
             if i + 1 == len(move_list):  # if no next white move => black won
                 white_transition_vector = [0] * 154 + [1]  # no white move from the next generated state
@@ -181,6 +187,7 @@ def generate_board_states(move_list, player_color, win):
             board_states['States'].append(state)
             if player_color == 'White':
                 board_states['PlayerPOV'].append(state)
+
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
     board_states = convert_board_states_to_arrays(board_states, player_color)
     return board_states
@@ -273,7 +280,7 @@ def reflect_board_state(state):  # since black needs to have a POV representatio
     return reflected_state
 
 
-def mirror_board_state(state):  # since a mirror image has the same strategic value
+def mirror_board_state(state):  # helper method for reflect_board_state
     mirror_state_with_win = copy.deepcopy(state)  # edit copy of board_state
     mirror_state = mirror_state_with_win[0]
     state = state[0]  # the board state; state[1] is the win or loss value, state [2] is the transition vector
@@ -427,7 +434,7 @@ def generate_binary_plane(state, player_color, who_to_filter):
 
 
 def convert_board_states_to_arrays(board_states, player_color):
-    #TODO: more features: plane of 1s if next move == capture, plane of 1's on locations of possible captures? plane of 1s on locations of possible moves?
+    #TODO: more features: 16 extra binary planes per player for # pieces left? i.e. plane 14 => 14 pieces left? plane of 1s if next move == capture, plane of 1's on locations of possible captures? plane of 1s on locations of possible moves?
     new_board_states = board_states
     POV_states = board_states['PlayerPOV']
     states = board_states['States']

@@ -94,7 +94,7 @@ def self_play_data_structures_to_numpy():
            r'1024-1129selfPlayLogsBreakthrough4DataPython.p'
            ]
 
-  arg_lists = [[r'Self-Play', r'Value', path, file] for file in files]
+  arg_lists = [[r'Self-Play', r'Policy', path, file] for file in files]
   processes = Pool(processes=len(arg_lists))
   processes.starmap_async(numpy_array.self_player_driver, arg_lists)#map processes to arg lists
   processes.close()

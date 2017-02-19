@@ -452,12 +452,12 @@ for num_hidden in [i for i in range(12,13)]:
             y_pred = tf.nn.softmax(outer_layer)
 
             #tf's internal softmax; else, put softmax back in output layer
-            # cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
+            cost = tf.nn.softmax_cross_entropy_with_logits(outer_layer, y)
             # # alternative implementation
             # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
 
             #kadenze cross_entropy cost function
-            cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+            # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
 
 
             #way better performance

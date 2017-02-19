@@ -74,49 +74,40 @@ def filter_by_win_ratio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
-def filter_for_self_play(self_play_data, NNType, game_stage='Start', percent=10):
+def filter_for_self_play(self_play_data, NNType, game_stage='End', percent=50):
     training_data = []
-    if NNType == 'Policy':
-        for self_play_log in self_play_data:
-            for game in self_play_log['Games']:
-              states_random_subset = game['BoardStates']['PlayerPOV']
-              mirror_states_random_subset = game['MirrorBoardStates']['PlayerPOV']
-              assert len(states_random_subset) == len(mirror_states_random_subset)
-              for i in range(0, len(states_random_subset)):
-                  training_data.append(states_random_subset[i])
-                  training_data.append(mirror_states_random_subset[i])
-    elif NNType == 'Value':
-        for self_play_log in self_play_data:
-            for game in self_play_log['Games']: #TODO: experiment with the randomness
-                game_length = len(game['BoardStates']['PlayerPOV'])
-                if game_stage == None:
-                    start = 0
-                    end = game_length
-                elif game_stage == 'Start':
-                    # Start-Game Value Net
-                    start = 0
-                    end = math.floor(game_length / 3)
-                elif game_stage == 'Mid':
-                    # Mid-Game Value Net
-                    start = math.floor(game_length / 3)
-                    end = math.floor(game_length / 3) * 2
-                elif game_stage == 'End':
-                    # End-Game Value Net
-                    start = math.floor(game_length / 3) * 2
-                    end = game_length
-                states = game['BoardStates']['PlayerPOV'][start:end]
-                mirror_states = game['MirrorBoardStates']['PlayerPOV'][start:end]
-                num_random_states = math.floor(len(states) * (percent/100))   #25% of moves
-                #TODO: sample some random # of states in corresponding 3rd of data
+    for self_play_log in self_play_data:
+        for game in self_play_log['Games']:
+            game_length = len(game['BoardStates']['PlayerPOV'])
+            if game_stage == None:
+                start = 0
+                end = game_length
+            elif game_stage == 'Start':
+                # Start-Game Value Net
+                start = 0
+                end = math.floor(game_length / 3)
+            elif game_stage == 'Mid':
+                # Mid-Game Value Net
+                start = math.floor(game_length / 3)
+                end = math.floor(game_length / 3) * 2
+            elif game_stage == 'End':
+                # End-Game Value Net
+                start = math.floor(game_length / 3) * 2
+                end = game_length
+            states = game['BoardStates']['PlayerPOV'][start:end]
+            mirror_states = game['MirrorBoardStates']['PlayerPOV'][start:end]
+            if NNType == 'Policy':#TODO: unshuffle these?
+                num_random_states = len(states)
+            elif NNType == 'Value':
+                num_random_states = math.floor(len(states) * (percent/100))   #x% of moves
                 #if num_random_states == len(states), mixes state order to decorrelate NN training examples
-                states_random_subset = random.sample(states, num_random_states)
-                mirror_states_random_subset = random.sample(mirror_states, num_random_states)
-                training_data.extend(states_random_subset)
-                training_data.extend(mirror_states_random_subset)
-
-    else:
-        print('Invalid NN for self-play')
-        exit(-1)
+            else:
+                print('Invalid NN for self-play')
+                exit(-1)
+            states_random_subset = random.sample(states, num_random_states)
+            mirror_states_random_subset = random.sample(mirror_states, num_random_states)
+            training_data.extend(states_random_subset)
+            training_data.extend(mirror_states_random_subset)
     print('# of States for Self-Play {NNType} Net: {states}'.format(states=len(training_data), NNType=NNType))
     return training_data
 
@@ -263,5 +254,5 @@ def self_player_driver(filter, NNType, path, fileName):
     player_list = pickle.load(file)
     file.close()
     training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType)
-    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POE{NNType}Net1stThird25%DataSet'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
+    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POE{NNType}Net3rdThird'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
     write_np_array_to_disk(write_path, training_examples, labels, filter, NNType)

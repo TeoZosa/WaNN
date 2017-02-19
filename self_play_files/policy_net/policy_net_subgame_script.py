@@ -140,7 +140,7 @@ def get_net_type(type):
     type_dict = {'1stThird': 'Start',
                  '2ndtThird': 'Mid',
                  '3rdThird': 'End',
-                 'tireGame': 'Full'}
+                 'AllThird': 'Full'}
     return type_dict[type]
 
 def load_examples_and_labels(path):
@@ -238,11 +238,13 @@ elif(net_type == 'End'):
     testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(
         os.path.join(input_path, r'TestDataStart'))  # 210659 states
     testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
-else:#TODO: make this able to test on unseen data from all thirds
+else:
     other_3rd_1 = 'Start'
-    other_3rd_2 = 'End'
+    other_3rd_2 = 'Mid'
+    other_3rd_3 = 'End'
     testing_examples_other_3rd_1, testing_labels_other_3rd_1 = load_examples_and_labels(os.path.join(input_path, r'TestDataStart')) # 210659 states
     testing_examples_other_3rd_2, testing_labels_other_3rd_2 = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
+    testing_examples_other_3rd_3, testing_labels_other_3rd_3 = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
 
 # X, y = load_examples_and_labels(inputPath)
 
@@ -413,6 +415,14 @@ for num_hidden in [i for i in range(1,10)]:
                                                                                X: testing_examples_other_3rd_2,
                                                                                y: testing_labels_other_3rd_2
                                                                            })), end="\n", file=file)
+            if (net_type == 'Full'):
+                print("Final Test Accuracy ({other_3rd_3}-states): {accuracy}".format(other_3rd_3=other_3rd_3,
+                                                                                      accuracy=sess.run(accuracy,
+                                                                                                        feed_dict={
+                                                                                                            X: testing_examples_other_3rd_3,
+                                                                                                            y: testing_labels_other_3rd_3
+                                                                                                        })), end="\n",
+                      file=file)
             sess.close()
 file.close()
 

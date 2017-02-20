@@ -3,7 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_script.py" afterPath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_script.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" afterPath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tools/utils.py" afterPath="$PROJECT_DIR$/tools/utils.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -27,7 +29,7 @@
     <SUITE FILE_PATH="coverage/BreakthroughANN$charCNN.coverage" NAME="charCNN Coverage Results" MODIFIED="1482956171783" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$LittleGolemWebScraper.coverage" NAME="LittleGolemWebScraper Coverage Results" MODIFIED="1465508934413" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$regexExample.coverage" NAME="regexExample Coverage Results" MODIFIED="1464189117689" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNetSubGames.coverage" NAME="PolicyNetSubGames Coverage Results" MODIFIED="1487547061231" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/policy_net" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNetSubGames.coverage" NAME="PolicyNetSubGames Coverage Results" MODIFIED="1487551215456" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/policy_net" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$NumpyArray.coverage" NAME="NumpyArray Coverage Results" MODIFIED="1465991406057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayerDataDirectoryToAnalysisFormatWBEBinaryFeaturePlanes.coverage" NAME="PlayerDataDirectoryToAnalysisFormatWBEBinaryFeaturePlanes Coverage Results" MODIFIED="1465933949273" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464305683673" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -59,52 +61,122 @@
     <favorites_list name="untitled1" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tools/utils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="53" column="43" lean-forward="false" selection-start-line="53" selection-start-column="43" selection-end-line="53" selection-end-column="43" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="policy_net_subgame_script.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="167">
-              <caret line="377" column="68" lean-forward="true" selection-start-line="377" selection-start-column="68" selection-end-line="377" selection-end-column="68" />
-              <folding>
-                <element signature="e#1#39#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="numpy_array.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="88" column="37" lean-forward="false" selection-start-line="88" selection-start-column="37" selection-end-line="88" selection-end-column="37" />
-              <folding>
-                <element signature="e#0#13#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="self_play_logs_to_training_data.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="789">
-              <caret line="92" column="61" lean-forward="true" selection-start-line="92" selection-start-column="61" selection-end-line="92" selection-end-column="61" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <splitter split-orientation="horizontal" split-proportion="0.5571227">
+      <split-first>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tools/utils.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="-34">
+                  <caret line="51" column="69" lean-forward="true" selection-start-line="51" selection-start-column="69" selection-end-line="51" selection-end-column="69" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="policy_net_subgame_script.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="-322">
+                  <caret line="234" column="17" lean-forward="false" selection-start-line="234" selection-start-column="17" selection-end-line="234" selection-end-column="17" />
+                  <folding>
+                    <element signature="e#1#39#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="numpy_array.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="221">
+                  <caret line="88" column="37" lean-forward="false" selection-start-line="88" selection-start-column="37" selection-end-line="88" selection-end-column="37" />
+                  <folding>
+                    <element signature="e#0#13#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="self_play_logs_to_training_data.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="789">
+                  <caret line="92" column="61" lean-forward="true" selection-start-line="92" selection-start-column="61" selection-end-line="92" selection-end-column="61" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf>
+          <file leaf-file-name="policy_net_subgame_script.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="944">
+                  <caret line="445" column="0" lean-forward="true" selection-start-line="445" selection-start-column="0" selection-end-line="445" selection-end-column="0" />
+                  <folding>
+                    <element signature="e#1#39#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="math_ops.py" pinned="false" current-in-tab="false">
+            <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/ops/math_ops.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="261">
+                  <caret line="1395" column="0" lean-forward="false" selection-start-line="1395" selection-start-column="0" selection-end-line="1395" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="numeric.py" pinned="false" current-in-tab="false">
+            <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/numpy/core/numeric.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="261">
+                  <caret line="1960" column="0" lean-forward="false" selection-start-line="1960" selection-start-column="0" selection-end-line="1960" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="pywrap_tensorflow.py" pinned="false" current-in-tab="false">
+            <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/pywrap_tensorflow.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="261">
+                  <caret line="336" column="0" lean-forward="false" selection-start-line="336" selection-start-column="0" selection-end-line="336" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="session.py" pinned="false" current-in-tab="false">
+            <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/client/session.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="98">
+                  <caret line="757" column="0" lean-forward="false" selection-start-line="757" selection-start-column="0" selection-end-line="757" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="ops.py" pinned="false" current-in-tab="false">
+            <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/framework/ops.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="261">
+                  <caret line="485" column="0" lean-forward="false" selection-start-line="485" selection-start-column="0" selection-end-line="485" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-second>
+    </splitter>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -115,8 +187,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>PrintRow</find>
-      <find>thread</find>
       <find>pool</find>
       <find>moveList[i][3:5]</find>
       <find>From</find>
@@ -145,9 +215,10 @@
       <find>array_to_append=[],</find>
       <find>,\n\s*</find>
       <find>training_examples</find>
+      <find />
+      <find>y_pred_vector</find>
     </findStrings>
     <replaceStrings>
-      <replace>line</replace>
       <replace>convertDatastructureThread</replace>
       <replace>file</replace>
       <replace>selfPlayLog</replace>
@@ -177,6 +248,7 @@
       <replace>label</replace>
       <replace>,</replace>
       <replace>training_data</replace>
+      <replace>y_pred_vector_i</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\damon\PycharmProjects\BreakthroughANN</dir>
@@ -251,9 +323,9 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="324" />
-    <option name="y" value="436" />
-    <option name="width" value="2229" />
+    <option name="x" value="334" />
+    <option name="y" value="90" />
+    <option name="width" value="3254" />
     <option name="height" value="1523" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -772,13 +844,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00066" summary="better readability">
-      <created>1483469439892</created>
-      <option name="number" value="00066" />
-      <option name="presentableId" value="LOCAL-00066" />
-      <option name="project" value="LOCAL" />
-      <updated>1483469439892</updated>
-    </task>
     <task id="LOCAL-00067" summary="altered numpy array contents (indices vs pre-one-hotted arrays), for tf.contrib.learn's DNN Classifier, used one-hotted features(nd.array of nd.arrays vs. nd.matrix) and index for output &quot;class&quot;.  Dirty test code in policy net (testing a DNN classifier while reading documentation on building a CNN).">
       <created>1483815595841</created>
       <option name="number" value="00067" />
@@ -1115,7 +1180,14 @@
       <option name="project" value="LOCAL" />
       <updated>1487546682657</updated>
     </task>
-    <option name="localTasksCounter" value="115" />
+    <task id="LOCAL-00115" summary="printing more statistics about top moves">
+      <created>1487547083724</created>
+      <option name="number" value="00115" />
+      <option name="presentableId" value="LOCAL-00115" />
+      <option name="project" value="LOCAL" />
+      <updated>1487547083724</updated>
+    </task>
+    <option name="localTasksCounter" value="116" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1128,27 +1200,27 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="324" y="436" width="2229" height="1523" extended-state="0" />
+    <frame x="334" y="90" width="3254" height="1523" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21391632" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.21391632" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.50547266" sideWeight="0.47476527" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4763749" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.03144016" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22695585" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14639814" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14639814" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11534391" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36250967" sideWeight="0.80751175" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36173508" sideWeight="0.80751175" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4767375" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -1189,7 +1261,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="using He et al. std dev for weight initialization. almost finished classing Policy Net" />
     <MESSAGE value="black move flag added to WBPOE&#10;" />
     <MESSAGE value="POEPmOm for Value net" />
     <MESSAGE value="param space" />
@@ -1214,7 +1285,8 @@
     <MESSAGE value="changed softmax args since tensorflow now throws error if unnamed" />
     <MESSAGE value="added top n statistics for policy net move prediction" />
     <MESSAGE value="fixed bug in move lookup; for some reason, missing a bunch of transitions in white moves" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixed bug in move lookup; for some reason, missing a bunch of transitions in white moves" />
+    <MESSAGE value="printing more statistics about top moves" />
+    <option name="LAST_COMMIT_MESSAGE" value="printing more statistics about top moves" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1277,7 +1349,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="235" />
+      <option name="time" value="236" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1315,13 +1387,6 @@
         <state relative-caret-position="252">
           <caret line="1349" column="0" lean-forward="false" selection-start-line="1349" selection-start-column="0" selection-end-line="1349" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/ops/math_ops.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="184">
-          <caret line="1676" column="0" lean-forward="false" selection-start-line="1676" selection-start-column="0" selection-end-line="1676" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -1459,13 +1524,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/pywrap_tensorflow.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5508">
-          <caret line="324" column="0" lean-forward="false" selection-start-line="324" selection-start-column="0" selection-end-line="324" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/h5py/_hl/files.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4216">
@@ -1480,13 +1538,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/framework/ops.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7667">
-          <caret line="479" column="0" lean-forward="false" selection-start-line="479" selection-start-column="0" selection-end-line="479" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1498,13 +1549,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="124" lean-forward="false" selection-start-line="0" selection-start-column="124" selection-end-line="0" selection-end-column="124" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/client/session.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="765" column="0" lean-forward="false" selection-start-line="765" selection-start-column="0" selection-end-line="765" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -1526,14 +1570,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="195">
           <caret line="436" column="0" lean-forward="false" selection-start-line="436" selection-start-column="0" selection-end-line="436" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/numpy/core/numeric.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="1868" column="0" lean-forward="false" selection-start-line="1868" selection-start-column="0" selection-end-line="1868" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1613,7 +1649,7 @@
         <state relative-caret-position="-1454">
           <caret line="286" column="31" lean-forward="true" selection-start-line="286" selection-start-column="31" selection-end-line="286" selection-end-column="31" />
           <folding>
-            <element signature="e#1#39#0" expanded="true" />
+            <element signature="e#1#39#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1638,16 +1674,56 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tools/utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="53" column="43" lean-forward="false" selection-start-line="53" selection-start-column="43" selection-end-line="53" selection-end-column="43" />
+        <state relative-caret-position="-34">
+          <caret line="51" column="69" lean-forward="true" selection-start-line="51" selection-start-column="69" selection-end-line="51" selection-end-column="69" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/framework/ops.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="261">
+          <caret line="485" column="0" lean-forward="false" selection-start-line="485" selection-start-column="0" selection-end-line="485" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/pywrap_tensorflow.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="261">
+          <caret line="336" column="0" lean-forward="false" selection-start-line="336" selection-start-column="0" selection-end-line="336" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/numpy/core/numeric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="261">
+          <caret line="1960" column="0" lean-forward="false" selection-start-line="1960" selection-start-column="0" selection-end-line="1960" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/ops/math_ops.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="261">
+          <caret line="1395" column="0" lean-forward="false" selection-start-line="1395" selection-start-column="0" selection-end-line="1395" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/python/client/session.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="98">
+          <caret line="757" column="0" lean-forward="false" selection-start-line="757" selection-start-column="0" selection-end-line="757" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="167">
-          <caret line="377" column="68" lean-forward="true" selection-start-line="377" selection-start-column="68" selection-end-line="377" selection-end-column="68" />
+        <state relative-caret-position="944">
+          <caret line="445" column="0" lean-forward="true" selection-start-line="445" selection-start-column="0" selection-end-line="445" selection-end-column="0" />
           <folding>
             <element signature="e#1#39#0" expanded="true" />
           </folding>

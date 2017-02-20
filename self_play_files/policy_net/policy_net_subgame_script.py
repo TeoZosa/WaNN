@@ -207,6 +207,75 @@ def loss(output_layer, labels):
         losses = tf.nn.softmax_cross_entropy_with_logits(outer_layer, labels)
         loss = tf.reduce_mean(losses)
 
+def compute_accuracy(examples, labels):
+    return sess.run(accuracy,feed_dict={X: examples, y: labels})
+
+def train_model(examples, labels):
+    sess.run(optimizer, feed_dict={
+        X: examples,
+        y: labels
+    })
+def print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file_to_write):
+    print("\nAdam Optimizer"
+          "\nNum Filters: {num_filters}"
+          "\nNum Hidden Layers: {num_hidden}"
+          "\nLearning Rate: {learning_rate}"
+          "\nBatch Size: {batch_size}"
+          "\n# of Epochs: {n_epochs}".format(
+        learning_rate=learning_rate,
+        batch_size=batch_size,
+        n_epochs=n_epochs,
+        num_filters=n_filters,
+        num_hidden=num_hidden), end="\n", file=file_to_write)
+
+def print_partition_accuracy_statistics(examples, labels, partition, file_to_write):
+    print("Final Test Accuracy ({partition}-states): {accuracy}".format(
+        partition=partition,
+        accuracy=compute_accuracy(examples, labels)),
+        end="\n",
+        file=file_to_write)
+
+def print_prediction_statistics(examples, labels, file_to_write):
+    example = random.randrange(0, len(examples))
+    labels_predictions = sess.run(y_pred, feed_dict={X: [examples[example]]})
+    correct_move = np.argmax(labels[example])
+    predicted_move = np.argmax(labels_predictions)
+    num_top_moves = 10
+    top_n_indexes = sorted(range(len(labels_predictions[0])), key=lambda i: labels_predictions[0][i], reverse=True)[
+                    :num_top_moves]
+    if (correct_move in top_n_indexes):
+        rank_in_prediction = top_n_indexes.index(correct_move) + 1  # offset 0-indexing
+        in_top_n = True
+    else:
+        rank_in_prediction = in_top_n = False
+    top_n_white_moves = list(map(lambda index: utils.move_lookup(index, 'White'), top_n_indexes))
+    top_n_black_moves = list(map(lambda index: utils.move_lookup(index, 'Black'), top_n_indexes))
+    print("Sample Predicted Probabilities = "
+          "\n{y_pred}"
+          "\nIn top {num_top_moves} = {in_top_n}"
+          "\nTop move's rank in prediction = {move_rank}"
+          "\nTop {num_top_moves} moves ranked first to last = "
+          "\nif White: \n {top_white_moves}"
+          "\nif Black: \n {top_black_moves}"
+          "\nActual Move = "
+          "\nif White: {y_act_white}"
+          "\nif Black: {y_act_black}".format(
+        y_pred=labels_predictions,
+        in_top_n=in_top_n,
+        num_top_moves=num_top_moves,
+        move_rank=rank_in_prediction,
+        top_white_moves=top_n_white_moves,
+        top_black_moves=top_n_black_moves,
+        y_pred_white=utils.move_lookup(predicted_move, 'White'),
+        y_pred_black=utils.move_lookup(predicted_move, 'Black'),
+        y_act_white=utils.move_lookup(correct_move, 'White'),
+        y_act_black=utils.move_lookup(correct_move, 'Black')),
+        end="\n", file=file_to_write)
+
+def print_partition_statistics(examples, labels, partition, file):
+    print_partition_accuracy_statistics(examples, labels, partition, file)
+    print_prediction_statistics(examples, labels, file)
+
 # TODO: excise code to be run in main script.
 
         #main script
@@ -317,33 +386,23 @@ for num_hidden in [i for i in range(1,10)]:
             # pprint.pprint([op.name for op in g.get_operations()])
 
             n_epochs = 5
-            print("\nAdam Optimizer"
-                  "\nNum Filters: {num_filters}"
-                  "\nNum Hidden Layers: {num_hidden}"
-                  "\nLearning Rate: {learning_rate}"
-                  "\nBatch Size: {batch_size}"
-                  "\n# of Epochs: {n_epochs}".format(
-                learning_rate=learning_rate,
-                batch_size = batch_size,
-                n_epochs=n_epochs,
-                num_filters=n_filters,
-                num_hidden=num_hidden), end="\n", file=file)
+
+            print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file)
 
             for epoch_i in range(n_epochs):
 
+                # reshuffle training set at each epoch
                 training_examples, training_labels = shuffle(training_examples, training_labels,
-                                                             random_state=random.randint(1, 1024))  # reshuffling of training set at each epoch
+                                                             random_state=random.randint(1, 1024))
 
+                #split training examples into batches
                 training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, batch_size)
 
                 startTime = time.time()  #start timer
 
                 #train model
-                for i in range (0, len(training_example_batches)):
-                    sess.run(optimizer, feed_dict={
-                        X: training_example_batches[i],
-                        y: training_label_batches[i]
-                    })
+                for i in range(0, len(training_example_batches)):
+                    train_model(training_example_batches[i], training_label_batches[i])
 
                     # show stats at every 1/10th interval of epoch
                     if (i+1)%(len(training_example_batches)//10)==0:
@@ -351,84 +410,36 @@ for num_hidden in [i for i in range(1,10)]:
                             X: training_example_batches[i],
                             y: training_label_batches[i]
                             })
-                        accuracy_score = sess.run(accuracy, feed_dict={
-                                       X: validation_examples,
-                                       y: validation_labels
-                                       })
+                        accuracy_score = compute_accuracy(validation_examples, validation_labels)
                         print("Loss: {}".format(loss), end="\n", file=file)
                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
                         print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
-                        print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
+                        print('Interval {interval} of 10 Accuracy: {accuracy_score}'.format(
                             interval=(i+1)//(len(training_example_batches) // 10),
-                            accuracy=accuracy_score), end="\n", file=file)
+                            accuracy_score=accuracy_score), end="\n", file=file)
 
 
                 #show accuracy at end of epoch
+                accuracy_score = compute_accuracy(validation_examples, validation_labels)
                 print ('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
                     epoch_num=epoch_i+1,
-                    accuracy_score=sess.run(accuracy,
-                                   feed_dict={
-                                       X: validation_examples,
-                                       y: validation_labels
-                                   })), end="\n", file=file)
+                    accuracy_score=accuracy_score), end="\n", file=file)
 
                 #show example of what network is predicting vs the move oracle
-                example = random.randrange(0, len(validation_examples))
-                y_pred_vector = sess.run(y_pred, feed_dict={X:[validation_examples[example]]})
-                correct_move = np.argmax(validation_labels[example])
-                predicted_move = np.argmax(y_pred_vector)
-                num_top_moves = 10
-                top_n_indexes = sorted(range(len(y_pred_vector[0])), key=lambda i: y_pred_vector[0][i], reverse=True)[:num_top_moves]
-                if (correct_move in top_n_indexes):
-                    rank_in_prediction = top_n_indexes.index(correct_move)
-                    in_top_n = True
-                else:
-                    rank_in_prediction = in_top_n = False
-                top_n_white_moves = list(map(lambda index: utils.move_lookup(index, 'White'), top_n_indexes))
-                top_n_black_moves = list(map(lambda index: utils.move_lookup(index, 'Black'), top_n_indexes))
-                print("Sample Predicted Probabilities = "
-                      "\n{y_pred}"
-                      "\nIn top {num_top_moves} = {in_top_n}"
-                      "\nTop move's rank in prediction = {move_rank}"
-                      "\nTop {num_top_moves} moves ranked first to last = "
-                      "\nif White: \n {top_white_moves}"
-                      "\nif Black: \n {top_black_moves}"
-                      "\nActual Move = "
-                      "\nif White: {y_act_white}"
-                      "\nif Black: {y_act_black}".format(
-                    y_pred=y_pred_vector,
-                    in_top_n=in_top_n,
-                    num_top_moves=num_top_moves,
-                    move_rank = rank_in_prediction,
-                    top_white_moves=top_n_white_moves,
-                    top_black_moves=top_n_black_moves,
-                    y_pred_white=utils.move_lookup(predicted_move, 'White'),
-                    y_pred_black=utils.move_lookup(predicted_move, 'Black'),
-                    y_act_white=utils.move_lookup(correct_move, 'White'),
-                    y_act_black=utils.move_lookup(correct_move, 'Black')),
-                    end="\n", file=file)
-
+                print_prediction_statistics(validation_examples, validation_labels, file)
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n", file=file)
 
             # Print final test accuracy:
-            print("Final Test Accuracy ({partition}-states): {accuracy}".format(partition=partition_i, accuracy=sess.run(accuracy,
-                                                                                                                         feed_dict={
-                               X: testing_examples_partition_i,
-                               y: testing_labels_partition_i
-                           })), end="\n", file=file)
-            print("Final Test Accuracy ({partition}-states): {accuracy}".format(partition=partition_j, accuracy=sess.run(accuracy,
-                                                                                                                         feed_dict={
-                                                                               X: testing_examples_partition_j,
-                                                                               y: testing_labels_partition_j
-                                                                           })), end="\n", file=file)
+
+            #partition i
+            print_partition_statistics(testing_examples_partition_i, testing_labels_partition_i, partition_i, file)
+            
+            #partition j
+            print_partition_statistics(testing_examples_partition_j, testing_labels_partition_j, partition_j, file)
+
+            #partition k (only for full policy net)
             if (net_type == 'Full'):
-                print("Final Test Accuracy ({partition}-states): {accuracy}".format(partition=partition_k,
-                                                                                    accuracy=sess.run(accuracy,
-                                                                                                        feed_dict={
-                                                                                                            X: testing_examples_partition_k,
-                                                                                                            y: testing_labels_partition_k
-                                                                                                        })), end="\n",
-                      file=file)
+                print_partition_statistics(testing_examples_partition_k, testing_labels_partition_k, partition_k, file)
             sess.close()
 file.close()
 

@@ -583,8 +583,8 @@ file.close()
 #                batch_size=2056)
 #
 # # Evaluate accuracy.
-# accuracy_score = classifier.evaluate(x=X_test,y=y_test)["accuracy"]
-# print('Accuracy: {0:f}'.format(accuracy_score))
+# compute_accuracy = classifier.evaluate(x=X_test,y=y_test)["accuracy"]
+# print('Accuracy: {0:f}'.format(compute_accuracy))
 #
 
 # 't' is [

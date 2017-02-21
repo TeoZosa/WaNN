@@ -390,6 +390,10 @@ for num_hidden in [i for i in range(1,10)]:
 
             print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file)
 
+            #split into testing and validation sets
+            valid_examples, valid_labels, test_examples, test_labels = model_selection.train_test_split(
+                validation_examples, validation_labels, batch_size=0.5, random_state=random.randint(1, 1024))
+
             for epoch_i in range(n_epochs):
 
                 # reshuffle training set at each epoch
@@ -398,6 +402,7 @@ for num_hidden in [i for i in range(1,10)]:
 
                 #split training examples into batches
                 training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, batch_size)
+                
 
                 startTime = time.time()  #start timer
 
@@ -411,7 +416,7 @@ for num_hidden in [i for i in range(1,10)]:
                             X: training_example_batches[i],
                             y: training_label_batches[i]
                             })
-                        accuracy_score = compute_accuracy(validation_examples, validation_labels)
+                        accuracy_score = compute_accuracy(valid_examples, valid_labels)
                         print("Loss: {}".format(loss), end="\n", file=file)
                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
                         print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
@@ -421,16 +426,19 @@ for num_hidden in [i for i in range(1,10)]:
 
 
                 #show accuracy at end of epoch
-                accuracy_score = compute_accuracy(validation_examples, validation_labels)
+                accuracy_score = compute_accuracy(valid_examples, valid_labels)
                 print ('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
                     epoch_num=epoch_i+1,
                     accuracy_score=accuracy_score), end="\n", file=file)
 
                 #show example of what network is predicting vs the move oracle
-                print_prediction_statistics(validation_examples, validation_labels, file)
+                print_prediction_statistics(valid_examples, valid_labels, file)
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n", file=file)
 
             # Print final test accuracy:
+            
+            #this partition
+            print_partition_statistics(test_examples, test_labels, net_type, file)
 
             #partition i
             print_partition_statistics(testing_examples_partition_i, testing_labels_partition_i, partition_i, file)

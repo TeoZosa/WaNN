@@ -1,1 +1,2 @@
 #TODO: get relevant code from converting to data structure to make a CL breakthrough player that uses policy net as opponent
+#TODO: to evaluate top n moves from Policy net: check for legal move (if corresponding color piece exists and is moving forward between column -1 to column +1) ; check for gameover (white in row 7; black in row 1); make random move (if all moves are illegal; shouldn't happen with good policy net).

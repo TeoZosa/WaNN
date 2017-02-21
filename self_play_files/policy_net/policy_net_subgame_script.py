@@ -392,7 +392,7 @@ for num_hidden in [i for i in range(1,10)]:
 
             #split into testing and validation sets
             valid_examples, valid_labels, test_examples, test_labels = model_selection.train_test_split(
-                validation_examples, validation_labels, batch_size=0.5, random_state=random.randint(1, 1024))
+                validation_examples, validation_labels, test_size=0.5, random_state=random.randint(1, 1024))
 
             for epoch_i in range(n_epochs):
 

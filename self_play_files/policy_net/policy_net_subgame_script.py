@@ -130,15 +130,15 @@ def assign_path(deviceName ='Workstation'):
        path = r'/Users/TeofiloZosa/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
-    elif deviceName == 'Workstation':#TODO: testing Start-Game Value Net
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\4DArraysHDF5(RxCxF)POEPolicyNet1stThird'
+    elif deviceName == 'Workstation':
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\4DArraysHDF5(RxCxF)POEPolicyNet2ndThird'
     else:
         path = ''#todo:error checking
     return path
 
 def get_net_type(type):
     type_dict = {'1stThird': 'Start',
-                 '2ndtThird': 'Mid',
+                 '2ndThird': 'Mid',
                  '3rdThird': 'End',
                  'AllThird': 'Full'}
     return type_dict[type]
@@ -236,15 +236,15 @@ def print_partition_accuracy_statistics(examples, labels, partition, file_to_wri
         file=file_to_write)
 
 def print_prediction_statistics(examples, labels, file_to_write):
+    num_top_moves = 10
     example = random.randrange(0, len(examples))
     labels_predictions = sess.run(y_pred, feed_dict={X: [examples[example]]})
-    correct_move = np.argmax(labels[example])
-    predicted_move = np.argmax(labels_predictions)
-    num_top_moves = 10
+    correct_move_index = np.argmax(labels[example])
+    predicted_move_index = np.argmax(labels_predictions)
     top_n_indexes = sorted(range(len(labels_predictions[0])), key=lambda i: labels_predictions[0][i], reverse=True)[
                     :num_top_moves]
-    if (correct_move in top_n_indexes):
-        rank_in_prediction = top_n_indexes.index(correct_move) + 1  # offset 0-indexing
+    if (correct_move_index in top_n_indexes):
+        rank_in_prediction = top_n_indexes.index(correct_move_index) + 1  # offset 0-indexing
         in_top_n = True
     else:
         rank_in_prediction = in_top_n = False
@@ -266,10 +266,10 @@ def print_prediction_statistics(examples, labels, file_to_write):
         move_rank=rank_in_prediction,
         top_white_moves=top_n_white_moves,
         top_black_moves=top_n_black_moves,
-        y_pred_white=utils.move_lookup(predicted_move, 'White'),
-        y_pred_black=utils.move_lookup(predicted_move, 'Black'),
-        y_act_white=utils.move_lookup(correct_move, 'White'),
-        y_act_black=utils.move_lookup(correct_move, 'Black')),
+        y_pred_white=utils.move_lookup(predicted_move_index, 'White'),
+        y_pred_black=utils.move_lookup(predicted_move_index, 'Black'),
+        y_act_white=utils.move_lookup(correct_move_index, 'White'),
+        y_act_black=utils.move_lookup(correct_move_index, 'Black')),
         end="\n", file=file_to_write)
 
 def print_partition_statistics(examples, labels, partition, file):
@@ -318,6 +318,7 @@ file = open(os.path.join(input_path,
                          game_stage + 'AdamNumFiltersNumLayersTFCrossEntropy_He_weightsPOE.txt'), 'a')
 # file = sys.stdout
 print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
+
 for num_hidden in [i for i in range(1,10)]:
     for n_filters in [
                         16, 32, 64,

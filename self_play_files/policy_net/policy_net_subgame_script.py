@@ -391,7 +391,7 @@ for num_hidden in [i for i in range(1,10)]:
             print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file)
 
             #split into testing and validation sets
-            valid_examples, valid_labels, test_examples, test_labels = model_selection.train_test_split(
+            valid_examples, test_examples, valid_labels, test_labels = model_selection.train_test_split(
                 validation_examples, validation_labels, test_size=0.5, random_state=random.randint(1, 1024))
 
             for epoch_i in range(n_epochs):

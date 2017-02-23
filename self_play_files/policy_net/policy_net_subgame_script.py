@@ -237,9 +237,9 @@ def print_partition_accuracy_statistics(examples, labels, partition, file_to_wri
 
 def print_prediction_statistics(examples, labels, file_to_write):
     num_top_moves = 10
-    example = random.randrange(0, len(examples))
-    labels_predictions = sess.run(y_pred, feed_dict={X: [examples[example]]})
-    correct_move_index = np.argmax(labels[example])
+    random_example = random.randrange(0, len(examples))
+    labels_predictions = sess.run(y_pred, feed_dict={X: [examples[random_example]]})
+    correct_move_index = np.argmax(labels[random_example])
     predicted_move_index = np.argmax(labels_predictions)
     top_n_indexes = sorted(range(len(labels_predictions[0])), key=lambda i: labels_predictions[0][i], reverse=True)[
                     :num_top_moves]

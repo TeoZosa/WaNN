@@ -133,6 +133,7 @@ def initial_state(move_list, player_color, win):
     return [
         {
             10: -1,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+            #equivalent to -1 or 0 if white's move, 1 if black's move
             9: is_white,  # is player_color white
             8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
             7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
@@ -214,7 +215,7 @@ def generate_transition_vector(to, _from, player_color):
     from_row = int(_from[1])
     to_row = int(to[1])
     # ex if white and from_column is b => 1*3; moves starting from b are [2] or [3] or [4];
-    column_offset = (ord(from_column) - ord('a')) * 3  
+    column_offset = (ord(from_column) - ord('a')) * 3
     if player_color == 'Black':
         row_offset = (to_row - 1) * 22  # 22 possible moves per row
         assert (row_offset == (from_row - 2) * 22)  # double check

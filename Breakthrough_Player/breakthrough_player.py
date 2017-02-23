@@ -90,18 +90,25 @@ def enumerate_legal_moves(game_board, player_color):
     for row in range(1, 9):  # rows 1-8; if white is in row 8 or black is in row 1, game over should have been declared
         for column in columns:
             if game_board[row][column] == player:
-                left_diagonal_move = check_left_diagonal_move(game_board, row, column, player_color)
-                if left_diagonal_move is not None:
-                    legal_moves.append(left_diagonal_move)
-
-                forward_move = check_forward_move(game_board, row, column, player_color)
-                if forward_move is not None:
-                    legal_moves.append(forward_move)
-
-                right_diagonal_move = check_right_diagonal_move(game_board, row, column, player_color)
-                if right_diagonal_move is not None:
-                    legal_moves.append(right_diagonal_move)
+                legal_moves.extend(get_possible_move(game_board, row, column, player_color))
     return legal_moves
+
+def get_possible_move(game_board, row, column, player_color):
+    possible_moves = []
+
+    left_diagonal_move = check_left_diagonal_move(game_board, row, column, player_color)
+    if left_diagonal_move is not None:
+        possible_moves.extend(left_diagonal_move)
+
+    forward_move = check_forward_move(game_board, row, column, player_color)
+    if forward_move is not None:
+        possible_moves.extend(forward_move)
+
+    right_diagonal_move = check_right_diagonal_move(game_board, row, column, player_color)
+    if right_diagonal_move is not None:
+        possible_moves.extend(right_diagonal_move)
+
+    return possible_moves
 
 def check_left_diagonal_move(game_board, row, column, player_color):
     white = 'w'

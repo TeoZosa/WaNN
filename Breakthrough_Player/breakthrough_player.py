@@ -2,7 +2,63 @@ from Breakthrough_Player import board_utils
 from tools import utils
 
 #TODO: get relevant code from converting to data structure to make a CL breakthrough player that uses policy net as opponent
-#TODO: to evaluate top n moves from Policy net: check for legal move (if corresponding color piece exists and is moving forward between column -1 to column +1) ;
+
+def play_game(player_is_white):#TODO: use pandas to print out board? integrate with trmph?
+    game_board = board_utils.initial_game_board()
+    gameover = False
+    counter = 0
+    while not gameover:
+        whose_move = None
+        if counter % 2 == 0: #white's move
+            whose_move = 'White'
+            move = get_whites_move(game_board, player_is_white)
+        else: #black's move
+            whose_move = 'Black'
+            move = get_blacks_move(game_board, player_is_white)
+        game_board = board_utils.move_piece(game_board, move, whose_move)
+        gameover = game_over(game_board)
+
+def get_whites_move(game_board, player_is_white):
+    move = None
+    if player_is_white:
+        player_move_legal = False
+        while not player_move_legal:
+            move = input('Enter your move: ')
+            player_move_legal = check_legality(game_board, move)
+            if not player_move_legal:
+                print("Error, illegal move. Please enter a legal move.")
+    else:#get policy net move
+        move = None
+    return move
+
+def get_blacks_move(game_board, player_is_white):
+    move = None
+    if player_is_white:
+        move = None
+    else:
+        player_move_legal = False
+        while not player_move_legal:
+            move = input('Enter your move: ')
+            player_move_legal = check_legality(game_board, move)
+            if not player_move_legal:
+                print("Error, illegal move. Please enter a legal move.")
+    return move
+
+def check_legality(game_board, move):
+    move = move.split('-')
+    move_from = move[0].lower
+    move_to = move[1].lower
+    player_color_index = 9
+    is_white = 1
+    if game_board[player_color_index] == is_white:
+        player_color = 'White'
+    else:
+        player_color = 'Black'
+    legal_moves = enumerate_legal_moves(game_board, player_color)
+    for legal_move in legal_moves:
+        if move_from == legal_move['From'].lower and move_to == legal_move['To'].lower:
+            return True#return True after finding the move in the list of legal moves
+    return False# if move not in list of legal moves, return False
 
 def get_best_move(board_state, policy_net_output):
     game_board = board_state[0]
@@ -18,8 +74,6 @@ def get_best_move(board_state, policy_net_output):
     for move in ranked_move_indexes:#iterate over moves from best to worst and pick the first legal move; will terminate before loop ends
         if move in legal_move_indexes:
             return utils.move_lookup(move, player_color)
-
-
 
 
 def enumerate_legal_moves(game_board, player_color):
@@ -113,11 +167,11 @@ def convert_legal_moves_into_policy_net_indexes(legal_moves, player_color):
 
 
 # check for gameover (white in row 8; black in row 1); check in between moves
-def game_over (board_state):
+def game_over (game_board):
     white = 'w'
     black = 'b'
-    black_home_row = board_state[0][8]
-    white_home_row = board_state[0][1]
+    black_home_row = game_board[8]
+    white_home_row = game_board[1]
     if (white in black_home_row or black in white_home_row):
         return True
     else:

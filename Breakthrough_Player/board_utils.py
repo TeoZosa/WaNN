@@ -1,40 +1,40 @@
 import copy
 
-def initial_state(move_list, player_color, win):
+
+
+def initial_game_board():
     empty = 'e'
     white = 'w'
     black = 'b'
-    if player_color == 'White':
-        is_white = 1
-    else:
-        is_white = 0
-    return [
-        {
-            10: -1,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
-            #equivalent to 0 if white's move, 1 if black's move
-            9: is_white,  # is player_color white
-            8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-            7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-            6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-            5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-            4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-            3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-            2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
-            1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
-        },
-        win,
-        generate_transition_vector(move_list[0]['White']['To'], move_list[0]['White']['From'],
-                                   'White')]  # White's opening move
-def move_piece(board_state, to, _from, whose_move):
+    return {
+        10: -1,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+        # equivalent to 0 if white's move, 1 if black's move
+        9: 1,  # is player_color white
+        8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
+        7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
+        6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
+        1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
+    }
+def move_piece(board_state, move, whose_move):
     empty = 'e'
     white_move_index = 10
-    next_board_state = copy.deepcopy(board_state)  # edit copy of board_state
+    is_white_index = 9
+    move = move.split('-')
+    _from = move[0].lower
+    to = move[1].lower
+    next_board_state = copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
     next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
     next_board_state[int(_from[1])][_from[0]] = empty
     if whose_move == 'White':
         next_board_state[white_move_index] = 1
+        next_board_state[is_white_index] = 0 #next move isn't white's
     else:
         next_board_state[white_move_index] = 0
+        next_board_state[is_white_index] = 1 #since black made this move, white makes next move
     return next_board_state
 
 def generate_transition_vector(to, _from, player_color):

@@ -6,17 +6,21 @@ from tools import utils
 def play_game(player_is_white):#TODO: use pandas to print out board? integrate with trmph?
     game_board = board_utils.initial_game_board()
     gameover = False
-    counter = 0
+    move_number = 0
     while not gameover:
-        whose_move = None
-        if counter % 2 == 0: #white's move
-            whose_move = 'White'
-            move = get_whites_move(game_board, player_is_white)
-        else: #black's move
-            whose_move = 'Black'
-            move = get_blacks_move(game_board, player_is_white)
-        game_board = board_utils.move_piece(game_board, move, whose_move)
+        move, color_to_move = get_move(game_board, player_is_white, move_number)
+        game_board = board_utils.move_piece(game_board, move, color_to_move)
         gameover = game_over(game_board)
+        move_number += 1
+
+def get_move(game_board, player_is_white, move_number):
+    if move_number % 2 == 0:  # white's turn
+        color_to_move = 'White'
+        move = get_whites_move(game_board, player_is_white)
+    else:  # black's turn
+        color_to_move = 'Black'
+        move = get_blacks_move(game_board, player_is_white)
+    return move, color_to_move
 
 def get_whites_move(game_board, player_is_white):
     move = None
@@ -33,7 +37,7 @@ def get_whites_move(game_board, player_is_white):
 
 def get_blacks_move(game_board, player_is_white):
     move = None
-    if player_is_white:
+    if player_is_white:#get policy net move
         move = None
     else:
         player_move_legal = False

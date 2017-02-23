@@ -3,9 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" afterPath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -113,8 +111,8 @@
           <file leaf-file-name="breakthrough_player.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="725">
-                  <caret line="29" column="29" lean-forward="false" selection-start-line="29" selection-start-column="29" selection-end-line="29" selection-end-column="29" />
+                <state relative-caret-position="975">
+                  <caret line="39" column="43" lean-forward="false" selection-start-line="39" selection-start-column="43" selection-end-line="39" selection-end-column="43" />
                   <folding>
                     <element signature="e#0#43#0" expanded="true" />
                   </folding>
@@ -810,13 +808,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00073" summary="deprecation message in aggregation phase. cleaned up unused code">
-      <created>1484072895438</created>
-      <option name="number" value="00073" />
-      <option name="presentableId" value="LOCAL-00073" />
-      <option name="project" value="LOCAL" />
-      <updated>1484072895438</updated>
-    </task>
     <task id="LOCAL-00074" summary="forgot to mention, added multiprocessing to numpy array conversion since aggregation phase has been deprecated">
       <created>1484073301524</created>
       <option name="number" value="00074" />
@@ -1153,7 +1144,14 @@
       <option name="project" value="LOCAL" />
       <updated>1487828038407</updated>
     </task>
-    <option name="localTasksCounter" value="122" />
+    <task id="LOCAL-00122" summary="fleshing out breakthrough_player">
+      <created>1487830748305</created>
+      <option name="number" value="00122" />
+      <option name="presentableId" value="LOCAL-00122" />
+      <option name="project" value="LOCAL" />
+      <updated>1487830748305</updated>
+    </task>
+    <option name="localTasksCounter" value="123" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1227,7 +1225,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="value net logging. got lazy and turned win/loss into 2 class classification problem" />
     <MESSAGE value="fixed win lookup" />
     <MESSAGE value="restructure directory, clean up code" />
     <MESSAGE value="clean up code" />
@@ -1252,7 +1249,8 @@
     <MESSAGE value="added todo, brought back test/validation sets" />
     <MESSAGE value="typo&#10;" />
     <MESSAGE value="moved functions to board_utils, fleshed out breakthrough_player" />
-    <option name="LAST_COMMIT_MESSAGE" value="moved functions to board_utils, fleshed out breakthrough_player" />
+    <MESSAGE value="fleshing out breakthrough_player" />
+    <option name="LAST_COMMIT_MESSAGE" value="fleshing out breakthrough_player" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1688,8 +1686,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="725">
-          <caret line="29" column="29" lean-forward="false" selection-start-line="29" selection-start-column="29" selection-end-line="29" selection-end-column="29" />
+        <state relative-caret-position="975">
+          <caret line="39" column="43" lean-forward="false" selection-start-line="39" selection-start-column="43" selection-end-line="39" selection-end-column="43" />
           <folding>
             <element signature="e#0#43#0" expanded="true" />
           </folding>

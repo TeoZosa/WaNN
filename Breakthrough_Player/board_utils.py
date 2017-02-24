@@ -1,6 +1,95 @@
 import copy
+import tensorflow as tf
+import pandas as pd
+import numpy as np
+from tensorflow.python.framework.ops import reset_default_graph
+from Breakthrough_Player.policy_net_utils import call_policy_net
 
+def generate_policy_net_moves(game_board, player_color):
+    board_representation = convert_board_to_2d_matrix_POE(game_board, player_color)
+    return call_policy_net(board_representation)
 
+def convert_board_to_2d_matrix_POE(game_board, player_color):
+    one_hot_board = [generate_binary_vector(game_board, player_color=player_color,
+                                            who_to_filter='Player'),  # [0] player
+                     generate_binary_vector(game_board, player_color=player_color,
+                                            who_to_filter='Opponent'),  # [1] opponent
+                     generate_binary_vector(game_board, player_color=player_color,
+                                            who_to_filter='Empty'), #[2] empty
+                     generate_binary_vector(game_board, player_color=player_color,
+                                           who_to_filter='Bias')]  # [3] bias
+    one_hot_board = np.array(one_hot_board, dtype=np.float32)
+    one_hot_board = one_hot_board.ravel() #1d board
+    # # ensure at most 1 bit is on at each board position for player/opponent/empty
+    # assert ((one_hot_board[0] ^ one_hot_board[1] ^ one_hot_board[2]).all().all() and
+    #             not(one_hot_board[0] & one_hot_board[1] & one_hot_board[2]).all().all())
+
+    formatted_example = np.reshape(np.array(one_hot_board, dtype=np.float32),
+                                   (len(one_hot_board) // 64, 8, 8))  # feature_plane x row x col
+
+    for i in range(0, len(formatted_example)):
+        formatted_example[i] = formatted_example[
+            i].transpose()  # transpose (row x col) to get feature_plane x col x row
+    formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
+
+    return np.array(formatted_example, dtype=np.float32)
+
+def generate_binary_vector(state, player_color, who_to_filter):
+    bias = 1
+    if player_color == 'Black':
+        state = reflect_board_state(state) #reversed representation for black to ensure POV representation
+    panda_board = pd.DataFrame(state).transpose().sort_index(ascending=False).iloc[2:]  # human-readable board
+    if who_to_filter == 'White':
+        who_dict = {
+            'e': 0,
+            'w': 1,
+            'b': 0}
+    elif who_to_filter == 'Black':
+        who_dict = {
+            'e': 0,
+            'w': 0,
+            'b': 1}
+    elif who_to_filter == 'Player':
+        if player_color == 'White':
+            who_dict = {
+                'e': 0,
+                'w': 1,
+                'b': 0}
+        elif player_color == 'Black':
+            who_dict = {
+                'e': 0,
+                'w': 0,
+                'b': 1}
+        else:
+            print("error in convertBoard")
+            exit(-190)
+    elif who_to_filter == 'Opponent':
+        if player_color == 'White':
+            who_dict = {
+                'e': 0,
+                'w': 0,
+                'b': 1}
+        elif player_color == 'Black':
+            who_dict = {
+                'e': 0,
+                'w': 1,
+                'b': 0}
+        else:
+            print("error in convertBoard")
+            exit(-190)
+    elif who_to_filter == 'Empty':
+        who_dict = {
+            'e': 1,
+            'w': 0,
+            'b': 0}
+    elif who_to_filter == 'Bias':  # duplicate across 64 positions since CNN needs same dimensions
+        who_dict = {
+            'e': bias,
+            'w': bias,
+            'b': bias}
+    else:
+        print("Error, generate_binary_vector needs a valid argument to filter")
+    return np.array(panda_board.apply(lambda x: x.apply(lambda y: who_dict[y]))).ravel()#features x col x row
 
 def initial_game_board():
     empty = 'e'
@@ -71,3 +160,43 @@ def generate_transition_vector(to, _from, player_color):
     transition_vector = [0] * 155 #  last index is the no move index
     transition_vector[index] = 1
     return transition_vector
+
+def reflect_board_state(state):  # since black needs to have a POV representation
+    semi_reflected_state = mirror_board_state(state)
+    reflected_state = copy.deepcopy(semi_reflected_state)
+    reflected_state[1] = semi_reflected_state[8]
+    reflected_state[2] = semi_reflected_state[7]
+    reflected_state[3] = semi_reflected_state[6]
+    reflected_state[4] = semi_reflected_state[5]
+    reflected_state[5] = semi_reflected_state[4]
+    reflected_state[6] = semi_reflected_state[3]
+    reflected_state[7] = semi_reflected_state[2]
+    reflected_state[8] = semi_reflected_state[1]
+    return reflected_state
+
+
+def mirror_board_state(state):  # helper method for reflect_board_state
+    mirror_state = copy.deepcopy(state)  # edit copy of board_state
+     # the board state; state[1] is the win or loss value, state [2] is the transition vector
+    is_white_index = 9
+    white_move_index = 10
+    for row in sorted(state):
+        if row != is_white_index and row != white_move_index:  # these indexes don't change
+            for column in sorted(state[row]):
+                if column == 'a':
+                    mirror_state[row]['h'] = state[row][column]
+                elif column == 'b':
+                    mirror_state[row]['g'] = state[row][column]
+                elif column == 'c':
+                    mirror_state[row]['f'] = state[row][column]
+                elif column == 'd':
+                    mirror_state[row]['e'] = state[row][column]
+                elif column == 'e':
+                    mirror_state[row]['d'] = state[row][column]
+                elif column == 'f':
+                    mirror_state[row]['c'] = state[row][column]
+                elif column == 'g':
+                    mirror_state[row]['b'] = state[row][column]
+                elif column == 'h':
+                    mirror_state[row]['a'] = state[row][column]
+    return mirror_state

@@ -1,0 +1,3 @@
+from Breakthrough_Player import breakthrough_player
+
+breakthrough_player.play_game(False)

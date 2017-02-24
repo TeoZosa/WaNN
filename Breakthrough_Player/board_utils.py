@@ -24,8 +24,8 @@ def move_piece(board_state, move, whose_move):
     white_move_index = 10
     is_white_index = 9
     move = move.split('-')
-    _from = move[0].lower
-    to = move[1].lower
+    _from = move[0].lower()
+    to = move[1].lower()
     next_board_state = copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
     next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
     next_board_state[int(_from[1])][_from[0]] = empty

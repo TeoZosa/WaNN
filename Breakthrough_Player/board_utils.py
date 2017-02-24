@@ -10,19 +10,15 @@ def generate_policy_net_moves(game_board, player_color):
     return call_policy_net(board_representation)
 
 def convert_board_to_2d_matrix_POE(game_board, player_color):
-    one_hot_board = [generate_binary_vector(game_board, player_color=player_color,
+    one_hot_board = np.array([generate_binary_vector(game_board, player_color=player_color,
                                             who_to_filter='Player'),  # [0] player
                      generate_binary_vector(game_board, player_color=player_color,
                                             who_to_filter='Opponent'),  # [1] opponent
                      generate_binary_vector(game_board, player_color=player_color,
                                             who_to_filter='Empty'), #[2] empty
                      generate_binary_vector(game_board, player_color=player_color,
-                                           who_to_filter='Bias')]  # [3] bias
-    one_hot_board = np.array(one_hot_board, dtype=np.float32)
+                                           who_to_filter='Bias')], dtype=np.float32)  # [3] bias
     one_hot_board = one_hot_board.ravel() #1d board
-    # # ensure at most 1 bit is on at each board position for player/opponent/empty
-    # assert ((one_hot_board[0] ^ one_hot_board[1] ^ one_hot_board[2]).all().all() and
-    #             not(one_hot_board[0] & one_hot_board[1] & one_hot_board[2]).all().all())
 
     formatted_example = np.reshape(np.array(one_hot_board, dtype=np.float32),
                                    (len(one_hot_board) // 64, 8, 8))  # feature_plane x row x col

@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" />
     </list>
@@ -84,21 +83,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="numpy_array.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1343">
-                  <caret line="139" column="37" lean-forward="true" selection-start-line="135" selection-start-column="4" selection-end-line="140" selection-end-column="119" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file leaf-file-name="board_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="646">
-                  <caret line="38" column="31" lean-forward="true" selection-start-line="38" selection-start-column="31" selection-end-line="38" selection-end-column="31" />
+                <state relative-caret-position="323">
+                  <caret line="19" column="96" lean-forward="false" selection-start-line="19" selection-start-column="96" selection-end-line="19" selection-end-column="96" />
                   <folding>
                     <element signature="e#0#11#0" expanded="true" />
                   </folding>
@@ -169,7 +158,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>oneDArray</find>
       <find>skflow</find>
       <find>classifier</find>
       <find>selfPlayLog</find>
@@ -199,9 +187,9 @@
       <find>left</find>
       <find>append</find>
       <find>panda</find>
+      <find>generate_binary_plane</find>
     </findStrings>
     <replaceStrings>
-      <replace>selfPlayDataList</replace>
       <replace>PrintDataStructureStyleRow</replace>
       <replace>process</replace>
       <replace>processes</replace>
@@ -231,6 +219,7 @@
       <replace>valid_labels</replace>
       <replace>right</replace>
       <replace>extend</replace>
+      <replace>generate_binary_vector</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\damon\PycharmProjects\BreakthroughANN</dir>
@@ -863,13 +852,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00077" summary="for numpy conversion, fixed logic in conversion; saving as hd5f (note: multiprocessing doesn't percolate the exception up the chain properly)">
-      <created>1484087305508</created>
-      <option name="number" value="00077" />
-      <option name="presentableId" value="LOCAL-00077" />
-      <option name="project" value="LOCAL" />
-      <updated>1484087305508</updated>
-    </task>
     <task id="LOCAL-00078" summary="for numpy conversion, fixed logic in conversion; saving as hdf5 (note: multiprocessing doesn't percolate the exception up the chain properly)">
       <created>1484089191432</created>
       <option name="number" value="00078" />
@@ -1206,7 +1188,14 @@
       <option name="project" value="LOCAL" />
       <updated>1487912803914</updated>
     </task>
-    <option name="localTasksCounter" value="126" />
+    <task id="LOCAL-00126" summary="fully finished board utils for policy net input preprocessing and instantiation">
+      <created>1487919281659</created>
+      <option name="number" value="00126" />
+      <option name="presentableId" value="LOCAL-00126" />
+      <option name="project" value="LOCAL" />
+      <updated>1487919281659</updated>
+    </task>
+    <option name="localTasksCounter" value="127" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1228,7 +1217,7 @@
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47608927" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.03144016" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2183847" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2183847" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2975558" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11534391" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
@@ -1280,7 +1269,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="restructure directory, clean up code" />
     <MESSAGE value="clean up code" />
     <MESSAGE value="more restructuring and cleaning. altered policy net code for entire dataset experiment&#10;" />
     <MESSAGE value="cleaning code" />
@@ -1305,7 +1293,8 @@
     <MESSAGE value="moved functions to board_utils, fleshed out breakthrough_player" />
     <MESSAGE value="fleshing out breakthrough_player" />
     <MESSAGE value="fully finished player, sans policy net." />
-    <option name="LAST_COMMIT_MESSAGE" value="fully finished player, sans policy net." />
+    <MESSAGE value="fully finished board utils for policy net input preprocessing and instantiation" />
+    <option name="LAST_COMMIT_MESSAGE" value="fully finished board utils for policy net input preprocessing and instantiation" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1362,7 +1351,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Breakthrough_Player/board_utils.py</url>
-          <line>177</line>
+          <line>173</line>
           <option name="timeStamp" value="249" />
         </line-breakpoint>
       </breakpoints>
@@ -1733,14 +1722,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1343">
-          <caret line="139" column="37" lean-forward="true" selection-start-line="135" selection-start-column="4" selection-end-line="140" selection-end-column="119" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1010">
@@ -1749,10 +1730,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1343">
+          <caret line="139" column="37" lean-forward="true" selection-start-line="135" selection-start-column="4" selection-end-line="140" selection-end-column="119" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="646">
-          <caret line="38" column="31" lean-forward="true" selection-start-line="38" selection-start-column="31" selection-end-line="38" selection-end-column="31" />
+        <state relative-caret-position="323">
+          <caret line="19" column="96" lean-forward="false" selection-start-line="19" selection-start-column="96" selection-end-line="19" selection-end-column="96" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>

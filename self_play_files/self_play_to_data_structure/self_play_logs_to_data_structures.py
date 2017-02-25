@@ -6,6 +6,7 @@ import copy
 import math
 import warnings
 from tools import utils
+from Breakthrough_Player import  breakthrough_player #for legality checking
 
 import pandas as pd
 from multiprocessing import Pool, freeze_support
@@ -334,17 +335,17 @@ def convert_board_to_2d_matrix_WBPOEWm(board_state, player_color):
     # lower row is not good, but would the Player/Opponent features cancel this out?
 
     # if player color == white, player and white states are mirrors; else, player and black states are mirrors
-    one_hot_board = [generate_binary_plane(state, player_color=player_color,
+    one_hot_board = [generate_binary_plane(state, player_color,
                                             who_to_filter='White'),  # [0] white
-                     generate_binary_plane(state, player_color=player_color,
+                     generate_binary_plane(state, player_color,
                                             who_to_filter='Black'),  # [1] black
-                     generate_binary_plane(state, player_color=player_color,
+                     generate_binary_plane(state, player_color,
                                             who_to_filter='Player'),  # [2] player
-                     generate_binary_plane(state, player_color=player_color,
+                     generate_binary_plane(state, player_color,
                                             who_to_filter='Opponent'),  # [3] opponent
-                     generate_binary_plane(state, player_color=player_color,
+                     generate_binary_plane(state, player_color,
                                             who_to_filter='Empty'),  # [4] empty
-                     generate_binary_plane(state, player_color=player_color,
+                     generate_binary_plane(state, player_color,
                                            who_to_filter='MoveFlag')]  # [5] flag indicating if the transition came from a white move
     
     # ensure at most 1 bit is on at each board position for white/black/empty
@@ -365,11 +366,11 @@ def convert_board_to_2d_matrix_WBPOEWm(board_state, player_color):
 
 def convert_board_to_2d_matrix_POE(board_state, player_color):
     state = board_state[0]
-    one_hot_board = [generate_binary_plane(state, player_color=player_color,
+    one_hot_board = [generate_binary_plane(state, player_color,
                                             who_to_filter='Player'),  # [0] player
-                     generate_binary_plane(state, player_color=player_color,
+                     generate_binary_plane(state, player_color,
                                             who_to_filter='Opponent'),  # [1] opponent
-                     generate_binary_plane(state, player_color=player_color,
+                     generate_binary_plane(state, player_color,
                                             who_to_filter='Empty')]  # [2] empty
 
     # ensure at most 1 bit is on at each board position for player/opponent/empty
@@ -435,7 +436,10 @@ def generate_binary_plane(state, player_color, who_to_filter):
 
 
 def convert_board_states_to_arrays(board_states, player_color):
-    #TODO: more features: 16 extra binary planes per player for # pieces left? i.e. plane 14 => 14 pieces left? plane of 1s if next move == capture, plane of 1's on locations of possible captures? plane of 1s on locations of possible moves?
+    #TODO: more features: 16 extra binary planes per player for # pieces left? i.e. plane 14 => 14 pieces left?
+    # plane of 1s if next move == capture, plane of 1's on locations of possible captures?
+    # plane of 1s on locations of possible moves?
+    # plane of next board state? (maybe will interact with label + planes representing possible moves/captures)
     new_board_states = board_states
     POV_states = board_states['PlayerPOV']
     states = board_states['States']
@@ -463,16 +467,11 @@ def convert_board_to_1d_array_WBPOEWmBm(board_state, player_color):
     # if player color == white, player and white states are mirrors; else, player and black states are mirrors
     white_move_flag = [from_white_move]  * 64  # duplicate across 64 features since CNN needs same dimensions
     black_move_flag = [from_white_move^1] *64
-    one_hot_board = [generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='White'),  # [0] white
-                     generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Black'),  # [1] black
-                     generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Player'),  # [2] player
-                     generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Opponent'),  # [3] opponent
-                     generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Empty'),  # [4] empty
+    one_hot_board = [generate_binary_vector(state, player_color, what_to_filter='White'),  # [0] white
+                     generate_binary_vector(state, player_color, what_to_filter='Black'),  # [1] black
+                     generate_binary_vector(state, player_color, what_to_filter='Player'),  # [2] player
+                     generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [3] opponent
+                     generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [4] empty
                      white_move_flag,
                      black_move_flag]  # [5] flag indicating if the transition came from a white move
     for i in range(0, 64):  # error checking block
@@ -502,12 +501,9 @@ def convert_board_to_1d_array_POEPmOm(board_state, player_color):
         player_to_move = from_white_move  #  black's move = 1 iff from_white_move = 1
     player_move_flag = [player_to_move] * 64
     opponent_move_flag = [player_to_move ^ 1] * 64
-    one_hot_board = [generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Player'),  # [0] player
-                     generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Opponent'),  # [1] opponent
-                     generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Empty'),  # [3] empty
+    one_hot_board = [generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
+                     generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
+                     generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [3] empty
                      player_move_flag,  # [4] flag indicating if players's turn to move
                      opponent_move_flag]  # [5] flag indicating if opponent's turn to move
     for i in range(0, 64):  # error checking block
@@ -520,12 +516,9 @@ def convert_board_to_1d_array_POEPmOm(board_state, player_color):
 def convert_board_to_1d_array_POE(board_state, player_color):
     # 12/22 removed White/Black to avoid Curse of Dimensionality.
     state = board_state[0]
-    one_hot_board = [generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Player'),  # [0] player
-                     generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Opponent'),  # [1] opponent
-                     generate_binary_vector(state, player_color=player_color,
-                                            what_to_filter='Empty')]  # [2] empty
+    one_hot_board = [generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
+                     generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
+                     generate_binary_vector(state, player_color, what_to_filter='Empty')]  # [2] empty
     for i in range(0, 64):  # error checking block
         # ensure at most 1 bit is on at each board position for player/opponent/empty
         assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
@@ -533,78 +526,323 @@ def convert_board_to_1d_array_POE(board_state, player_color):
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
     return new_board_state
 
+def convert_board_to_1d_array_POEMfMtCfCtPnOnEn(board_state, player_color):
+    # 12/22 removed White/Black to avoid Curse of Dimensionality.
+    state = board_state[0]
+    board_with_moves = mark_all_possible_moves(state, player_color)
+    next_move = utils.win_lookup(board_state[2].index(1)).split('-')
+    next_to = next_move[1]
+    next_from = next_move[0]
+    next_state = move_piece(board_state, next_to, next_from, player_color)[0]
+    one_hot_board = [generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
+                     generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
+                     generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [2] empty
+                     generate_binary_vector(board_with_moves, player_color,  what_to_filter='Moves From'),
+                     generate_binary_vector(board_with_moves, player_color, what_to_filter='Moves To'),
+                     generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures From'),
+                     generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures To'),
+                     generate_binary_vector(next_state, player_color, what_to_filter='Player'),  # [7] player
+                     generate_binary_vector(next_state, player_color, what_to_filter='Opponent'),  # [8] opponent
+                     generate_binary_vector(next_state, player_color, what_to_filter='Empty')]  # [9] empty
+    for i in range(0, 64):  # error checking block
+        # ensure at most 1 bit is on at each board position for player/opponent/empty
+        assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
+                not (one_hot_board[0][i] & one_hot_board[1][i] & one_hot_board[2][i]))
+        assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
+                not (one_hot_board[0][i] & one_hot_board[1][i] & one_hot_board[2][i]))
+    new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
+    return new_board_state
+
+def mark_all_possible_moves(state, player_color):
+    #TODO: can we solve for the fact that 'to' moves don't know where they came from? 
+    # different 'from' moves map to the same 'to' moves?
+    #we can't do the naive solution and specify a plane of 3 distinct values, for each move (amount of moves isn't constant)
+    #specifying a plane of 1's or 0's for each of the 155 transitions is also not feasible (would PROBABLY require too much data)
+    legal_moves = breakthrough_player.enumerate_legal_moves(state, player_color)
+    board_with_moves = copy.deepcopy(state)# edit copy of board_state
+    for move in legal_moves:
+        _from = move['From']
+        to = move['To']
+        board_with_moves = mark_possible_move(board_with_moves, to, _from, player_color)
+    return board_with_moves
+    
+
+
+def mark_possible_move(state, to, _from, player_color):
+    move_to_flag = 'Player Move To'
+    move_from_flag = 'Player Move From'
+    capture_to_flag = 'Player Capture To'
+    capture_from_flag = 'Player Capture From'
+    white_move_index = 10
+    next_board_state = copy.deepcopy(state)  # edit copy of board_state
+    if player_color == 'White':
+        next_board_state[white_move_index] = 1
+        enemy_piece = 'b'
+    else:
+        next_board_state[white_move_index] = 0
+        enemy_piece = 'w'
+    piece_at_move_location = next_board_state[int(to[1])][to[0]]
+    if piece_at_move_location == enemy_piece:
+        next_board_state[int(to[1])][to[0]] = capture_to_flag
+        next_board_state[int(_from[1])][_from[0]] = capture_from_flag
+    else:
+        next_board_state[int(to[1])][to[0]] = move_to_flag
+        next_board_state[int(_from[1])][_from[0]] = move_from_flag
+    return next_board_state
+
+
+
 
 def generate_binary_vector(state, player_color, what_to_filter):
     binary_vector = []
     is_white_index = 9
     white_move_index = 10
-    if what_to_filter == 'White':
-        white_dict = {
+    if what_to_filter == 'White' or what_to_filter == 'Black':
+        what_to_filter_dict = {
+        'White': {
             'e': 0,
             'w': 1,
-            'b': 0}
-        for row in sorted(state):
-            if row != is_white_index and row != white_move_index:  # don't touch these indexes
-                for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
-                    binary_vector.append(white_dict[state[row][column]])
-    elif what_to_filter == 'Black':
-        black_dict = {
+            'b': 0},
+        'Black': {
             'e': 0,
             'w': 0,
-            'b': 1}
-        for row in sorted(state):
-            if row != is_white_index and row != white_move_index:  # don't touch these indexes
-                for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
-                    binary_vector.append(black_dict[state[row][column]])
+            'b': 1}}
     elif what_to_filter == 'Player':
-        if player_color == 'White':
-            player_dict = {
+        what_to_filter_dict = {
+            'White':{
                 'e': 0,
                 'w': 1,
-                'b': 0}
-        elif player_color == 'Black':
-            player_dict = {
+                'b': 0},
+            'Black': {
                 'e': 0,
                 'w': 0,
-                'b': 1}
-        else:
-            print("error in convertBoard")
-            exit(-190)
-        for row in sorted(state):
-            if row != is_white_index and row != white_move_index:  # don't touch these indexes
-                for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
-                    binary_vector.append(player_dict[state[row][column]])
+                'b': 1}}
     elif what_to_filter == 'Opponent':
-        if player_color == 'White':
-            opponent_dict = {
+        what_to_filter_dict = {
+            'White': {
                 'e': 0,
                 'w': 0,
-                'b': 1}
-        elif player_color == 'Black':
-            opponent_dict = {
+                'b': 1},
+            'Black': {
                 'e': 0,
                 'w': 1,
-                'b': 0}
-        else:
-            print("error in convertBoard")
-            exit(-190)
-        for row in sorted(state):
-            if row != is_white_index and row != white_move_index:  # don't touch these indexes
-                for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
-                    binary_vector.append(opponent_dict[state[row][column]])
+                'b': 0}}
     elif what_to_filter == 'Empty':
-        empty_dict = {
-            'e': 1,
-            'w': 0,
-            'b': 0}
-        for row in sorted(state):
-            if row != is_white_index and row != white_move_index:  # don't touch these indexes
-                for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
-                    binary_vector.append(empty_dict[state[row][column]])
+        what_to_filter_dict = {
+            'White':{
+                'e': 1,
+                'w': 0,
+                'b': 0},
+            'Black': {
+                'e': 1,
+                'w': 0,
+                'b': 0}}
+    elif what_to_filter == 'Moves From':
+        what_to_filter_dict = {
+            'White':{
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 0,
+                'Player Move From': 1,
+                'Player Capture To': 0,
+                'Player Capture From': 0},
+            'Black': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 0,
+                'Player Move From': 1,
+                'Player Capture To': 0,
+                'Player Capture From': 0}}
+    elif what_to_filter == 'Moves To':
+        what_to_filter_dict = {
+            'White': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 1,
+                'Player Move From': 0,
+                'Player Capture To': 0,
+                'Player Capture From': 0}  ,
+            'Black': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 1,
+                'Player Move From': 0,
+                'Player Capture To': 0,
+                'Player Capture From': 0}}
+    elif what_to_filter == 'Captures From':
+        what_to_filter_dict = {
+            'White': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 0,
+                'Player Move From': 0,
+                'Player Capture To': 0,
+                'Player Capture From': 1},
+            'Black': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 0,
+                'Player Move From': 0,
+                'Player Capture To': 0,
+                'Player Capture From': 1}}
+    elif what_to_filter == 'Captures To':
+        what_to_filter_dict = {
+            'White': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 0,
+                'Player Move From': 0,
+                'Player Capture To': 1,
+                'Player Capture From': 0},
+            'Black': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 0,
+                'Player Move From': 0,
+                'Player Capture To': 1,
+                'Player Capture From': 0}}
     else:
         print("Error, generate_binary_vector needs a valid argument to filter")
+        what_to_filter_dict = {
+            'White': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 0,
+                'Player Move From': 0,
+                'Player Capture To': 0,
+                'Player Capture From': 0},
+            'Black': {
+                'e': 0,
+                'w': 0,
+                'b': 0,
+                'Player Move To': 0,
+                'Player Move From': 0,
+                'Player Capture To': 0,
+                'Player Capture From': 0}}
+    for row in sorted(state):
+        if row != is_white_index and row != white_move_index:  # don't touch these indexes
+            for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+                binary_vector.append(what_to_filter_dict[player_color][state[row][column]])
     return binary_vector
 
+
+# def generate_binary_vector(state, player_color, what_to_filter):
+#     binary_vector = []
+#     is_white_index = 9
+#     white_move_index = 10
+#     
+# 
+#     if what_to_filter == 'White':
+#         white_dict = {
+#             'e': 0,
+#             'w': 1,
+#             'b': 0}
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(white_dict[state[row][column]])
+#     elif what_to_filter == 'Black':
+#         black_dict = {
+#             'e': 0,
+#             'w': 0,
+#             'b': 1}
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(black_dict[state[row][column]])
+#     elif what_to_filter == 'Player':
+#         if player_color == 'White':
+#             player_dict = {
+#                 'e': 0,
+#                 'w': 1,
+#                 'b': 0}
+#         elif player_color == 'Black':
+#             player_dict = {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 1}
+#         else:
+#             print("error in convertBoard")
+#             exit(-190)
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(player_dict[state[row][column]])
+#     elif what_to_filter == 'Opponent':
+#         if player_color == 'White':
+#             opponent_dict = {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 1}
+#         elif player_color == 'Black':
+#             opponent_dict = {
+#                 'e': 0,
+#                 'w': 1,
+#                 'b': 0}
+#         else:
+#             print("error in convertBoard")
+#             exit(-190)
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(opponent_dict[state[row][column]])
+#     elif what_to_filter == 'Empty':
+#         empty_dict = {
+#             'e': 1,
+#             'w': 0,
+#             'b': 0}
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(empty_dict[state[row][column]])
+#     elif what_to_filter == 'Moves From':
+#         empty_dict = {
+#             'e': 1,
+#             'w': 0,
+#             'b': 0}
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(empty_dict[state[row][column]])
+#     elif what_to_filter == 'Moves To':
+#         empty_dict = {
+#             'e': 1,
+#             'w': 0,
+#             'b': 0}
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(empty_dict[state[row][column]])
+#     elif what_to_filter == 'Captures From':
+#         empty_dict = {
+#             'e': 1,
+#             'w': 0,
+#             'b': 0}
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(empty_dict[state[row][column]])
+#     elif what_to_filter == 'Captures To':
+#         empty_dict = {
+#             'e': 1,
+#             'w': 0,
+#             'b': 0}
+#         for row in sorted(state):
+#             if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#                 for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                     binary_vector.append(empty_dict[state[row][column]])
+#     else:
+#         print("Error, generate_binary_vector needs a valid argument to filter")
+#     return binary_vector
 
 def move_piece(board_state, to, _from, whose_move):
     empty = 'e'

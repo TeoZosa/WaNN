@@ -131,7 +131,7 @@ def assign_path(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\4DArraysHDF5(RxCxF)POEPolicyNet3rdThird'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\4DArraysHDF5(RxCxF)POEPolicyNetAllThird'
     else:
         path = ''#todo:error checking
     return path
@@ -301,7 +301,7 @@ elif(net_type == 'Mid'):
     testing_examples_partition_j, testing_labels_partition_j = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
 elif(net_type == 'End'):
     partition_i = 'Start'
-    partition_j = 'End'
+    partition_j = 'Mid'
     testing_examples_partition_i, testing_labels_partition_i = load_examples_and_labels(os.path.join(input_path, r'TestDataStart'))  # 210659 states
     testing_examples_partition_j, testing_labels_partition_j = load_examples_and_labels(os.path.join(input_path, r'TestDataMid'))
 else:
@@ -319,14 +319,15 @@ file = open(os.path.join(input_path,
 # file = sys.stdout
 print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
 
-for num_hidden in [i for i in range(1,10)]:
+for num_hidden in [i for i in range(2,3)]:
     for n_filters in [
-                        16, 32, 64,
-                       128,
+                      #  16, 32, 64,
+                      # 128,
                       192]:
         for learning_rate in [
-            0.001,
-            0.0011, 0.0012, 0.0013,
+            #0.001,
+            #0.0011,
+            0.0012, 0.0013,
                               0.0014, 0.0015
         ]:
             reset_default_graph()

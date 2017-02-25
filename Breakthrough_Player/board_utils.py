@@ -1,13 +1,12 @@
 import copy
-import tensorflow as tf
+
 import pandas as pd
 import numpy as np
-from tensorflow.python.framework.ops import reset_default_graph
-from Breakthrough_Player.policy_net_utils import call_policy_net
+# from Breakthrough_Player.policy_net_utils import call_policy_net
 
 def generate_policy_net_moves(game_board, player_color):
     board_representation = convert_board_to_2d_matrix_POE(game_board, player_color)
-    return call_policy_net(board_representation)
+    # return call_policy_net(board_representation)
 
 def convert_board_to_2d_matrix_POE(game_board, player_color):
     one_hot_board = np.array([generate_binary_vector(game_board, player_color=player_color,

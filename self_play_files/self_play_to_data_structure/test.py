@@ -1,0 +1,2 @@
+from self_play_files.self_play_to_data_structure import self_play_logs_to_data_structures as convertLog
+convertLog.driver(r'G:\TruncatedLogs\1018-1024\selfPlayLogsBreakthrough1',)

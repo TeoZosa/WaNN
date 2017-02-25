@@ -319,14 +319,14 @@ file = open(os.path.join(input_path,
 # file = sys.stdout
 print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
 
-for num_hidden in [i for i in range(2,3)]:
+for num_hidden in [i for i in range(3,10)]:
     for n_filters in [
-                      #  16, 32, 64,
-                      # 128,
+                       16, 32, 64,
+                      128,
                       192]:
         for learning_rate in [
-            #0.001,
-            #0.0011,
+            0.001,
+            0.0011,
             0.0012, 0.0013,
                               0.0014, 0.0015
         ]:

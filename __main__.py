@@ -24,7 +24,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
 
   # startTime = time.time()
-  # SelfPlayLogsToTrainingData.SelfPlayLogsToDataStructures()
+  # self_play_logs_to_training_data.SelfPlayLogsToDataStructures()
   # print("Minutes to convert to data structures: {time}".format(time=(time.time() - startTime) / (60)))
 
   startTime = time.time()

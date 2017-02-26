@@ -4,21 +4,19 @@ import pickle  # serialize the data structure
 import mmap  # read entire files into memory (only for workstation)
 import copy
 import math
-import warnings
-from tools import utils
-from Breakthrough_Player import  breakthrough_player #for legality checking
 
-import pandas as pd
-from multiprocessing import Pool, freeze_support
+from multiprocessing import Pool
+from tools import utils
+from Breakthrough_Player import  breakthrough_player #for enumerating possible moves
 
 def driver(path):
-    player_list = process_directory_of_breakthrough_files(path)
-    write_to_disk(player_list, path)
+    player_list = process_directory_of_breakthrough_files_single_thread(path)
+   # write_to_disk(player_list, path)
 
 def write_to_disk(data_to_write, path):
     write_directory = 'G:\TruncatedLogs\PythonDataSets\DataStructures'
-    date = str(path[len(r'G:\TruncatedLogs') + 1
-    :- len(r'\selfPlayLogsBreakthroughN')])
+    date = path[len(r'G:\TruncatedLogs') + 1
+    :- len(r'\selfPlayLogsBreakthroughN')]
     server_name = path[- len(r'\selfPlayLogsBreakthroughN') + 1
     :]
     output_file = open(os.path.join(write_directory, (
@@ -34,10 +32,9 @@ def process_directory_of_breakthrough_files_single_thread(path):
          player_list.extend(process_breakthrough_file (arg[0], arg[1]))
     return player_list
 
-def process_directory_of_breakthrough_files(path):
+def process_directory_of_breakthrough_files_multithread(path):
     player_list = []
     arg_lists = [[path, self_play_games] for self_play_games in utils.find_files(path, '*.txt')]
-    # freeze_support()
     process_pool = Pool(processes=len(arg_lists))
     player_list.extend(process_pool.starmap(process_breakthrough_file, arg_lists))
     process_pool.close()
@@ -47,18 +44,16 @@ def process_directory_of_breakthrough_files(path):
 def process_breakthrough_file(path, self_play_games):
     file_name = self_play_games[len(path):- len('.txt')]  # trim path & extension
     file_name = file_name.split('_SelfPlayLog')  # \BreakthroughN_SelfPlayLog00-> ['\BreakthroughN',00]
-    server_name = str(file_name[0].strip('\\'))  # '\BreakthroughN' -> 'BreakthroughN'
-    self_play_log = str(file_name[1]).strip(
+    server_name = file_name[0].strip('\\')  #'\BreakthroughN' -> 'BreakthroughN'
+    self_play_log = file_name[1].strip(
                         '(').strip(
                         ')')  # if file_name was originally \BreakthroughN_SelfPlayLog(xy)
-    date_range = str(self_play_games[len(r'G:\TruncatedLogs')
+    date_range = self_play_games[len(r'G:\TruncatedLogs')
                                      + 1:len(path)
-                                     - len(r'\selfPlayLogsBreakthroughN')])
+                                     - len(r'\selfPlayLogsBreakthroughN')]
     games_list, white_wins, black_wins = format_game_list(self_play_games)
     return {'ServerNode': server_name, 'Self-PlayLog': self_play_log, 'DateRange': date_range, 'Games': games_list,
             'WhiteWins': white_wins, 'BlackWins': black_wins}
-
-
 
 def format_game_list(self_play_games):
     games = []
@@ -129,7 +124,6 @@ def format_game_list(self_play_games):
     file.close()
     return games, num_white_wins, num_black_wins
 
-
 def initial_state(move_list, player_color, win):
     empty = 'e'
     white = 'w'
@@ -153,7 +147,7 @@ def initial_state(move_list, player_color, win):
             1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
         },
         win,
-        generate_transition_vector(move_list[0]['White']['To'], move_list[0]['White']['From'],
+        utils.generate_transition_vector(move_list[0]['White']['To'], move_list[0]['White']['From'],
                                    'White')]  # White's opening move
 
 
@@ -169,11 +163,11 @@ def generate_board_states(move_list, player_color, win):
 
         # structure kept for symmetry
         if isinstance(move_list[i]['White'], dict):  # for self-play, this should always happen.
-            if isinstance(move_list[i]['Black'], dict):  # if no black move => white won
-                black_transition_vector = generate_transition_vector(move_list[i]['Black']['To'],
+            if isinstance(move_list[i]['Black'], dict):  # if Black has a reply
+                black_transition_vector = utils.generate_transition_vector(move_list[i]['Black']['To'],
                                                                      move_list[i]['Black']['From'], 'Black')
                 # can't put black move block in here as it would execute before white's move
-            else:
+            else:  # no black move => white won 
                 black_transition_vector = [0] * 154 + [1]
             state = [
                 move_piece(state[0], move_list[i]['White']['To'], move_list[i]['White']['From'], whose_move='White'),
@@ -183,11 +177,11 @@ def generate_board_states(move_list, player_color, win):
                 board_states['PlayerPOV'].append(reflect_board_state(state))
             board_states['States'].append(state)
 
-        if isinstance(move_list[i]['Black'], dict):  # if string, then == resign or NIL
+        if isinstance(move_list[i]['Black'], dict):  # if not, then == resign or NIL
             if i + 1 == len(move_list):  # if no next white move => black won
                 white_transition_vector = [0] * 154 + [1]  # no white move from the next generated state
             else:
-                white_transition_vector = generate_transition_vector(move_list[i + 1]['White']['To'],
+                white_transition_vector = utils.generate_transition_vector(move_list[i + 1]['White']['To'],
                                                                    move_list[i + 1]['White']['From'], 'White')
             state = [
                 move_piece(state[0], move_list[i]['Black']['To'], move_list[i]['Black']['From'], whose_move='Black'),
@@ -200,42 +194,6 @@ def generate_board_states(move_list, player_color, win):
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
     board_states = convert_board_states_to_arrays(board_states, player_color)
     return board_states
-
-
-def generate_transition_vector(to, _from, player_color):
-    # probability distribution over the 154 possible (vs legal) moves from the POV of the player.
-    # Reasoning: six center columns where, if a piece was present, it could move one of three ways.
-    # A piece in one of the two side columns can move one of two ways.
-    # Since nothing can move in the farthest row, there are only seven rows of possible movement.
-    # => (2*2*7) + (6*3*7) = 154
-    # ==> 154 element vector of all 0s sans the 1 for the transition that was actually made.
-    # i.e. a1-a2 (if White) == h8-h7 (if Black) =>
-    # row 0 (closest row), column 0(farthest left)
-    # moves to
-    # row +1, column 0
-    # <=> transition[0] = 1, transition[1:len(transition)] = 0
-
-    # Notes: when calling NN, just reverse board state if black and decode output with black's table
-    #1/14/17: since NN sees sorted r x c, we actually need to reverse if white..
-
-    from_column = _from[0]
-    to_column = to[0]
-    from_row = int(_from[1])
-    to_row = int(to[1])
-    # ex if white and from_column is b => 1*3; moves starting from b are [2] or [3] or [4];
-    column_offset = (ord(from_column) - ord('a')) * 3
-    if player_color == 'Black':
-        row_offset = (to_row - 1) * 22  # 22 possible moves per row
-        assert (row_offset == (from_row - 2) * 22)  # double check
-        index = 153 - (
-        ord(to_column) - ord(from_column) + column_offset + row_offset)  # 153 reverses the board for black
-    else:
-        row_offset = (from_row - 1) * 22  # 22 possible moves per row
-        assert (row_offset == (to_row - 2) * 22)  # double check
-        index = ord(to_column) - ord(from_column) + column_offset + row_offset
-    transition_vector = [0] * 155 #  last index is the no move index
-    transition_vector[index] = 1
-    return transition_vector
 
 
 def mirror_move(move):
@@ -316,130 +274,6 @@ def mirror_board_state(state):  # helper method for reflect_board_state
                     mirror_state[row]['a'] = state[row][column]
     return mirror_state_with_win
 
-def convert_board_states_to_matrices(board_states, player_color):
-    warnings.warn("Removed in favor of performing conversion later in the pipeline. "
-                  "Else, this stage of the pipeline will be computationally expensive, "
-                  "memory intensive, and require large amounts of disk space "
-                  , DeprecationWarning)
-    new_board_states = board_states
-    POV_states = board_states['PlayerPOV']
-    states = board_states['States']
-    new_board_states['States'] = []
-    new_board_states['PlayerPOV'] = []
-    for state in states:
-        new_board_states['States'].append(
-            convert_board_to_2d_matrix_POE(state, player_color))  # These can be inputs to value net
-    for POV_state in POV_states:
-        new_board_states['PlayerPOV'].append(
-            convert_board_to_2d_matrix_POE(POV_state, player_color))  # These can be inputs to policy net
-    return new_board_states
-
-def convert_board_to_2d_matrix_WBPOEWm(board_state, player_color):
-    state = board_state[0]
-    # Do we need White/Black if black is a flipped representation? we are only asking the net "from my POV, these are
-    # my pieces and my opponent's pieces what move should I take? If not, the net sees homogeneous data.
-    # My fear is seeing black in a flipped representation may mess things up as, if you are white, black being in a
-    # lower row is not good, but would the Player/Opponent features cancel this out?
-
-    # if player color == white, player and white states are mirrors; else, player and black states are mirrors
-    one_hot_board = [generate_binary_plane(state, player_color,
-                                            who_to_filter='White'),  # [0] white
-                     generate_binary_plane(state, player_color,
-                                            who_to_filter='Black'),  # [1] black
-                     generate_binary_plane(state, player_color,
-                                            who_to_filter='Player'),  # [2] player
-                     generate_binary_plane(state, player_color,
-                                            who_to_filter='Opponent'),  # [3] opponent
-                     generate_binary_plane(state, player_color,
-                                            who_to_filter='Empty'),  # [4] empty
-                     generate_binary_plane(state, player_color,
-                                           who_to_filter='MoveFlag')]  # [5] flag indicating if the transition came from a white move
-    
-    # ensure at most 1 bit is on at each board position for white/black/empty
-    assert ((one_hot_board[0] ^ one_hot_board[1] ^ one_hot_board[4]).all().all() and
-            not (one_hot_board[0] & one_hot_board[1] & one_hot_board[4]).all().all())
-    # ensure at most 1 bit is on at each board position for player/opponent/empty
-    assert ((one_hot_board[2] ^ one_hot_board[3] ^ one_hot_board[4]).all().all() and
-            not (one_hot_board[2] & one_hot_board[3] & one_hot_board[4]).all().all())
-    if player_color == 'White':
-        # white positions == player and black positions == opponent;
-        assert (one_hot_board[0].equals(one_hot_board[2]) and one_hot_board[1].equals(one_hot_board[3]))
-    else:
-        #  white positions == opponent and player == black positions;
-        assert (one_hot_board[0].equals(one_hot_board[3]) and one_hot_board[1].equals(one_hot_board[2]))
-    new_board_state = [one_hot_board, board_state[1], board_state[2]]  # [x vector, win, y transition vector]
-    return new_board_state
-
-
-def convert_board_to_2d_matrix_POE(board_state, player_color):
-    state = board_state[0]
-    one_hot_board = [generate_binary_plane(state, player_color,
-                                            who_to_filter='Player'),  # [0] player
-                     generate_binary_plane(state, player_color,
-                                            who_to_filter='Opponent'),  # [1] opponent
-                     generate_binary_plane(state, player_color,
-                                            who_to_filter='Empty')]  # [2] empty
-
-    # ensure at most 1 bit is on at each board position for player/opponent/empty
-    assert ((one_hot_board[0] ^ one_hot_board[1] ^ one_hot_board[2]).all().all() and
-                not(one_hot_board[0] & one_hot_board[1] & one_hot_board[2]).all().all())
-    new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
-    return new_board_state
-
-def generate_binary_plane(state, player_color, who_to_filter):
-    white_move = state[10]
-    panda_board = pd.DataFrame(state).transpose().sort_index(ascending=False).iloc[2:]  # human-readable board
-    if who_to_filter == 'White':
-        who_dict = {
-            'e': 0,
-            'w': 1,
-            'b': 0}
-    elif who_to_filter == 'Black':
-        who_dict = {
-            'e': 0,
-            'w': 0,
-            'b': 1}
-    elif who_to_filter == 'Player':
-        if player_color == 'White':
-            who_dict = {
-                'e': 0,
-                'w': 1,
-                'b': 0}
-        elif player_color == 'Black':
-            who_dict = {
-                'e': 0,
-                'w': 0,
-                'b': 1}
-        else:
-            print("error in convertBoard")
-            exit(-190)
-    elif who_to_filter == 'Opponent':
-        if player_color == 'White':
-            who_dict = {
-                'e': 0,
-                'w': 0,
-                'b': 1}
-        elif player_color == 'Black':
-            who_dict = {
-                'e': 0,
-                'w': 1,
-                'b': 0}
-        else:
-            print("error in convertBoard")
-            exit(-190)
-    elif who_to_filter == 'Empty':
-        who_dict = {
-            'e': 1,
-            'w': 0,
-            'b': 0}
-    elif who_to_filter == 'MoveFlag':  # duplicate across 64 positions since CNN needs same dimensions
-        who_dict = {
-            'e': white_move,
-            'w': white_move,
-            'b': white_move}
-    else:
-        print("Error, generate_binary_plane needs a valid argument to filter")
-    return panda_board.apply(lambda x: x.apply(lambda y: who_dict[y]))#filter board positions to binary
 
 
 def convert_board_states_to_arrays(board_states, player_color):
@@ -451,13 +285,15 @@ def convert_board_states_to_arrays(board_states, player_color):
     new_board_states['PlayerPOV'] = []
     for state in states:
         new_board_states['States'].append(
-            convert_board_to_1d_array_POEMfMtCfCtPnOnEnCm(state, player_color, False))  # These can be inputs to value net
+            convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(state, player_color, False))  # These can be inputs to value net
     for POV_state in POV_states:
         new_board_states['PlayerPOV'].append(
-            convert_board_to_1d_array_POEMfMtCfCtPnOnEnCm(POV_state, player_color, True))  # These can be inputs to policy net
+            convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(POV_state, player_color, True))  # These can be inputs to policy net
     return new_board_states
 
-
+'''Feature Planes:
+    White, Black, Player, Opponent, Empty, Came From White Move, Came From Black Move
+    '''
 def convert_board_to_1d_array_WBPOEWmBm(board_state, player_color):
     state = board_state[0]
     white_move_index = 10
@@ -471,13 +307,14 @@ def convert_board_to_1d_array_WBPOEWmBm(board_state, player_color):
     # if player color == white, player and white states are mirrors; else, player and black states are mirrors
     white_move_flag = [from_white_move]  * 64  # duplicate across 64 features since CNN needs same dimensions
     black_move_flag = [from_white_move^1] *64
-    one_hot_board = [generate_binary_vector(state, player_color, what_to_filter='White'),  # [0] white
-                     generate_binary_vector(state, player_color, what_to_filter='Black'),  # [1] black
-                     generate_binary_vector(state, player_color, what_to_filter='Player'),  # [2] player
-                     generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [3] opponent
-                     generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [4] empty
-                     white_move_flag,
-                     black_move_flag]  # [5] flag indicating if the transition came from a white move
+    one_hot_board = [utils.generate_binary_vector(state, player_color, what_to_filter='White'),  # [0] white
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Black'),  # [1] black
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Player'),  # [2] player
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [3] opponent
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [4] empty
+                     white_move_flag,# [5] flag indicating if the transition came from a white move
+                     black_move_flag,
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Bias')]
     for i in range(0, 64):  # error checking block
         # ensure at most 1 bit is on at each board position for white/black/empty
         assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[4][i]) and
@@ -494,7 +331,10 @@ def convert_board_to_1d_array_WBPOEWmBm(board_state, player_color):
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # [x vector, win, y transition vector]
     return new_board_state
 
-def convert_board_to_1d_array_POEPmOm(board_state, player_color):
+'''Feature Planes:
+    Player, Opponent, Empty, Came From Player Move, Came From Opponent Move
+    '''
+def convert_board_to_1d_array_POEPmOmB(board_state, player_color):
     state = board_state[0]
     white_move_index = 10
     from_white_move = state[white_move_index]
@@ -505,11 +345,12 @@ def convert_board_to_1d_array_POEPmOm(board_state, player_color):
         player_to_move = from_white_move  #  black's move = 1 iff from_white_move = 1
     player_move_flag = [player_to_move] * 64
     opponent_move_flag = [player_to_move ^ 1] * 64
-    one_hot_board = [generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
-                     generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
-                     generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [3] empty
+    one_hot_board = [utils.generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [3] empty
                      player_move_flag,  # [4] flag indicating if players's turn to move
-                     opponent_move_flag]  # [5] flag indicating if opponent's turn to move
+                     opponent_move_flag,  # [5] flag indicating if opponent's turn to move
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Bias')]
     for i in range(0, 64):  # error checking block
         # ensure at most 1 bit is on at each board position for player/opponent/empty
         assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
@@ -517,12 +358,16 @@ def convert_board_to_1d_array_POEPmOm(board_state, player_color):
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # [x vector, win, y transition vector]
     return new_board_state
 
-def convert_board_to_1d_array_POE(board_state, player_color):
+'''Feature Planes:
+    Player, Opponent, Empty
+    '''
+def convert_board_to_1d_array_POEB(board_state, player_color):
     # 12/22 removed White/Black to avoid Curse of Dimensionality.
     state = board_state[0]
-    one_hot_board = [generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
-                     generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
-                     generate_binary_vector(state, player_color, what_to_filter='Empty')]  # [2] empty
+    one_hot_board = [utils.generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [2] empty
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Bias')]
     for i in range(0, 64):  # error checking block
         # ensure at most 1 bit is on at each board position for player/opponent/empty
         assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
@@ -530,19 +375,48 @@ def convert_board_to_1d_array_POE(board_state, player_color):
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
     return new_board_state
 
-def convert_board_to_1d_array_POEMfMtCfCtPnOnEnCm(board_state, player_color, POV_states):
+'''Feature Planes:
+    Player, Opponent, Empty, Moves From, Moves To, Captures From, Captures To, Player (Next State),
+    Opponent (Next State), Empty (Next State), If Actual Move Made Was A Capture Move
+    '''
+def convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(board_state, player_color, POV_states):
+    state, board_with_moves, next_state, capture_filter = generate_intermediate_boards_POEMfMtCfCtPnOnEnCmB(
+        board_state, player_color, POV_states)
+    one_hot_board = [utils.generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [2] empty
+                     utils.generate_binary_vector(board_with_moves, player_color,  what_to_filter='Moves From'),  # [3]
+                     utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Moves To'),  # [4]
+                     utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures From'),  # [5]
+                     utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures To'),  # [6]
+                     utils.generate_binary_vector(next_state, player_color, what_to_filter='Player'),  # [7] player
+                     utils.generate_binary_vector(next_state, player_color, what_to_filter='Opponent'),  # [8] opponent
+                     utils.generate_binary_vector(next_state, player_color, what_to_filter='Empty'), # [9] empty
+                     utils.generate_binary_vector(next_state, player_color, what_to_filter=capture_filter), #10
+                     utils.generate_binary_vector(state, player_color, what_to_filter='Bias')]  #[11]
+    for i in range(0, 64):  # error checking block
+        # ensure at most 1 bit is on at each board position for player/opponent/empty
+        assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
+                not (one_hot_board[0][i] & one_hot_board[1][i] & one_hot_board[2][i]))
+        assert ((one_hot_board[7][i] ^ one_hot_board[8][i] ^ one_hot_board[9][i]) and
+                not (one_hot_board[7][i] & one_hot_board[8][i] & one_hot_board[9][i]))
+    new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
+    return new_board_state
+
+def generate_intermediate_boards_POEMfMtCfCtPnOnEnCmB(board_state, player_color, POV_states):
     state = board_state[0]
     next_move = utils.move_lookup(board_state[2].index(1), player_color).split('-')
     next_to = next_move[1]
     next_from = next_move[0]
-    if next_from == 'no': #'no move' => next state is the same as the current state
+    if next_from == 'no':  # 'no move' => next state is the same as the current state
         next_state = state
         capture_filter = 'Non-Capture Move'
-        board_with_moves = state # hacky but simple, generate binary vector will return a plane of all 0s since state has no move flags
+        board_with_moves = state  # hacky but simple, generate binary vector will return a plane of all 0s since state has no move flags
     else:
-        if POV_states and player_color == 'Black': #reflect for non-POV
+        if POV_states and player_color == 'Black':  # reflect for non-POV
             original_state = reflect_board_state(board_state)[0]
-            #Funny syntax below since reflect_board_state is expecting a list where game_board is the first element
+            # Reflect new boards back to POV
+            # Funny syntax below since reflect_board_state is expecting a list where game_board is the first element
             board_with_moves = reflect_board_state([mark_all_possible_moves(original_state, player_color)])[0]
             next_state = reflect_board_state([move_piece(original_state, next_to, next_from, player_color)])[0]
         else:
@@ -553,26 +427,7 @@ def convert_board_to_1d_array_POEMfMtCfCtPnOnEnCm(board_state, player_color, POV
             capture_filter = 'Capture Move'
         else:
             capture_filter = 'Non-Capture Move'
-
-    one_hot_board = [generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
-                     generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
-                     generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [2] empty
-                     generate_binary_vector(board_with_moves, player_color,  what_to_filter='Moves From'),  # [3]
-                     generate_binary_vector(board_with_moves, player_color, what_to_filter='Moves To'),  # [4]
-                     generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures From'),  # [5]
-                     generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures To'),  # [6]
-                     generate_binary_vector(next_state, player_color, what_to_filter='Player'),  # [7] player
-                     generate_binary_vector(next_state, player_color, what_to_filter='Opponent'),  # [8] opponent
-                     generate_binary_vector(next_state, player_color, what_to_filter='Empty'), # [9] empty
-                     generate_binary_vector(next_state, player_color, what_to_filter=capture_filter)]  #[10]
-    for i in range(0, 64):  # error checking block
-        # ensure at most 1 bit is on at each board position for player/opponent/empty
-        assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
-                not (one_hot_board[0][i] & one_hot_board[1][i] & one_hot_board[2][i]))
-        assert ((one_hot_board[7][i] ^ one_hot_board[8][i] ^ one_hot_board[9][i]) and
-                not (one_hot_board[7][i] & one_hot_board[8][i] & one_hot_board[9][i]))
-    new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
-    return new_board_state
+    return state, board_with_moves, next_state, capture_filter
 
 def next_move_is_capture(state, to, player_color):
     if player_color == 'White':
@@ -590,7 +445,12 @@ def next_move_is_capture(state, to, player_color):
 def mark_all_possible_moves(state, player_color):
     #TODO: can we solve for the fact that 'to' moves don't know where they came from? 
     # different 'from' moves map to the same 'to' moves?
-    #we can't do the naive solution and specify a plane of 3 distinct values, for each move (amount of moves isn't constant)
+
+    #we can't do the naive solution and specify a plane of 3 distinct values, for each move (amount of moves isn't constant);
+    # maybe set some upper bound on # moves (i.e. 16 x 3 = 48) and if <48, just leave them empty (plane of 0's)?
+    #not feasible using binary planes since we'd need 2 boards per move (1 for move to, 1 for move from)  => 96 planes
+    #not worth the information loss vs specifying a plane per transition
+
     #specifying a plane of 1's or 0's for each of the 155 transitions is also not feasible (would PROBABLY require too much data)
     legal_moves = breakthrough_player.enumerate_legal_moves(state, player_color)
     board_with_moves = copy.deepcopy(state)# edit copy of board_state
@@ -610,10 +470,10 @@ def mark_possible_move(state, to, _from, player_color):
     white_move_index = 10
     next_board_state = copy.deepcopy(state)  # edit copy of board_state
     if player_color == 'White':
-        next_board_state[white_move_index] = 1
+        next_board_state[white_move_index] = 1 #next state came from white move
         enemy_piece = 'b'
     else:
-        next_board_state[white_move_index] = 0
+        next_board_state[white_move_index] = 0 #next state did not come from white move
         enemy_piece = 'w'
     piece_at_move_location = next_board_state[int(to[1])][to[0]]
     if piece_at_move_location == enemy_piece:
@@ -627,166 +487,7 @@ def mark_possible_move(state, to, _from, player_color):
 
 
 
-def generate_binary_vector(state, player_color, what_to_filter):
-    binary_vector = []
-    is_white_index = 9
-    white_move_index = 10
-    if what_to_filter == 'White' or what_to_filter == 'Black':
-        what_to_filter_dict = {
-        'White': {
-            'e': 0,
-            'w': 1,
-            'b': 0},
-        'Black': {
-            'e': 0,
-            'w': 0,
-            'b': 1}}
-    elif what_to_filter == 'Player':
-        what_to_filter_dict = {
-            'White':{
-                'e': 0,
-                'w': 1,
-                'b': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 1}}
-    elif what_to_filter == 'Opponent':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 1},
-            'Black': {
-                'e': 0,
-                'w': 1,
-                'b': 0}}
-    elif what_to_filter == 'Empty':
-        what_to_filter_dict = {
-            'White':{
-                'e': 1,
-                'w': 0,
-                'b': 0},
-            'Black': {
-                'e': 1,
-                'w': 0,
-                'b': 0}}
-    elif what_to_filter == 'Capture Move':
-        what_to_filter_dict = {
-            'White': {
-                'e': 1,
-                'w': 1,
-                'b': 1},
-            'Black': {
-                'e': 1,
-                'w': 1,
-                'b': 1}}
-    elif what_to_filter == 'Non-Capture Move':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0}}
-    elif what_to_filter == 'Moves From':
-        what_to_filter_dict = {
-            'White':{
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 1,
-                'Player Capture To': 0,
-                'Player Capture From': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 1,
-                'Player Capture To': 0,
-                'Player Capture From': 0}}
-    elif what_to_filter == 'Moves To':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 1,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 0}  ,
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 1,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 0}}
-    elif what_to_filter == 'Captures From':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 1},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 1}}
-    elif what_to_filter == 'Captures To':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 1,
-                'Player Capture From': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 1,
-                'Player Capture From': 0}}
-    else:
-        print("Error, generate_binary_vector needs a valid argument to filter")
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 0}}
-    for row in sorted(state):
-        if row != is_white_index and row != white_move_index:  # don't touch these indexes
-            for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
-                binary_vector.append(what_to_filter_dict[player_color][state[row][column]])
-    return binary_vector
+
 
 
 def move_piece(board_state, to, _from, whose_move):

@@ -132,7 +132,6 @@ def format_training_example(training_example):
     formatted_example = []
     for plane in training_example:
         formatted_example += plane  # flatten 2d matrix
-    formatted_example += [1] * 64  # 1 bias plane
     formatted_example = np.reshape(np.array(formatted_example, dtype=np.float32),
                                    (len(formatted_example) // 64, 8, 8))  # feature_plane x row x co)
     for i in range(0, len(formatted_example)):

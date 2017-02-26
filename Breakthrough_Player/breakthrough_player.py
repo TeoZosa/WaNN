@@ -196,7 +196,7 @@ def check_right_diagonal_move(game_board, row, column, player_color):
 
 def convert_legal_moves_into_policy_net_indexes(legal_moves, player_color):
     return list(map(lambda move:
-                    board_utils.generate_transition_vector(move['To'], move['From'], player_color), legal_moves))
+                    utils.generate_transition_vector(move['To'], move['From'], player_color), legal_moves))
 
 
 # check for gameover (white in row 8; black in row 1); check in between moves

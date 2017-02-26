@@ -254,5 +254,5 @@ def self_player_driver(filter, NNType, path, fileName):
     player_list = pickle.load(file)
     file.close()
     training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType)
-    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POE{NNType}NetEntireGame'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
+    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POEMfMtCfCtPnOnEnCm{NNType}NetAllThird'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
     write_np_array_to_disk(write_path, training_examples, labels, filter, NNType)

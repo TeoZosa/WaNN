@@ -1,7 +1,7 @@
 from Breakthrough_Player import board_utils
 from tools import utils
 import pandas as pd
-#TODO: get relevant code from converting to data structure to make a CL breakthrough player that uses policy net as opponent
+#TODO: use (good) policy net as opponent
 import random
 
 def play_game(player_is_white):

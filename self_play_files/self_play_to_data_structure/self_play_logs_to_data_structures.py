@@ -294,10 +294,10 @@ def convert_board_to_1d_array_POEB(board_state, player_color):
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
     return new_board_state
 
-'''Feature Planes:
-    Player, Opponent, Empty, Moves From, Moves To, Captures From, Captures To, Player (Next State),
-    Opponent (Next State), Empty (Next State), If Actual Move Made Was A Capture Move
-    '''
+"""'Feature Planes:
+Player, Opponent, Empty, Moves From, Moves To, Captures From, Captures To, Player (Next State),
+Opponent (Next State), Empty (Next State), If Actual Move Made Was A Capture Move
+''"""
 def convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(board_state, player_color, POV_states):
     state, board_with_moves, next_state, capture_filter = generate_intermediate_boards_POEMfMtCfCtPnOnEnCmB(
         board_state, player_color, POV_states)
@@ -474,7 +474,6 @@ def mirror_move(move):
     # else 'Black' == NIL, don't change it
     return mirrored_move
 
-
 def mirror_column(column_char):
     mirror_dict = {'a': 'h',
                    'b': 'g',
@@ -486,7 +485,6 @@ def mirror_column(column_char):
                    'h': 'a'
                    }
     return mirror_dict[column_char]
-
 
 def reflect_board_state(state):  # since black needs to have a POV representation
     semi_reflected_state = mirror_board_state(state)
@@ -500,7 +498,6 @@ def reflect_board_state(state):  # since black needs to have a POV representatio
     reflected_state[0][7] = semi_reflected_state[0][2]
     reflected_state[0][8] = semi_reflected_state[0][1]
     return reflected_state
-
 
 def mirror_board_state(state):  # helper method for reflect_board_state
     mirror_state_with_win = copy.deepcopy(state)  # edit copy of board_state

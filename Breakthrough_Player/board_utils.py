@@ -1,22 +1,19 @@
 import copy
-
-import pandas as pd
+from Tools import utils
 import numpy as np
 # from Breakthrough_Player.policy_net_utils import call_policy_net
 
 def generate_policy_net_moves(game_board, player_color):
-    board_representation = convert_board_to_2d_matrix_POE(game_board, player_color)
+    board_representation = convert_board_to_2d_matrix_POEB(game_board, player_color)
     # return call_policy_net(board_representation)
 
-def convert_board_to_2d_matrix_POE(game_board, player_color):
-    one_hot_board = np.array([generate_binary_vector(game_board, player_color=player_color,
-                                                     what_to_filter='Player'),  # [0] player
-                     generate_binary_vector(game_board, player_color=player_color,
-                                            what_to_filter='Opponent'),  # [1] opponent
-                     generate_binary_vector(game_board, player_color=player_color,
-                                            what_to_filter='Empty'),  #[2] empty
-                     generate_binary_vector(game_board, player_color=player_color,
-                                            what_to_filter='Bias')], dtype=np.float32)  # [3] bias
+def convert_board_to_2d_matrix_POEB(game_board, player_color):
+    if player_color == 'Black':
+        game_board = reflect_board_state(game_board)
+    one_hot_board = np.array([utils.generate_binary_vector(game_board, player_color, 'Player'),  # [0] player
+                     utils.generate_binary_vector(game_board, player_color, 'Opponent'),  # [1] opponent
+                     utils.generate_binary_vector(game_board, player_color, 'Empty'),  #[2] empty
+                     utils.generate_binary_vector(game_board, player_color, 'Bias')], dtype=np.float32)  # [3] bias
     one_hot_board = one_hot_board.ravel() #1d board
 
     formatted_example = np.reshape(np.array(one_hot_board, dtype=np.float32),
@@ -28,180 +25,6 @@ def convert_board_to_2d_matrix_POE(game_board, player_color):
     formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
 
     return np.array(formatted_example, dtype=np.float32)
-
-#Note: not the same as generate_binary_vector in self_play_logs_to_datastructures;
-def generate_binary_vector(state, player_color, what_to_filter):
-    bias = 1
-    if player_color == 'Black':
-        state = reflect_board_state(state) #reversed representation for black to ensure POV representation
-    panda_board = pd.DataFrame(state).transpose().sort_index(ascending=False).iloc[2:]  # human-readable board
-    if what_to_filter == 'White' or what_to_filter == 'Black':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 1,
-                'b': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 1}}
-    elif what_to_filter == 'Player':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 1,
-                'b': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 1}}
-    elif what_to_filter == 'Opponent':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 1},
-            'Black': {
-                'e': 0,
-                'w': 1,
-                'b': 0}}
-    elif what_to_filter == 'Empty':
-        what_to_filter_dict = {
-            'White': {
-                'e': 1,
-                'w': 0,
-                'b': 0},
-            'Black': {
-                'e': 1,
-                'w': 0,
-                'b': 0}}
-    elif what_to_filter == 'Capture Move':
-        what_to_filter_dict = {
-            'White': {
-                'e': 1,
-                'w': 1,
-                'b': 1},
-            'Black': {
-                'e': 1,
-                'w': 1,
-                'b': 1}}
-    elif what_to_filter == 'Non-Capture Move':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0}}
-    elif what_to_filter == 'Moves From':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 1,
-                'Player Capture To': 0,
-                'Player Capture From': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 1,
-                'Player Capture To': 0,
-                'Player Capture From': 0}}
-    elif what_to_filter == 'Moves To':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 1,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 1,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 0}}
-    elif what_to_filter == 'Captures From':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 1},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 1}}
-    elif what_to_filter == 'Captures To':
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 1,
-                'Player Capture From': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 1,
-                'Player Capture From': 0}}
-    elif what_to_filter == 'Bias':  # duplicate across 64 positions since CNN needs same dimensions
-        what_to_filter_dict = {
-            'White': {
-                'e': bias,
-                'w': bias,
-                'b': bias},
-            'Black': {
-                'e': bias,
-                'w': bias,
-                'b': bias}}
-    else:
-        print("Error, generate_binary_vector needs a valid argument to filter")
-        what_to_filter_dict = {
-            'White': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 0},
-            'Black': {
-                'e': 0,
-                'w': 0,
-                'b': 0,
-                'Player Move To': 0,
-                'Player Move From': 0,
-                'Player Capture To': 0,
-                'Player Capture From': 0}}
-    for row in sorted(state):
-        if row != is_white_index and row != white_move_index:  # don't touch these indexes
-            for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
-                binary_vector.append(what_to_filter_dict[player_color][state[row][column]])
-    return binary_vector
-
 
 def initial_game_board():
     empty = 'e'

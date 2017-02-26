@@ -4,14 +4,13 @@ import pickle  # serialize the data structure
 import mmap  # read entire files into memory (only for workstation)
 import copy
 import math
-
 from multiprocessing import Pool
 from tools import utils
 from Breakthrough_Player import  breakthrough_player #for enumerating possible moves
 
 def driver(path):
-    player_list = process_directory_of_breakthrough_files_single_thread(path)
-   # write_to_disk(player_list, path)
+    player_list = process_directory_of_breakthrough_files_multithread(path)
+    write_to_disk(player_list, path)
 
 def write_to_disk(data_to_write, path):
     write_directory = 'G:\TruncatedLogs\PythonDataSets\DataStructures'
@@ -194,86 +193,6 @@ def generate_board_states(move_list, player_color, win):
     # for data transformation; inefficient to essentially compute board states twice, but more error-proof
     board_states = convert_board_states_to_arrays(board_states, player_color)
     return board_states
-
-
-def mirror_move(move):
-    mirrored_move = copy.deepcopy(move)
-    white_to = move['White']['To']
-    white_from = move['White']['From']
-    white_from_column = white_from[0]
-    white_to_column = white_to[0]
-    white_from_row = int(white_from[1])
-    white_to_row = int(white_to[1])
-    mirrored_move['White']['To'] = mirror_column(white_to_column) + str(white_to_row)
-    mirrored_move['White']['From'] = mirror_column(white_from_column) + str(white_from_row)
-
-    if isinstance(move['Black'], dict):
-        black_to = move['Black']['To']
-        black_from = move['Black']['From']
-        black_from_column = black_from[0]
-        black_to_column = black_to[0]
-        black_from_row = int(black_from[1])
-        black_to_row = int(black_to[1])
-        mirrored_move['Black']['To'] = mirror_column(black_to_column) + str(black_to_row)
-        mirrored_move['Black']['From'] = mirror_column(black_from_column) + str(black_from_row)
-    # else 'Black' == NIL, don't change it
-    return mirrored_move
-
-
-def mirror_column(column_char):
-    mirror_dict = {'a': 'h',
-                   'b': 'g',
-                   'c': 'f',
-                   'd': 'e',
-                   'e': 'd',
-                   'f': 'c',
-                   'g': 'b',
-                   'h': 'a'
-                   }
-    return mirror_dict[column_char]
-
-
-def reflect_board_state(state):  # since black needs to have a POV representation
-    semi_reflected_state = mirror_board_state(state)
-    reflected_state = copy.deepcopy(semi_reflected_state)
-    reflected_state[0][1] = semi_reflected_state[0][8]
-    reflected_state[0][2] = semi_reflected_state[0][7]
-    reflected_state[0][3] = semi_reflected_state[0][6]
-    reflected_state[0][4] = semi_reflected_state[0][5]
-    reflected_state[0][5] = semi_reflected_state[0][4]
-    reflected_state[0][6] = semi_reflected_state[0][3]
-    reflected_state[0][7] = semi_reflected_state[0][2]
-    reflected_state[0][8] = semi_reflected_state[0][1]
-    return reflected_state
-
-
-def mirror_board_state(state):  # helper method for reflect_board_state
-    mirror_state_with_win = copy.deepcopy(state)  # edit copy of board_state
-    mirror_state = mirror_state_with_win[0]
-    state = state[0]  # the board state; state[1] is the win or loss value, state [2] is the transition vector
-    is_white_index = 9
-    white_move_index = 10
-    for row in sorted(state):
-        if row != is_white_index and row != white_move_index:  # these indexes don't change
-            for column in sorted(state[row]):
-                if column == 'a':
-                    mirror_state[row]['h'] = state[row][column]
-                elif column == 'b':
-                    mirror_state[row]['g'] = state[row][column]
-                elif column == 'c':
-                    mirror_state[row]['f'] = state[row][column]
-                elif column == 'd':
-                    mirror_state[row]['e'] = state[row][column]
-                elif column == 'e':
-                    mirror_state[row]['d'] = state[row][column]
-                elif column == 'f':
-                    mirror_state[row]['c'] = state[row][column]
-                elif column == 'g':
-                    mirror_state[row]['b'] = state[row][column]
-                elif column == 'h':
-                    mirror_state[row]['a'] = state[row][column]
-    return mirror_state_with_win
-
 
 
 def convert_board_states_to_arrays(board_states, player_color):
@@ -459,8 +378,6 @@ def mark_all_possible_moves(state, player_color):
         to = move['To']
         board_with_moves = mark_possible_move(board_with_moves, to, _from, player_color)
     return board_with_moves
-    
-
 
 def mark_possible_move(state, to, _from, player_color):
     move_to_flag = 'Player Move To'
@@ -484,12 +401,6 @@ def mark_possible_move(state, to, _from, player_color):
         next_board_state[int(_from[1])][_from[0]] = move_from_flag
     return next_board_state
 
-
-
-
-
-
-
 def move_piece(board_state, to, _from, whose_move):
     empty = 'e'
     white_move_index = 10
@@ -501,7 +412,6 @@ def move_piece(board_state, to, _from, whose_move):
     else:
         next_board_state[white_move_index] = 0
     return next_board_state
-
 
 def format_move_lists_and_links(unformatted_move_list):
     move_regex = re.compile(r"[W|B]\s([a-h]\d.[a-h]\d)",
@@ -540,4 +450,82 @@ def format_move_lists_and_links(unformatted_move_list):
         original_visualizer_link = original_visualizer_link + _from + to
         mirror_visualizer_link = mirror_visualizer_link + mirror_from + mirror_to
     return new_move_list, new_mirror_move_list, original_visualizer_link, mirror_visualizer_link
+
+def mirror_move(move):
+    mirrored_move = copy.deepcopy(move)
+    white_to = move['White']['To']
+    white_from = move['White']['From']
+    white_from_column = white_from[0]
+    white_to_column = white_to[0]
+    white_from_row = int(white_from[1])
+    white_to_row = int(white_to[1])
+    mirrored_move['White']['To'] = mirror_column(white_to_column) + str(white_to_row)
+    mirrored_move['White']['From'] = mirror_column(white_from_column) + str(white_from_row)
+
+    if isinstance(move['Black'], dict):
+        black_to = move['Black']['To']
+        black_from = move['Black']['From']
+        black_from_column = black_from[0]
+        black_to_column = black_to[0]
+        black_from_row = int(black_from[1])
+        black_to_row = int(black_to[1])
+        mirrored_move['Black']['To'] = mirror_column(black_to_column) + str(black_to_row)
+        mirrored_move['Black']['From'] = mirror_column(black_from_column) + str(black_from_row)
+    # else 'Black' == NIL, don't change it
+    return mirrored_move
+
+
+def mirror_column(column_char):
+    mirror_dict = {'a': 'h',
+                   'b': 'g',
+                   'c': 'f',
+                   'd': 'e',
+                   'e': 'd',
+                   'f': 'c',
+                   'g': 'b',
+                   'h': 'a'
+                   }
+    return mirror_dict[column_char]
+
+
+def reflect_board_state(state):  # since black needs to have a POV representation
+    semi_reflected_state = mirror_board_state(state)
+    reflected_state = copy.deepcopy(semi_reflected_state)
+    reflected_state[0][1] = semi_reflected_state[0][8]
+    reflected_state[0][2] = semi_reflected_state[0][7]
+    reflected_state[0][3] = semi_reflected_state[0][6]
+    reflected_state[0][4] = semi_reflected_state[0][5]
+    reflected_state[0][5] = semi_reflected_state[0][4]
+    reflected_state[0][6] = semi_reflected_state[0][3]
+    reflected_state[0][7] = semi_reflected_state[0][2]
+    reflected_state[0][8] = semi_reflected_state[0][1]
+    return reflected_state
+
+
+def mirror_board_state(state):  # helper method for reflect_board_state
+    mirror_state_with_win = copy.deepcopy(state)  # edit copy of board_state
+    mirror_state = mirror_state_with_win[0]
+    state = state[0]  # the board state; state[1] is the win or loss value, state [2] is the transition vector
+    is_white_index = 9
+    white_move_index = 10
+    for row in sorted(state):
+        if row != is_white_index and row != white_move_index:  # these indexes don't change
+            for column in sorted(state[row]):
+                if column == 'a':
+                    mirror_state[row]['h'] = state[row][column]
+                elif column == 'b':
+                    mirror_state[row]['g'] = state[row][column]
+                elif column == 'c':
+                    mirror_state[row]['f'] = state[row][column]
+                elif column == 'd':
+                    mirror_state[row]['e'] = state[row][column]
+                elif column == 'e':
+                    mirror_state[row]['d'] = state[row][column]
+                elif column == 'f':
+                    mirror_state[row]['c'] = state[row][column]
+                elif column == 'g':
+                    mirror_state[row]['b'] = state[row][column]
+                elif column == 'h':
+                    mirror_state[row]['a'] = state[row][column]
+    return mirror_state_with_win
 

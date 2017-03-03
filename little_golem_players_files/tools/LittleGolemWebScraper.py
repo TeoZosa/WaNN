@@ -44,10 +44,9 @@ def WriteAllPlayersGamesDataToDisk(plidList, playerNamesList, writePath):
     for i in range(0, len(plidList)):
         gameData = GetPlayerGameData(plidList[i])
         WriteToDisk(playerNamesList[i], plidList[i], gameData, writePath)
-
-
-writePath = r'/Users/TeofiloZosa/BreakthroughData/AutomatedData/'
-playerNamesFilePath = r'/Users/TeofiloZosa/BreakthroughData/BreakthroughPlayerNamesFormatted.txt'
-playerNameList = GetPlayerNameList(playerNamesFilePath)
-plids = GetPLIDs()
-WriteAllPlayersGamesDataToDisk(plids, playerNameList, writePath)
+def driver():
+    writePath = r'/Users/TeofiloZosa/BreakthroughData/AutomatedData/'
+    playerNamesFilePath = r'/Users/TeofiloZosa/BreakthroughData/BreakthroughPlayerNamesFormatted.txt'
+    playerNameList = GetPlayerNameList(playerNamesFilePath)
+    plids = GetPLIDs()
+    WriteAllPlayersGamesDataToDisk(plids, playerNameList, writePath)

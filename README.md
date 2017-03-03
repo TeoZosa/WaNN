@@ -1,6 +1,6 @@
 #Breakthrough ANN
 ##### Deep neural networks for use in an agent utilizing a Monte Carlo tree search in the game of Breakthrough. 
-Can also be used as a standalone player (via ['breakthrough_player.py'](BreakthroughCNN/Breakthrough_Player/breakthrough_player.py)). <p>
+Can also be used as a standalone player (via ['breakthrough_player.py'](../Breakthrough_Player/breakthrough_player.py)). <p>
 Multiple auxiliary files for pulling the data from a website storing Breakthrough game data, or self-play logs, and transforming that data into labeled training data for a neural network built using Tensorflow.
 <p><p>Currently running experiments on different models trained on self-play data.
 <p>(Ignore older files as they need to be cleaned up and collated)

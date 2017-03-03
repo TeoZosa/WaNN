@@ -30,7 +30,7 @@ def SortByRank(playerList):
     return newList
 def WriteToDisk(playerList, outputFile):
     pickle.dump(playerList, outputFile)
-
-outputFile, playerList = AnalysisFormatBinaryFeaturesWBPOEData(pathToCheck)
-playerList = SortByRank(playerList)
-WriteToDisk(playerList, outputFile)
+def driver():
+    outputFile, playerList = AnalysisFormatBinaryFeaturesWBPOEData(pathToCheck)
+    playerList = SortByRank(playerList)
+    WriteToDisk(playerList, outputFile)

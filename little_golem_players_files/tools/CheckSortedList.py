@@ -38,23 +38,8 @@ def TestAnalysisVsOriginal(originalPlayerList, analysisPlayerList):
             assert(analysisPlayerList[1]['Games'][i]['BoardStates']['States'][stateNum][1] == win)
             for row in gameStates[stateNum]:
                 for column in sorted(gameStates[stateNum][row]):
-                    offset = (row - 1) * 8
-                    if column == 'a':
-                        offset+= 0
-                    elif column == 'b':
-                        offset+= 1
-                    elif column == 'c':
-                        offset += 2
-                    elif column == 'd':
-                        offset += 3
-                    elif column == 'e':
-                        offset += 4
-                    elif column == 'f':
-                        offset += 5
-                    elif column == 'g':
-                        offset += 6
-                    elif column == 'h':
-                        offset += 7
+                    column_offset = int(ord(column) - ord('a'))
+                    offset = (row - 1) * 8 + column_offset
                     value = analysisPlayerList[1]['Games'][i]['BoardStates']['States'][stateNum][0][offset]
                     if gameStates[stateNum][row][column] == 'e':
                         assert (value == 0)
@@ -68,6 +53,7 @@ def TestAnalysisVsOriginal(originalPlayerList, analysisPlayerList):
                             assert (value == 1)
                         if gameStates[stateNum][row][column] == 'w':
                             assert (value == -1)
+
 def TestAnalysisVsMirrors(analysisPlayerList):
     for player in analysisPlayerList:
         for game in player['Games']:

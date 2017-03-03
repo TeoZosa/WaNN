@@ -1,3 +1,5 @@
+#NOTE: deprecated. way easier to use a pandas dataframe
+
 import pprint
 def PrintGame(game):
     board = game['BoardStates']['States']

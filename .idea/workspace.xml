@@ -2,9 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/little_golem_players_files/tools/CustomRegressionNetwork.py" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/little_golem_players_files/tools/HumanReadableBoardPrinting.py" afterPath="$PROJECT_DIR$/little_golem_players_files/tools/HumanReadableBoardPrinting.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" afterPath="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py" afterPath="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tools/numpy_array.py" afterPath="$PROJECT_DIR$/tools/numpy_array.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -29,7 +33,7 @@
     <SUITE FILE_PATH="coverage/BreakthroughANN$charCNN.coverage" NAME="charCNN Coverage Results" MODIFIED="1482956171783" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$LittleGolemWebScraper.coverage" NAME="LittleGolemWebScraper Coverage Results" MODIFIED="1465508934413" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$regexExample.coverage" NAME="regexExample Coverage Results" MODIFIED="1464189117689" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNetSubGames.coverage" NAME="PolicyNetSubGames Coverage Results" MODIFIED="1488052712730" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/policy_net" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNetSubGames.coverage" NAME="PolicyNetSubGames Coverage Results" MODIFIED="1488425260445" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/policy_net" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$NumpyArray.coverage" NAME="NumpyArray Coverage Results" MODIFIED="1465991406057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayerDataDirectoryToAnalysisFormatWBEBinaryFeaturePlanes.coverage" NAME="PlayerDataDirectoryToAnalysisFormatWBEBinaryFeaturePlanes Coverage Results" MODIFIED="1465933949273" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464305683673" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -37,7 +41,7 @@
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$ValueNetByRankBinaryFeaturePlanes__1_.coverage" NAME="ValueNetByRankBinaryFeaturePlanes (1) Coverage Results" MODIFIED="1466269717585" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/ValueNetRankBinary" />
     <SUITE FILE_PATH="coverage/BreakthroughANN$ValueNet.coverage" NAME="ValueNet Coverage Results" MODIFIED="1487049956046" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/value_net" />
     <SUITE FILE_PATH="coverage/BreakthroughANN$PolicyNet.coverage" NAME="PolicyNet Coverage Results" MODIFIED="1485040106040" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PolicyNet" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$main.coverage" NAME="main Coverage Results" MODIFIED="1488074605116" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$main.coverage" NAME="main Coverage Results" MODIFIED="1488415948929" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$PlayWithSortedList.coverage" NAME="PlayWithSortedList Coverage Results" MODIFIED="1464194157435" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$LittleGolemWebScraper.coverage" NAME="LittleGolemWebScraper Coverage Results" MODIFIED="1464145876852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/untitled1$SortPlayerListByRank.coverage" NAME="SortPlayerListByRank Coverage Results" MODIFIED="1464189492627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -64,121 +68,103 @@
   <component name="FileEditorManager">
     <splitter split-orientation="horizontal" split-proportion="0.6118305">
       <split-first>
-        <splitter split-orientation="horizontal" split-proportion="0.54559916">
-          <split-first>
-            <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-              <file leaf-file-name="utils.py" pinned="false" current-in-tab="true">
-                <entry file="file://$PROJECT_DIR$/tools/utils.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="544">
-                      <caret line="34" column="4" lean-forward="false" selection-start-line="34" selection-start-column="4" selection-end-line="34" selection-end-column="9" />
-                      <folding />
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-              <file leaf-file-name="__main__.py" pinned="false" current-in-tab="false">
-                <entry file="file://$PROJECT_DIR$/__main__.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="493">
-                      <caret line="32" column="0" lean-forward="true" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
-                      <folding />
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-              <file leaf-file-name="board_utils.py" pinned="false" current-in-tab="false">
-                <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="153">
-                      <caret line="9" column="34" lean-forward="false" selection-start-line="9" selection-start-column="34" selection-end-line="9" selection-end-column="34" />
-                      <folding>
-                        <element signature="e#0#11#0" expanded="true" />
-                      </folding>
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-              <file leaf-file-name="deprecated_functions_self_play_logs_to_data_structures.py" pinned="false" current-in-tab="false">
-                <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/deprecated_functions_self_play_logs_to_data_structures.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="-1321">
-                      <caret line="1" column="19" lean-forward="false" selection-start-line="1" selection-start-column="19" selection-end-line="1" selection-end-column="19" />
-                      <folding>
-                        <element signature="e#0#15#0" expanded="true" />
-                      </folding>
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-              <file leaf-file-name="self_play_logs_to_training_data.py" pinned="false" current-in-tab="false">
-                <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="306">
-                      <caret line="24" column="1" lean-forward="false" selection-start-line="24" selection-start-column="1" selection-end-line="30" selection-end-column="60" />
-                      <folding />
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-              <file leaf-file-name="test.py" pinned="false" current-in-tab="false">
-                <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/test.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="0">
-                      <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-                      <folding />
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-              <file leaf-file-name="policy_net_utils.py" pinned="false" current-in-tab="false">
-                <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="0">
-                      <caret line="0" column="23" lean-forward="true" selection-start-line="0" selection-start-column="23" selection-end-line="0" selection-end-column="23" />
-                      <folding />
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-            </leaf>
-          </split-first>
-          <split-second>
-            <leaf>
-              <file leaf-file-name="self_play_logs_to_data_structures.py" pinned="false" current-in-tab="true">
-                <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="8249">
-                      <caret line="487" column="0" lean-forward="false" selection-start-line="487" selection-start-column="0" selection-end-line="487" selection-end-column="0" />
-                      <folding>
-                        <element signature="e#0#38#0" expanded="true" />
-                      </folding>
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-              <file leaf-file-name="numpy_array.py" pinned="false" current-in-tab="false">
-                <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
-                  <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="555">
-                      <caret line="133" column="55" lean-forward="false" selection-start-line="133" selection-start-column="55" selection-end-line="133" selection-end-column="55" />
-                      <folding />
-                    </state>
-                  </provider>
-                </entry>
-              </file>
-            </leaf>
-          </split-second>
-        </splitter>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file leaf-file-name="policy_net_subgame_script.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="23">
+                  <caret line="334" column="0" lean-forward="true" selection-start-line="334" selection-start-column="0" selection-end-line="334" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="ValueNetByRankBinaryFeaturePlanes.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/little_golem_players_files/value_net_rank_binary/ValueNetByRankBinaryFeaturePlanes.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="-206">
+                  <caret line="191" column="66" lean-forward="true" selection-start-line="191" selection-start-column="66" selection-end-line="191" selection-end-column="66" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="DirectoryToBinaryFeaturesToNumpyArray.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/little_golem_players_files/tools/DirectoryToBinaryFeaturesToNumpyArray.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="374">
+                  <caret line="27" column="16" lean-forward="true" selection-start-line="27" selection-start-column="16" selection-end-line="27" selection-end-column="16" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tools/utils.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="527">
+                  <caret line="33" column="17" lean-forward="true" selection-start-line="33" selection-start-column="17" selection-end-line="33" selection-end-column="17" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="self_play_logs_to_data_structures.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="268">
+                  <caret line="311" column="113" lean-forward="false" selection-start-line="311" selection-start-column="113" selection-end-line="311" selection-end-column="113" />
+                  <folding>
+                    <element signature="e#0#38#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="__main__.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/__main__.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="374">
+                  <caret line="25" column="0" lean-forward="false" selection-start-line="25" selection-start-column="0" selection-end-line="27" selection-end-column="104" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="board_utils.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="680">
+                  <caret line="40" column="82" lean-forward="true" selection-start-line="40" selection-start-column="82" selection-end-line="40" selection-end-column="82" />
+                  <folding>
+                    <element signature="e#0#11#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="policy_net_utils.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="0">
+                  <caret line="0" column="23" lean-forward="true" selection-start-line="0" selection-start-column="23" selection-end-line="0" selection-end-column="23" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="525">
           <file leaf-file-name="breakthrough_player.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="75">
-                  <caret line="3" column="17" lean-forward="false" selection-start-line="3" selection-start-column="17" selection-end-line="3" selection-end-column="17" />
-                  <folding />
+                <state relative-caret-position="825">
+                  <caret line="33" column="3" lean-forward="true" selection-start-line="33" selection-start-column="3" selection-end-line="33" selection-end-column="3" />
+                  <folding>
+                    <element signature="e#0#43#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -224,8 +210,8 @@
       <find>generate_transition_vector</find>
       <find>generate_binary_plane</find>
       <find>generate_binary_vector</find>
-      <find>what_to_filter=</find>
       <find>original_state</find>
+      <find>what_to_filter=</find>
     </findStrings>
     <replaceStrings>
       <replace>blackFrom</replace>
@@ -256,8 +242,8 @@
       <replace>utils.generate_transition_vector</replace>
       <replace>generate_binary_vector</replace>
       <replace>utils.generate_binary_vector</replace>
-      <replace />
       <replace>state</replace>
+      <replace />
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\damon\PycharmProjects\BreakthroughANN</dir>
@@ -271,7 +257,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/CheckSortedList.py" />
         <option value="$PROJECT_DIR$/PlayerDataDirectoryToAnalysisFormatWBEBinaryFeaturePlanes.py" />
         <option value="$PROJECT_DIR$/SortPlayerListByRank.py" />
         <option value="$PROJECT_DIR$/run_config.py" />
@@ -312,16 +297,17 @@
         <option value="$PROJECT_DIR$/self_play_files/value_net/value_net_script.py" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/play_game.py" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.py" />
-        <option value="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
         <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" />
         <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/test.py" />
-        <option value="$PROJECT_DIR$/__main__.py" />
         <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/deprecated_functions_self_play_logs_to_data_structures.py" />
-        <option value="$PROJECT_DIR$/tools/numpy_array.py" />
         <option value="$PROJECT_DIR$/tools/utils.py" />
-        <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" />
-        <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py" />
+        <option value="$PROJECT_DIR$/little_golem_players_files/tools/HumanReadableBoardPrinting.py" />
+        <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py" />
+        <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" />
+        <option value="$PROJECT_DIR$/__main__.py" />
+        <option value="$PROJECT_DIR$/tools/numpy_array.py" />
+        <option value="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
       </list>
     </option>
   </component>
@@ -332,10 +318,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-12" />
-    <option name="y" value="-12" />
-    <option name="width" value="3864" />
-    <option name="height" value="2114" />
+    <option name="x" value="1117" />
+    <option name="y" value="272" />
+    <option name="width" value="1806" />
+    <option name="height" value="1368" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -422,60 +408,6 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="self_play_files" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="value_net" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="self_play_files" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="self_play_to_data_structure" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="self_play_files" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="policy_net" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
               <option name="myItemId" value="little_golem_players_files" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -495,6 +427,24 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="tools" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="BreakthroughANN" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="BreakthroughANN" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="little_golem_players_files" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="players_to_data_structures" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -557,7 +507,7 @@
       <recent name="C:\Users\damon\PycharmProjects\BreakthroughANN\self_play_to_data_structure" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.test_data_structure_conversion">
+  <component name="RunManager" selected="Python.PolicyNetSubGames">
     <configuration default="false" name="main" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -909,13 +859,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00086" summary="cleaned up code">
-      <created>1484417502541</created>
-      <option name="number" value="00086" />
-      <option name="presentableId" value="LOCAL-00086" />
-      <option name="project" value="LOCAL" />
-      <updated>1484417502541</updated>
-    </task>
     <task id="LOCAL-00087" summary="cleaned up code. changed lookup table to list">
       <created>1484419120865</created>
       <option name="number" value="00087" />
@@ -1252,7 +1195,14 @@
       <option name="project" value="LOCAL" />
       <updated>1488135146372</updated>
     </task>
-    <option name="localTasksCounter" value="135" />
+    <task id="LOCAL-00135" summary="comments">
+      <created>1488135563454</created>
+      <option name="number" value="00135" />
+      <option name="presentableId" value="LOCAL-00135" />
+      <option name="project" value="LOCAL" />
+      <updated>1488135563454</updated>
+    </task>
+    <option name="localTasksCounter" value="136" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1265,17 +1215,17 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-12" y="-12" width="3864" height="2114" extended-state="6" />
+    <frame x="1117" y="272" width="1806" height="1368" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.09675705" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21361503" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.50547266" sideWeight="0.47476527" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47608927" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4753521" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.03144016" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.21495816" sideWeight="0.42797866" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2975558" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.49295774" sideWeight="0.52523476" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11534391" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -1326,7 +1276,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="refactored code to prevent changing file names in two places" />
     <MESSAGE value="changed int division to math.floor as results weren't as expected (i.e. 100 // (100/12) == 11, but 100 / (100/12) == 12)" />
     <MESSAGE value="refactored filter for self play" />
     <MESSAGE value="refactored self play to be more general. added script for subgame policy nets" />
@@ -1351,7 +1300,8 @@
     <MESSAGE value="generating new datasets" />
     <MESSAGE value="moved shared functions to utils file. Bias plane now added in conversion to data structure instead of numpy arrays" />
     <MESSAGE value="restructured code" />
-    <option name="LAST_COMMIT_MESSAGE" value="restructured code" />
+    <MESSAGE value="comments" />
+    <option name="LAST_COMMIT_MESSAGE" value="comments" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1378,7 +1328,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/little_golem_players_files/tools/HumanReadableBoardPrinting.py</url>
-          <line>5</line>
+          <line>7</line>
           <option name="timeStamp" value="96" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -1411,6 +1361,10 @@
           <line>27</line>
           <option name="timeStamp" value="275" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/tools/numpy_array.py</url>
+          <option name="timeStamp" value="278" />
+        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -1419,39 +1373,11 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="278" />
+      <option name="time" value="279" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://C:/Program Files/Anaconda3/Lib/multiprocessing/process.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="182">
-          <caret line="248" column="0" lean-forward="false" selection-start-line="248" selection-start-column="0" selection-end-line="248" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/multiprocessing/spawn.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1649">
-          <caret line="105" column="0" lean-forward="false" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/traceback.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="182">
-          <caret line="116" column="0" lean-forward="false" selection-start-line="116" selection-start-column="0" selection-end-line="116" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/sklearn/model_selection/_split.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="199">
-          <caret line="1675" column="0" lean-forward="false" selection-start-line="1675" selection-start-column="0" selection-end-line="1675" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/matplotlib/pyplot.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="182">
@@ -1572,13 +1498,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/little_golem_players_files/tools/DirectoryToBinaryFeaturesToNumpyArray.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="23" column="47" lean-forward="false" selection-start-line="23" selection-start-column="47" selection-end-line="23" selection-end-column="47" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/self_play_files/CNN.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
@@ -1667,14 +1586,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/little_golem_players_files/tools/HumanReadableBoardPrinting.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/IPython/core/interactiveshell.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="476">
@@ -1687,32 +1598,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
           <caret line="2" column="35" lean-forward="false" selection-start-line="2" selection-start-column="35" selection-end-line="2" selection-end-column="35" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="23" lean-forward="true" selection-start-line="0" selection-start-column="23" selection-end-line="0" selection-end-column="23" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="414">
-          <caret line="327" column="12" lean-forward="false" selection-start-line="327" selection-start-column="12" selection-end-line="328" selection-end-column="19" />
-          <folding>
-            <element signature="e#1#39#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="24" column="1" lean-forward="false" selection-start-line="24" selection-start-column="1" selection-end-line="30" selection-end-column="60" />
           <folding />
         </state>
       </provider>
@@ -1746,34 +1631,8 @@
         <state relative-caret-position="-1321">
           <caret line="1" column="19" lean-forward="false" selection-start-line="1" selection-start-column="19" selection-end-line="1" selection-end-column="19" />
           <folding>
-            <element signature="e#0#15#0" expanded="true" />
+            <element signature="e#0#15#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="555">
-          <caret line="133" column="55" lean-forward="false" selection-start-line="133" selection-start-column="55" selection-end-line="133" selection-end-column="55" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="34" lean-forward="false" selection-start-line="9" selection-start-column="34" selection-end-line="9" selection-end-column="34" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/__main__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="493">
-          <caret line="32" column="0" lean-forward="true" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1785,28 +1644,132 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="825">
+          <caret line="33" column="3" lean-forward="true" selection-start-line="33" selection-start-column="3" selection-end-line="33" selection-end-column="3" />
+          <folding>
+            <element signature="e#0#43#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/__main__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="25" column="0" lean-forward="false" selection-start-line="25" selection-start-column="0" selection-end-line="27" selection-end-column="104" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="24" column="1" lean-forward="false" selection-start-line="24" selection-start-column="1" selection-end-line="30" selection-end-column="60" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="23" lean-forward="true" selection-start-line="0" selection-start-column="23" selection-end-line="0" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="680">
+          <caret line="40" column="82" lean-forward="true" selection-start-line="40" selection-start-column="82" selection-end-line="40" selection-end-column="82" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/little_golem_players_files/tools/HumanReadableBoardPrinting.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="55" lean-forward="false" selection-start-line="0" selection-start-column="55" selection-end-line="0" selection-end-column="55" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/little_golem_players_files/tools/LittleGolemWebScraper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="19" lean-forward="true" selection-start-line="0" selection-start-column="19" selection-end-line="0" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="217">
+          <caret line="76" column="64" lean-forward="false" selection-start-line="76" selection-start-column="64" selection-end-line="76" selection-end-column="64" />
+          <folding>
+            <element signature="e#0#13#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tools/utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="544">
-          <caret line="34" column="4" lean-forward="false" selection-start-line="34" selection-start-column="4" selection-end-line="34" selection-end-column="9" />
+        <state relative-caret-position="527">
+          <caret line="33" column="17" lean-forward="true" selection-start-line="33" selection-start-column="17" selection-end-line="33" selection-end-column="17" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="8249">
-          <caret line="487" column="0" lean-forward="false" selection-start-line="487" selection-start-column="0" selection-end-line="487" selection-end-column="0" />
+        <state relative-caret-position="268">
+          <caret line="311" column="113" lean-forward="false" selection-start-line="311" selection-start-column="113" selection-end-line="311" selection-end-column="113" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py">
+    <entry file="file://$PROJECT_DIR$/little_golem_players_files/players_to_data_structures/PlayerDataDirectoryToAnalysisFormat.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="3" column="17" lean-forward="false" selection-start-line="3" selection-start-column="17" selection-end-line="3" selection-end-column="17" />
+        <state relative-caret-position="-3530">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#38#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="23">
+          <caret line="334" column="0" lean-forward="true" selection-start-line="334" selection-start-column="0" selection-end-line="334" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/little_golem_players_files/tools/DirectoryToBinaryFeaturesToNumpyArray.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="27" column="16" lean-forward="true" selection-start-line="27" selection-start-column="16" selection-end-line="27" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/little_golem_players_files/tools/CustomRegressionNetwork.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="321">
+          <caret line="19" column="65" lean-forward="true" selection-start-line="19" selection-start-column="65" selection-end-line="19" selection-end-column="65" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/little_golem_players_files/value_net_rank_binary/ValueNetByRankBinaryFeaturePlanes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-206">
+          <caret line="191" column="66" lean-forward="true" selection-start-line="191" selection-start-column="66" selection-end-line="191" selection-end-column="66" />
           <folding />
         </state>
       </provider>

@@ -1,5 +1,5 @@
 import copy
-from Tools import utils
+from tools import utils
 import numpy as np
 # from Breakthrough_Player.policy_net_utils import call_policy_net
 

@@ -308,17 +308,16 @@ def convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(board_state, player_color, PO
                      utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Moves To'),  # [4]
                      utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures From'),  # [5]
                      utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures To'),  # [6]
-                     utils.generate_binary_vector(next_state, player_color, what_to_filter='Player'),  # [7] player
-                     utils.generate_binary_vector(next_state, player_color, what_to_filter='Opponent'),  # [8] opponent
-                     utils.generate_binary_vector(next_state, player_color, what_to_filter='Empty'), # [9] empty
-                     utils.generate_binary_vector(next_state, player_color, what_to_filter=capture_filter), #10
+                     # utils.generate_binary_vector(next_state, player_color, what_to_filter='Player'),  # [7] player
+                     # utils.generate_binary_vector(next_state, player_color, what_to_filter='Opponent'),  # [8] opponent
+                     # utils.generate_binary_vector(next_state, player_color, what_to_filter='Empty'), # [9] empty
+                     # utils.generate_binary_vector(next_state, player_color, what_to_filter=capture_filter), #10
                      utils.generate_binary_vector(state, player_color, what_to_filter='Bias')]  #[11]
     for i in range(0, 64):  # error checking block
         # ensure at most 1 bit is on at each board position for player/opponent/empty
         assert ((one_hot_board[0][i] ^ one_hot_board[1][i] ^ one_hot_board[2][i]) and
                 not (one_hot_board[0][i] & one_hot_board[1][i] & one_hot_board[2][i]))
-        assert ((one_hot_board[7][i] ^ one_hot_board[8][i] ^ one_hot_board[9][i]) and
-                not (one_hot_board[7][i] & one_hot_board[8][i] & one_hot_board[9][i]))
+
     new_board_state = [one_hot_board, board_state[1], board_state[2]]  # ex. [x vector, win, y transition vector]
     return new_board_state
 
@@ -341,6 +340,7 @@ def generate_intermediate_boards_POEMfMtCfCtPnOnEnCmB(board_state, player_color,
         else:
             original_state = state
             board_with_moves = mark_all_possible_moves(original_state, player_color)
+            # TODO: probably should change this since player is asking which move to make, not asking whether some possible move is good.
             next_state = move_piece(original_state, next_to, next_from, player_color)
         if next_move_is_capture(original_state, next_to, player_color) == True:
             capture_filter = 'Capture Move'

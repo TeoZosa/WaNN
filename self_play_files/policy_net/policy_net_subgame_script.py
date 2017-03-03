@@ -131,7 +131,7 @@ def assign_path(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\4DArraysHDF5(RxCxF)POEPolicyNetAllThird'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\POEMfMtCfCt\4DArraysHDF5(RxCxF)POEMfMtCfCtPolicyNetAllThird'
     else:
         path = ''#todo:error checking
     return path
@@ -334,7 +334,7 @@ for num_hidden in [i for i in range(3,10)]:
             batch_size = 128
 
             #build graph
-            X = tf.placeholder(tf.float32, [None, 8, 8, 4])
+            X = tf.placeholder(tf.float32, [None, 8, 8, 8])
             # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
             y = tf.placeholder(tf.float32, [None,  155])
             filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable

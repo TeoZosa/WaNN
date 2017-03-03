@@ -74,7 +74,7 @@ def filter_by_win_ratio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
-def filter_for_self_play(self_play_data, NNType, game_stage=None, percent=50):
+def filter_for_self_play(self_play_data, NNType, game_stage='End', percent=50):
     training_data = []
     for self_play_log in self_play_data:
         for game in self_play_log['Games']:
@@ -253,5 +253,5 @@ def self_player_driver(filter, NNType, path, fileName):
     player_list = pickle.load(file)
     file.close()
     training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType)
-    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POEMfMtCfCtPnOnEnCm{NNType}NetAllThird'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
+    write_path = os.path.join(path,"NumpyArrays",'4DArraysHDF5(RxCxF)POEMfMtCfCtPnOnEnCm{NNType}Net3rdThird'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
     write_np_array_to_disk(write_path, training_examples, labels, filter, NNType)

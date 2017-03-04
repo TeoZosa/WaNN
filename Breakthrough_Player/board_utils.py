@@ -1,11 +1,11 @@
 import copy
 from tools import utils
 import numpy as np
-# from Breakthrough_Player.policy_net_utils import call_policy_net
+from Breakthrough_Player.policy_net_utils import call_policy_net
 
 def generate_policy_net_moves(game_board, player_color):
     board_representation = convert_board_to_2d_matrix_POEB(game_board, player_color)
-    # return call_policy_net(board_representation)
+    return call_policy_net(board_representation)
 
 def convert_board_to_2d_matrix_POEB(game_board, player_color):
     if player_color == 'Black':

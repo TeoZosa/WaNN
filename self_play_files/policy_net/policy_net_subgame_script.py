@@ -131,7 +131,7 @@ def assign_path(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\POEMfMtCfCt\4DArraysHDF5(RxCxF)POEMfMtCfCtPolicyNetAllThird'
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}AllThird'.format(features='POE', net_type='PolicyNet')
     else:
         path = ''#todo:error checking
     return path
@@ -313,28 +313,28 @@ else:
     testing_examples_partition_k, testing_labels_partition_k = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
 
 
-file = open(os.path.join(input_path,
-                         r'ExperimentLogs',
-                         game_stage + 'AdamNumFiltersNumLayersTFCrossEntropy_He_weightsPOE.txt'), 'a')
-# file = sys.stdout
+# file = open(os.path.join(input_path,
+#                          r'ExperimentLogs',
+#                          game_stage + 'AdamNumFiltersNumLayersTFCrossEntropy_He_weightsPOE.txt'), 'a')
+file = sys.stdout
 print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
 
-for num_hidden in [i for i in range(3,10)]:
+for num_hidden in [i for i in range(4,5)]:
     for n_filters in [
-                       16, 32, 64,
-                      128,
+                      #  16, 32, 64,
+                      # 128,
                       192]:
         for learning_rate in [
             0.001,
-            0.0011,
-            0.0012, 0.0013,
-                              0.0014, 0.0015
+            # 0.0011,
+            # 0.0012, 0.0013,
+            #                   0.0014, 0.0015
         ]:
             reset_default_graph()
             batch_size = 128
 
             #build graph
-            X = tf.placeholder(tf.float32, [None, 8, 8, 8])
+            X = tf.placeholder(tf.float32, [None, 8, 8, 4])
             # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
             y = tf.placeholder(tf.float32, [None,  155])
             filter_size = 3 #AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
@@ -377,9 +377,12 @@ for num_hidden in [i for i in range(3,10)]:
 
             correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+            #save the model
+            saver = tf.train.Saver()
 
             sess = tf.Session()
             sess.run(tf.global_variables_initializer())
+
 
             # # We first get the graph that we used to compute the network
             # g = tf.get_default_graph()
@@ -387,7 +390,7 @@ for num_hidden in [i for i in range(3,10)]:
             # # And can inspect everything inside of it
             # pprint.pprint([op.name for op in g.get_operations()])
 
-            n_epochs = 5
+            n_epochs = 10  # mess with this a bit
 
             print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file)
 
@@ -450,6 +453,11 @@ for num_hidden in [i for i in range(3,10)]:
             #partition k (only for full policy net)
             if (net_type == 'Full'):
                 print_partition_statistics(testing_examples_partition_k, testing_labels_partition_k, partition_k, file)
+
+
+            #save the model now
+            save_path = saver.save(sess, os.path.join(input_path, r'model'))
+
             sess.close()
 file.close()
 

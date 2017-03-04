@@ -1,15 +1,16 @@
 import tensorflow as tf
 import numpy as np
-def call_policy_net(board_representation):
-    sess = tf.Session()
-    saver = tf.train.Saver()
 
+from tensorflow.python.framework.ops import reset_default_graph
+def call_policy_net(board_representation):
+    reset_default_graph()#TODO: keep policy net open for entire game instead of opening it on every move
     #TODO: restore policy net from graphdef checkpoint
+    learning_rate = 0.001
     X = tf.placeholder(tf.float32, [None, 8, 8, 4])
     y = tf.placeholder(tf.float32, [None, 155])
     filter_size = 3  # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
-    n_filters = 64
-    num_hidden = 11
+    n_filters = 192
+    num_hidden = 4
     n_filters_out = [n_filters] * num_hidden + [
         1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
     n_layers = len(n_filters_out)
@@ -23,11 +24,26 @@ def call_policy_net(board_representation):
                                           name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
 
     # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
-    inference, _ = output_layer_init(h_layers[-1], reuse=None)
+    outer_layer, _ = output_layer_init(h_layers[-1], reuse=None)
+    # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
+    y_pred = tf.nn.softmax(outer_layer)
 
-    path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\4DArraysHDF5(RxCxF)POEPolicyNet3rdThird'
+    # tf's internal softmax; else, put softmax back in output layer
+    cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+    # # alternative implementation
+    # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
+
+    # kadenze cross_entropy cost function
+    # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+
+
+    # way better performance
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    saver = tf.train.Saver()
+    path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\POE\4DArraysHDF5(RxCxF)POEPolicyNetAllThird\model\model'
+    sess = tf.Session()
     saver.restore(sess, path)
-    predicted_moves = sess.run(inference, feed_dict={X: [board_representation]})
+    predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
     sess.close()
     return predicted_moves
 

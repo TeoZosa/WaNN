@@ -36,8 +36,8 @@ def write_to_disk(playerName, plid, page, path):
     output_file.close()
 
 def get_player_game_data(plid):
-    playerGameListPath = 'http://www.littlegolem.net/jsp/info/player_game_list_txt.jsp?plid={playerID}&gtid=brkthr' \
-        .format(playerID=plid)
+    playerGameListPath = 'http://www.littlegolem.net/jsp/info/player_game_list_txt.jsp?plid={}&gtid=brkthr' \
+        .format(plid)
     req = urllib.request.Request(playerGameListPath)
     with urllib.request.urlopen(req) as response:
         the_page = response.read()

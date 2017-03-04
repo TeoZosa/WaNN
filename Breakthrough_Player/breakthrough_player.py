@@ -35,7 +35,9 @@ def get_whites_move(game_board, player_is_white):
             if not player_move_legal:
                 print("Error, illegal move. Please enter a legal move.")
     else:##TODO: get policy net move
-        move = get_random_move(game_board, 'White')
+        ranked_moves = board_utils.generate_policy_net_moves(game_board, 'White')
+        move = get_best_move(game_board, ranked_moves)
+        # move = get_random_move(game_board, 'White')
     return move
 
 def print_move(move, color_to_move):
@@ -45,7 +47,9 @@ def print_move(move, color_to_move):
 def get_blacks_move(game_board, player_is_white):
     move = None
     if player_is_white:#get policy net move
-        move = get_random_move(game_board, 'Black')
+        ranked_moves = board_utils.generate_policy_net_moves(game_board, 'Black')
+        move = get_best_move(game_board, ranked_moves)
+        # move = get_random_move(game_board, 'Black')
     else:
         player_move_legal = False
         while not player_move_legal:
@@ -87,14 +91,14 @@ def check_legality(game_board, move):
     return False# if move not in list of legal moves, return False
 
 def get_best_move(board_state, policy_net_output):
-    game_board = board_state[0]
+    game_board = board_state
     player_color_index = 9
     is_white = 1
     if game_board[player_color_index] == is_white:
         player_color = 'White'
     else:
         player_color = 'Black'
-    ranked_move_indexes = sorted(range(len(policy_net_output)), key=lambda i: policy_net_output[i], reverse=True)
+    ranked_move_indexes = sorted(range(len(policy_net_output[0])), key=lambda i: policy_net_output[0][i], reverse=True)
     legal_moves = enumerate_legal_moves(board_state, player_color)
     legal_move_indexes = convert_legal_moves_into_policy_net_indexes(legal_moves, player_color)
     for move in ranked_move_indexes:#iterate over moves from best to worst and pick the first legal move; will terminate before loop ends
@@ -195,8 +199,8 @@ def check_right_diagonal_move(game_board, row, column, player_color):
     return move
 
 def convert_legal_moves_into_policy_net_indexes(legal_moves, player_color):
-    return list(map(lambda move:
-                    utils.generate_transition_vector(move['To'], move['From'], player_color), legal_moves))
+    return [move.index(1) for move in list(map(lambda move:
+                    utils.generate_transition_vector(move['To'], move['From'], player_color), legal_moves))]
 
 
 # check for gameover (white in row 8; black in row 1); check in between moves

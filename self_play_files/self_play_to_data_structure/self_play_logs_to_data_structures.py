@@ -323,7 +323,7 @@ def convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(board_state, player_color, PO
 
 def generate_intermediate_boards_POEMfMtCfCtPnOnEnCmB(board_state, player_color, POV_states):
     state = board_state[0]
-    next_move = utils.move_lookup(board_state[2].index(1), player_color).split('-')
+    next_move = utils.move_lookup_by_index(board_state[2].index(1), player_color).split('-')
     next_to = next_move[1]
     next_from = next_move[0]
     if next_from == 'no':  # 'no move' => next state is the same as the current state

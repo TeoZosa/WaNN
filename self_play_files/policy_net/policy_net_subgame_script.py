@@ -248,8 +248,8 @@ def print_prediction_statistics(examples, labels, file_to_write):
         in_top_n = True
     else:
         rank_in_prediction = in_top_n = False
-    top_n_white_moves = list(map(lambda index: utils.move_lookup(index, 'White'), top_n_indexes))
-    top_n_black_moves = list(map(lambda index: utils.move_lookup(index, 'Black'), top_n_indexes))
+    top_n_white_moves = list(map(lambda index: utils.move_lookup_by_index(index, 'White'), top_n_indexes))
+    top_n_black_moves = list(map(lambda index: utils.move_lookup_by_index(index, 'Black'), top_n_indexes))
     print("Sample Predicted Probabilities = "
           "\n{y_pred}"
           "\nIn top {num_top_moves} = {in_top_n}"
@@ -266,10 +266,10 @@ def print_prediction_statistics(examples, labels, file_to_write):
         move_rank=rank_in_prediction,
         top_white_moves=top_n_white_moves,
         top_black_moves=top_n_black_moves,
-        y_pred_white=utils.move_lookup(predicted_move_index, 'White'),
-        y_pred_black=utils.move_lookup(predicted_move_index, 'Black'),
-        y_act_white=utils.move_lookup(correct_move_index, 'White'),
-        y_act_black=utils.move_lookup(correct_move_index, 'Black')),
+        y_pred_white=utils.move_lookup_by_index(predicted_move_index, 'White'),
+        y_pred_black=utils.move_lookup_by_index(predicted_move_index, 'Black'),
+        y_act_white=utils.move_lookup_by_index(correct_move_index, 'White'),
+        y_act_black=utils.move_lookup_by_index(correct_move_index, 'Black')),
         end="\n", file=file_to_write)
 
 def print_partition_statistics(examples, labels, partition, file):
@@ -313,17 +313,19 @@ else:
     testing_examples_partition_k, testing_labels_partition_k = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
 
 
-# file = open(os.path.join(input_path,
-#                          r'ExperimentLogs',
-#                          game_stage + 'AdamNumFiltersNumLayersTFCrossEntropy_He_weightsPOE.txt'), 'a')
-file = sys.stdout
+file = open(os.path.join(input_path,
+                         r'ExperimentLogs',
+                         game_stage + '192_512Filters1_10LayersTF_CE__He_weightsPOE.txt'), 'a')
+# file = sys.stdout
 print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
 
-for num_hidden in [i for i in range(4,5)]:
+for num_hidden in [i for i in range(1,10)]:
     for n_filters in [
-                      #  16, 32, 64,
+                      #  64,
                       # 128,
-                      192]:
+                      192,
+                        256,
+                        512]:
         for learning_rate in [
             0.001,
             # 0.0011,
@@ -390,7 +392,7 @@ for num_hidden in [i for i in range(4,5)]:
             # # And can inspect everything inside of it
             # pprint.pprint([op.name for op in g.get_operations()])
 
-            n_epochs = 10  # mess with this a bit
+            n_epochs = 5  # mess with this a bit
 
             print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file)
 
@@ -455,8 +457,8 @@ for num_hidden in [i for i in range(4,5)]:
                 print_partition_statistics(testing_examples_partition_k, testing_labels_partition_k, partition_k, file)
 
 
-            #save the model now
-            save_path = saver.save(sess, os.path.join(input_path, r'model'))
+            # #save the model now
+            # save_path = saver.save(sess, os.path.join(input_path, r'model'))
 
             sess.close()
 file.close()

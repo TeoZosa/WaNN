@@ -153,10 +153,10 @@ class CNN(object):
                   "\nIf white: {y_pred_white} vs. {y_act_white}"
                   "\nIf black: {y_pred_black} vs. {y_act_black}".format(
                 y_pred=label_predicted,
-                y_pred_white=utils.move_lookup(np.argmax(label_predicted), 'White'),
-                y_pred_black=utils.move_lookup(np.argmax(label_predicted), 'Black'),
-                y_act_white=utils.move_lookup(np.argmax(y_valid[0]), 'White'),
-                y_act_black=utils.move_lookup(np.argmax(y_valid[0]), 'Black')),
+                y_pred_white=utils.move_lookup_by_index(np.argmax(label_predicted), 'White'),
+                y_pred_black=utils.move_lookup_by_index(np.argmax(label_predicted), 'Black'),
+                y_act_white=utils.move_lookup_by_index(np.argmax(y_valid[0]), 'White'),
+                y_act_black=utils.move_lookup_by_index(np.argmax(y_valid[0]), 'Black')),
                 end="\n", file=file)
 
         # Print final test accuracy:

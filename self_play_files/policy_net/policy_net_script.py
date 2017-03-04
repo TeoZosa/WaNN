@@ -543,10 +543,10 @@ for num_hidden in [i for i in range(12,13)]:
                       "\nIf white: {y_pred_white} vs. {y_act_white}"
                       "\nIf black: {y_pred_black} vs. {y_act_black}".format(
                         y_pred=y_pred_vector,
-                        y_pred_white=utils.move_lookup(np.argmax(y_pred_vector), 'White'),
-                        y_pred_black=utils.move_lookup(np.argmax(y_pred_vector), 'Black'),
-                        y_act_white=utils.move_lookup(np.argmax(y_valid[0]), 'White'),
-                        y_act_black=utils.move_lookup(np.argmax(y_valid[0]), 'Black')),
+                        y_pred_white=utils.move_lookup_by_index(np.argmax(y_pred_vector), 'White'),
+                        y_pred_black=utils.move_lookup_by_index(np.argmax(y_pred_vector), 'Black'),
+                        y_act_white=utils.move_lookup_by_index(np.argmax(y_valid[0]), 'White'),
+                        y_act_black=utils.move_lookup_by_index(np.argmax(y_valid[0]), 'Black')),
                     end="\n", file=file)
 
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / (60)), end="\n", file=file)

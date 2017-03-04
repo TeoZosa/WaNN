@@ -13,7 +13,10 @@ def call_policy_net(board_representation):
     path = os.path.join(r'..', r'policy_net_model', r'model')
     sess = tf.Session()
     saver.restore(sess, path)
-    predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
+    if isinstance(board_representation, list): #batch of positions to evaluate
+        predicted_moves = sess.run(y_pred, feed_dict={X: board_representation})
+    else: #just one position
+        predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
     sess.close()
     return predicted_moves
 

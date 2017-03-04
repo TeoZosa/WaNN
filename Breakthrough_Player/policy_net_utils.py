@@ -1,12 +1,23 @@
 import tensorflow as tf
 import numpy as np
 import os
-
 from tensorflow.python.framework.ops import reset_default_graph
+
 def call_policy_net(board_representation):
     reset_default_graph()#TODO: keep policy net open for entire game instead of opening it on every move
-    #TODO: restore policy net from graphdef checkpoint
-    learning_rate = 0.001
+    y_pred, X = build_policy_net()
+
+
+
+    saver = tf.train.Saver()
+    path = os.path.join(r'..', r'policy_net_model', r'model')
+    sess = tf.Session()
+    saver.restore(sess, path)
+    predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
+    sess.close()
+    return predicted_moves
+
+def build_policy_net():
     X = tf.placeholder(tf.float32, [None, 8, 8, 4])
     y = tf.placeholder(tf.float32, [None, 155])
     filter_size = 3  # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
@@ -24,31 +35,8 @@ def call_policy_net(board_representation):
         h_layers.append(hidden_layer_init(h_layers[i], n_filters_out[i], n_filters_out[i + 1], filter_size,
                                           name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
 
-    # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
     outer_layer, _ = output_layer_init(h_layers[-1], reuse=None)
-    # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-    y_pred = tf.nn.softmax(outer_layer)
-
-    # tf's internal softmax; else, put softmax back in output layer
-    cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-    # # alternative implementation
-    # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-
-    # kadenze cross_entropy cost function
-    # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-
-
-    # way better performance
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-    saver = tf.train.Saver()
-    path = os.path.join(r'..', r'policy_net_model', r'model')
-    sess = tf.Session()
-    saver.restore(sess, path)
-    predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
-    sess.close()
-    return predicted_moves
-
-
+    return tf.nn.softmax(outer_layer), X
 
 def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name=None, activation=tf.nn.relu,
                       reuse=None):

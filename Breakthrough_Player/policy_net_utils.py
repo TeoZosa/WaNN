@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import os
 
 from tensorflow.python.framework.ops import reset_default_graph
 def call_policy_net(board_representation):
@@ -40,7 +41,7 @@ def call_policy_net(board_representation):
     # way better performance
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
     saver = tf.train.Saver()
-    path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\PolicyNet\POE\4DArraysHDF5(RxCxF)POEPolicyNetAllThird\model\model'
+    path = os.path.join(r'..', r'policy_net_model', r'model')
     sess = tf.Session()
     saver.restore(sess, path)
     predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})

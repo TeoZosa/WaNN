@@ -1,0 +1,2 @@
+model_checkpoint_path: "G:\\TruncatedLogs\\PythonDatasets\\Datastructures\\NumpyArrays\\PolicyNet\\POE\\4DArraysHDF5(RxCxF)POEPolicyNetAllThird\\model"
+all_model_checkpoint_paths: "G:\\TruncatedLogs\\PythonDatasets\\Datastructures\\NumpyArrays\\PolicyNet\\POE\\4DArraysHDF5(RxCxF)POEPolicyNetAllThird\\model"

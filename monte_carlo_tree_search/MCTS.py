@@ -26,6 +26,10 @@ def MCTS(game_board, player_color, time_to_think=180, depth_limit=5):
     update_values_from_policy_net(game_tree)
     while (time.time()- startTime < time_to_think ):
         MCTS_game(root)
+        for i in range (0, len(game_tree)):
+            print("Node {i}:\n"
+                  "wins = {wins}\n"
+                  "visits = {visits}\n".format(i=i, wins=game_tree[i].wins,visits=game_tree[i].visits))
     print("seconds taken: {}".format(time.time() - startTime))
     return move_lookup_by_index(choose_move(root).index, player_color)
     #TODO:change NN to be called asynchronously?
@@ -69,10 +73,14 @@ def update_UCT(node, parent_visits):
 def update_values_from_policy_net(game_tree):
     NN_output = generate_policy_net_moves_batch(game_tree)
     for i in range(0, len(NN_output)):
-        if game_tree[i].children is not None:
+        parent = game_tree[i]
+        if parent.children is not None:
             for child in game_tree[i].children:
-                assert (child.parent is game_tree[i])
+                # assert (child.parent is game_tree[i])
                 if child.gameover == False: #if deterministically won/lost, don't update anything
-                    NN_weighting = 1000
-                    child.wins += int(NN_output[i][child.index]*NN_weighting) # is this a good weighting?
-                    child.visits += NN_weighting
+                    NN_weighting = num_visits = 1000
+                    weighted_wins = int(NN_output[i][child.index]*NN_weighting)
+                    child.wins += weighted_wins # is this a good weighting?
+                    child.visits += num_visits
+                    parent.wins += weighted_wins
+                    parent.visits += num_visits

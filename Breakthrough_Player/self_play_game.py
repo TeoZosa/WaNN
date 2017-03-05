@@ -6,7 +6,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 51
   black_wins = 0
   white_wins = 0
-  file_to_write = open(r'G:\TruncatedLogs\PythonDatasets\03042017selfplayMCTSvsPolicy.txt','a')
+  file_to_write = open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTSvsPolicy.txt','a')
   for i in range(1, num_games_to_play):
     winner_color = breakthrough_player.self_play_game(False, file_to_write)
     if winner_color == 'White':

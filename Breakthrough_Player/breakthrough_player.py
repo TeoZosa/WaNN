@@ -1,6 +1,6 @@
 from Breakthrough_Player.board_utils import print_board, move_piece, game_over, \
-    initial_game_board, check_legality, generate_policy_net_moves, get_best_move
-from monte_carlo_tree_search.MCTS import MCTS
+    initial_game_board, check_legality, generate_policy_net_moves, get_best_move, get_random_move
+from monte_carlo_tree_search.MCTS import MCTS_BFS_to_depth_limit, MCTS_with_expansions
 import sys
 import threading
 from multiprocessing import  Process, pool
@@ -26,7 +26,7 @@ class myThread (threading.Thread):
       self.move = None
    def run(self):
       print ("Starting " + self.threadID)
-      self.move = MCTS(self.name, self.game_board, self.color)
+      self.move = MCTS_BFS_to_depth_limit(self.name, self.game_board, self.color)
       print ("Exiting " + self.threadID)
 
 def play_game(player_is_white):
@@ -66,7 +66,7 @@ def get_whites_move(game_board, player_is_white):
         # ranked_moves = generate_policy_net_moves(game_board, 'White')
         # move = get_best_move(game_board, ranked_moves)
 
-        move = MCTS (game_board, 'White')
+        move = MCTS_BFS_to_depth_limit (game_board, 'White')
         # move = get_random_move(game_board, 'White')
     return move
 
@@ -85,15 +85,15 @@ def get_blacks_move(game_board, player_is_white):
                 print("Error, illegal move. Please enter a legal move.")
     return move
 
-def self_play_game(player_is_white, file_to_write=sys.stdout):
-    print("MCTS Vs. Policy", file=file_to_write)
+def self_play_game(player_is_white, policy_opponent='Expansion MCTS', file_to_write=sys.stdout):
+    print("MCTS_BFS_to_depth_limit Vs. Policy", file=file_to_write)
     game_board = initial_game_board()
     gameover = False
     move_number = 0
     winner_color = None
     while not gameover:
         print_board(game_board, file=file_to_write)
-        move, color_to_move = get_move_self_play(game_board, player_is_white, move_number)
+        move, color_to_move = get_move_self_play(game_board, player_is_white, move_number, policy_opponent)
         print_move(move, color_to_move, file_to_write)
         game_board = move_piece(game_board, move, color_to_move)
         gameover, winner_color = game_over(game_board)
@@ -101,48 +101,55 @@ def self_play_game(player_is_white, file_to_write=sys.stdout):
     print("Game over. {} wins".format(winner_color), file=file_to_write)
     return winner_color
 
-def get_move_self_play(game_board, player_is_white, move_number):
+def get_move_self_play(game_board, player_is_white, move_number, policy_opponent):
     if move_number % 2 == 0:  # white's turn
         color_to_move = 'White'
-        move = get_whites_move_self_play(game_board, player_is_white)
+        move = get_whites_move_self_play(game_board, player_is_white, policy_opponent)
     else:  # black's turn
         color_to_move = 'Black'
-        move = get_blacks_move_self_play(game_board, player_is_white)
+        move = get_blacks_move_self_play(game_board, player_is_white, policy_opponent)
     return move, color_to_move
 
-def get_whites_move_self_play(game_board, player_is_white):
-    move = None
+def get_whites_move_self_play(game_board, player_is_white, policy_opponent):
+    color_to_move = 'White' # explicitly declared here since this is only for white
     if player_is_white:#get policy net move
-        ranked_moves = generate_policy_net_moves(game_board, 'White')
+        ranked_moves = generate_policy_net_moves(game_board, color_to_move)
         move = get_best_move(game_board, ranked_moves)
-    else:# get MCTS
-        processes = MyPool(processes=1)
-        move = processes.starmap(MCTS, [[game_board, 'White']])  # map processes to arg lists
-        processes.close()
-        processes.join()
-
-        # move = MCTS (game_board, 'White')
-        # move = get_random_move(game_board, 'White')
+    else:# get MCTS type or random
+        move = get_policy_opponent_move(game_board, color_to_move, policy_opponent)
     return move
 
-def get_blacks_move_self_play(game_board, player_is_white):
-    move = None
-    if player_is_white:#get MCTS
-        processes = MyPool(processes=1)
-        move = processes.starmap(MCTS, [[game_board, 'Black']])  # map processes to arg lists
-        processes.close()
-        processes.join()
-
-        # move = MCTS(game_board, 'Black')
-        # move = get_random_move(game_board, 'Black')
+def get_blacks_move_self_play(game_board, player_is_white, policy_opponent):
+    color_to_move = 'Black' # explicitly declared here since this is only for black
+    if player_is_white:#get MCTS_BFS_to_depth_limit
+       move = get_policy_opponent_move(game_board, color_to_move, policy_opponent)
     else:#get policy net move
-        ranked_moves = generate_policy_net_moves(game_board, 'Black')
+        ranked_moves = generate_policy_net_moves(game_board, color_to_move)
         move = get_best_move(game_board, ranked_moves)
-
-
     return move
 
+def get_policy_opponent_move(game_board, color_to_move, policy_opponent):
+    if policy_opponent == 'random':
+        move = get_random_move(game_board, color_to_move)
+    elif policy_opponent == 'Expansion MCTS':
+        move = MCTS_expansions_move(game_board, color_to_move)
+    else:  # BFS to depth MCTS
+        move = MCTS_move_multithread(game_board, color_to_move)
+    return move
+
+def MCTS_move_multithread(game_board, player_color):
+    # to dealloc memory upon thread close;
+    # if we call directly without forking a new process, ,
+    # keeps memory until next call, causing huge bloat before it can garbage collect
+    # if we increase processes, we get root-level parallelism (must pull out best move)
+    processes = MyPool(processes=1)
+    move = processes.starmap(MCTS_BFS_to_depth_limit, [[game_board, player_color]])[0]
+    processes.close()
+    processes.join()
+    return move
+
+def MCTS_expansions_move(game_board, player_color):
+    return MCTS_with_expansions(game_board, player_color)
 
 def print_move(move, color_to_move, file=sys.stdout):
     print('{color} move: {move}'.format(color=color_to_move, move=move), file=file)
-

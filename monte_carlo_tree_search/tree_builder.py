@@ -1,7 +1,7 @@
 from Breakthrough_Player.board_utils import game_over, enumerate_legal_moves, move_piece
 from tools.utils import index_lookup_by_move
 from monte_carlo_tree_search.TreeNode import TreeNode
-from monte_carlo_tree_search.tree_search_utils import update_tree_visits, update_tree_wins
+from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins
 from multiprocessing import Pool
 from multiprocessing.managers import BaseManager
 
@@ -9,7 +9,7 @@ def build_game_tree(player_color, depth, unvisited_queue, depth_limit): #first-p
     if depth < depth_limit: # play game at this root to depth limit
        visited_queue = visit_to_depth_limit(player_color, depth, unvisited_queue, depth_limit)
     else: #reached depth limit;
-       update_bottom_of_tree(unvisited_queue)
+       # update_bottom_of_tree(unvisited_queue)
        visited_queue = [] #don't return bottom of tree so it doesn't run inference on these nodes
     return visited_queue
 
@@ -28,10 +28,10 @@ def visit_to_depth_limit(player_color, depth, unvisited_queue, depth_limit):
     return visited_queue
 
 
-def update_bottom_of_tree(unvisited_queue):
+def update_bottom_of_tree(unvisited_queue):#don't do this as it will mark the bottom as losses
     #NN will take care of these wins.
     for node in unvisited_queue:  # bottom of tree, so percolate visits to the top
-        update_tree_visits(node)
+        update_tree_losses(node)
         #don't return bottom of tree so it doesn't run inference on these nodes
     # visited_queue = unvisited_queue
     # return visited_queue
@@ -105,4 +105,4 @@ def set_game_over_values(node, player_color, winner_color):
         update_tree_wins(node, overwhelming_amount) #draw agent towards move
     else:
         node.wins = 0 # this node will never win
-        update_tree_visits(node, overwhelming_amount) #keep agent away from move
+        update_tree_losses(node, overwhelming_amount) #keep agent away from move

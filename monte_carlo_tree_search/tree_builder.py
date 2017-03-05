@@ -3,7 +3,7 @@ from tools.utils import index_lookup_by_move
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import update_tree_visits, update_tree_wins
 from multiprocessing import Pool
-
+from multiprocessing.managers import BaseManager
 
 def build_game_tree(player_color, depth, unvisited_queue, depth_limit): #first-pass BFS to enumerate all the concrete nodes we want to keep track of/run through policy net
     if depth < depth_limit: # play game at this root to depth limit
@@ -46,31 +46,29 @@ def get_opponent_color(player_color):
 def visit_all_nodes_and_expand_single_thread(unvisited_queue, player_color):
     unvisited_children = []
     for this_root_node in unvisited_queue:  # if empty=> nothing to visit;
-       unvisited_child_nodes, _= visit_single_node_and_expand(this_root_node, player_color)
+       unvisited_child_nodes= visit_single_node_and_expand(this_root_node, player_color)
        unvisited_children.extend(unvisited_child_nodes)
     return unvisited_children
 
 def visit_all_nodes_and_expand_multithread(unvisited_queue, player_color):
     unvisited_children = []
-    return_args = []
+    unvisited_children_separated = []
     arg_lists = [[node, player_color] for node in unvisited_queue]
-    # freeze_support()  # ?
     processes = Pool(processes=30)
-    return_args.extend(processes.starmap(visit_single_node_and_expand, arg_lists))  # async fine since all at the same depth?
+    unvisited_children_separated.append(processes.starmap(visit_single_node_and_expand, arg_lists)[0])  # synchronized with unvisited queue
     processes.close()
     processes.join()
-    for output in return_args:
-        child_nodes = output[0]
-        if output[1] is not None:
-            parent_node = output[1]
-            parent_node.children = child_nodes
+    for i in range (0, len(unvisited_children_separated)):#does this still outweigh just single threading?
+        child_nodes = unvisited_children_separated[i]
+        parent_node = arg_lists[i][0]
+        for child in child_nodes:
+            child.parent = parent_node
+        parent_node.children = child_nodes
         unvisited_children.extend(child_nodes)
     return unvisited_children
 
 def visit_single_node_and_expand(node, player_color):
     unvisited_children = []
-    parent_node = None
-    child_nodes = None
     game_board = node.game_board
     is_game_over, winner_color = game_over(game_board)
     if is_game_over:  # only useful at end of game
@@ -85,7 +83,7 @@ def visit_single_node_and_expand(node, player_color):
             child_nodes.append(child_node)
         parent_node.children = child_nodes
         unvisited_children.extend(child_nodes)
-    return unvisited_children, parent_node# return tuple instead of sharing object
+    return unvisited_children# return tuple instead of sharing object
 
 
 def init_child_node_and_board(game_board, child_as_move, parent_color, parent_node):

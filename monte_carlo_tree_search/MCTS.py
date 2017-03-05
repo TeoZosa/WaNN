@@ -18,7 +18,7 @@ import time
 # 4. keep searching, updating value based on uct and random rollouts.
 
 
-def MCTS(game_board, player_color, time_to_think=60, depth_limit=3):
+def MCTS(game_board, player_color, time_to_think=60, depth_limit=5):
     startTime = time.time()
     root = TreeNode(game_board, player_color, None, None)
     game_tree = build_game_tree(player_color, 0, [root], depth_limit)
@@ -70,6 +70,7 @@ def update_values_from_policy_net(game_tree):
     for i in range(0, len(NN_output)):
         if game_tree[i].children is not None:
             for child in game_tree[i].children:
+                assert (child.parent is game_tree[i])
                 if child.gameover == False: #if deterministically won/lost, don't update anything
                     NN_weighting = 1000
                     child.wins += int(NN_output[i][child.index]*NN_weighting) # is this a good weighting?

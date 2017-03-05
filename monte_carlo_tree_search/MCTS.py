@@ -34,7 +34,7 @@ def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_
     root = game_tree[0]#tree node gets copied by threads; pull out new root
 
     while (time.time()- start_time < time_to_think ):
-        MCTS_game(root)
+        BFS_MCTS_game(root)
         if counter % 1000 == 0:#log every 100th simulation
             print("Monte Carlo Game {iteration}\n".format(iteration=counter), file=file)
             for i in range (0, len(game_tree)):
@@ -58,7 +58,7 @@ def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_
 
 
 
-def MCTS_game(root):
+def BFS_MCTS_game(root):
     if root.children is None:
         #bottom of tree; random rollout
         win = random.randint(0,1)
@@ -68,7 +68,7 @@ def MCTS_game(root):
             update_tree_visits(root)
     else:
         move = choose_move(root)
-        MCTS_game(move)
+        BFS_MCTS_game(move)
 
 
 class simulation_info():
@@ -77,6 +77,7 @@ class simulation_info():
         self.counter = 0
         self.prev_game_tree_size = 0
         self.game_tree = []
+        self.game_tree_height = 0
 
 def MCTS_with_expansions(game_board, player_color, time_to_think=300, depth_limit=5):
     sim_info = simulation_info(open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTS_depth_{depth}__timetothink{time_to_think}.txt'.format(
@@ -90,17 +91,18 @@ def MCTS_with_expansions(game_board, player_color, time_to_think=300, depth_limi
     return best_move
 
 def run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info):
-    sim_info.game_tree = MCTS_game_with_expansions(root, 0, depth_limit, sim_info.game_tree)
+    play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info)
     if sim_info.counter % 1000 == 0:  # log every 1000th simulation
         print("Number of Tree Nodes added in simulation {counter} = "
-              "{nodes} in {time} seconds".format(counter=sim_info.counter,
+              "{nodes} in {time} seconds\n"
+              "Current tree height = {height}".format(counter=sim_info.counter,
                                                  nodes=len(sim_info.game_tree) - sim_info.prev_game_tree_size,
-                                                 time=time.time() - start_time), file=sim_info.file)
+                                                 time=time.time() - start_time, height=sim_info.game_tree_height), file=sim_info.file)
     sim_info.prev_game_tree_size = len(sim_info.game_tree)
     sim_info.counter += 1
 
 
-def MCTS_game_with_expansions(root, depth, depth_limit, expanded_nodes):
+def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height=0):
     if root.children is None:
         if depth < depth_limit:
             #expand
@@ -108,10 +110,10 @@ def MCTS_game_with_expansions(root, depth, depth_limit, expanded_nodes):
             # update_single_value_from_policy_net(root)
             update_values_from_policy_net([root])
             #put it into game tree
-            expanded_nodes.append(root)
+            sim_info.game_tree.append(root)
             #root should now have children with values
             move = choose_move(root)
-            MCTS_game_with_expansions(move, depth+1, depth_limit) #search until depth limit
+            play_MCTS_game_with_expansions(move, depth + 1, depth_limit, sim_info, this_height + 1) #search until depth limit
             #fact: since this node was previously unexpanded, all subsequent nodes will be unexpanded =>
             #will increment depth each subsequent call
         else:
@@ -121,10 +123,12 @@ def MCTS_game_with_expansions(root, depth, depth_limit, expanded_nodes):
                 update_tree_wins(root)
             else:
                 update_tree_visits(root)
-            return expanded_nodes
+            if this_height > sim_info.game_tree_height:
+                sim_info.game_tree_height = this_height
+            #return here
     else:
         move = choose_move(root)
-        MCTS_game_with_expansions(move, depth, depth_limit)
+        play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info, this_height + 1)
 
 
 def choose_move(node):

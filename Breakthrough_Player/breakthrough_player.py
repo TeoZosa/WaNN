@@ -129,7 +129,7 @@ def get_blacks_move_self_play(game_board, player_is_white, policy_opponent):
     return move
 
 def get_policy_opponent_move(game_board, color_to_move, policy_opponent):
-    if policy_opponent == 'random':
+    if policy_opponent == 'Random':
         move = get_random_move(game_board, color_to_move)
     elif policy_opponent == 'Expansion MCTS':
         move = MCTS_expansions_move(game_board, color_to_move)

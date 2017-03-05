@@ -7,8 +7,13 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   black_wins = 0
   white_wins = 0
   file_to_write = open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTSvsPolicy.txt','a')
+  #possible policy net opponents
+  expansion_MCTS = 'Expansion MCTS'
+  random_moves = 'Random'
+  BFS_MCTS = 'BFS MCTS'
+
   for i in range(1, num_games_to_play):
-    winner_color = breakthrough_player.self_play_game(False, file_to_write)
+    winner_color = breakthrough_player.self_play_game(False, policy_opponent=expansion_MCTS)
     if winner_color == 'White':
       white_wins += 1
     else:

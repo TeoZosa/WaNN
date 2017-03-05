@@ -19,17 +19,22 @@ import time
 # 4. keep searching, updating value based on uct and random rollouts.
 
 
-def MCTS(game_board, player_color, time_to_think=180, depth_limit=5):
+def MCTS(game_board, player_color, time_to_think=60, depth_limit=5):
+    file = open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__timetothink{time_to_think}'.format(
+        depth=depth_limit, time_to_think=time_to_think),'a')
     startTime = time.time()
     root = TreeNode(game_board, player_color, None, None)
     game_tree = build_game_tree(player_color, 0, [root], depth_limit)
     update_values_from_policy_net(game_tree)
+    counter = 1
     while (time.time()- startTime < time_to_think ):
         MCTS_game(root)
+        print("Monte Carlo Game {iteration}\n".format(iteration=counter), file=file)
         for i in range (0, len(game_tree)):
             print("Node {i}:\n"
                   "wins = {wins}\n"
-                  "visits = {visits}\n".format(i=i, wins=game_tree[i].wins,visits=game_tree[i].visits))
+                  "visits = {visits}\n\n".format(i=i, wins=game_tree[i].wins,visits=game_tree[i].visits), file=file)
+        counter += 1
     print("seconds taken: {}".format(time.time() - startTime))
     return move_lookup_by_index(choose_move(root).index, player_color)
     #TODO:change NN to be called asynchronously?

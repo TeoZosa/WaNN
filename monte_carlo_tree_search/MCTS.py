@@ -19,23 +19,27 @@ import time
 # 4. keep searching, updating value based on uct and random rollouts.
 
 
-def MCTS(game_board, player_color, time_to_think=60, depth_limit=5):
-    file = open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__timetothink{time_to_think}'.format(
+def MCTS(game_board, player_color, time_to_think=600, depth_limit=10):
+    file = open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__timetothink{time_to_think}.txt'.format(
         depth=depth_limit, time_to_think=time_to_think),'a')
     startTime = time.time()
     root = TreeNode(game_board, player_color, None, None)
     game_tree = build_game_tree(player_color, 0, [root], depth_limit)
     update_values_from_policy_net(game_tree)
     counter = 1
+    root = game_tree[0]#tree node gets copied by threads; pull out new root
     while (time.time()- startTime < time_to_think ):
         MCTS_game(root)
-        print("Monte Carlo Game {iteration}\n".format(iteration=counter), file=file)
-        for i in range (0, len(game_tree)):
-            print("Node {i}:\n"
-                  "wins = {wins}\n"
-                  "visits = {visits}\n\n".format(i=i, wins=game_tree[i].wins,visits=game_tree[i].visits), file=file)
+        if counter % 100 == 0:#log every 100th simulation
+            print("Monte Carlo Game {iteration}\n".format(iteration=counter), file=file)
+            for i in range (0, len(game_tree)):
+                print("Node {i}:\n"
+                      "UCT = {uct}"
+                      "wins = {wins}\n"
+                      "visits = {visits}\n\n".format(i=i, uct= game_tree[i].value, wins=game_tree[i].wins,visits=game_tree[i].visits), file=file)
         counter += 1
     print("seconds taken: {}".format(time.time() - startTime))
+    file.close()
     return move_lookup_by_index(choose_move(root).index, player_color)
     #TODO:change NN to be called asynchronously?
 
@@ -83,9 +87,9 @@ def update_values_from_policy_net(game_tree):
             for child in game_tree[i].children:
                 # assert (child.parent is game_tree[i])
                 if child.gameover == False: #if deterministically won/lost, don't update anything
-                    NN_weighting = num_visits = 1000
+                    NN_weighting = 1000
                     weighted_wins = int(NN_output[i][child.index]*NN_weighting)
-                    child.wins += weighted_wins # is this a good weighting?
-                    child.visits += num_visits
-                    parent.wins += weighted_wins
-                    parent.visits += num_visits
+                    # num_extra_visits = weighted_wins
+                    # update_tree_visits(child, num_extra_visits)
+                    update_tree_wins(child, weighted_wins) #say we won every time we visited,
+                    # or else it may be a high visit count with low win count

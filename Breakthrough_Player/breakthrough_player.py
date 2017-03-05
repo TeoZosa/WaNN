@@ -37,7 +37,7 @@ def get_whites_move(game_board, player_is_white):
             if not player_move_legal:
                 print("Error, illegal move. Please enter a legal move.")
     else:#get policy net move
-        # ranked_moves = .generate_policy_net_moves(game_board, 'White')
+        # ranked_moves = generate_policy_net_moves(game_board, 'White')
         # move = get_best_move(game_board, ranked_moves)
 
         move = MCTS (game_board, 'White')

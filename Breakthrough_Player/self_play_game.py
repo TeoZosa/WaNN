@@ -18,6 +18,6 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
       white_wins += 1
     else:
       black_wins += 1
-    print("Game {game}  White Wins: {white_wins}    Black Wins: {black_wins]".format(
+    print("Game {game}  White Wins: {white_wins}    Black Wins: {black_wins}".format(
         game=i, white_wins=white_wins, black_wins=black_wins ), file=file_to_write)
   file_to_write.close()

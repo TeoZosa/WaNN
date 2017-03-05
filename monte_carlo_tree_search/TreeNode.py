@@ -6,6 +6,6 @@ class TreeNode(object):
         self.parent = parent#to pass up visits/wins; if None => root
         self.children = None
         self.gameover = False
-        self.visits = 0 #should be equal to sum of all children
+        self.visits = 0 #should be equal to sum of all children + num_times it was rolled out
         self.wins = 0 # 0 <= wins <= visits
 

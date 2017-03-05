@@ -1,5 +1,6 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
-from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, choose_move, update_values_from_policy_net
+from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, choose_move, \
+    update_values_from_policy_net, get_UCT
 from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand
 from tools.utils import move_lookup_by_index
 import random
@@ -45,16 +46,7 @@ def run_BFS_MCTS_simulation(sim_info):
     root = sim_info.game_tree[0]
     BFS_MCTS_game(root)
     if sim_info.counter % 400 == 0:  # log every 400th simulation
-        print("Monte Carlo Game {iteration}\n".format(iteration=sim_info.counter), file=sim_info.file)
-        for i in range(0, len(sim_info.game_tree)):
-            node_parent = sim_info.game_tree[i].parent
-            if node_parent is None:
-                UCT = 0
-            else:
-                UCT = sim_info.game_tree[i].get_UCT_value(node_parent.visits)
-            print("Node {i}:    UCT = {uct}     wins = {wins}       visits = {visits}".format(
-                i=i, uct=UCT, wins=sim_info.game_tree[i].wins, visits=sim_info.game_tree[i].visits),
-                file=sim_info.file)
+        print_simulation_statistics(sim_info)
     sim_info.counter += 1
 
 def BFS_MCTS_game(root):
@@ -65,7 +57,7 @@ def BFS_MCTS_game(root):
         move = choose_move(root)
         BFS_MCTS_game(move)
         
-        
+
 #Option B: Traditional MCTS with expansion using policy net to generate prior values
 # start with root and put in NN queue, (level 0)
 # while time to think,
@@ -75,7 +67,7 @@ def BFS_MCTS_game(root):
 # 4. do random rollouts. repeat 1.
 
 #TODO: for root-level parallelism here, add stochasticity to UCT constant? 
-def MCTS_with_expansions(game_board, player_color, time_to_think=10, depth_limit=5):
+def MCTS_with_expansions(game_board, player_color, time_to_think=20, depth_limit=5):
     sim_info = SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTS_depth_{depth}__timetothink{time_to_think}.txt'.format(
         depth=depth_limit, time_to_think=time_to_think), 'a'))
     root = TreeNode(game_board, player_color, None, None)
@@ -90,20 +82,13 @@ def MCTS_with_expansions(game_board, player_color, time_to_think=10, depth_limit
 
 def run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info):
     play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info)
-    if sim_info.counter % 10 == 0:  # log every 10th simulation
-        print("Number of Tree Nodes added in simulation {counter} = "
-              "{nodes} in {time} seconds\n"
-              "Current tree height = {height}".format(counter=sim_info.counter,
-                                                 nodes=len(sim_info.game_tree) - sim_info.prev_game_tree_size,
-                                                 time=time.time() - start_time, height=sim_info.game_tree_height), file=sim_info.file)
+    if sim_info.counter % 100 == 0:  # log every 100th simulation
+        print_expansion_statistics(sim_info, start_time)
     sim_info.prev_game_tree_size = len(sim_info.game_tree)
     sim_info.counter += 1
 
 
 def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height=0):
-    # if root is None:
-    #     print('what happened')
-    #
     if root.children is None:
         if not root.gameover:
             if depth < depth_limit:
@@ -135,3 +120,24 @@ def random_rollout(node):
         update_tree_wins(node)
     else:
         update_tree_losses(node)
+
+def print_simulation_statistics(sim_info):
+    print("Monte Carlo Game {iteration}\n".format(iteration=sim_info.counter), file=sim_info.file)
+    for i in range(0, len(sim_info.game_tree)):
+        node_parent = sim_info.game_tree[i].parent
+        if node_parent is None:
+            UCT = 0
+        else:
+            UCT = get_UCT(sim_info.game_tree[i], node_parent.visits)
+        print("Node {i}:    UCT = {uct}     wins = {wins}       visits = {visits}".format(
+            i=i, uct=UCT, wins=sim_info.game_tree[i].wins, visits=sim_info.game_tree[i].visits),
+            file=sim_info.file)
+
+def print_expansion_statistics(sim_info, start_time):
+    print_simulation_statistics(sim_info)
+    print("Number of Tree Nodes added in simulation {counter} = "
+          "{nodes} in {time} seconds\n"
+          "Current tree height = {height}".format(counter=sim_info.counter,
+                                                  nodes=len(sim_info.game_tree) - sim_info.prev_game_tree_size,
+                                                  time=time.time() - start_time,
+                                                  height=sim_info.game_tree_height), file=sim_info.file)

@@ -2,8 +2,8 @@ from Breakthrough_Player.board_utils import print_board, move_piece, game_over, 
     initial_game_board, check_legality, generate_policy_net_moves, get_best_move, get_random_move
 from monte_carlo_tree_search.MCTS import MCTS_BFS_to_depth_limit, MCTS_with_expansions
 import sys
-import threading
 from multiprocessing import  Process, pool
+
 class NoDaemonProcess(Process):
     # make 'daemon' attribute always return False
     def _get_daemon(self):
@@ -14,20 +14,8 @@ class NoDaemonProcess(Process):
 
 # We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
 # because the latter is only a wrapper function, not a proper class.
-class MyPool(pool.Pool):  # Had to make a special class to allow for an inner process pool
+class MyPool(pool.Pool):  # make a special class to allow for an inner process pool
     Process = NoDaemonProcess
-
-class myThread (threading.Thread):
-   def __init__(self, threadID, game_board, color):
-      threading.Thread.__init__(self)
-      self.threadID = threadID
-      self.game_board = game_board
-      self.color= color
-      self.move = None
-   def run(self):
-      print ("Starting " + self.threadID)
-      self.move = MCTS_BFS_to_depth_limit(self.name, self.game_board, self.color)
-      print ("Exiting " + self.threadID)
 
 def play_game(player_is_white):
     print("Teo's Fabulous Breakthrough Player")
@@ -86,19 +74,23 @@ def get_blacks_move(game_board, player_is_white):
     return move
 
 def self_play_game(player_is_white, policy_opponent='Expansion MCTS', file_to_write=sys.stdout):
-    print("MCTS_BFS_to_depth_limit Vs. Policy", file=file_to_write)
+    print("{} Vs. Policy".format(policy_opponent), file=file_to_write)
     game_board = initial_game_board()
     gameover = False
     move_number = 0
     winner_color = None
+    web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     while not gameover:
         print_board(game_board, file=file_to_write)
         move, color_to_move = get_move_self_play(game_board, player_is_white, move_number, policy_opponent)
         print_move(move, color_to_move, file_to_write)
         game_board = move_piece(game_board, move, color_to_move)
+        move = move.split(r'-')
+        web_visualizer_link = web_visualizer_link + move[0] + move[1]
         gameover, winner_color = game_over(game_board)
         move_number += 1
     print("Game over. {} wins".format(winner_color), file=file_to_write)
+    print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
     return winner_color
 
 def get_move_self_play(game_board, player_is_white, move_number, policy_opponent):

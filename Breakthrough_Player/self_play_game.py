@@ -13,7 +13,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   BFS_MCTS = 'BFS MCTS'
 
   for i in range(1, num_games_to_play):
-    winner_color = breakthrough_player.self_play_game(False, policy_opponent=expansion_MCTS)
+    winner_color = breakthrough_player.self_play_game(False, policy_opponent=expansion_MCTS, file_to_write=file_to_write)
     if winner_color == 'White':
       white_wins += 1
     else:

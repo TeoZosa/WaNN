@@ -19,7 +19,7 @@ def update_tree_losses(node, amount=1): # visits and losses go together
         grandparent = parent.parent
         if grandparent is not None:
             grandparent.visits += amount
-        parent.win += amount# since loss for child = win for parent = loss for grandparent
+        parent.wins += amount# since loss for child = win for parent = loss for grandparent
         parent.visits += amount
         parent = parent.parent
 

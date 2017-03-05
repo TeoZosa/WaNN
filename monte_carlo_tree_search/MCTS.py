@@ -90,7 +90,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think=10, depth_limit
 
 def run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info):
     play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info)
-    if sim_info.counter % 100 == 0:  # log every 1000th simulation
+    if sim_info.counter % 10 == 0:  # log every 10th simulation
         print("Number of Tree Nodes added in simulation {counter} = "
               "{nodes} in {time} seconds\n"
               "Current tree height = {height}".format(counter=sim_info.counter,
@@ -102,26 +102,25 @@ def run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info)
 
 def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height=0):
     if root.children is None:
-        if depth < depth_limit:
-            visit_single_node_and_expand([root, root.color])
-            update_values_from_policy_net([root])
+        if not root.gameover:
+            if depth < depth_limit:
+                visit_single_node_and_expand([root, root.color])
+                update_values_from_policy_net([root])
 
-            #put expanded node into game tree
-            sim_info.game_tree.append(root)
+                #put expanded node into game tree
+                sim_info.game_tree.append(root)
 
-            #root should now have children with values unless it was gameover
-            move = choose_move(root)
-            if not move.gameover :
+                #root should now have children with values
+                move = choose_move(root)
                 #fact: since this node was previously unexpanded, all subsequent nodes will be unexpanded =>
                 #will increment depth each subsequent call
                 play_MCTS_game_with_expansions(move, depth + 1, depth_limit, sim_info, this_height + 1) #search until depth limit
-            #else:  return here
-        else:
-            # reached depth limit
-            random_rollout(root)
-            if this_height > sim_info.game_tree_height: #keep track of max tree height
-                sim_info.game_tree_height = this_height
-            #return here
+            else: # reached depth limit
+                random_rollout(root)
+                if this_height > sim_info.game_tree_height: #keep track of max tree height
+                    sim_info.game_tree_height = this_height
+                #return here
+        #else: return here
     else:#keep searching tree
         move = choose_move(root)
         play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info, this_height + 1)

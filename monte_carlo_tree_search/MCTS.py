@@ -2,6 +2,7 @@ from Breakthrough_Player.board_utils import generate_policy_net_moves_batch
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import update_tree_visits, update_tree_wins
 from monte_carlo_tree_search.tree_builder import build_game_tree
+from tools.utils import move_lookup_by_index
 import random
 import time
 #TODO: thread pool to play games, play games: ,
@@ -18,7 +19,7 @@ import time
 # 4. keep searching, updating value based on uct and random rollouts.
 
 
-def MCTS(game_board, player_color, time_to_think=60, depth_limit=5):
+def MCTS(game_board, player_color, time_to_think=180, depth_limit=5):
     startTime = time.time()
     root = TreeNode(game_board, player_color, None, None)
     game_tree = build_game_tree(player_color, 0, [root], depth_limit)
@@ -26,7 +27,7 @@ def MCTS(game_board, player_color, time_to_think=60, depth_limit=5):
     while (time.time()- startTime < time_to_think ):
         MCTS_game(root)
     print("seconds taken: {}".format(time.time() - startTime))
-    return choose_move(root)
+    return move_lookup_by_index(choose_move(root).index, player_color)
     #TODO:change NN to be called asynchronously?
 
 

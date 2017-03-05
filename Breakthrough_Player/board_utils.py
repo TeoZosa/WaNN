@@ -1,6 +1,7 @@
 import copy
 from tools import utils
 import numpy as np
+import sys
 import random
 import pandas as pd
 from Breakthrough_Player.policy_net_utils import call_policy_net
@@ -9,7 +10,7 @@ def generate_policy_net_moves(game_board, player_color):
     board_representation = utils.convert_board_to_2d_matrix_POEB(game_board, player_color)
     return call_policy_net(board_representation)
 
-def generate_policy_net_moves_batch(game_nodes, batch_size=4096):
+def generate_policy_net_moves_batch(game_nodes, batch_size=16384):
 
     board_representations = [utils.convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in game_nodes]
     inference_batches = utils.batch_split_no_labels(board_representations, batch_size)
@@ -63,14 +64,14 @@ def get_random_move(game_board, player_color):
     move = random_move['From'] + '-' + random_move['To']
     return move
 
-def print_board(game_board):
+def print_board(game_board, file=sys.stdout):
     new_piece_map = {
         'w': 'w',
         'b': 'b',
         'e': '_'
     }
     print((pd.DataFrame(game_board).transpose().sort_index(ascending=False).iloc[2:])# human-readable board
-          .apply(lambda x: x.apply(lambda y: new_piece_map[y])))  # transmogrify e's to _'s
+          .apply(lambda x: x.apply(lambda y: new_piece_map[y])), file=file)  # transmogrify e's to _'s
 
 def check_legality(game_board, move):
     move = move.split('-')

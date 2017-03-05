@@ -23,7 +23,7 @@ def visit_to_depth_limit(player_color, depth, unvisited_queue, depth_limit):
         # visit children
         opponent_color = get_opponent_color(player_color)
         visited_queue.extend(build_game_tree(opponent_color, depth + 1, unvisited_children,
-                                             depth_limit))
+                                             depth_limit)) #TODO: is recursion taking too long/too much stack space?
         # else: game over taken care of in visit
     return visited_queue
 
@@ -54,7 +54,7 @@ def visit_all_nodes_and_expand_multithread(unvisited_queue, player_color):
     unvisited_children = []
     unvisited_children_separated = []
     arg_lists = [[node, player_color] for node in unvisited_queue]
-    processes = Pool(processes=5)#prevent threads from taking up too much memory before joining
+    processes = Pool(processes=7)#prevent threads from taking up too much memory before joining
     unvisited_children_separated = processes.map(visit_single_node_and_expand, arg_lists)  # synchronized with unvisited queue
     processes.close()
     processes.join()

@@ -18,17 +18,21 @@ import time
 # 4. keep searching, updating value based on uct and random rollouts.
 
 
-def MCTS(game_board, player_color, time_to_think=300, depth_limit=5):
+def MCTS(game_board, player_color, time_to_think=1000, depth_limit=5):
+
+    # wanderer = 93,650k nodes  6GB
+    #this = 270k nodes 50 GB..
     file = open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__timetothink{time_to_think}.txt'.format(
         depth=depth_limit, time_to_think=time_to_think),'a')
-    startTime = time.time()
+    start_time = time.time()
     root = TreeNode(game_board, player_color, None, None)
     game_tree = build_game_tree(player_color, 0, [root], depth_limit)
-    print(len(game_tree))
+    print("Number of Tree Nodes = {nodes} in {time} seconds".format(nodes=len(game_tree), time=time.time()-start_time))
     update_values_from_policy_net(game_tree)
     counter = 1
     root = game_tree[0]#tree node gets copied by threads; pull out new root
-    while (time.time()- startTime < time_to_think ):
+
+    while (time.time()- start_time < time_to_think ):
         MCTS_game(root)
         if counter % 100 == 0:#log every 100th simulation
             print("Monte Carlo Game {iteration}\n".format(iteration=counter), file=file)
@@ -38,13 +42,14 @@ def MCTS(game_board, player_color, time_to_think=300, depth_limit=5):
                     UCT = 0
                 else:
                     UCT = game_tree[i].get_UCT_value(node_parent.visits)
-                print("Node {i}:\n"
-                      "UCT = {uct}\n" # take out for actual play since this computation will slow us down?
-                      "wins = {wins}\n"
-                      "visits = {visits}\n\n".format(i=i, uct= UCT, wins=game_tree[i].wins,visits=game_tree[i].visits), file=file)
+                print("Node {i}:    UCT = {uct}     wins = {wins}       visits = {visits}".format(
+                    i=i, uct= UCT, wins=game_tree[i].wins,visits=game_tree[i].visits),
+                    file=file)
         counter += 1
-    print("seconds taken: {}".format(time.time() - startTime))
+    print("seconds taken: {}".format(time.time() - start_time))
     best_move = move_lookup_by_index(choose_move(root).index, player_color)
+    # game_tree = []  # so garbage collector lets it go before next move? or multiprocessing again higher up?
+    # root = None
     print("For {player_color}, best move is {move}\n".format(player_color=player_color, move=best_move), file=file)
     file.close()
     return best_move

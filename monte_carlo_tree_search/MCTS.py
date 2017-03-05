@@ -5,7 +5,6 @@ from monte_carlo_tree_search.tree_builder import build_game_tree
 from tools.utils import move_lookup_by_index
 import random
 import time
-#TODO: thread pool to play games, play games: ,
 
 #TODO: algorithm: randomly initialize new nodes with some visit count [0, 100],
 
@@ -19,12 +18,13 @@ import time
 # 4. keep searching, updating value based on uct and random rollouts.
 
 
-def MCTS(game_board, player_color, time_to_think=600, depth_limit=10):
+def MCTS(game_board, player_color, time_to_think=300, depth_limit=5):
     file = open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__timetothink{time_to_think}.txt'.format(
         depth=depth_limit, time_to_think=time_to_think),'a')
     startTime = time.time()
     root = TreeNode(game_board, player_color, None, None)
     game_tree = build_game_tree(player_color, 0, [root], depth_limit)
+    print(len(game_tree))
     update_values_from_policy_net(game_tree)
     counter = 1
     root = game_tree[0]#tree node gets copied by threads; pull out new root
@@ -33,14 +33,21 @@ def MCTS(game_board, player_color, time_to_think=600, depth_limit=10):
         if counter % 100 == 0:#log every 100th simulation
             print("Monte Carlo Game {iteration}\n".format(iteration=counter), file=file)
             for i in range (0, len(game_tree)):
+                node_parent = game_tree[i].parent
+                if node_parent is None:
+                    UCT = 0
+                else:
+                    UCT = game_tree[i].get_UCT_value(node_parent.visits)
                 print("Node {i}:\n"
-                      "UCT = {uct}"
+                      "UCT = {uct}\n" # take out for actual play since this computation will slow us down?
                       "wins = {wins}\n"
-                      "visits = {visits}\n\n".format(i=i, uct= game_tree[i].value, wins=game_tree[i].wins,visits=game_tree[i].visits), file=file)
+                      "visits = {visits}\n\n".format(i=i, uct= UCT, wins=game_tree[i].wins,visits=game_tree[i].visits), file=file)
         counter += 1
     print("seconds taken: {}".format(time.time() - startTime))
+    best_move = move_lookup_by_index(choose_move(root).index, player_color)
+    print("For {player_color}, best move is {move}\n".format(player_color=player_color, move=best_move), file=file)
     file.close()
-    return move_lookup_by_index(choose_move(root).index, player_color)
+    return best_move
     #TODO:change NN to be called asynchronously?
 
 
@@ -60,24 +67,19 @@ def MCTS_game(root):
 def choose_move(node):
     parent_visits = node.visits
     best = None
-    best_val = 0
+    best_val = -1 #child may have a 0 uct value if visited too much
     if node.children is not None:
         for child in node.children:
-            update_UCT(child, parent_visits)
-            if child.value > best_val:
+            child_value = update_UCT(child, parent_visits)
+            if child_value > best_val:
                 best = child
-                best_val = best.value
+                best_val = child_value
     return best
 
 
 
 def update_UCT(node, parent_visits):
-    node.update_value(parent_visits)
-
-
-# def launch_policy_net(batch):
-#     return list(map(
-#         lambda x: board_utils.generate_policy_net_moves(x.state, x.color), batch))
+    return node.get_UCT_value(parent_visits)
 
 def update_values_from_policy_net(game_tree):
     NN_output = generate_policy_net_moves_batch(game_tree)

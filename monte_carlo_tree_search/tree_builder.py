@@ -46,7 +46,7 @@ def get_opponent_color(player_color):
 def visit_all_nodes_and_expand_single_thread(unvisited_queue, player_color):
     unvisited_children = []
     for this_root_node in unvisited_queue:  # if empty=> nothing to visit;
-       unvisited_child_nodes= visit_single_node_and_expand(this_root_node, player_color)
+       unvisited_child_nodes= visit_single_node_and_expand([this_root_node, player_color])
        unvisited_children.extend(unvisited_child_nodes)
     return unvisited_children
 
@@ -54,11 +54,13 @@ def visit_all_nodes_and_expand_multithread(unvisited_queue, player_color):
     unvisited_children = []
     unvisited_children_separated = []
     arg_lists = [[node, player_color] for node in unvisited_queue]
-    processes = Pool(processes=30)
-    unvisited_children_separated.append(processes.starmap(visit_single_node_and_expand, arg_lists)[0])  # synchronized with unvisited queue
+    processes = Pool(processes=5)#prevent threads from taking up too much memory before joining
+    unvisited_children_separated = processes.map(visit_single_node_and_expand, arg_lists)  # synchronized with unvisited queue
     processes.close()
     processes.join()
     for i in range (0, len(unvisited_children_separated)):#does this still outweigh just single threading?
+        # if len(unvisited_children_separated) == 1:
+        #     unvisited_children_separated = unvisited_children_separated[0]
         child_nodes = unvisited_children_separated[i]
         parent_node = arg_lists[i][0]
         for child in child_nodes:
@@ -67,7 +69,9 @@ def visit_all_nodes_and_expand_multithread(unvisited_queue, player_color):
         unvisited_children.extend(child_nodes)
     return unvisited_children
 
-def visit_single_node_and_expand(node, player_color):
+def visit_single_node_and_expand(node_and_color):
+    node = node_and_color[0]
+    player_color = node_and_color[1]
     unvisited_children = []
     game_board = node.game_board
     is_game_over, winner_color = game_over(game_board)

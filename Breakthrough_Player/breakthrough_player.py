@@ -2,7 +2,7 @@ from Breakthrough_Player.board_utils import print_board, move_piece, game_over, 
     initial_game_board, check_legality, generate_policy_net_moves, get_best_move, get_random_move
 from monte_carlo_tree_search.MCTS import MCTS_BFS_to_depth_limit, MCTS_with_expansions
 import sys
-from multiprocessing import  Process, pool
+from multiprocessing import  Process, pool, Pool
 
 class NoDaemonProcess(Process):
     # make 'daemon' attribute always return False
@@ -126,19 +126,25 @@ def get_policy_opponent_move(game_board, color_to_move, policy_opponent):
         move = get_random_move(game_board, color_to_move)
     elif policy_opponent == 'Expansion MCTS':
         move = MCTS_expansions_move(game_board, color_to_move)
+        #causes tensorflow CUDNN init errors mid game
+        # move = MCTS_move_multithread(game_board, color_to_move, MCTS_expansions_move)
     else:  # BFS to depth MCTS
-        move = MCTS_move_multithread(game_board, color_to_move)
+        move = MCTS_move_multithread(game_board, color_to_move, MCTS_BFS_to_depth_limit)
     return move
 
-def MCTS_move_multithread(game_board, player_color):
+def MCTS_move_multithread(game_board, player_color, MCTS_func):
     # to dealloc memory upon thread close;
     # if we call directly without forking a new process, ,
     # keeps memory until next call, causing huge bloat before it can garbage collect
     # if we increase processes, we get root-level parallelism (must pull out best move)
-    processes = MyPool(processes=1)
-    move = processes.starmap(MCTS_BFS_to_depth_limit, [[game_board, player_color]])[0]
-    processes.close()
-    processes.join()
+    if MCTS_func is MCTS_expansions_move:
+        pool_func = Pool
+    else:
+        pool_func = MyPool
+    with pool_func(processes=1) as processes:
+        move = processes.starmap(MCTS_func, [[game_board, player_color]])[0]
+        processes.close()
+        processes.join()
     return move
 
 def MCTS_expansions_move(game_board, player_color):

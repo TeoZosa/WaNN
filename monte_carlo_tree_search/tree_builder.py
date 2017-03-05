@@ -71,19 +71,19 @@ def visit_all_nodes_and_expand_multithread(unvisited_queue, player_color):
 
 def visit_single_node_and_expand(node_and_color):
     node = node_and_color[0]
-    player_color = node_and_color[1]
+    node_color = node_and_color[1]
     unvisited_children = []
     game_board = node.game_board
     is_game_over, winner_color = game_over(game_board)
     if is_game_over:  # only useful at end of game
-        set_game_over_values(node, player_color, winner_color)
+        set_game_over_values(node, node_color, winner_color)
     else:  # expand node, adding children to unvisited queue
         parent_node = node
-        child_as_moves = enumerate_legal_moves(game_board, player_color)
+        child_as_moves = enumerate_legal_moves(game_board, node_color)
         child_nodes = []
         for child_as_move in child_as_moves:  # generate grandchildren in order
             move = child_as_move['From'] + r'-' + child_as_move['To']
-            child_node = init_child_node_and_board(game_board, move, player_color, parent_node)
+            child_node = init_child_node_and_board(game_board, move, node_color, parent_node)
             child_nodes.append(child_node)
         parent_node.children = child_nodes
         unvisited_children.extend(child_nodes)
@@ -98,10 +98,10 @@ def init_child_node_and_board(game_board, child_as_move, parent_color, parent_no
     return TreeNode(child_board, child_color, child_index, parent_node)
 
 
-def set_game_over_values(node, player_color, winner_color):
+def set_game_over_values(node, node_color, winner_color):
     node.gameover = True
     overwhelming_amount = 999999999 #should be infinity as this node will always win
-    if winner_color == player_color:
+    if winner_color == node_color:
         update_tree_wins(node, overwhelming_amount) #draw agent towards move
     else:
         node.wins = 0 # this node will never win

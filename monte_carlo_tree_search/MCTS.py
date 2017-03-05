@@ -3,12 +3,23 @@ from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update
     update_values_from_policy_net, get_UCT
 from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand
 from tools.utils import move_lookup_by_index
+from Breakthrough_Player.board_utils import print_board
 import random
 import time
+import os
 
 class SimulationInfo():
     def __init__(self, file):
         self.file= file
+        self.counter = 1
+        self.prev_game_tree_size = 0
+        self.game_tree = []
+        self.game_tree_height = 0
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
         self.counter = 1
         self.prev_game_tree_size = 0
         self.game_tree = []
@@ -23,23 +34,23 @@ class SimulationInfo():
 # 3. keep searching to bottom of tree where we do random rollouts.
 
 def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_limit=5):
-    sim_info = SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__timetothink{time_to_think}.txt'.format(
-        depth=depth_limit, time_to_think=time_to_think),'a'))
-    # wanderer = 93,650k nodes  6GB
-    #this = 270k nodes 50 GB..
-    start_time = time.time()
-    root = TreeNode(game_board, player_color, None, None)
-    sim_info.game_tree = build_game_tree(player_color, 0, [root], depth_limit)
-    print("Number of Tree Nodes = {nodes} in {time} seconds".format(nodes=len(sim_info.game_tree), time=time.time()-start_time))
-    update_values_from_policy_net(sim_info.game_tree)
+    with SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__timetothink{time_to_think}.txt'.format(
+        depth=depth_limit, time_to_think=time_to_think),'a')) as sim_info:
+        # wanderer = 93,650k nodes  6GB
+        #this = 270k nodes 50 GB..
+        start_time = time.time()
+        root = TreeNode(game_board, player_color, None, None)
+        sim_info.game_tree = build_game_tree(player_color, 0, [root], depth_limit)
+        print("Number of Tree Nodes = {nodes} in {time} seconds".format(nodes=len(sim_info.game_tree), time=time.time()-start_time))
+        update_values_from_policy_net(sim_info.game_tree)
 
-    while (time.time()- start_time < time_to_think ):
-        run_BFS_MCTS_simulation(sim_info)
+        while (time.time()- start_time < time_to_think ):
+            run_BFS_MCTS_simulation(sim_info)
 
-    print("seconds taken: {}".format(time.time() - start_time))
-    best_move = move_lookup_by_index(choose_move(root).index, player_color)
-    print("For {player_color}, best move is {move}\n".format(player_color=player_color, move=best_move),file=sim_info.file)
-    sim_info.file.close()
+        print("seconds taken: {}".format(time.time() - start_time))
+        best_move = move_lookup_by_index(choose_move(root).index, player_color)
+        print("For {player_color}, best move is {move}\n".format(player_color=player_color, move=best_move),file=sim_info.file)
+        sim_info.file.close()
     return best_move
 
 def run_BFS_MCTS_simulation(sim_info):
@@ -68,21 +79,23 @@ def BFS_MCTS_game(root):
 
 #TODO: for root-level parallelism here, add stochasticity to UCT constant? 
 def MCTS_with_expansions(game_board, player_color, time_to_think=20, depth_limit=5):
-    sim_info = SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTS_depth_{depth}__timetothink{time_to_think}.txt'.format(
-        depth=depth_limit, time_to_think=time_to_think), 'a'))
-    root = TreeNode(game_board, player_color, None, None)
-    start_time = time.time()
+    with SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTS_depth_{depth}__timetothink{time_to_think}.txt'.format(
+        depth=depth_limit, time_to_think=time_to_think), 'a')) as sim_info:
+        root = TreeNode(game_board, player_color, None, None)
+        start_time = time.time()
 
-    while time.time() - start_time < time_to_think:
-        run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info)
+        while time.time() - start_time < time_to_think:
+            run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info)
 
-    best_move = move_lookup_by_index(choose_move(root).index, player_color)
-    sim_info.file.close()
-    return best_move
+        best_move = move_lookup_by_index(choose_move(root).index, player_color)
+        print("For {player_color}, best move is {move}\n".format(player_color=player_color, move=best_move),
+              file=sim_info.file)
+        sim_info.file.close()
+    return best_move #do I want to save this root to use next time?
 
 def run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info):
     play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info)
-    if sim_info.counter % 100 == 0:  # log every 100th simulation
+    if sim_info.counter  % 5 == 0:  # log every 100th simulation
         print_expansion_statistics(sim_info, start_time)
     sim_info.prev_game_tree_size = len(sim_info.game_tree)
     sim_info.counter += 1
@@ -132,6 +145,8 @@ def print_simulation_statistics(sim_info):
         print("Node {i}:    UCT = {uct}     wins = {wins}       visits = {visits}".format(
             i=i, uct=UCT, wins=sim_info.game_tree[i].wins, visits=sim_info.game_tree[i].visits),
             file=sim_info.file)
+        print_board(sim_info.game_tree[i].game_board, sim_info.file)
+        print("\n", file=sim_info.file)
 
 def print_expansion_statistics(sim_info, start_time):
     print_simulation_statistics(sim_info)

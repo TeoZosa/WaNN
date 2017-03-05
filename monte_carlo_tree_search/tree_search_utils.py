@@ -19,19 +19,22 @@ def update_tree_losses(node, amount=1): # visit and no win = loss
 
 def choose_move(node):
     parent_visits = node.visits
-    worst = None
+    best = None
     if node.children is not None:
-        worst = node.children[0]
-        worst_val = get_UCT(node.children[0], parent_visits)
+        best = node.children[0]
+        best_val = get_UCT(node.children[0], parent_visits)
         for i in range(1, len(node.children)):
             child_value = get_UCT(node.children[i], parent_visits)
-            if child_value < worst_val:
-                worst = node.children[i]
-                worst_val = child_value
-    return worst  #because a win for me = a loss for child?
+            if child_value > best_val:
+                best = node.children[i]
+                best_val = child_value
+    return best  #because a win for me = a loss for child?
 
 def get_UCT(node, parent_visits):
-    return np.float64((node.wins / node.visits) + (1.414 * math.sqrt(math.log(parent_visits) / node.visits)))
+    exploration_constant = 1.414 # 1.414 ~ √2
+    exploitation_factor = (node.visits - node.wins) / node.visits  #a loss value / visits of child = wins / visits for parent
+    exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
+    return np.float64(exploitation_factor + exploration_factor)
 
 def update_values_from_policy_net(game_tree):
     NN_output = generate_policy_net_moves_batch(game_tree)
@@ -41,6 +44,7 @@ def update_values_from_policy_net(game_tree):
             for child in game_tree[i].children:
                 # assert (child.parent is game_tree[i])
                 if child.gameover == False:  # if deterministically won/lost, don't update anything
+                    #maybe only update if over a certain threshold? or top 10?
                     NN_weighting = 1000
                     weighted_wins = int(NN_output[i][child.index] * NN_weighting)
                     # num_extra_visits = weighted_wins

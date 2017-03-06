@@ -17,20 +17,26 @@ class NoDaemonProcess(Process):
 class MyPool(pool.Pool):  # make a special class to allow for an inner process pool
     Process = NoDaemonProcess
 
-def play_game(player_is_white):
+def play_game(player_is_white, file_to_write=sys.stdout):
     print("Teo's Fabulous Breakthrough Player")
     game_board = initial_game_board()
     gameover = False
     move_number = 0
     winner_color = None
+    web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     while not gameover:
         print_board(game_board)
         move, color_to_move = get_move(game_board, player_is_white, move_number)
         print_move(move, color_to_move)
         game_board = move_piece(game_board, move, color_to_move)
+        move = move.split(r'-')
+        web_visualizer_link = web_visualizer_link + move[0] + move[1]
         gameover, winner_color = game_over(game_board)
         move_number += 1
-    print("Game over. {} wins".format(winner_color))
+    print_board(game_board, file=file_to_write)
+    print("Game over. {} wins".format(winner_color), file=file_to_write)
+    print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
+    return winner_color
 
 def get_move(game_board, player_is_white, move_number):
     if move_number % 2 == 0:  # white's turn
@@ -51,10 +57,9 @@ def get_whites_move(game_board, player_is_white):
             if not player_move_legal:
                 print("Error, illegal move. Please enter a legal move.")
     else:#get policy net move
-        # ranked_moves = generate_policy_net_moves(game_board, 'White')
-        # move = get_best_move(game_board, ranked_moves)
+        ranked_moves = generate_policy_net_moves(game_board, 'White')
+        move = get_best_move(game_board, ranked_moves)
 
-        move = MCTS_BFS_to_depth_limit (game_board, 'White')
         # move = get_random_move(game_board, 'White')
     return move
 
@@ -134,6 +139,9 @@ def get_policy_opponent_move(game_board, color_to_move, policy_opponent):
         move = MCTS_expansions_move(game_board, color_to_move)
         #causes tensorflow CUDNN init errors mid game
         # move = MCTS_move_multithread(game_board, color_to_move, MCTS_expansions_move)
+    elif policy_opponent == 'Policy':
+        ranked_moves = generate_policy_net_moves(game_board, color_to_move)
+        move = get_best_move(game_board, ranked_moves)
     else:  # BFS to depth MCTS
         move = MCTS_move_multithread(game_board, color_to_move, MCTS_BFS_to_depth_limit)
     return move

@@ -48,13 +48,12 @@ def randomly_choose_a_winning_move(node):
                     best = child
                     best_val = child_win_rate
 
-        for i in range(1, len(node.children)): #find equally best children
-            child = node.children[i]
+        for child in node.children: #find equally best children
             child_win_rate = child.wins / child.visits
             if child_win_rate == best_val:
                 if best.visits == child.visits:
                     best_nodes.append(child)
-        best_nodes.append(best) #should now have list of equally best children
+        #should now have list of equally best children
     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
 
 
@@ -74,7 +73,7 @@ def update_values_from_policy_net(game_tree):
             for child in parent.children:#iterate over to get the sum
                 sum_for_normalization += NN_output[i][child.index]
             for child in parent.children:#iterate again to update values
-                # assert (child.parent is game_tree[i])
+                # assert (child.parent is game_tree[i]) #for multithreading
                 if child.gameover is False:  # update only if not the end of the game
                     update_child(child, NN_output[i], top_children_indexes, sum_for_normalization)
 
@@ -90,7 +89,7 @@ def update_child(child, NN_output, top_children_indexes, sum_for_normalization):
         #  ex. even if all same rounded visits, rank 0 will have visits + 50
         rank = top_children_indexes.index(child_index)
         relative_weighting_offset = (num_top_children - rank)
-        relative_weighting = relative_weighting_offset #* (num_top_children * 2) #change number??
+        relative_weighting = relative_weighting_offset * (num_top_children * 2) #change number??
         weighted_wins = int(normalized_value) + relative_weighting
     else:
         weighted_wins = int(normalized_value)

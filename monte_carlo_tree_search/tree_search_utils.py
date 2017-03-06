@@ -17,7 +17,7 @@ def update_tree_losses(node, amount=1): # visit and no win = loss
     if parent is not None: #node loss => parent win
         update_tree_wins(parent, amount)
 
-def choose_move(node):
+def choose_UCT_move(node):
     parent_visits = node.visits
     best = None
     if node.children is not None:
@@ -30,36 +30,58 @@ def choose_move(node):
                 best_val = child_value
     return best  #because a win for me = a loss for child?
 
+def choose_winning_move(node):
+    best = None
+    if node.children is not None:
+        best = node.children[0]
+        best_val = node.children[0].wins/node.children[0].visits
+        for i in range(1, len(node.children)):
+            child = node.children[i]
+            child_win_rate = child.wins/child.visits
+            if child_win_rate < best_val: #get the child with the lowest win rate
+                best = child
+                best_val = child_win_rate
+            elif child_win_rate == best_val: #if both have equal win rate (i.e. both 0/visits), get the one with the most visits
+                if best.visits < child.visits:
+                    best = child
+                    best_val = child_win_rate
+    return best  # because a win for me = a loss for child
+
 def get_UCT(node, parent_visits):
     exploration_constant = 1.414 # 1.414 ~ √2
-    exploitation_factor = (node.visits - node.wins) / node.visits  #a loss value / visits of child = wins / visits for parent
+    exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
     exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
     return np.float64(exploitation_factor + exploration_factor)
 
 def update_values_from_policy_net(game_tree):
     NN_output = generate_policy_net_moves_batch(game_tree)
     for i in range(0, len(NN_output)):
+        top_children_indexes = get_top_children(NN_output[i])
         parent = game_tree[i]
         if parent.children is not None:
-            for child in game_tree[i].children:
+            for child in parent.children:
                 # assert (child.parent is game_tree[i])
-                if child.gameover == False:  # if deterministically won/lost, don't update anything
-                    #maybe only update if over a certain threshold? or top 10?
-                    NN_weighting = 1000
-                    weighted_wins = int(NN_output[i][child.index] * NN_weighting)
-                    # num_extra_visits = weighted_wins
-                    # update_tree_losses(child, num_extra_visits)
-                    update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
-                    # or else it may be a high visit count with low win count
+                if child.gameover == False:  # update only if not the end of the game
+                    update_child(child, NN_output[i], top_children_indexes)
 
-def update_single_value_from_policy_net(node):  # multi valued call should work too?
-    NN_output = generate_policy_net_moves(node.game_board, node.color)
-    for child in node.children:
-        assert (child.parent is node)
-        if child.gameover is False:  # if deterministically won/lost, don't update anything
-            NN_weighting = 1000
-            weighted_wins = int(NN_output[child.index] * NN_weighting)
-            # num_extra_visits = weighted_wins
-            # update_tree_losses(child, num_extra_visits)
-            update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
-            # or else it may be a high visit count with low win count
+
+def update_child(child, NN_output, top_children_indexes):
+    num_top_children = len(top_children_indexes)
+    # TODO: only update if over a certain threshold? or top 10?
+    # sometimes majority of children end up being the same weight as precision is lost with rounding
+    NN_weighting = 1000
+    child_index = child.index
+    if child_index in top_children_indexes:  # weight top moves higher for exploitation
+        #  ex. even if all same rounded visits, rank 0 will have visits + 50
+        rank = top_children_indexes.index(child_index)
+        relative_weighting_offset = (num_top_children - rank)
+        relative_weighting = relative_weighting_offset * (num_top_children * 2)
+        weighted_wins = int(NN_output[child_index] * NN_weighting) + relative_weighting
+    else:
+        weighted_wins = int(NN_output[child_index] * NN_weighting)
+    update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
+    # or else it may be a high visit count with low win count
+
+def get_top_children(NN_output):
+    num_to_consider = 5
+    return sorted(range(len(NN_output)), key=lambda k: NN_output[k], reverse=True)[:num_to_consider]

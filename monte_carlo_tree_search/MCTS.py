@@ -1,6 +1,6 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
-from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, choose_move, \
-    update_values_from_policy_net, get_UCT
+from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, choose_UCT_move, \
+    update_values_from_policy_net, get_UCT, choose_winning_move
 from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board
@@ -48,7 +48,7 @@ def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_
             run_BFS_MCTS_simulation(sim_info)
 
         print("seconds taken: {}".format(time.time() - start_time))
-        best_move = move_lookup_by_index(choose_move(root).index, player_color)
+        best_move = move_lookup_by_index(choose_winning_move(root).index, player_color)
         print("For {player_color}, best move is {move}\n".format(player_color=player_color, move=best_move),file=sim_info.file)
         sim_info.file.close()
     return best_move
@@ -65,7 +65,7 @@ def BFS_MCTS_game(root):
         #bottom of tree; random rollout
        random_rollout(root)
     else:
-        move = choose_move(root)
+        move = choose_UCT_move(root)
         BFS_MCTS_game(move)
         
 
@@ -78,7 +78,7 @@ def BFS_MCTS_game(root):
 # 4. do random rollouts. repeat 1.
 
 #TODO: for root-level parallelism here, add stochasticity to UCT constant? 
-def MCTS_with_expansions(game_board, player_color, time_to_think=20, depth_limit=5):
+def MCTS_with_expansions(game_board, player_color, time_to_think=60, depth_limit=1):
     with SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTS_depth_{depth}__timetothink{time_to_think}.txt'.format(
         depth=depth_limit, time_to_think=time_to_think), 'a')) as sim_info:
         root = TreeNode(game_board, player_color, None, None)
@@ -87,7 +87,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think=20, depth_limit
         while time.time() - start_time < time_to_think:
             run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info)
 
-        best_move = move_lookup_by_index(choose_move(root).index, player_color)
+        best_move = move_lookup_by_index(choose_winning_move(root).index, player_color)
         print("For {player_color}, best move is {move}\n".format(player_color=player_color, move=best_move),
               file=sim_info.file)
         sim_info.file.close()
@@ -111,7 +111,7 @@ def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_heig
                 sim_info.game_tree.append(root)
                 if not root.gameover: # expansion may have revealed a gameover
                     #root should now have children with values
-                    move = choose_move(root)
+                    move = choose_UCT_move(root)
                     #fact: since this node was previously unexpanded, all subsequent nodes will be unexpanded
                     #=> will increment depth each subsequent call
                     play_MCTS_game_with_expansions(move, depth + 1, depth_limit, sim_info, this_height + 1) #search until depth limit
@@ -123,16 +123,17 @@ def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_heig
                 #return here
          # else: return here
     else:#keep searching tree
-        move = choose_move(root)
+        move = choose_UCT_move(root)
         play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info, this_height + 1)
 
 
 def random_rollout(node):
+    amount = 1#increase to pretend to outweigh NN?
     win = random.randint(0, 1)
     if win == 1:
-        update_tree_wins(node)
+        update_tree_wins(node, amount)
     else:
-        update_tree_losses(node)
+        update_tree_losses(node, amount)
 
 def print_simulation_statistics(sim_info):
     print("Monte Carlo Game {iteration}\n".format(iteration=sim_info.counter), file=sim_info.file)

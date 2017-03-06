@@ -3,7 +3,7 @@ from multiprocessing import freeze_support
 
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
-  num_games_to_play = 51
+  num_games_to_play = 11
   black_wins = 0
   white_wins = 0
   file_to_write = open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTSvsPolicy.txt','a')

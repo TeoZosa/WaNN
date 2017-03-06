@@ -6,7 +6,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 11
   black_wins = 0
   white_wins = 0
-  file_to_write = open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTSvsPolicy.txt','a')
+  file_to_write = open(r'G:\TruncatedLogs\PythonDatasets\03052017_2randomStartMoves_ExpansionMCTSvsPolicy.txt','a')
   #possible policy net opponents
   expansion_MCTS = 'Expansion MCTS'
   random_moves = 'Random'

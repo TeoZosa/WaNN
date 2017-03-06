@@ -97,25 +97,31 @@ def self_play_game(policy_net_is_white, policy_opponent='Expansion MCTS', file_t
 def get_move_self_play(game_board, policy_net_is_white, move_number, policy_opponent):
     if move_number % 2 == 0:  # white's turn
         color_to_move = 'White'
-        move = get_whites_move_self_play(game_board, policy_net_is_white, policy_opponent)
+        move = get_whites_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number)
     else:  # black's turn
         color_to_move = 'Black'
-        move = get_blacks_move_self_play(game_board, policy_net_is_white, policy_opponent)
+        move = get_blacks_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number)
     return move, color_to_move
 
-def get_whites_move_self_play(game_board, policy_net_is_white, policy_opponent):
+def get_whites_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number):
     color_to_move = 'White' # explicitly declared here since this is only for white
     if policy_net_is_white:#get policy net move
         ranked_moves = generate_policy_net_moves(game_board, color_to_move)
         move = get_best_move(game_board, ranked_moves)
     else:# get MCTS type or random
-        move = get_policy_opponent_move(game_board, color_to_move, policy_opponent)
+        if move_number <= 4:
+            move = get_random_move(game_board, color_to_move)
+        else:
+            move = get_policy_opponent_move(game_board, color_to_move, policy_opponent)
     return move
 
-def get_blacks_move_self_play(game_board, policy_net_is_white, policy_opponent):
+def get_blacks_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number):
     color_to_move = 'Black' # explicitly declared here since this is only for black
     if policy_net_is_white:#get MCTS_BFS_to_depth_limit
-       move = get_policy_opponent_move(game_board, color_to_move, policy_opponent)
+        if move_number <= 4:
+            move = get_random_move(game_board, color_to_move)
+        else:
+            move = get_policy_opponent_move(game_board, color_to_move, policy_opponent)
     else:#get policy net move
         ranked_moves = generate_policy_net_moves(game_board, color_to_move)
         move = get_best_move(game_board, ranked_moves)

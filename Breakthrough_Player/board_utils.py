@@ -103,6 +103,29 @@ def get_best_move(game_board, policy_net_output):
         if move in legal_move_indexes:
             return utils.move_lookup_by_index(move, player_color)
 
+def get_one_of_the_best_moves(game_board, policy_net_output): #if we want successful stochasticity in pure policy net moves
+    player_color_index = 9
+    is_white = 1
+    if game_board[player_color_index] == is_white:
+        player_color = 'White'
+    else:
+        player_color = 'Black'
+    ranked_move_indexes = sorted(range(len(policy_net_output[0])), key=lambda i: policy_net_output[0][i], reverse=True)
+    legal_moves = enumerate_legal_moves(game_board, player_color)
+    legal_move_indexes = convert_legal_moves_into_policy_net_indexes(legal_moves, player_color)
+    best_moves = []
+    best_move = None
+    for move in ranked_move_indexes:#iterate over moves from best to worst and pick the first legal move =? best legal move; will terminate before loop ends
+        if move in legal_move_indexes:
+            best_move = move
+    best_move_val = policy_net_output[best_move] #to get value to compare
+    for move in ranked_move_indexes:#do it again to get array of best moves
+        if move in legal_move_indexes:
+            move_val = policy_net_output[move]
+            if move_val/best_move_val > 0.9: #if within 10% of best_move_val
+                best_moves.append(move)
+    a_best_move = random.sample(best_moves, 1)[0]
+    return utils.move_lookup_by_index(a_best_move, player_color)
 
 def enumerate_legal_moves(game_board, player_color):
     if player_color == 'White':

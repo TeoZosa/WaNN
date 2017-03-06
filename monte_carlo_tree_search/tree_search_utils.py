@@ -1,6 +1,7 @@
 from Breakthrough_Player.board_utils import generate_policy_net_moves_batch, generate_policy_net_moves
 import math
 import numpy as np
+import random
 
 #backpropagate wins
 def update_tree_wins(node, amount=1): #visits and wins go together
@@ -30,12 +31,13 @@ def choose_UCT_move(node):
                 best_val = child_value
     return best  #because a win for me = a loss for child?
 
-def choose_winning_move(node):
+def randomly_choose_a_winning_move(node):
     best = None
+    best_nodes = []
     if node.children is not None:
         best = node.children[0]
         best_val = node.children[0].wins/node.children[0].visits
-        for i in range(1, len(node.children)):
+        for i in range(1, len(node.children)): #find best child
             child = node.children[i]
             child_win_rate = child.wins/child.visits
             if child_win_rate < best_val: #get the child with the lowest win rate
@@ -45,7 +47,16 @@ def choose_winning_move(node):
                 if best.visits < child.visits:
                     best = child
                     best_val = child_win_rate
-    return best  # because a win for me = a loss for child
+
+        for i in range(1, len(node.children)): #find equally best children
+            child = node.children[i]
+            child_win_rate = child.wins / child.visits
+            if child_win_rate == best_val:
+                if best.visits == child.visits:
+                    best_nodes.append(child)
+        best_nodes.append(best) #should now have list of equally best children
+    return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
+
 
 def get_UCT(node, parent_visits):
     exploration_constant = 1.414 # 1.414 ~ √2
@@ -75,7 +86,7 @@ def update_child(child, NN_output, top_children_indexes):
         #  ex. even if all same rounded visits, rank 0 will have visits + 50
         rank = top_children_indexes.index(child_index)
         relative_weighting_offset = (num_top_children - rank)
-        relative_weighting = relative_weighting_offset * (num_top_children * 2)
+        relative_weighting = relative_weighting_offset #* (num_top_children * 2) #change number??
         weighted_wins = int(NN_output[child_index] * NN_weighting) + relative_weighting
     else:
         weighted_wins = int(NN_output[child_index] * NN_weighting)

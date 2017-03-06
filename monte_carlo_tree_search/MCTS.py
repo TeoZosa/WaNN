@@ -1,7 +1,7 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
-from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, choose_UCT_move, \
-    update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move
-from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand, random_rollout
+from monte_carlo_tree_search.tree_search_utils import choose_UCT_move, \
+    update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move, choose_UCT_or_promising_unexpanded_move
+from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand, random_rollout, update_win_status_from_children
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board
 import time
@@ -32,7 +32,7 @@ class SimulationInfo():
 # 3. keep searching to bottom of tree where we do random rollouts.
 
 def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_limit=5):
-    with SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__timetothink{time_to_think}.txt'.format(
+    with SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03042017_depth_{depth}__ttt{time_to_think}.txt'.format(
         depth=depth_limit, time_to_think=time_to_think),'a')) as sim_info:
         # wanderer = 93,650k nodes  6GB
         #this = 270k nodes 50 GB..
@@ -77,7 +77,7 @@ def BFS_MCTS_game(root):
 
 #TODO: for root-level parallelism here, add stochasticity to UCT constant? 
 def MCTS_with_expansions(game_board, player_color, time_to_think=60, depth_limit=1):
-    with SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03052017ExpansionMCTS_depth_{depth}__timetothink{time_to_think}.txt'.format(
+    with SimulationInfo(open(r'G:\TruncatedLogs\PythonDatasets\03062017BestFirstExpansionMCTS_depth{depth}_ttt{time_to_think}.txt'.format(
         depth=depth_limit, time_to_think=time_to_think), 'a')) as sim_info:
         root = TreeNode(game_board, player_color, None, None)
         start_time = time.time()
@@ -121,7 +121,9 @@ def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_heig
                 #return here
          # else: return here
     else:#keep searching tree
-        move = choose_UCT_move(root)
+        if root.win_status is None: #if False => all kids are winners, if True => some kid is a loser
+            update_win_status_from_children(root)#to check for forced wins
+        move = choose_UCT_or_promising_unexpanded_move(root)
         play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info, this_height + 1)
 
 

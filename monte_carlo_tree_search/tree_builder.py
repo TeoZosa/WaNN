@@ -1,7 +1,7 @@
 from Breakthrough_Player.board_utils import game_over, enumerate_legal_moves, move_piece
 from tools.utils import index_lookup_by_move
 from monte_carlo_tree_search.TreeNode import TreeNode
-from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins
+from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, update_win_statuses
 from multiprocessing import Pool
 import random
 
@@ -83,13 +83,35 @@ def visit_single_node_and_expand(node_and_color):
 def expand_node(parent_node):
     children_as_moves = enumerate_legal_moves(parent_node.game_board, parent_node.color)
     child_nodes = []
+    children_win_statuses = []
     for child_as_move in children_as_moves:  # generate children
         move = child_as_move['From'] + r'-' + child_as_move['To']
         child_node = init_child_node_and_board(parent_node.game_board, move, parent_node.color, parent_node)
         check_for_winning_move(child_node)
+        children_win_statuses.append(child_node.win_status)
         child_nodes.append(child_node)
+    set_win_status_from_children(parent_node, children_win_statuses)
     parent_node.children = child_nodes
     return child_nodes
+
+def update_win_status_from_children(node):
+    win_statuses = get_win_statuses_of_children(node)
+    set_win_status_from_children(node, win_statuses)
+
+def get_win_statuses_of_children(node):
+    win_statuses = []
+    children = node.children
+    for child in children:
+        win_statuses.append(child.win_status)
+    return win_statuses
+
+def set_win_status_from_children(node, children_win_statuses):
+    if False in children_win_statuses: #Fact: if any child is false => parent is true
+        update_win_statuses(node, True)  # some kid is a loser, I have some game winning move to choose from
+    if True in children_win_statuses and not False in children_win_statuses and not None in children_win_statuses:
+        update_win_statuses(node, False)#all children winners = node is a loss no matter what
+    #else:
+       # some kids are winners, some kids are unknown => can't say anything with certainty
 
 def init_child_node_and_board(game_board, child_as_move, parent_color, parent_node):
     child_color = get_opponent_color(parent_color)
@@ -107,9 +129,11 @@ def set_game_over_values(node, node_color, winner_color):
     overwhelming_amount = 999999999 #change this value? it may be too large and influence tree growth in a funny way
     if winner_color == node_color:
         update_tree_wins(node, overwhelming_amount) #draw agent towards move
+        update_win_statuses(node, True)
     else:
-        node.wins = 0 # this node will never win
+        node.wins = -overwhelming_amount # this node will never win; also sets UCT to be large
         update_tree_losses(node, overwhelming_amount) #keep agent away from move
+        update_win_statuses(node, False)
 
 def random_rollout(node):
     amount = 1  # increase to pretend to outweigh NN?

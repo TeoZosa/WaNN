@@ -18,44 +18,91 @@ def update_tree_losses(node, amount=1): # visit and no win = loss
     if parent is not None: #node loss => parent win
         update_tree_wins(parent, amount)
 
+#backpropagate guaranteed win status
+def update_win_statuses(node, win_status): #is win status really necessary? shouldn't the UCT do the same thing with huge wins/losses?
+    node.win_status = win_status
+    # loss_status = not win_status
+    # parent = node.parent
+    # if parent is not None:
+    #     update_win_statuses(parent, loss_status)
+
 def choose_UCT_move(node):
-    parent_visits = node.visits
-    best = None
+    best = None #shouldn't ever return None
     if node.children is not None:
-        best = node.children[0]
-        best_val = get_UCT(node.children[0], parent_visits)
-        for i in range(1, len(node.children)):
+        best = find_best_UCT_child(node)
+    return best  #because a win for me = a loss for child?
+
+def choose_UCT_or_promising_unexpanded_move(node):
+    best = None  # shouldn't ever return None
+    if node.best_child is not None:
+        if node.best_child.expanded == False:
+            best = node.best_child
+            node.best_child.expanded = True
+        else:
+            best = find_best_UCT_child(node)
+    elif node.children is not None:
+        best = find_best_UCT_child(node)
+    return best  # because a win for me = a loss for child?
+
+def find_best_UCT_child(node):
+    parent_visits = node.visits
+    best = node.children[0]
+    best_val = get_UCT(node.children[0], parent_visits)
+    for i in range(1, len(node.children)):
+        if not node.children[i].win_status == True: #don't even consider children who will win
             child_value = get_UCT(node.children[i], parent_visits)
             if child_value > best_val:
                 best = node.children[i]
                 best_val = child_value
-    return best  #because a win for me = a loss for child?
+    return best
 
 def randomly_choose_a_winning_move(node):
-    best = None
     best_nodes = []
     if node.children is not None:
-        best = node.children[0]
-        best_val = node.children[0].wins/node.children[0].visits
-        for i in range(1, len(node.children)): #find best child
-            child = node.children[i]
-            child_win_rate = child.wins/child.visits
-            if child_win_rate < best_val: #get the child with the lowest win rate
+        win_can_be_forced, best_nodes = check_for_forced_win(node.children)
+        if not win_can_be_forced:
+            best_nodes = get_best_children(node.children)
+    return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
+
+def check_for_forced_win(node_children):
+    guaranteed_children = []
+    forced_win = False
+    for child in node_children:
+        if child.win_status == False:
+            guaranteed_children.append(child)
+            forced_win = True
+    if len(guaranteed_children) > 0:
+        guaranteed_children = get_best_children(guaranteed_children)
+    return forced_win, guaranteed_children #does it really matter which losing child is the best if all are losers?
+
+def get_best_child(node_children):
+    best = node_children[0]
+    best_val = node_children[0].wins / node_children[0].visits
+    for i in range(1, len(node_children)):  # find best child
+        child = node_children[i]
+        child_win_rate = child.wins / child.visits
+        if child_win_rate < best_val:  # get the child with the lowest win rate
+            best = child
+            best_val = child_win_rate
+        elif child_win_rate == best_val:  # if both have equal win rate (i.e. both 0/visits), get the one with the most visits
+            if best.visits < child.visits:
                 best = child
                 best_val = child_win_rate
-            elif child_win_rate == best_val: #if both have equal win rate (i.e. both 0/visits), get the one with the most visits
-                if best.visits < child.visits:
-                    best = child
-                    best_val = child_win_rate
+    return best, best_val
 
-        for child in node.children: #find equally best children
+def get_best_children(node_children):#TODO: make sure to not pick winning children?
+    best, best_val = get_best_child(node_children)
+    best_nodes = []
+    for child in node_children:  # find equally best children
+        if not child.win_status == True: #don't even consider children who will win
             child_win_rate = child.wins / child.visits
             if child_win_rate == best_val:
                 if best.visits == child.visits:
                     best_nodes.append(child)
-        #should now have list of equally best children
-    return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
-
+                    # should now have list of equally best children
+    if len(best_nodes) == 0: #all children are winners => checkmated, just make the best move you have
+        best_nodes.append(best)
+    return best_nodes
 
 def get_UCT(node, parent_visits):
     exploration_constant = 1.414 # 1.414 ~ √2
@@ -88,8 +135,10 @@ def update_child(child, NN_output, top_children_indexes, sum_for_normalization):
     if child_index in top_children_indexes:  # weight top moves higher for exploitation
         #  ex. even if all same rounded visits, rank 0 will have visits + 50
         rank = top_children_indexes.index(child_index)
+        if rank == 0:
+            child.parent.best_child = child #mark as node to expand first
         relative_weighting_offset = (num_top_children - rank)
-        relative_weighting = relative_weighting_offset * (num_top_children * 2) #change number??
+        relative_weighting = relative_weighting_offset * num_top_children * 2 #change number??
         weighted_wins = int(normalized_value) + relative_weighting
     else:
         weighted_wins = int(normalized_value)

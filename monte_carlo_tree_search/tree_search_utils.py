@@ -70,26 +70,30 @@ def update_values_from_policy_net(game_tree):
         top_children_indexes = get_top_children(NN_output[i])
         parent = game_tree[i]
         if parent.children is not None:
-            for child in parent.children:
+            sum_for_normalization = 0
+            for child in parent.children:#iterate over to get the sum
+                sum_for_normalization += NN_output[i][child.index]
+            for child in parent.children:#iterate again to update values
                 # assert (child.parent is game_tree[i])
-                if child.gameover == False:  # update only if not the end of the game
-                    update_child(child, NN_output[i], top_children_indexes)
+                if child.gameover is False:  # update only if not the end of the game
+                    update_child(child, NN_output[i], top_children_indexes, sum_for_normalization)
 
 
-def update_child(child, NN_output, top_children_indexes):
+def update_child(child, NN_output, top_children_indexes, sum_for_normalization):
     num_top_children = len(top_children_indexes)
     # TODO: only update if over a certain threshold? or top 10?
     # sometimes majority of children end up being the same weight as precision is lost with rounding
-    NN_weighting = 1000
     child_index = child.index
+    child_val = NN_output[child_index]
+    normalized_value = (child_val / sum_for_normalization) * 100
     if child_index in top_children_indexes:  # weight top moves higher for exploitation
         #  ex. even if all same rounded visits, rank 0 will have visits + 50
         rank = top_children_indexes.index(child_index)
         relative_weighting_offset = (num_top_children - rank)
         relative_weighting = relative_weighting_offset #* (num_top_children * 2) #change number??
-        weighted_wins = int(NN_output[child_index] * NN_weighting) + relative_weighting
+        weighted_wins = int(normalized_value) + relative_weighting
     else:
-        weighted_wins = int(NN_output[child_index] * NN_weighting)
+        weighted_wins = int(normalized_value)
     update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
     # or else it may be a high visit count with low win count
 

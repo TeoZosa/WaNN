@@ -1,12 +1,27 @@
 from Breakthrough_Player.breakthrough_player import self_play_game
 from multiprocessing import freeze_support
+import os.path
 
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
-  num_games_to_play = 1
+  num_games_to_play = 10
   black_wins = 0
   white_wins = 0
-  file_to_write = open(r'G:\TruncatedLogs\PythonDatasets\03062017_2RandStartMoves_randBestMoves_normalizedNNupdate_rankingOffset_BlackEMCTSvsPolicy.txt','a')
+  time_to_think = 60
+  depth_limit = 1
+  date = r'03072017'
+  file_designator = ''
+  opponent = 'EMCTS'
+  path = r'G:\TruncatedLogs\PythonDatasets'
+  gameplay_file = open(os.path.join(path,
+                      r'{date}_2RandStartMoves_randBestMoves_'
+                       r'normalizedNNupdate_rankingOffset_'
+                       r'White{opponent}vsPolicy{designator}.txt'.format(date=date, opponent=opponent, designator=file_designator)), 'a')
+  MCTS_logging_file = open(os.path.join(path,
+                           r'{date}{opponent}_'
+                           r'depth{depth}_'
+                           r'ttt{time_to_think}{designator}.txt'.format(date=date, opponent=opponent, designator=file_designator,
+        depth=depth_limit, time_to_think=time_to_think)), 'a')
   #possible policy net opponents
   expansion_MCTS = 'Expansion MCTS'
   random_moves = 'Random'
@@ -14,11 +29,14 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   policy = "Policy"
 
   for i in range(0, num_games_to_play):
-    winner_color = self_play_game(True, policy_opponent=expansion_MCTS, )
+    winner_color = self_play_game(False, policy_opponent=expansion_MCTS, depth_limit=depth_limit,
+                                  time_to_think=time_to_think, file_to_write=gameplay_file, MCTS_log_file=MCTS_logging_file)
     if winner_color == 'White':
       white_wins += 1
     else:
       black_wins += 1
     print("Game {game}  White Wins: {white_wins}    Black Wins: {black_wins}".format(
-        game=i+1, white_wins=white_wins, black_wins=black_wins ), file=file_to_write)
-  file_to_write.close()
+        game=i+1, white_wins=white_wins, black_wins=black_wins ), file=gameplay_file)
+
+  gameplay_file.close()
+  MCTS_logging_file.close()

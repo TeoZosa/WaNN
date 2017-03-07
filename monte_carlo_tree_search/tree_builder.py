@@ -70,6 +70,11 @@ def visit_all_nodes_and_expand_multithread(unvisited_queue, player_color):
 
 def visit_single_node_and_expand(node_and_color):
     node = node_and_color[0]
+    unvisited_children = expand_node(node)
+    return unvisited_children
+
+def visit_single_node_and_expand_no_lookahead(node_and_color):
+    node = node_and_color[0]
     node_color = node_and_color[1]
     unvisited_children = []
     game_board = node.game_board
@@ -87,7 +92,7 @@ def expand_node(parent_node):
     for child_as_move in children_as_moves:  # generate children
         move = child_as_move['From'] + r'-' + child_as_move['To']
         child_node = init_child_node_and_board(parent_node.game_board, move, parent_node.color, parent_node)
-        check_for_winning_move(child_node)
+        check_for_winning_move(child_node) #1-step lookahead for gameover
         children_win_statuses.append(child_node.win_status)
         child_nodes.append(child_node)
     set_win_status_from_children(parent_node, children_win_statuses)
@@ -126,7 +131,7 @@ def check_for_winning_move(child_node):
 
 def set_game_over_values(node, node_color, winner_color):
     node.gameover = True
-    overwhelming_amount = 999999999 #change this value? it may be too large and influence tree growth in a funny way
+    overwhelming_amount = 9999999#change this value? it may be too large and influence tree growth in a funny way
     if winner_color == node_color:
         update_tree_wins(node, overwhelming_amount) #draw agent towards move
         update_win_statuses(node, True)

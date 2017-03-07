@@ -16,6 +16,8 @@ import sys
 # 4. do random rollouts. repeat 1.
 
 #TODO: for root-level parallelism here, add stochasticity to UCT constant?
+
+#for production, remove simulation info logging code
 def MCTS_with_expansions(game_board, player_color, time_to_think=60, depth_limit=1, previous_move=None, log_file=sys.stdout):
     with SimulationInfo(log_file) as sim_info:
 
@@ -27,7 +29,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think=60, depth_limit
         best_child = randomly_choose_a_winning_move(root)
         best_move = move_lookup_by_index(best_child.index, player_color)
         print_best_move(player_color, best_move, sim_info)
-    return best_child, best_move #save this root to use next time?
+    return best_child, best_move #save this root to use next time
 
 def assign_root(game_board, player_color, previous_move):
     if previous_move is None: #no tree to reuse
@@ -88,7 +90,7 @@ def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height):
 def log_expanded_node(node, this_height, sim_info):
     # put expanded node and height into game tree
     sim_info.game_tree.append(node)
-    sim_info.game_node_height.append(this_height)
+    node.height = this_height
 
 def play_simulation(root, sim_info, this_height):
     random_rollout(root)
@@ -113,7 +115,7 @@ def print_simulation_statistics(sim_info):
         else:
             UCT = get_UCT(sim_info.game_tree[i], node_parent.visits)
         print("Node {i} Height {height}:    UCT = {uct}     wins = {wins}       visits = {visits}".format(
-            i=i, height=sim_info.game_node_height[i], uct=UCT, wins=sim_info.game_tree[i].wins, visits=sim_info.game_tree[i].visits),
+            i=i, height=sim_info.game_tree[i].height, uct=UCT, wins=sim_info.game_tree[i].wins, visits=sim_info.game_tree[i].visits),
             file=sim_info.file)
         print_board(sim_info.game_tree[i].game_board, sim_info.file)
         print("\n", file=sim_info.file)

@@ -10,7 +10,6 @@ class SimulationInfo():
         self.prev_game_tree_size = 0
         self.game_tree = []
         self.game_tree_height = 0
-        self.game_node_height = [] #synchronized with nodes in game_tree
         self.start_time = None
 
     def __enter__(self):
@@ -21,6 +20,8 @@ class SimulationInfo():
         self.prev_game_tree_size = 0
         self.game_tree = []
         self.game_tree_height = 0
+        self.game_node_height = []  # synchronized with nodes in game_tree
+        self.start_time = None
 
 #backpropagate wins
 def update_tree_wins(node, amount=1): #visits and wins go together

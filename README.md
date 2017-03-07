@@ -8,7 +8,7 @@
 - To see an example of a full game between the policy net and an agent using the policy net for node expansion in MCTS, click the game board image above (courtesy of www.trmph.com)
 - The neural networks herein will eventually be merged with a C++ program that uses a Monte Carlo tree search.<p>
 - Through [`breakthrough_player.py`](../master/Breakthrough_Player/breakthrough_player.py), a user can play against a trained policy net, or MCTS+policy net variants.<p> 
-- A majority of the code is made up of multiple auxiliary files for pulling the data from a <a href="https://www.littlegolem.net/jsp/games/gamedetail.jsp?gtid=brkthr">website storing Breakthrough game data</a>, or self-play logs, and transforming that data into labeled training data for a neural network built using <a href="https://github.com/tensorflow/tensorflow"> Tensorflow</a>.<p><p> 
+- A majority of the code is made up of multiple auxiliary files for pulling the data from a <a href="https://www.littlegolem.net/jsp/games/gamedetail.jsp?gtid=brkthr">website storing Breakthrough game data</a>, or self-play logs, and transforming that data into labeled training data for the neural networks (built using <a href="https://github.com/tensorflow/tensorflow"> Tensorflow</a>).<p><p> 
 - Currently running experiments on different models trained on self-play data.
 
 

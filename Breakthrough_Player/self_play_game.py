@@ -4,7 +4,7 @@ import os.path
 
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
-  num_games_to_play = 10
+  num_games_to_play = 20
   black_wins = 0
   white_wins = 0
   time_to_think = 60

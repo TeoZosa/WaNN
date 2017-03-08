@@ -89,17 +89,6 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height):
         # return here
 
 def expand_and_select(node, depth, depth_limit, sim_info, this_height):
-    # if MCTS_Type == 'Expansion MCTS':
-    #     expand(node, sim_info, this_height)
-    #     if node.win_status is None:  # if we don't know the win status, search deeper
-    #         update_children_and_select(node, depth, depth_limit, sim_info, this_height)
-    #     else:
-    #         #hacky fix: if node expanded child is a winner/loser, won't prune children and doesn't initialize all visits => buggy UCT values
-    #         for child in node.children:
-    #             if child.visits == 0:
-    #                 child.visits = 1
-    #     # else: return here; #don't bother checking past sub-tree if we already know there is a guaranteed win/loss
-    # elif MCTS_Type == 'EBFS MCTS':
     #TODO: check; this should work for both. depth_limit 1 = Expansion MCTS with pre-pruning, depth_limit > 1 = EBFS MCTS
     expand_and_update_children_wrt_NN(node, depth, depth_limit, sim_info, this_height)
     if node.win_status is None:  # if we don't know the win status, search deeper
@@ -112,18 +101,9 @@ def expand_and_select(node, depth, depth_limit, sim_info, this_height):
                 child.visits = 1
                 # else: return here; #don't bother checking past sub-tree if we already know there is a guaranteed win/loss
 
-
-def expand(node, sim_info, this_height):
-    visit_single_node_and_expand([node, node.color])  # also checks children for game overs
-    log_expanded_node(node, this_height, sim_info)
-
-# def update_children_and_select(node, depth, depth_limit, sim_info, this_height):
-#     update_values_from_policy_net([node])# root should now have children with values
-#     select_unexpanded_child(node, depth, depth_limit, sim_info, this_height)
-
 def expand_and_update_children_wrt_NN(node, depth, depth_limit, sim_info, this_height):
     expand_child_nodes_wrt_NN([node], depth,
-                              depth_limit)  # searches to a depth to take advantage of NN batch processing
+                              depth_limit, sim_info)  # searches to a depth to take advantage of NN batch processing
     log_expanded_node(node, this_height, sim_info)
 
 def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height):
@@ -135,7 +115,6 @@ def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height):
 
 def log_expanded_node(node, this_height, sim_info):
     # put expanded node and height into game tree
-    sim_info.game_tree.append(node)
     node.height = this_height
 
 def play_simulation(root, sim_info, this_height):
@@ -153,7 +132,12 @@ def select_best_child(node, depth, depth_limit, sim_info, this_height):
     play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info, this_height + 1)
 
 def print_simulation_statistics(sim_info):
-    print("Monte Carlo Game {iteration}\n".format(iteration=sim_info.counter), file=sim_info.file)
+    print("Monte Carlo Game {iteration}\n"
+          "Played at root   Height {height}:    UCT = {uct}     wins = {wins}       visits = {visits}\n".format(
+        height = sim_info.root.height, uct=0, wins=sim_info.root.wins, visits=sim_info.root.visits,
+        iteration=sim_info.counter), file=sim_info.file)
+    print_board(sim_info.root.game_board, sim_info.file)
+    print("\n", file=sim_info.file)
     for i in range(0, len(sim_info.game_tree)):
         node_parent = sim_info.game_tree[i].parent
         if node_parent is None:

@@ -104,7 +104,7 @@ def expand_node(parent_node):
     parent_node.children = child_nodes
     return child_nodes
 
-def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit): #nodes are all at the same depth
+def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit, sim_info): #nodes are all at the same depth
     # TODO: do NN update before enumerating children? so we bring down the base AND constant
     # Problem: need to convert top NN indexes into moves, check legality, then append to parent
     # Issues to consider: if instant game over not in top NN indexes, will not be marked. should this matter practically?
@@ -149,11 +149,12 @@ def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit): #nodes are 
             node.children = unexpanded_nodes_children_nodes[i]
             node.expanded = True
             update_win_status_from_children(node)
+            sim_info.game_tree.append(node)
             for child in unexpanded_nodes_children_nodes[i]:
                 update_child_EBFS(child, NN_output[i], unexpanded_nodes_top_children_indexes[i])
 
 
-        if depth < depth_limit: #keep expanding
+        if depth < depth_limit-1: #keep expanding; offset makes it so depth_limit = 1 => Normal Expansion MCTS
             unexpanded_nodes_children_nodes = list(itertools.chain(*unexpanded_nodes_children_nodes))
             expand_child_nodes_wrt_NN(unexpanded_nodes_children_nodes, depth+1, depth_limit)
 

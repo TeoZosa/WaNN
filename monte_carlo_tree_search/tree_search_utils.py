@@ -142,11 +142,10 @@ def update_values_from_policy_net(game_tree):
         top_children_indexes = get_top_children(NN_output[i])
         parent = game_tree[i]
         if parent.children is not None:
-            sum_for_normalization = 0
             pruned_children = []
-            for child in parent.children:#iterate over to get the sum
-                if child.index in top_children_indexes:
-                   sum_for_normalization += NN_output[i][child.index]
+            # for child in parent.children:#iterate over to get the sum
+            #     if child.index in top_children_indexes:#can be replaced with sum inside update_child?
+            #        sum_for_normalization += NN_output[i][child.index]
             for child in parent.children:#iterate again to update values
                 if child.index in top_children_indexes:
                     pruned_children.append(child)
@@ -155,12 +154,16 @@ def update_values_from_policy_net(game_tree):
                     # assert (child.parent is game_tree[i]) #for multithreading
                     # TODO: prune children. We don't even consider non top n children, UCT multiplier keeps moves relative priority/ranking
                 if child.gameover is False:  # update only if not the end of the game
-                    update_child(child, NN_output[i], top_children_indexes, sum_for_normalization)
+                    update_child(child, NN_output[i], top_children_indexes)
 
             parent.children = pruned_children
 
 
-def update_child(child, NN_output, top_children_indexes, sum_for_normalization):
+def update_child(child, NN_output, top_children_indexes):
+    sum_for_normalization = sum(map(lambda child_index:
+                                    NN_output[child_index],
+                                    top_children_indexes))
+
     num_top_children = len(top_children_indexes)
     # TODO: only update if over a certain threshold? or top 10?
     # sometimes majority of children end up being the same weight as precision is lost with rounding
@@ -181,6 +184,21 @@ def update_child(child, NN_output, top_children_indexes, sum_for_normalization):
     update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
     # or else it may be a high visit count with low win count
 
+def update_child_EBFS(child, NN_output, top_children_indexes):
+    sum_for_normalization = sum(map(lambda child_index:
+                                      NN_output[child_index],
+                                      top_children_indexes))
+    child_index = child.index
+    child_val = NN_output[child_index]
+    normalized_value = (child_val / sum_for_normalization) * 100
+    #  ex. even if all same rounded visits, rank 0 will have visits + 50
+    rank = top_children_indexes.index(child_index)
+    if rank == 0:
+        child.parent.best_child = child #mark as node to expand first
+    child.UCT_multiplier  = 1 + normalized_value/10 #prefer to choose NN's top picks as a function of probability returned by NN; policy trajectory stays close to NN trajectory
+    weighted_wins = int(normalized_value)
+    update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
+    # or else it may be a high visit count with low win count
 
 
 def get_top_children(NN_output):

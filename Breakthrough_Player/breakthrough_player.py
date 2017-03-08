@@ -1,6 +1,5 @@
 from Breakthrough_Player.board_utils import print_board, move_piece, game_over, \
     initial_game_board, check_legality, generate_policy_net_moves, get_best_move, get_random_move
-from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit, MCTS_with_expansions
 from monte_carlo_tree_search.MCTS import MCTS
 import sys
 from multiprocessing import  Process, pool, Pool
@@ -115,7 +114,7 @@ def get_whites_move_self_play(game_board, policy_net_is_white, policy_opponent, 
     if policy_net_is_white:#get policy net move
         ranked_moves = generate_policy_net_moves(game_board, color_to_move)
         move = get_best_move(game_board, ranked_moves)
-    else:# get MCTS type or random
+    else:# get policy opponent move
         if move_number <= 4:
             move = get_random_move(game_board, color_to_move)
         else:
@@ -124,7 +123,7 @@ def get_whites_move_self_play(game_board, policy_net_is_white, policy_opponent, 
 
 def get_blacks_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number, MCTS_tree):
     color_to_move = 'Black' # explicitly declared here since this is only for black
-    if policy_net_is_white:#get MCTS_BFS_to_depth_limit
+    if policy_net_is_white:#get policy opponent move
         if move_number <= 4:
             move = get_random_move(game_board, color_to_move)
         else:
@@ -139,8 +138,6 @@ def get_policy_opponent_move(game_board, color_to_move, policy_opponent, MCTS_tr
         move = get_random_move(game_board, color_to_move)
     elif policy_opponent == 'Expansion MCTS':
         move = MCTS_tree.evaluate(game_board, color_to_move)
-        #causes tensorflow CUDNN init errors mid game
-        # move = MCTS_move_multithread(game_board, color_to_move, MCTS_expansions_move)
     elif policy_opponent == 'Policy':
         ranked_moves = generate_policy_net_moves(game_board, color_to_move)
         move = get_best_move(game_board, ranked_moves)
@@ -160,9 +157,6 @@ def MCTS_move_multithread(game_board, player_color, MCTS_tree):
         processes.close()
         processes.join()
     return move
-
-def MCTS_expansions_move(game_board, player_color):
-    return MCTS_with_expansions(game_board, player_color)
 
 def print_move(move, color_to_move, file=sys.stdout):
     print('{color} move: {move}\n'.format(color=color_to_move, move=move), file=file)

@@ -1,7 +1,9 @@
 from Breakthrough_Player.board_utils import game_over, enumerate_legal_moves, move_piece
-from tools.utils import index_lookup_by_move
+from tools.utils import index_lookup_by_move, move_lookup_by_index
 from monte_carlo_tree_search.TreeNode import TreeNode
-from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, update_win_statuses
+from Breakthrough_Player.board_utils import generate_policy_net_moves_batch, check_legality
+
+from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, update_win_statuses, get_top_children, update_child_EBFS
 from multiprocessing import Pool
 import random
 
@@ -89,15 +91,80 @@ def expand_node(parent_node):
     children_as_moves = enumerate_legal_moves(parent_node.game_board, parent_node.color)
     child_nodes = []
     children_win_statuses = []
+    #TODO: do NN update before enumerating children? so we bring down the base AND the exponent
+    # Problem: need to convert top NN indexes into moves, check legality, then append to parent
+    # Issues to consider: if instant game over not in top NN indexes, will not be marked. should this matter practically?
     for child_as_move in children_as_moves:  # generate children
         move = child_as_move['From'] + r'-' + child_as_move['To']
-        child_node = init_child_node_and_board(parent_node.game_board, move, parent_node.color, parent_node)
+        child_node = init_child_node_and_board(move, parent_node)
         check_for_winning_move(child_node) #1-step lookahead for gameover
         children_win_statuses.append(child_node.win_status)
         child_nodes.append(child_node)
     set_win_status_from_children(parent_node, children_win_statuses)
     parent_node.children = child_nodes
     return child_nodes
+
+def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit): #nodes are all at the same depth
+    # TODO: do NN update before enumerating children? so we bring down the base AND constant
+    # Problem: need to convert top NN indexes into moves, check legality, then append to parent
+    # Issues to consider: if instant game over not in top NN indexes, will not be marked. should this matter practically?
+
+    #don't expand end of game moves or previously expanded nodes
+    unexpanded_nodes = list(filter(lambda x: not x.expanded and not x.gameover, unexpanded_nodes))
+
+    if len(unexpanded_nodes) > 0: #if any nodes to expand;
+        NN_output = generate_policy_net_moves_batch(unexpanded_nodes)
+
+        #get top children of unexpanded nodes
+        unexpanded_nodes_top_children_indexes = list(map(get_top_children, NN_output))
+        child_color = get_opponent_color(unexpanded_nodes[0].color) #fact, will always be the same color since we are at the same depth
+
+        #turn the child indexes into moves
+        unexpanded_nodes_suggested_children_as_moves = list(map(lambda node_top_children:
+                                                                map(lambda top_child: move_lookup_by_index(top_child, child_color),
+                                                                    node_top_children),
+                                                                unexpanded_nodes_top_children_indexes)) # [[moves i] ... [moves n]  ]
+        #filter the illegal moves (if any)
+        unexpanded_nodes_legal_children_as_moves = list(map(lambda unexpanded_node, children_as_moves:#make sure NN top picks are legal
+                             list(filter(lambda child_as_move:
+                                    check_legality(unexpanded_node.game_board, child_as_move),
+                                    children_as_moves)),
+                             unexpanded_nodes, unexpanded_nodes_suggested_children_as_moves))
+
+        #turn the child moves into nodes
+        unexpanded_nodes_children_nodes = list(map(lambda children_as_moves, parent_node:
+                               list(lambda child_as_move:
+                                    map(init_child_node_and_board(child_as_move, parent_node),
+                                        children_as_moves)),
+                                                   unexpanded_nodes_legal_children_as_moves, unexpanded_nodes))
+        #check for wins
+        map(lambda node_children:
+            map(lambda child_node:
+                check_for_winning_move(child_node),
+                node_children),
+            unexpanded_nodes_children_nodes)
+
+        #update parents' win statuses based on children
+        map(update_win_status_from_children, unexpanded_nodes)
+
+        #assign children to parents
+        map(lambda node, children: assign_children(node, children),
+            unexpanded_nodes, unexpanded_nodes_children_nodes )
+
+        #update children with NN values
+        map(lambda children, NN_output_for_parent, top_children_indexes:
+            map(lambda child: update_child_EBFS(child, NN_output_for_parent, top_children_indexes), children),
+            unexpanded_nodes_children_nodes, NN_output,  unexpanded_nodes_top_children_indexes)
+
+        if depth < depth_limit: #keep expanding
+            expand_child_nodes_wrt_NN(unexpanded_nodes_children_nodes, depth+1, depth_limit)
+
+    #return here
+def init_tree_to_depth(tree, depth, depth_limit):
+    return tree
+
+def assign_children(node, children):
+    node.children = children
 
 def update_win_status_from_children(node):
     win_statuses = get_win_statuses_of_children(node)
@@ -118,7 +185,9 @@ def set_win_status_from_children(node, children_win_statuses):
     #else:
        # some kids are winners, some kids are unknown => can't say anything with certainty
 
-def init_child_node_and_board(game_board, child_as_move, parent_color, parent_node):
+def init_child_node_and_board(child_as_move, parent_node):
+    game_board = parent_node.game_board
+    parent_color= parent_node.color
     child_color = get_opponent_color(parent_color)
     child_board = move_piece(game_board, child_as_move, parent_color)
     child_index = index_lookup_by_move(child_as_move)
@@ -136,7 +205,7 @@ def set_game_over_values(node, node_color, winner_color):
         update_tree_wins(node, overwhelming_amount) #draw agent towards move
         update_win_statuses(node, True)
     else:
-        node.wins = -overwhelming_amount # this node will never win; also sets UCT to be large
+        node.wins = 0 # this node will never win; if negative overwhelming amount, may have division by zero error (i.e. one child had a loss, one had a win => parent is visited 0 times)
         update_tree_losses(node, overwhelming_amount) #keep agent away from move
         update_win_statuses(node, False)
 

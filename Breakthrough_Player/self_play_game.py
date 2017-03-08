@@ -8,7 +8,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   black_wins = 0
   white_wins = 0
   time_to_think = 60
-  depth_limit = 1
+  depth_limit = 10
   date = r'03072017'
   file_designator = ''
   expansion_MCTS = 'Expansion MCTS'

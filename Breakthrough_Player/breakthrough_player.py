@@ -89,6 +89,8 @@ def self_play_game(white_player, black_opponent, depth_limit, time_to_think, fil
     winner_color = None
     web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     while not gameover:
+        white_MCTS_tree.height = move_number
+        black_MCTS_tree.height = move_number
         print_board(game_board, file=file_to_write)
         move, color_to_move = get_move_self_play(game_board, white_player, move_number, black_opponent, white_MCTS_tree, black_MCTS_tree)
         print_move(move, color_to_move, file_to_write)

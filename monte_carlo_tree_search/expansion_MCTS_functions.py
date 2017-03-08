@@ -32,11 +32,11 @@ import sys
 #TODO: for root-level parallelism here, add stochasticity to UCT constant?
 
 #for production, remove simulation info logging code
-def MCTS_with_expansions(game_board, player_color, time_to_think=60,
-                         depth_limit=1, previous_move=None, log_file=sys.stdout, MCTS_Type='EBFS MCTS'):
+def MCTS_with_expansions(game_board, player_color, time_to_think,
+                         depth_limit, previous_move, move_number, log_file=sys.stdout, MCTS_Type='EBFS MCTS'):
     with SimulationInfo(log_file) as sim_info:
 
-        sim_info.root = root = assign_root(game_board, player_color, previous_move)
+        sim_info.root = root = assign_root(game_board, player_color, previous_move, move_number)
         start_time = time.time()
         done = False
         while time.time() - start_time < time_to_think and not done:
@@ -46,9 +46,9 @@ def MCTS_with_expansions(game_board, player_color, time_to_think=60,
         print_best_move(player_color, best_move, sim_info)
     return best_child, best_move #save this root to use next time
 
-def assign_root(game_board, player_color, previous_move):
+def assign_root(game_board, player_color, previous_move, move_number):
     if previous_move is None: #no tree to reuse
-        root = TreeNode(game_board, player_color, None, None)
+        root = TreeNode(game_board, player_color, None, None, move_number)
     else:
         root = None
         for child in previous_move.children: #check if we can reuse tree
@@ -57,13 +57,13 @@ def assign_root(game_board, player_color, previous_move):
                 root.parent = None # separate new root from old parent reference
                 break
         if root is None: #can't reuse tree
-            root = TreeNode(game_board, player_color, None, None)
+            root = TreeNode(game_board, player_color, None, None, move_number)
         previous_move.children = None #to dealloc unused tree
     return  root
 
 def run_MCTS_with_expansions_simulation(root, depth_limit, start_time, sim_info):
     play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info, 0)
-    if sim_info.counter  % 5 == 0:  # log every 100th simulation
+    if sim_info.counter  % 5 == 0:  # log every 5th simulation
         print_expansion_statistics(sim_info, start_time)
     sim_info.prev_game_tree_size = len(sim_info.game_tree)
     sim_info.counter += 1
@@ -88,9 +88,10 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height):
         play_simulation(root, sim_info, this_height)
         # return here
 
+
 def expand_and_select(node, depth, depth_limit, sim_info, this_height):
     #TODO: check; this should work for both. depth_limit 1 = Expansion MCTS with pre-pruning, depth_limit > 1 = EBFS MCTS
-    expand_and_update_children_wrt_NN(node, depth, depth_limit, sim_info, this_height)
+    expand(node, depth, depth_limit, sim_info, this_height)
     if node.win_status is None:  # if we don't know the win status, search deeper
         select_unexpanded_child(node, depth_limit, depth_limit, sim_info, this_height)
             # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
@@ -101,10 +102,14 @@ def expand_and_select(node, depth, depth_limit, sim_info, this_height):
                 child.visits = 1
                 # else: return here; #don't bother checking past sub-tree if we already know there is a guaranteed win/loss
 
-def expand_and_update_children_wrt_NN(node, depth, depth_limit, sim_info, this_height):
-    expand_child_nodes_wrt_NN([node], depth,
-                              depth_limit, sim_info)  # searches to a depth to take advantage of NN batch processing
-    log_expanded_node(node, this_height, sim_info)
+#TODO: reimplement postpruning? at least near end of game? i.e. if height > 40?
+def expand(node, depth, depth_limit, sim_info, this_height):
+    # TODO: keep expanding single node to depth limit? or set depth = depth_limit so it does a rollout after expansion?
+    if node.height > 40: #expand one at a time and prune after checking immediate wins/losses
+        expand_node(node, depth, depth_limit, sim_info, this_height)
+    else: # batch expansion and preprune (misses potential instant gameovers?)
+        expand_and_update_children_wrt_NN(node, depth, depth_limit, sim_info, this_height)
+
 
 def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height):
     move = choose_UCT_move(node)
@@ -113,9 +118,21 @@ def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height):
     play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info,
                                    this_height + 1)  # search until depth limit
 
+def expand_node(node, depth, depth_limit, sim_info, this_height):
+    visit_single_node_and_expand([node, node.color])
+    update_values_from_policy_net([node])
+
+def expand_and_update_children_wrt_NN(node, depth, depth_limit, sim_info, this_height):
+    expand_child_nodes_wrt_NN([node], depth,
+                              depth_limit, sim_info)  # searches to a depth to take advantage of NN batch processing
+    log_expanded_node(node, this_height, sim_info)
+
 def log_expanded_node(node, this_height, sim_info):
     # put expanded node and height into game tree
-    node.height = this_height
+    if node.parent is None:
+        node.height = this_height
+    else:
+        node.height = node.parent.height+1
 
 def play_simulation(root, sim_info, this_height):
     random_rollout(root)
@@ -135,7 +152,7 @@ def print_simulation_statistics(sim_info):
     print("Monte Carlo Game {iteration}\n"
           "Played at root   Height {height}:    UCT = {uct}     wins = {wins}       visits = {visits}\n".format(
         height = sim_info.root.height, uct=0, wins=sim_info.root.wins, visits=sim_info.root.visits,
-        iteration=sim_info.counter), file=sim_info.file)
+        iteration=sim_info.counter+1), file=sim_info.file)
     print_board(sim_info.root.game_board, sim_info.file)
     print("\n", file=sim_info.file)
     for i in range(0, len(sim_info.game_tree)):
@@ -154,7 +171,7 @@ def print_expansion_statistics(sim_info, start_time):
     print_simulation_statistics(sim_info)
     print("Number of Tree Nodes added in simulation {counter} = "
           "{nodes} in {time} seconds\n"
-          "Current tree height = {height}".format(counter=sim_info.counter,
+          "Current tree height = {height}".format(counter=sim_info.counter+1,
                                                   nodes=len(sim_info.game_tree) - sim_info.prev_game_tree_size,
                                                   time=time.time() - start_time,
                                                   height=sim_info.game_tree_height), file=sim_info.file)

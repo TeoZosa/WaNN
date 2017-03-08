@@ -135,6 +135,8 @@ def check_legality_efficient(game_board, move):
 
 
 def check_legality_MCTS(game_board, move):
+    if move.lower() == 'no-move':
+        return False
     split_move = move.split('-')
     move_from = split_move[0].lower()
     move_to = split_move[1].lower()
@@ -155,6 +157,8 @@ def check_legality_MCTS(game_board, move):
     else:
         player_color = 'Black'
 
+    if abs(ord(move_to_column) - ord(move_from_column)) > 1: #check for correct columns
+        return False
     if player_color == 'White':
         if move_to_row < move_from_row:#check for correct direction
             return False
@@ -165,8 +169,7 @@ def check_legality_MCTS(game_board, move):
             return False
         if piece != 'b':#check for correct piece
             return False
-    if abs(ord(move_to_column) - ord(move_from_column)) > 1: #check for correct columns
-        return False
+
     moves = [check_left_diagonal_move(game_board, move_from_row, move_from_column, player_color),
              check_forward_move(game_board, move_from_row, move_from_column, player_color),
              check_right_diagonal_move(game_board, move_from_row, move_from_column, player_color)]
@@ -174,7 +177,8 @@ def check_legality_MCTS(game_board, move):
 
     if move.lower() in moves:
         return True
-    return False  # if move not in list of legal moves, return False
+    else:
+        return False  # if move not in list of legal moves, return False
 
 def convert_move_dict_to_move(move):
     if not move is None:

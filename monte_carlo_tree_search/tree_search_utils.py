@@ -6,7 +6,7 @@ import time
 class SimulationInfo():
     def __init__(self, file):
         self.file= file
-        self.counter = 1
+        self.counter = 0
         self.prev_game_tree_size = 0
         self.game_tree = []
         self.game_tree_height = 0
@@ -203,6 +203,5 @@ def update_child_EBFS(child, NN_output, top_children_indexes):
     # or else it may be a high visit count with low win count
 
 
-def get_top_children(NN_output):
-    num_to_consider = 5
-    return sorted(range(len(NN_output)), key=lambda k: NN_output[k], reverse=True)[:num_to_consider]
+def get_top_children(NN_output, num_top=5):
+    return sorted(range(len(NN_output)), key=lambda k: NN_output[k], reverse=True)[:num_top]

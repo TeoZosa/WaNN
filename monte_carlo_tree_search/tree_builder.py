@@ -1,8 +1,8 @@
 from Breakthrough_Player.board_utils import game_over, enumerate_legal_moves, move_piece
 from tools.utils import index_lookup_by_move, move_lookup_by_index
 from monte_carlo_tree_search.TreeNode import TreeNode
-from Breakthrough_Player.board_utils import generate_policy_net_moves_batch, check_legality
-
+from Breakthrough_Player.board_utils import generate_policy_net_moves_batch, check_legality, check_legality_MCTS
+import itertools
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, update_win_statuses, get_top_children, update_child_EBFS
 from multiprocessing import Pool
 import random
@@ -117,46 +117,44 @@ def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit): #nodes are 
 
         #get top children of unexpanded nodes
         unexpanded_nodes_top_children_indexes = list(map(get_top_children, NN_output))
+        parent_color = unexpanded_nodes[0].color
         child_color = get_opponent_color(unexpanded_nodes[0].color) #fact, will always be the same color since we are at the same depth
 
         #turn the child indexes into moves
         unexpanded_nodes_suggested_children_as_moves = list(map(lambda node_top_children:
-                                                                map(lambda top_child: move_lookup_by_index(top_child, child_color),
-                                                                    node_top_children),
+                                                                list(map(lambda top_child: move_lookup_by_index(top_child, parent_color),
+                                                                    node_top_children)),
                                                                 unexpanded_nodes_top_children_indexes)) # [[moves i] ... [moves n]  ]
         #filter the illegal moves (if any)
         unexpanded_nodes_legal_children_as_moves = list(map(lambda unexpanded_node, children_as_moves:#make sure NN top picks are legal
                              list(filter(lambda child_as_move:
-                                    check_legality(unexpanded_node.game_board, child_as_move),
+                                    check_legality_MCTS(unexpanded_node.game_board, child_as_move),
                                     children_as_moves)),
                              unexpanded_nodes, unexpanded_nodes_suggested_children_as_moves))
 
         #turn the child moves into nodes
         unexpanded_nodes_children_nodes = list(map(lambda children_as_moves, parent_node:
-                               list(lambda child_as_move:
-                                    map(init_child_node_and_board(child_as_move, parent_node),
-                                        children_as_moves)),
+                                                   list(map(lambda child_as_move:
+                                                       init_child_node_and_board(child_as_move, parent_node),
+                                                       children_as_moves)),
                                                    unexpanded_nodes_legal_children_as_moves, unexpanded_nodes))
         #check for wins
-        map(lambda node_children:
-            map(lambda child_node:
-                check_for_winning_move(child_node),
-                node_children),
-            unexpanded_nodes_children_nodes)
+        for children in unexpanded_nodes_children_nodes:
+            for child in children:
+                check_for_winning_move(child)
 
-        #update parents' win statuses based on children
-        map(update_win_status_from_children, unexpanded_nodes)
+        #mark parent as expanded, update win status, assign children to parents, and update children with NN values
+        for i in range(0, len(unexpanded_nodes)):
+            node = unexpanded_nodes[i]
+            node.children = unexpanded_nodes_children_nodes[i]
+            node.expanded = True
+            update_win_status_from_children(node)
+            for child in unexpanded_nodes_children_nodes[i]:
+                update_child_EBFS(child, NN_output[i], unexpanded_nodes_top_children_indexes[i])
 
-        #assign children to parents
-        map(lambda node, children: assign_children(node, children),
-            unexpanded_nodes, unexpanded_nodes_children_nodes )
-
-        #update children with NN values
-        map(lambda children, NN_output_for_parent, top_children_indexes:
-            map(lambda child: update_child_EBFS(child, NN_output_for_parent, top_children_indexes), children),
-            unexpanded_nodes_children_nodes, NN_output,  unexpanded_nodes_top_children_indexes)
 
         if depth < depth_limit: #keep expanding
+            unexpanded_nodes_children_nodes = list(itertools.chain(*unexpanded_nodes_children_nodes))
             expand_child_nodes_wrt_NN(unexpanded_nodes_children_nodes, depth+1, depth_limit)
 
     #return here
@@ -165,6 +163,9 @@ def init_tree_to_depth(tree, depth, depth_limit):
 
 def assign_children(node, children):
     node.children = children
+
+def set_expanded(node):
+    node.expanded = True
 
 def update_win_status_from_children(node):
     win_statuses = get_win_statuses_of_children(node)

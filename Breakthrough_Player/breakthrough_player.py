@@ -78,9 +78,11 @@ def get_blacks_move(game_board, player_is_white):
                 print("Error, illegal move. Please enter a legal move.")
     return move
 
-def self_play_game(policy_net_is_white, policy_opponent, depth_limit, time_to_think, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
-    MCTS_tree = MCTS(depth_limit, time_to_think, policy_opponent, MCTS_log_file)
-    print("{} Vs. Policy".format(policy_opponent), file=file_to_write)
+def self_play_game(white_player, black_opponent, depth_limit, time_to_think, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
+    white_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file)
+    black_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file)
+
+    print("{} Vs. Policy".format(black_opponent), file=file_to_write)
     game_board = initial_game_board()
     gameover = False
     move_number = 0
@@ -88,7 +90,7 @@ def self_play_game(policy_net_is_white, policy_opponent, depth_limit, time_to_th
     web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     while not gameover:
         print_board(game_board, file=file_to_write)
-        move, color_to_move = get_move_self_play(game_board, policy_net_is_white, move_number, policy_opponent, MCTS_tree)
+        move, color_to_move = get_move_self_play(game_board, white_player, move_number, black_opponent, white_MCTS_tree, black_MCTS_tree)
         print_move(move, color_to_move, file_to_write)
         game_board = move_piece(game_board, move, color_to_move)
         move = move.split(r'-')
@@ -100,52 +102,47 @@ def self_play_game(policy_net_is_white, policy_opponent, depth_limit, time_to_th
     print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
     return winner_color
 
-def get_move_self_play(game_board, policy_net_is_white, move_number, policy_opponent, MCTS_tree):
+def get_move_self_play(game_board, white_player, move_number, black_opponent, white_MCTS_tree, black_MCTS_tree):
     if move_number % 2 == 0:  # white's turn
         color_to_move = 'White'
-        move = get_whites_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number, MCTS_tree)
+        move = get_whites_move_self_play(game_board, white_player, move_number, white_MCTS_tree)
     else:  # black's turn
         color_to_move = 'Black'
-        move = get_blacks_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number, MCTS_tree)
+        move = get_blacks_move_self_play(game_board, black_opponent, move_number, black_MCTS_tree)
     return move, color_to_move
 
-def get_whites_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number, MCTS_tree):
+def get_whites_move_self_play(game_board, white_player, move_number, white_MCTS_tree):
     color_to_move = 'White' # explicitly declared here since this is only for white
-    if policy_net_is_white:#get policy net move
-        ranked_moves = generate_policy_net_moves(game_board, color_to_move)
-        move = get_best_move(game_board, ranked_moves)
-    else:# get policy opponent move
+    if white_player == 'Random' or white_player == 'Policy':
+        move = get_player_move(game_board, color_to_move, white_player, white_MCTS_tree)
+    else:#
         if move_number <= 4:
             move = get_random_move(game_board, color_to_move)
         else:
-            move = get_policy_opponent_move(game_board, color_to_move, policy_opponent, MCTS_tree)
+            move = get_player_move(game_board, color_to_move, white_player, white_MCTS_tree)
     return move
 
-def get_blacks_move_self_play(game_board, policy_net_is_white, policy_opponent, move_number, MCTS_tree):
+def get_blacks_move_self_play(game_board, black_opponent, move_number, black_MCTS_tree):
     color_to_move = 'Black' # explicitly declared here since this is only for black
-    if policy_net_is_white:#get policy opponent move
+    if black_opponent == 'Random' or black_opponent == 'Policy':# get policy opponent move
+        move = get_player_move(game_board, color_to_move, black_opponent, black_MCTS_tree)
+    else:
         if move_number <= 4:
             move = get_random_move(game_board, color_to_move)
         else:
-            move = get_policy_opponent_move(game_board, color_to_move, policy_opponent, MCTS_tree)
-    else:#get policy net move
-        ranked_moves = generate_policy_net_moves(game_board, color_to_move)
-        move = get_best_move(game_board, ranked_moves)
+            move = get_player_move(game_board, color_to_move, black_opponent, black_MCTS_tree)
     return move
 
-def get_policy_opponent_move(game_board, color_to_move, policy_opponent, MCTS_tree):
-    if policy_opponent == 'Random':
+def get_player_move(game_board, color_to_move, player, MCTS_tree):
+    if player == 'Random':
         move = get_random_move(game_board, color_to_move)
-    elif policy_opponent == 'Expansion MCTS':
+    elif player == 'Expansion MCTS' or player == 'EBFS MCTS' or player == 'Policy':
         move = MCTS_tree.evaluate(game_board, color_to_move)
-    elif policy_opponent == 'Policy':
-        ranked_moves = generate_policy_net_moves(game_board, color_to_move)
-        move = get_best_move(game_board, ranked_moves)
-    else:  # BFS to depth MCTS
+    elif player == 'BFS MCTS':  # BFS to depth MCTS
         move = MCTS_move_multithread(game_board, color_to_move, MCTS_tree)
     return move
 
-def MCTS_move_multithread(game_board, player_color, MCTS_tree):
+def MCTS_move_multithread(game_board, player_color, white_MCTS_tree):
     # to dealloc memory upon thread close;
     # if we call directly without forking a new process, ,
     # keeps memory until next call, causing huge bloat before it can garbage collect
@@ -153,7 +150,7 @@ def MCTS_move_multithread(game_board, player_color, MCTS_tree):
 
     pool_func = MyPool
     with pool_func(processes=1) as processes:
-        move = processes.starmap(MCTS_tree.evaluate, [[game_board, player_color]])[0]
+        move = processes.starmap(white_MCTS_tree.evaluate, [[game_board, player_color]])[0]
         processes.close()
         processes.join()
     return move

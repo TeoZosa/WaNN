@@ -11,6 +11,7 @@ class SimulationInfo():
         self.game_tree = []
         self.game_tree_height = 0
         self.start_time = None
+        self.root = None
 
     def __enter__(self):
         return self
@@ -55,9 +56,9 @@ def choose_UCT_move(node):
 def choose_UCT_or_best_child(node):
     best = None  # shouldn't ever return None
     if node.best_child is not None: #expand best child if not already previously expanded
-        if node.best_child.expanded == False:
+        if node.best_child.visited == False:
             best = node.best_child
-            node.best_child.expanded = True
+            node.best_child.visited = True
         else:
             best = find_best_UCT_child(node)
     elif node.children is not None: #if this node has children to choose from: should always happen
@@ -125,16 +126,17 @@ def get_best_children(node_children):#TODO: make sure to not pick winning childr
     return best_nodes
 
 def get_UCT(node, parent_visits):
-    if node.win_status == True:#taken care of in calling method; this will never run(saves on the computation)
-        UCT_multiplier = -999
+    if node.win_status == True:#taken care of in calling method; this will never run
+        UCT = -999
     elif node.win_status == False:
-        UCT_multiplier = 999
+        UCT = 999
     else:
         UCT_multiplier = node.UCT_multiplier
-    exploration_constant = 1.414 # 1.414 ~ √2
-    exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
-    exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
-    return np.float64((exploitation_factor + exploration_factor) * UCT_multiplier)
+        exploration_constant = 1.414 # 1.414 ~ √2
+        exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
+        exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
+        UCT = np.float64((exploitation_factor + exploration_factor) * UCT_multiplier)
+    return UCT
 
 def update_values_from_policy_net(game_tree):
     NN_output = generate_policy_net_moves_batch(game_tree)

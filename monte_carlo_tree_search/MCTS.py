@@ -1,5 +1,6 @@
 from monte_carlo_tree_search.expansion_MCTS_functions import MCTS_with_expansions
 from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit
+from Breakthrough_Player.board_utils import generate_policy_net_moves, get_best_move
 
 
 class MCTS(object):
@@ -26,9 +27,12 @@ class MCTS(object):
 
     def evaluate(self, game_board, player_color):
         previous_child = self.selected_child
-        if self.MCTS_type == 'Expansion MCTS':
-            self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file)
+        if self.MCTS_type == 'Expansion MCTS' or self.MCTS_type == 'EBFS MCTS':
+            self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file, self.MCTS_type)
         elif self.MCTS_type == 'BFS MCTS':
             self.selected_child, move = MCTS_BFS_to_depth_limit(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file)
+        elif self.MCTS_type == 'Policy':
+            ranked_moves = generate_policy_net_moves(game_board, player_color)
+            move = get_best_move(game_board, ranked_moves)
         return move
 

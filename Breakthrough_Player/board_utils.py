@@ -89,6 +89,97 @@ def check_legality(game_board, move):
             return True#return True after finding the move in the list of legal moves
     return False# if move not in list of legal moves, return False
 
+def check_legality_efficient(game_board, move):
+    move = move.split('-')
+    move_from = move[0].lower()
+    move_to = move[1].lower()
+
+    move_from_column = move_from[0]
+    move_from_row = move_from[1]
+
+    move_to_column = move_to[0]
+    move_to_row = move_to[1]
+    piece = game_board[move_from_row][move_from_column]
+
+    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    rows = ['1', '2', '3', '4', '5', '6', '7', '8']
+    player_color_index = 9
+    is_white = 1
+    if game_board[player_color_index] == is_white:
+        player_color = 'White'
+    else:
+        player_color = 'Black'
+    moves = [check_left_diagonal_move(game_board, move_from_row, move_from_column, player_color),
+             check_forward_move(game_board, move_from_row, move_from_column, player_color),
+             check_right_diagonal_move(game_board, move_from_row, move_from_column, player_color)]
+    if abs(ord(move_to_column) - ord(move_from_column)) > 1:
+        return False
+
+    if player_color == 'White':
+        if move_to_row < move_from_row:
+            return False
+        if piece !='w':
+            return False
+
+    else:
+        if move_to_row > move_from_row:
+            return False
+        if piece !='b':
+            return False
+
+    legal_moves = enumerate_legal_moves(game_board, player_color)
+    for legal_move in legal_moves:
+        if move_from == legal_move['From'].lower() and move_to == legal_move['To'].lower():
+            return True#return True after finding the move in the list of legal moves
+    return False# if move not in list of legal moves, return False
+
+
+def check_legality_MCTS(game_board, move):
+    split_move = move.split('-')
+    move_from = split_move[0].lower()
+    move_to = split_move[1].lower()
+
+    move_from_column = move_from[0]
+    move_from_row = int(move_from[1])
+
+    move_to_column = move_to[0]
+    move_to_row = int(move_to[1])
+    piece = game_board[move_from_row][move_from_column]
+
+    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    rows = ['1', '2', '3', '4', '5', '6', '7', '8']
+    player_color_index = 9
+    is_white = 1
+    if game_board[player_color_index] == is_white:
+        player_color = 'White'
+    else:
+        player_color = 'Black'
+
+    if player_color == 'White':
+        if move_to_row < move_from_row:#check for correct direction
+            return False
+        if piece != 'w':#check for correct piece
+            return False
+    else:
+        if move_to_row > move_from_row: #check for correct direction
+            return False
+        if piece != 'b':#check for correct piece
+            return False
+    if abs(ord(move_to_column) - ord(move_from_column)) > 1: #check for correct columns
+        return False
+    moves = [check_left_diagonal_move(game_board, move_from_row, move_from_column, player_color),
+             check_forward_move(game_board, move_from_row, move_from_column, player_color),
+             check_right_diagonal_move(game_board, move_from_row, move_from_column, player_color)]
+    moves = list(map(lambda x: convert_move_dict_to_move(x), moves ))
+
+    if move.lower() in moves:
+        return True
+    return False  # if move not in list of legal moves, return False
+
+def convert_move_dict_to_move(move):
+    if not move is None:
+        move =  move['From'] + r'-' + move['To']
+    return move
 def get_best_move(game_board, policy_net_output):
     player_color_index = 9
     is_white = 1

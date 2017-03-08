@@ -1,7 +1,7 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import choose_UCT_move, \
     update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, SimulationInfo
-from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, random_rollout, update_win_status_from_children, expand_child_nodes_wrt_NN
+from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, random_rollout, update_win_status_from_children, expand_descendants_to_depth_wrt_NN
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board
 import time
@@ -106,9 +106,9 @@ def expand_and_select(node, depth, depth_limit, sim_info, this_height):
 def expand(node, depth, depth_limit, sim_info, this_height):
     # TODO: keep expanding single node to depth limit? or set depth = depth_limit so it does a rollout after expansion?
     if node.height > 40: #expand one at a time and prune after checking immediate wins/losses
-        expand_node(node, depth, depth_limit, sim_info, this_height)
+        expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height)
     else: # batch expansion and preprune (misses potential instant gameovers?)
-        expand_and_update_children_wrt_NN(node, depth, depth_limit, sim_info, this_height)
+        expand_and_update_descendants(node, depth, depth_limit, sim_info, this_height)
 
 
 def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height):
@@ -118,13 +118,13 @@ def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height):
     play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info,
                                    this_height + 1)  # search until depth limit
 
-def expand_node(node, depth, depth_limit, sim_info, this_height):
+def expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height):
     visit_single_node_and_expand([node, node.color])
     update_values_from_policy_net([node])
 
-def expand_and_update_children_wrt_NN(node, depth, depth_limit, sim_info, this_height):
-    expand_child_nodes_wrt_NN([node], depth,
-                              depth_limit, sim_info)  # searches to a depth to take advantage of NN batch processing
+def expand_and_update_descendants(node, depth, depth_limit, sim_info, this_height):
+    expand_descendants_to_depth_wrt_NN([node], depth,
+                                       depth_limit, sim_info)  # searches to a depth to take advantage of NN batch processing
     log_expanded_node(node, this_height, sim_info)
 
 def log_expanded_node(node, this_height, sim_info):

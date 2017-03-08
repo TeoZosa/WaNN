@@ -104,7 +104,7 @@ def expand_node(parent_node):
     parent_node.children = child_nodes
     return child_nodes
 
-def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit, sim_info): #nodes are all at the same depth
+def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim_info): #nodes are all at the same depth
     # Prunes child nodes to be the NN's top predictions, all nodes at a depth to the depth limit to take advantage
     # of GPU batch processing. This step takes time away from MCTS in the beginning, but builds the tree that the MCTS
     # will use later on in the game.
@@ -112,15 +112,14 @@ def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit, sim_info): #
     # Problem: if instant game over not in top NN indexes, will not be marked. Calling method should use caution
     # when invoking this function at the latter stages of games.
 
-    #don't expand end of game moves or previously expanded nodes
+    #don't expand end of game moves or previously expanded nodes (important for tree reuse)
     unexpanded_nodes = list(filter(lambda x: not x.expanded and not x.gameover, unexpanded_nodes))
 
     if len(unexpanded_nodes) > 0: #if any nodes to expand;
         NN_output = generate_policy_net_moves_batch(unexpanded_nodes)
 
         #get top children of unexpanded nodes
-
-        unexpanded_nodes_top_children_indexes = list(map(get_top_children, NN_output))
+        # unexpanded_nodes_top_children_indexes = list(map(get_top_children, NN_output))
 
         #
         # #turn the child indexes into moves
@@ -145,9 +144,15 @@ def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit, sim_info): #
         # mark parent as expanded, check for wins, update win status, assign children to parents,
         # and update children with NN values
         parent_color = unexpanded_nodes[0].color #fact, will always be the same color since we are looking at the same depth
+        parent_height = unexpanded_nodes[0].height
+        unexpanded_children = []
+        if parent_height < 20:#TODO: dynamically change number of top children we consider based on height? i.e. earlier in the game, num = 7, later in the game, num = 5?
+            num_top_children = 7
+        else:
+            num_top_children = 5
         for i in range(0, len(unexpanded_nodes)):
             parent = unexpanded_nodes[i]
-            top_children_indexes = get_top_children(NN_output[i])
+            top_children_indexes = get_top_children(NN_output[i], num_top_children)
             children = []
             children_win_statuses = []
             for child in top_children_indexes:
@@ -155,19 +160,21 @@ def expand_child_nodes_wrt_NN(unexpanded_nodes, depth, depth_limit, sim_info): #
                 if check_legality_MCTS(parent.game_board, move):
                     child = init_child_node_and_board(move, parent)
                     check_for_winning_move(child)
-                    update_child_EBFS(child, NN_output[i], unexpanded_nodes_top_children_indexes[i])
+                    if child.gameover is False:# update only if not the end of the game
+                        update_child_EBFS(child, NN_output[i], top_children_indexes)
                     children_win_statuses.append(child.win_status)
                     children.append(child)
+                    unexpanded_children.append(child)
             if len (children) > 0:
                 parent.children = children
             parent.expanded = True
             sim_info.game_tree.append(parent)
-            update_win_status_from_children(parent)
+            set_win_status_from_children(parent, children_win_statuses)
 
 
         if depth < depth_limit-1: #keep expanding; offset makes it so depth_limit = 1 => Normal Expansion MCTS
-            unexpanded_nodes_children_nodes = list(itertools.chain(*unexpanded_nodes_children_nodes))
-            expand_child_nodes_wrt_NN(unexpanded_nodes_children_nodes, depth+1, depth_limit, sim_info)
+            # unexpanded_nodes_children_nodes = list(itertools.chain(*unexpanded_nodes_children_nodes))
+            expand_descendants_to_depth_wrt_NN(unexpanded_children, depth + 1, depth_limit, sim_info)
         # return here
     #return here
 
@@ -216,7 +223,7 @@ def set_game_over_values(node, node_color, winner_color):
         update_tree_wins(node, overwhelming_amount) #draw agent towards move
         update_win_statuses(node, True)
     else:
-        node.wins = 0 # this node will never win; if negative overwhelming amount, may have division by zero error (i.e. one child had a loss, one had a win => parent is visited 0 times)
+        node.wins = 0 # this node will never win;
         update_tree_losses(node, overwhelming_amount) #keep agent away from move
         update_win_statuses(node, False)
 

@@ -138,30 +138,26 @@ def get_UCT(node, parent_visits):
         UCT = np.float64((exploitation_factor + exploration_factor) * UCT_multiplier)
     return UCT
 
-def update_values_from_policy_net(game_tree):
+def update_values_from_policy_net(game_tree): #takes in a list of parents with children,
+    # prunes children not in top NN predictions or guaranteed losses for parent
     NN_output = generate_policy_net_moves_batch(game_tree)
     for i in range(0, len(NN_output)):
-        top_children_indexes = get_top_children(NN_output[i])
+        top_children_indexes = get_top_children(NN_output[i], num_top=3)#TODO: play with this number
         parent = game_tree[i]
         if parent.children is not None:
             pruned_children = []
-            # for child in parent.children:#iterate over to get the sum
-            #     if child.index in top_children_indexes:#can be replaced with sum inside update_child?
-            #        sum_for_normalization += NN_output[i][child.index]
-            for child in parent.children:#iterate again to update values
+            for child in parent.children:#iterate to update values
                 if child.index in top_children_indexes:
                     pruned_children.append(child)
+                    if child.gameover is False:  # update only if not the end of the game
+                        update_child_EBFS(child, NN_output[i], top_children_indexes)
                 elif child.win_status is False: #if it was a loser (win for parent) and wasn't in NN top index already
                     pruned_children.append(child)
-                    # assert (child.parent is game_tree[i]) #for multithreading
-                    # TODO: prune children. We don't even consider non top n children, UCT multiplier keeps moves relative priority/ranking
-                if child.gameover is False:  # update only if not the end of the game
-                    update_child(child, NN_output[i], top_children_indexes)
-
+                    #no need to update child. if it has a win status, either it was expanded or was an instant game over
             parent.children = pruned_children
 
 
-def update_child(child, NN_output, top_children_indexes):
+def update_child(child, NN_output, top_children_indexes): #use if we are assigning values to any child
     sum_for_normalization = sum(map(lambda child_index:
                                     NN_output[child_index],
                                     top_children_indexes))
@@ -186,7 +182,7 @@ def update_child(child, NN_output, top_children_indexes):
     update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
     # or else it may be a high visit count with low win count
 
-def update_child_EBFS(child, NN_output, top_children_indexes):
+def update_child_EBFS(child, NN_output, top_children_indexes): #use if we are assigning values to a top NN child
     sum_for_normalization = sum(map(lambda child_index:
                                       NN_output[child_index],
                                       top_children_indexes))

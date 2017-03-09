@@ -15,3 +15,9 @@ class TreeNode(object):
         self.visited = False #for best child, visit first if not already visited
         self.win_status = None
         self.UCT_multiplier = 1
+        self.sum_for_children_normalization = None #so we don't calculate for each child.
+
+class NeuralNetInput(object):
+    def __init__(self):
+        self.samples = []
+        self.results = []

@@ -1,7 +1,7 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import choose_UCT_move, \
-    update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, SimulationInfo
-from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand, random_rollout, update_win_status_from_children
+    update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, SimulationInfo, update_win_status_from_children
+from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand, random_rollout
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board
 import time
@@ -15,7 +15,7 @@ import sys
 # 2. run policy net JUST ONCE HERE when we get to bottom of tree,
 # 3. keep searching to bottom of tree where we do random rollouts.
 
-def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_limit=5, previous_move=None, log_file=sys.stdout):
+def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_limit=5, previous_move=None, log_file=sys.stdout, policy_net=None):
     with SimulationInfo(log_file) as sim_info:
         # wanderer = 93,650k nodes  6GB
         #this = 270k nodes 50 GB..

@@ -3,6 +3,11 @@ import math
 import numpy as np
 import random
 import time
+from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
+import threading
+from multiprocessing import Pool
+
 class SimulationInfo():
     def __init__(self, file):
         self.file= file
@@ -42,10 +47,42 @@ def update_tree_losses(node, amount=1): # visit and no win = loss
 #backpropagate guaranteed win status
 def update_win_statuses(node, win_status): #is win status really necessary? shouldn't the UCT do the same thing with huge wins/losses?
     node.win_status = win_status
-    # loss_status = not win_status
-    # parent = node.parent
-    # if parent is not None:
-    #     update_win_statuses(parent, loss_status)
+    parent = node.parent
+    if parent is not None:#parent may now know if it is a win or loss.
+        update_win_status_from_children(parent)
+
+def update_win_status_from_children(node):
+    win_statuses = get_win_statuses_of_children(node)
+    set_win_status_from_children(node, win_statuses)
+
+def get_win_statuses_of_children(node):
+    win_statuses = []
+    if node.children is not None:
+        for child in node.children:
+            win_statuses.append(child.win_status)
+    return win_statuses
+
+def set_win_status_from_children(node, children_win_statuses):
+    if False in children_win_statuses: #Fact: if any child is false => parent is true
+        update_win_statuses(node, True)  # some kid is a loser, I have some game winning move to choose from
+    if True in children_win_statuses and not False in children_win_statuses and not None in children_win_statuses:
+        update_win_statuses(node, False)#all children winners = node is a loss no matter what
+    #else:
+       # some kids are winners, some kids are unknown => can't say anything with certainty
+
+
+def disconnect_winning_children(node):
+    if node.children is not None:
+        non_winning_children = []
+        for child in node.children:
+            if child.win_status is not True:
+                non_winning_children.append(child)
+            else:
+                child.parent = None
+                child.children = None
+        if len(non_winning_children) == 0:
+            non_winning_children = None
+        node.children = non_winning_children
 
 def choose_UCT_move(node):
     best = None #shouldn't ever return None
@@ -77,6 +114,21 @@ def find_best_UCT_child(node):
                 best_val = child_value
     return best
 
+def get_UCT(node, parent_visits):
+    if node.win_status == True:#taken care of in calling method; this will never run
+        UCT = -999
+    elif node.win_status == False:
+        UCT = 999
+    elif node.visits == 0:
+        UCT = 998 #necessary for MCTS without NN initialized values
+    else:
+        UCT_multiplier = node.UCT_multiplier
+        exploration_constant = 1.414 # 1.414 ~ √2
+        exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
+        exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
+        UCT = np.float64((exploitation_factor + exploration_factor) * UCT_multiplier)
+    return UCT #UCT from parent's POV
+
 def randomly_choose_a_winning_move(node): #for stochasticity: choose among equally successful children
     best_nodes = []
     if node.children is not None:
@@ -84,6 +136,8 @@ def randomly_choose_a_winning_move(node): #for stochasticity: choose among equal
         if not win_can_be_forced:
             best_nodes = get_best_children(node.children)
     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
+
+
 
 def check_for_forced_win(node_children):
     guaranteed_children = []
@@ -125,24 +179,12 @@ def get_best_children(node_children):#TODO: make sure to not pick winning childr
         best_nodes.append(best)
     return best_nodes
 
-def get_UCT(node, parent_visits):
-    if node.win_status == True:#taken care of in calling method; this will never run
-        UCT = -999
-    elif node.win_status == False:
-        UCT = 999
-    else:
-        UCT_multiplier = node.UCT_multiplier
-        exploration_constant = 1.414 # 1.414 ~ √2
-        exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
-        exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
-        UCT = np.float64((exploitation_factor + exploration_factor) * UCT_multiplier)
-    return UCT
-
-def update_values_from_policy_net(game_tree): #takes in a list of parents with children,
-    # prunes children not in top NN predictions or guaranteed losses for parent
+def update_values_from_policy_net(game_tree, pruning=False): #takes in a list of parents with children,
+    # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated))
+    # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do that
     NN_output = generate_policy_net_moves_batch(game_tree)
     for i in range(0, len(NN_output)):
-        top_children_indexes = get_top_children(NN_output[i], num_top=3)#TODO: play with this number
+        top_children_indexes = get_top_children(NN_output[i], num_top=5)#TODO: play with this number
         parent = game_tree[i]
         if parent.children is not None:
             pruned_children = []
@@ -151,16 +193,63 @@ def update_values_from_policy_net(game_tree): #takes in a list of parents with c
                     pruned_children.append(child)
                     if child.gameover is False:  # update only if not the end of the game
                         update_child_EBFS(child, NN_output[i], top_children_indexes)
-                elif child.win_status is False: #if it was a loser (win for parent) and wasn't in NN top index already
+                elif not pruning:#if unknown and not pruning, keep
                     pruned_children.append(child)
+                elif child.win_status is not None: #if win/loss for parent, keep
+                        pruned_children.append(child)
                     #no need to update child. if it has a win status, either it was expanded or was an instant game over
             parent.children = pruned_children
 
 
-def update_child(child, NN_output, top_children_indexes): #use if we are assigning values to any child
-    sum_for_normalization = sum(map(lambda child_index:
+def update_value_from_policy_net_async(game_tree, lock, policy_net, pruning=False): #takes in a list of parents with children,
+    # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated))
+    # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do tha
+    # NN_processing = False
+    thread = threading.local()
+    with lock:
+        thread.game_tree = game_tree
+    thread.NN_output = None
+    # while NN_processing: #NN_processing may be set to True by a previous thread
+    #     time.sleep(.01)
+    # thread_local.NN_processing = True
+    thread.NN_output = policy_net.call_policy_net(thread.game_tree)
+    # while thread_local.NN_output is None: #not was necessary when we were trying to multiprocess,
+    #     time.sleep(0.01)
+    # thread_local.NN_processing = False
+    # with lock: #make sure updates to nodes aren't being made  by other threads ready to enter this block
+    #TODO: test thread safety without lock using local variables
+    thread.i = 0
+    while thread.i < len(thread.NN_output): #batch of nodes unique to thread in block
+        thread.pruned_children = []
+        thread.top_children_indexes = get_top_children(thread.NN_output[thread.i], num_top=5)#TODO: play with this number
+        thread.parent = thread.game_tree[thread.i]
+        if thread.parent.children is not None:
+            for child in thread.parent.children:#iterate to update values
+                if child.index in thread.top_children_indexes:
+                    thread.pruned_children.append(child)
+                    if child.gameover is False:  # update only if not the end of the game
+                        with lock:
+                            update_child_EBFS(child, thread.NN_output[thread.i], thread.top_children_indexes)
+                elif not pruning:#if unknown and not pruning, keep non-top child
+                    if child.gameover is False:
+                        with lock:
+                            update_child(child, thread.NN_output[thread.i], thread.top_children_indexes)
+                    thread.pruned_children.append(child)
+                elif child.win_status is not None: #if win/loss for thread.parent, keep
+                    thread.pruned_children.append(child)
+                    #no need to update child. if it has a win status, either it was expanded or was an instant game over
+        thread.parent.children = thread.pruned_children
+        thread.i += 1
+
+#TODO: fold the below functions into one
+def update_child(child, NN_output, top_children_indexes):
+    #use if we are assigning values to any child
+    parent = child.parent
+    if parent.sum_for_children_normalization is None:
+        parent.sum_for_children_normalization = sum(map(lambda child_index:
                                     NN_output[child_index],
                                     top_children_indexes))
+    sum_for_normalization = parent.sum_for_children_normalization
 
     num_top_children = len(top_children_indexes)
     # TODO: only update if over a certain threshold? or top 10?
@@ -183,9 +272,12 @@ def update_child(child, NN_output, top_children_indexes): #use if we are assigni
     # or else it may be a high visit count with low win count
 
 def update_child_EBFS(child, NN_output, top_children_indexes): #use if we are assigning values to a top NN child
-    sum_for_normalization = sum(map(lambda child_index:
-                                      NN_output[child_index],
-                                      top_children_indexes))
+    parent = child.parent
+    if parent.sum_for_children_normalization is None:
+        parent.sum_for_children_normalization = sum(map(lambda child_index:
+                                                        NN_output[child_index],
+                                                        top_children_indexes))
+    sum_for_normalization = parent.sum_for_children_normalization
     child_index = child.index
     child_val = NN_output[child_index]
     normalized_value = (child_val / sum_for_normalization) * 100

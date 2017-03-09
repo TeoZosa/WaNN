@@ -5,20 +5,35 @@ from tensorflow.python.framework.ops import reset_default_graph
 
 def call_policy_net(board_representation):
     reset_default_graph()#TODO: keep policy net open for entire game instead of opening it on every move
+    #
+    #
+    #
+    # saver = tf.train.Saver()
+    # path = os.path.join(r'..', r'policy_net_model', r'model')
+    # with tf.Session() as sess:
+    #     saver.restore(sess, path)
+    #     if isinstance(board_representation, list): #batch of positions to evaluate
+    #         predicted_moves = sess.run(y_pred, feed_dict={X: board_representation})
+    #     else: #just one position
+    #         predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
+    #     sess.close()
+    #
+    # return predicted_moves
+    sess, y_pred, X = instantiate_session()
+    if isinstance(board_representation, list):  # batch of positions to evaluate
+        predicted_moves = sess.run(y_pred, feed_dict={X: board_representation})
+    else: #just one position
+        predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
+    return predicted_moves
+
+def instantiate_session():
+    reset_default_graph()
     y_pred, X = build_policy_net()
-
-
-
     saver = tf.train.Saver()
     path = os.path.join(r'..', r'policy_net_model', r'model')
     sess = tf.Session()
     saver.restore(sess, path)
-    if isinstance(board_representation, list): #batch of positions to evaluate
-        predicted_moves = sess.run(y_pred, feed_dict={X: board_representation})
-    else: #just one position
-        predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
-    sess.close()
-    return predicted_moves
+    return sess, y_pred, X
 
 def build_policy_net():
     X = tf.placeholder(tf.float32, [None, 8, 8, 4])

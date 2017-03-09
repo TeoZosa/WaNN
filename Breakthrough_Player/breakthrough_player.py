@@ -1,6 +1,6 @@
 from Breakthrough_Player.board_utils import print_board, move_piece, game_over, \
-    initial_game_board, check_legality, generate_policy_net_moves, get_best_move, get_random_move
-from monte_carlo_tree_search.MCTS import MCTS
+    initial_game_board, check_legality, generate_policy_net_moves, get_best_move, get_random_move, get_NN
+from monte_carlo_tree_search.MCTS import MCTS, NeuralNet
 import sys
 from multiprocessing import  Process, pool, Pool
 
@@ -16,6 +16,8 @@ class NoDaemonProcess(Process):
 # because the latter is only a wrapper function, not a proper class.
 class MyPool(pool.Pool):  # make a special class to allow for an inner process pool
     Process = NoDaemonProcess
+
+
 
 def play_game(player_is_white, file_to_write=sys.stdout):
     print("Teo's Fabulous Breakthrough Player")
@@ -79,10 +81,13 @@ def get_blacks_move(game_board, player_is_white):
     return move
 
 def self_play_game(white_player, black_opponent, depth_limit, time_to_think, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
-    white_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file)
-    black_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file)
+    tf_session, output_node, input_node = get_NN()
+    policy_net = NeuralNet(tf_session, output_node, input_node)
 
-    print("{} Vs. Policy".format(black_opponent), file=file_to_write)
+    white_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
+    black_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file, policy_net)
+
+    print("{white} Vs. {black}".format(white=white_player, black=black_opponent), file=file_to_write)
     game_board = initial_game_board()
     gameover = False
     move_number = 0
@@ -138,7 +143,7 @@ def get_blacks_move_self_play(game_board, black_opponent, move_number, black_MCT
 def get_player_move(game_board, color_to_move, player, MCTS_tree):
     if player == 'Random':
         move = get_random_move(game_board, color_to_move)
-    elif player == 'Expansion MCTS' or player == 'EBFS MCTS' or player == 'Policy':
+    elif player == 'Expansion MCTS' or player == 'Expansion MCTS Pruning' or player == 'EBFS MCTS' or player == 'Policy':
         move = MCTS_tree.evaluate(game_board, color_to_move)
     elif player == 'BFS MCTS':  # BFS to depth MCTS
         move = MCTS_move_multithread(game_board, color_to_move, MCTS_tree)

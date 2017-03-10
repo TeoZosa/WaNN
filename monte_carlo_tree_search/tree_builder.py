@@ -188,16 +188,16 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
         # return here
     #return here
 
-def expand_descendants_to_depth_wrt_NN_midgame(unexpanded_nodes, depth, depth_limit, sim_info, policy_net): #nodes are all at the same depth
+def expand_descendants_to_depth_wrt_NN_midgame(unexpanded_nodes, depth, depth_limit, sim_info, lock, policy_net): #nodes are all at the same depth
     # Prunes child nodes to be the NN's top predictions or instant gameovers. Less efficient since we enumerate all children first.
     # all nodes at a depth to the depth limit to take advantage
     # of GPU batch processing. This step takes time away from MCTS in the beginning, but builds the tree that the MCTS
     # will use later on in the game.
 
-    unexpanded_nodes = list(filter(lambda x: not x.expanded and not x.gameover and x.win_status is None, unexpanded_nodes))
+    unexpanded_nodes = list(filter(lambda x: not x.expanded and not x.gameover and x.win_status is None, unexpanded_nodes)) #redundant
 
     if len(unexpanded_nodes) > 0: #if any nodes to expand;
-        NN_output = policy_net.call_policy_net(unexpanded_nodes)
+        NN_output = policy_net.call_policy_net(unexpanded_nodes) #the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
         parent_height = unexpanded_nodes[0].height
         unexpanded_children = []
         if parent_height < 60:#TODO: dynamically change number of top children we consider based on height i.e. middle of the game = 5, later in the game, num = 5?
@@ -206,37 +206,40 @@ def expand_descendants_to_depth_wrt_NN_midgame(unexpanded_nodes, depth, depth_li
             num_top_children = 5 #should this number get big again since we can potentially find forced wins?
         for i in range(0, len(unexpanded_nodes)):
             parent = unexpanded_nodes[i]
-            children_as_moves = enumerate_legal_moves(parent.game_board, parent.color)
-            pruned_children = []
-            children_win_statuses = []
-            top_children_indexes = get_top_children(NN_output[i], num_top_children)
-            sum_for_normalization = update_sum_for_normalization(parent, NN_output[i], top_children_indexes)
-            for child_as_move in children_as_moves:
-                move = child_as_move['From'] + r'-' + child_as_move['To']
-                child = init_child_node_and_board(move, parent)
-                check_for_winning_move(child)  # 1-step lookahead for gameover
-                children_win_statuses.append(child.win_status)
-                normalized_value = (NN_output[i][child.index] / sum_for_normalization) * 100
-                if child.gameover is False and child.win_status is None:  # update only if not the end of the game
-                    if child.index in top_children_indexes and normalized_value > 0: #TODO filter based on normalized value threshold?
-                        pruned_children.append(child) #always keeps top children who aren't losses for parent
-                        update_child(child, NN_output[i], top_children_indexes)
-                        unexpanded_children.append(child)
-                else: #if it has a win status and not already in NN choices,, keep it
-                    pruned_children.append(child)
-                    child.expanded = True#child is a loss for parent, don't need to check it any more
-            if len (pruned_children) > 0:
-                parent.children = pruned_children
+            with lock: #Lock after the NN update
+                if not parent.expanded: #if the node hasn't already been updated by another thread
+                    children_as_moves = enumerate_legal_moves(parent.game_board, parent.color)
+                    pruned_children = []
+                    children_win_statuses = []
+                    top_children_indexes = get_top_children(NN_output[i], num_top_children)
+                    sum_for_normalization = update_sum_for_normalization(parent, NN_output[i], top_children_indexes)
+                    for child_as_move in children_as_moves:
+                        move = child_as_move['From'] + r'-' + child_as_move['To']
+                        child = init_child_node_and_board(move, parent)
+                        check_for_winning_move(child)  # 1-step lookahead for gameover
+                        children_win_statuses.append(child.win_status)
+                        normalized_value = (NN_output[i][child.index] / sum_for_normalization) * 100
+                        if child.gameover is False and child.win_status is None:  # update only if not the end of the game
+                            if child.index in top_children_indexes and normalized_value >= 100/num_top_children: #TODO filter children under average normalized value; should correct for ordinal effects?
+                                pruned_children.append(child) #always keeps top children who aren't losses for parent
+                                update_child(child, NN_output[i], top_children_indexes)
+                                unexpanded_children.append(child)
+                        else: #if it has a win status and not already in NN choices,, keep it
+                            pruned_children.append(child)
+                            child.expanded = True#child is a loss for parent, don't need to check it any more
+                    if len (pruned_children) > 0:
+                        parent.children = pruned_children
 
-            else:
-                parent.children = None
-            parent.expanded = True
-            sim_info.game_tree.append(parent)
-            set_win_status_from_children(parent, children_win_statuses)
+                    else:
+                        parent.children = None
+                    parent.expanded = True
+                    sim_info.game_tree.append(parent)
+                    set_win_status_from_children(parent, children_win_statuses)
+                    #TODO: anneal this in MCTS class so it explores to deeper depth later in game? it isn't seeing forced wins as fast as it should
         if depth < depth_limit-1: #keep expanding; offset makes it so depth_limit = 1 => Normal Expansion MCTS
             expand_descendants_to_depth_wrt_NN_midgame(unexpanded_children, depth + 1, depth_limit, sim_info)
-        # return here
-    #return here
+            # return here
+            #return here
 
 def assign_children(node, children):
     node.children = children

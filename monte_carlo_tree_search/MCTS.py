@@ -64,3 +64,9 @@ class NeuralNet():
             predicted_moves = self.sess.run(self.output, feed_dict={self.input: batch})
             output.extend(predicted_moves)
         return output
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.sess.close()

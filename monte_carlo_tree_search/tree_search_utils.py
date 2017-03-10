@@ -69,26 +69,12 @@ def set_win_status_from_children(node, children_win_statuses):
         update_win_statuses(node, False)#all children winners = node is a loss no matter what
     #else:
        # some kids are winners, some kids are unknown => can't say anything with certainty
-
 def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS using async updates
     parent = node
     while parent is not None:
         parent.wins -= child.wins
         parent.visits -= child.visits
         parent = parent.parent
-
-def disconnect_winning_children(node): #problematic with a doomed root, ends up not having any children to choose from
-    if node.children is not None:
-        non_winning_children = []
-        for child in node.children:
-            if child.win_status is not True:
-                non_winning_children.append(child)
-            else:
-                child.parent = None
-                child.children = None
-        if len(non_winning_children) == 0:
-            non_winning_children = None
-        node.children = non_winning_children
 
 def choose_UCT_move(node):
     best = None #shouldn't ever return None
@@ -99,7 +85,7 @@ def choose_UCT_move(node):
 def choose_UCT_or_best_child(node):
     best = None  # shouldn't ever return None
     if node.best_child is not None: #expand best child if not already previously expanded
-        if node.best_child.visited == False:
+        if node.best_child.visited is False:
             best = node.best_child
             node.best_child.visited = True
         else:
@@ -128,13 +114,13 @@ def get_UCT(node, parent_visits):
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
         UCT_multiplier = node.UCT_multiplier
-        stochasticity_for_multithreading = random.random()/2.5 # 1.414 ~ √2
+        stochasticity_for_multithreading = random.random()/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
 
         exploration_constant = 1.0 + stochasticity_for_multithreading # 1.414 ~ √2
 
         exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
-        exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
-        UCT = np.float64((exploitation_factor + exploration_factor) * UCT_multiplier)
+        exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits) #03/10/2017 added 2 * from literature
+        UCT = np.float64((exploitation_factor + exploration_factor) * UCT_multiplier) #TODO change back to non-np float? shouldn't have problems with 0 UCT nodes anymore
     return UCT #UCT from parent's POV
 
 def randomly_choose_a_winning_move(node): #for stochasticity: choose among equally successful children
@@ -145,18 +131,30 @@ def randomly_choose_a_winning_move(node): #for stochasticity: choose among equal
             best_nodes = get_best_children(node.children)
     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
 
-
-
 def check_for_forced_win(node_children):
     guaranteed_children = []
     forced_win = False
     for child in node_children:
-        if child.win_status == False:
+        if child.win_status is False:
             guaranteed_children.append(child)
             forced_win = True
     if len(guaranteed_children) > 0: #TODO: does it really matter which losing child is the best if all are losers?
         guaranteed_children = get_best_children(guaranteed_children)
     return forced_win, guaranteed_children
+
+def get_best_children(node_children):#TODO: make sure to not pick winning children?
+    best, best_val = get_best_child(node_children)
+    best_nodes = []
+    for child in node_children:  # find equally best children
+        if not child.win_status == True: #don't even consider children who will win
+            child_win_rate = child.wins / child.visits
+            if child_win_rate == best_val:
+                if best.visits == child.visits:
+                    best_nodes.append(child)
+                    # should now have list of equally best children
+    if len(best_nodes) == 0: #all children are winners => checkmated, just make the best move you have
+        best_nodes.append(best)
+    return best_nodes
 
 def get_best_child(node_children):
     best = node_children[0]
@@ -172,20 +170,6 @@ def get_best_child(node_children):
                 best = child
                 best_val = child_win_rate
     return best, best_val
-
-def get_best_children(node_children):#TODO: make sure to not pick winning children?
-    best, best_val = get_best_child(node_children)
-    best_nodes = []
-    for child in node_children:  # find equally best children
-        if not child.win_status == True: #don't even consider children who will win
-            child_win_rate = child.wins / child.visits
-            if child_win_rate == best_val:
-                if best.visits == child.visits:
-                    best_nodes.append(child)
-                    # should now have list of equally best children
-    if len(best_nodes) == 0: #all children are winners => checkmated, just make the best move you have
-        best_nodes.append(best)
-    return best_nodes
 
 def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=False): #takes in a list of parents with children,
     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated))
@@ -262,7 +246,8 @@ def update_value_from_policy_net_async(game_tree, lock, policy_net, thread = Non
 def update_child(child, NN_output, top_children_indexes):
     #use if we are assigning values to any child
     parent = child.parent
-    legal_indexes = [kid.index for kid in parent.children]
+    if parent.children is not None:
+        legal_indexes = [kid.index for kid in parent.children]
     if parent.sum_for_children_normalization is None:
         parent.sum_for_children_normalization = sum(map(lambda child_index:
                                     NN_output[child_index],
@@ -283,7 +268,8 @@ def update_child(child, NN_output, top_children_indexes):
     # or else it may be a high visit count with low win count
 
 def update_sum_for_normalization(parent, NN_output, top_children_indexes):
-    legal_indexes = [child.index for child in parent.children]
+    if parent.children is not None:
+       legal_indexes = [child.index for child in parent.children]
     if parent.sum_for_children_normalization is None:
         parent.sum_for_children_normalization = sum(map(lambda child_index:
                                     NN_output[child_index],

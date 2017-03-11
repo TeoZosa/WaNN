@@ -129,6 +129,8 @@ def randomly_choose_a_winning_move(node): #for stochasticity: choose among equal
         win_can_be_forced, best_nodes = check_for_forced_win(node.children)
         if not win_can_be_forced:
             best_nodes = get_best_children(node.children)
+    if len(best_nodes) == 0:
+        True
     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
 
 def check_for_forced_win(node_children):
@@ -255,7 +257,8 @@ def update_child(child, NN_output, top_children_indexes):
     sum_for_normalization = parent.sum_for_children_normalization
     child_index = child.index
     child_val = NN_output[child_index]
-    normalized_value = (child_val / sum_for_normalization) * 100
+    # normalized_value = (child_val / sum_for_normalization) * 100
+    normalized_value = child_val * 100
     if child_index in top_children_indexes:  # weight top moves higher for exploitation
         #  ex. even if all same rounded visits, rank 0 will have visits + 50
         rank = top_children_indexes.index(child_index)
@@ -263,7 +266,7 @@ def update_child(child, NN_output, top_children_indexes):
             child.parent.best_child = child #mark as node to expand first
         child.UCT_multiplier  = 1 + normalized_value/10 #prefer to choose NN's top picks as a function of probability returned by NN; policy trajectory stays close to NN trajectory
     weighted_wins = int(normalized_value)
-    # weighted_wins = max(weighted_wins, 1) #in case it was so bad it didn'
+    weighted_wins = max(weighted_wins, 1) #if we aren't pruning and the NN probability is less than 1%
     update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
     # or else it may be a high visit count with low win count
 

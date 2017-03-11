@@ -1,7 +1,7 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import choose_UCT_move, update_value_from_policy_net_async,\
     update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, SimulationInfo
-from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, random_rollout,  expand_descendants_to_depth_wrt_NN, expand_descendants_to_depth_wrt_NN_midgame
+from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, random_rollout,  expand_descendants_to_depth_wrt_NN
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board
 import time
@@ -170,18 +170,15 @@ def expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_ne
     else: #EBFS MCTS, pre-pruning and expanding in batches to depth limit
         # TODO: keep expanding single node to depth limit? or set depth = depth_limit so it does a rollout after expansion?
         if node.height > 40:
-            #TODO: if this still doesn't do it, revert to normal EMCTS (without pruning) or permanently set depth_limit to 1
             #batch expansion and prune children not in top NN picks AFTER checking for immediate wins/losses
-            expand_descendants_to_depth_wrt_NN_midgame([node], depth,
-                                               depth_limit,
-                                               sim_info, async_update_lock, policy_net)  # searches to a depth to take advantage of NN batch processing
-
+            without_enumerating = False
         else:
             # batch expansion only on children in top NN picks
             #(misses potential instant gameovers not in top NN picks, so only call early in game)
-            expand_descendants_to_depth_wrt_NN([node], depth,
-                                               depth_limit,
-                                               sim_info, async_update_lock, policy_net)  # searches to a depth to take advantage of NN batch processing
+            without_enumerating = True
+
+        expand_descendants_to_depth_wrt_NN([node], without_enumerating, depth,depth_limit,
+                                                sim_info, async_update_lock, policy_net)  # searches to a depth to take advantage of NN batch processing
 
 
 def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
@@ -198,7 +195,8 @@ def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCT
 
 def expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pruning=False): #use if we want traditional MCTS
     if not node.expanded: #in case we're multithreading and we ended up with the same node to expand
-        expand_descendants_to_depth_wrt_NN_midgame([node], depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
+        without_enumerating = False
+        expand_descendants_to_depth_wrt_NN([node], without_enumerating, depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
             # visit_single_node_and_expand([node, node.color])
             # sim_info.game_tree.append(node)
             # with NN_queue_lock: #for async updates
@@ -213,31 +211,6 @@ def async_node_updates(done, pruning, policy_net): #thread enters here
                 NN_input_queue.clear() #reset the queue to empty
             update_value_from_policy_net_async(thread.batch_examples, async_update_lock, policy_net)
 
-
-# def queue_has_nodes():
-#     if NN_input_queue
-#
-# def update_nodes_wrt_NN(parents, children):
-#     for i in range(0, len(parents)):
-#         parent = parents[i]
-#         old_children = parent.children
-#         parent.children = children[i]
-#         new_children_list = children[i].copy()
-#         for old_child in old_children:
-#             for k in range (0, len(new_children_list)): #attach children and grandchildren
-#                 new_child = new_children_list[k]
-#                 new_child.parent = parent#since the parents with children NN got were copied,
-#                 if old_child.game_board == new_child.game_board:
-#                     new_child.children = old_child.children #attach grandchildren
-#                     new_children_list.remove(k) #remove from consideration so inner loop shrinks by 1
-#
-#
-# def switch_child_node(old_child, new_child):
-#     new_child.parent = old_child.parent
-#     new_child.children = old_child.children
-#     new_child.visits += old_child.visits
-#     new_child.wins += old_child.wins
-#
 
 def play_simulation(root, sim_info, this_height):
     random_rollout(root)

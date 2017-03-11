@@ -268,8 +268,6 @@ def update_child(child, NN_output, top_children_indexes):
     # or else it may be a high visit count with low win count
 
 def update_sum_for_normalization(parent, NN_output, top_children_indexes):
-    if parent.children is not None:
-       legal_indexes = [child.index for child in parent.children]
     if parent.sum_for_children_normalization is None:
         parent.sum_for_children_normalization = sum(map(lambda child_index:
                                     NN_output[child_index],

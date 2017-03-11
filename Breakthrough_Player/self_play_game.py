@@ -14,7 +14,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
-
+  MCTS_async_updates = 'MCTS Asynchronous'
   random_moves = 'Random'
   BFS_MCTS = 'BFS MCTS'
 

@@ -30,12 +30,13 @@ class MCTS(object):
 
     def evaluate(self, game_board, player_color):
         previous_child = self.selected_child
-        if self.MCTS_type == 'Expansion MCTS': #no pruning;     NOTE: decent IIRC
-            self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.height, self.log_file, self.MCTS_type, self.policy_net)
-        elif self.MCTS_type == 'EBFS MCTS': #pruning plus depth expansions      #NOTE: good in theory, untested
+        if self.MCTS_type == 'EBFS MCTS': #pruning plus depth expansions      #NOTE: good in theory, untested
             depth_limit = self.height // 20 + self.depth_limit  # check 1 level deeper every 10 moves. Will never go over 4 levels deeper since EMCTS stops doing that at height 40
             self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, depth_limit, previous_child, self.height, self.log_file, self.MCTS_type, self.policy_net)
-        elif self.MCTS_type == 'Expansion MCTS Pruning' or self.MCTS_type == 'Expansion MCTS Post-Pruning':#pruning with no depth expansions       #NOTE: seemed to be good initially
+        elif self.MCTS_type == 'Expansion MCTS' \
+            or self.MCTS_type == 'Expansion MCTS Pruning' \
+            or self.MCTS_type ==  'MCTS Asynchronous'\
+            or self.MCTS_type == 'Expansion MCTS Post-Pruning': #pruning with no depth expansions       #NOTE: seemed to be good initially
             self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.height, self.log_file, self.MCTS_type, self.policy_net)
         elif self.MCTS_type == 'BFS MCTS':
             self.selected_child, move = MCTS_BFS_to_depth_limit(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file, self.policy_net)

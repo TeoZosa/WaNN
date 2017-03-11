@@ -141,7 +141,11 @@ def get_blacks_move_self_play(game_board, black_opponent, move_number, black_MCT
 def get_player_move(game_board, color_to_move, player, MCTS_tree):
     if player == 'Random':
         move = get_random_move(game_board, color_to_move)
-    elif player == 'Expansion MCTS' or player == 'Expansion MCTS Pruning' or player == 'EBFS MCTS' or player == 'Policy':
+    elif player == 'Expansion MCTS' \
+        or player == 'Expansion MCTS Pruning' \
+        or player == 'EBFS MCTS' \
+        or player == 'MCTS Asynchronous'\
+        or player == 'Policy':
         move = MCTS_tree.evaluate(game_board, color_to_move)
     elif player == 'BFS MCTS':  # BFS to depth MCTS
         move = MCTS_move_multithread(game_board, color_to_move, MCTS_tree)

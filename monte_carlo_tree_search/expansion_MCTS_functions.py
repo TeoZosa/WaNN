@@ -1,12 +1,11 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
-from monte_carlo_tree_search.tree_search_utils import choose_UCT_move, update_value_from_policy_net_async,\
-    update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, SimulationInfo
+from monte_carlo_tree_search.tree_search_utils import choose_UCT_move, \
+    get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, SimulationInfo
 from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, random_rollout,  expand_descendants_to_depth_wrt_NN
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board
 import time
 import sys
-from multiprocessing import Process, Pool
 from multiprocessing.pool import ThreadPool
 import threading
 
@@ -21,8 +20,7 @@ import threading
 
 
 #OR
-#BEST SO FAR
-# Expansion MCTS with pruning, tree saving and (optional) tree parallelization (EBFS MCTS with depth_limit=1):
+# Expansion MCTS with pruning, tree saving and (optional) tree parallelization:
 # Traditional MCTS with expansion using policy net to generate prior values and pruning of unpromising children..
 # start with root and expand with NN, (level 0)
 # while time to think,
@@ -30,9 +28,9 @@ import threading
 # 2. When we reach a leaf node, expand, evaluate with policy net, and update prior values on children
 # 3. keep searching to desired depth (final depth = depth at expansion + depth_limit)
 # 4. do random rollouts. repeat 1.
+#BEST SO FAR
 
 #OR
-#not so good (but tested prior to more fine-grained pruning or multithreading)
 # EBFS MCTS: Hybrid BFS MCTS with expansion to desired depth using policy net to generate prior values
 # since we can use policy net to prune children, makes continued expansion tractable.
 # (O = num_moves_over_threshold ^depth)
@@ -45,10 +43,10 @@ import threading
 #   evaluate with policy net, and update prior values on children
 # 3. Find the best unexpanded descendant
 # 4. do a random rollout. repeat 1.
+#not so good (but tested prior to more fine-grained pruning or multithreading)
+
 
 #OR
-# Pretty bad performance, the normal MCTS-running thread is mostly useless as python isn't fast enough for it to
-# move away from dumb moves. Maybe if we had multiple threads doing policy net updates it wouldn't be so bad?
 #
 # MCTS with asynchronous policy net updates and pruning:
 # normal MCTS while another thread waits for policy net output and updates/prunes accordingly.
@@ -62,16 +60,19 @@ import threading
 # 3. keep searching to desired depth (final depth = depth at expansion + depth_limit)
 # 4. do random rollouts. repeat 1.
 
-#TODO: for root-level parallelism here, add stochasticity to UCT constant?
+# Pretty bad performance, the normal MCTS-running thread is mostly useless as python isn't fast enough for it to
+# move away from dumb moves. Maybe if we had multiple threads doing policy net updates it wouldn't be so bad?
+# But even then, MCTS may be taking processor cycle doing useless work whereas tree parallelization completely avoids that
+# (we can't multiprocess since tensorflow complains about interleaving calls to NNs from separate processes)
+
 
 NN_queue_lock = threading.Lock()#making sure the queue is accessed one at a time
 async_update_lock = threading.Lock() #for expansions, updates, and selecting a child
-ready = threading.Condition()
-NN_input_queue = []
+NN_input_queue = [] #for expanded nodes that need to be evaluated asynchronously
 
 #for production, remove simulation info logging code
 def MCTS_with_expansions(game_board, player_color, time_to_think,
-                         depth_limit, previous_move, move_number, log_file=sys.stdout, MCTS_Type='EBFS MCTS', policy_net=None):
+                         depth_limit, previous_move, move_number, log_file=sys.stdout, MCTS_Type='Expansion MCTS Pruning', policy_net=None):
     with SimulationInfo(log_file) as sim_info:
 
         sim_info.root = root = assign_root(game_board, player_color, previous_move, move_number, sim_info)
@@ -85,18 +86,15 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         num_processes = 10
         thread2 = ThreadPool(processes=num_processes)#TODO check this
         while time.time() - start_time < time_to_think and not done:
-            NN_args = [done, pruning, policy_net]
-            MCTS_args = [[root,depth_limit, start_time, sim_info, MCTS_Type, policy_net] * num_processes]
-            # thread1.apply_async(async_node_updates, NN_args)
-            # result = thread2.apply_async(run_MCTS_with_expansions_simulation, (root,
-            #                                                               depth_limit, start_time, sim_info, MCTS_Type, policy_net))
-            # done = result.get()
-            thread2.map_async(run_MCTS_with_expansions_simulation, MCTS_args)
-            done = run_MCTS_with_expansions_simulation(MCTS_args[0])
-            # done = done.get()[0]
+            if MCTS_Type ==  'MCTS Asynchronous':
+                NN_args = [done, pruning, sim_info, policy_net]
+                thread1.apply_async(async_node_updates, NN_args)
+            else:
+                MCTS_args = [[root,depth_limit, start_time, sim_info, MCTS_Type, policy_net] * num_processes]
+                thread2.map_async(run_MCTS_with_expansions_simulation, MCTS_args)
+                done = run_MCTS_with_expansions_simulation(MCTS_args[0]) #have the main thread return done
         best_child = randomly_choose_a_winning_move(root)
         best_move = move_lookup_by_index(best_child.index, player_color)
-
         print_best_move(player_color, best_move, sim_info)
     return best_child, best_move #save this root to use next time
 
@@ -161,44 +159,34 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type,
 
 
 def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
-    #TODO: check; this should work for both. depth_limit 1 = Expansion MCTS with pre-pruning, depth_limit > 1 = EBFS MCTS
     expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
-    # if node.win_status is None:  # if we don't know the win status, search deeper
     if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
         depth = depth_limit
-    # else:
-    #     sim_info.game_tree.append(node)
     select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
-
-    # else:
-    #     # hacky fix: if node expanded child is a winner/loser, won't prune children and doesn't initialize all visits => buggy UCT values
-    #     for child in node.children:
-    #         if child.visits == 0:
-    #             child.visits = 1
-    #             # else: return here; #don't bother checking past sub-tree if we already know there is a guaranteed win/loss
 
 #TODO: EBFS  MCTS class increases depth limit as game progresses
 def expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
-    if MCTS_Type == 'Expansion MCTS': #Classic MCTS
-        #EMCTS, expanding one at a time and only pruning children that lead to loss for parent node (03/09/17 no pruning at all since may lead to a childless root)
-        expand_node_and_update_children(node, depth, depth_limit, sim_info, policy_net, this_height)
-    elif MCTS_Type == 'Expansion MCTS Post-Pruning' or MCTS_Type == 'Expansion MCTS Pruning': #03/07/2017 best performance?
-        #EMCTS, expanding one at a time and POST pruning children that lead to loss for parent node or not in top NN
-        expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pruning=True)
-        #TODO: bother with making this work with async updating?
-    else: #EBFS MCTS, pre-pruning and expanding in batches to depth limit
-        # TODO: keep expanding single node to depth limit? or set depth = depth_limit so it does a rollout after expansion?
-        if node.height > 40:
-            #batch expansion and prune children not in top NN picks AFTER checking for immediate wins/losses
-            without_enumerating = False
-        else:
-            # batch expansion only on children in top NN picks
-            #(misses potential instant gameovers not in top NN picks, so only call early in game)
-            without_enumerating = True
+    if MCTS_Type =='MCTS Asynchronous':
+        expand_node_async(node)
+    else:
+        if MCTS_Type == 'Expansion MCTS' or \
+                MCTS_Type == 'Expansion MCTS Post-Pruning':
+            pre_pruning = False
+            depth = depth_limit
+        elif MCTS_Type == 'Expansion MCTS Pruning': #03/07/2017 best performance?
+            pre_pruning = True
+            depth = depth_limit
+        #depth = depth_limit makes NN expansion run on only the node given (in-line MCTS)
 
-        expand_descendants_to_depth_wrt_NN([node], without_enumerating, depth,depth_limit,
-                                                sim_info, async_update_lock, policy_net)  # searches to a depth to take advantage of NN batch processing
-
+        else: #EBFS MCTS, pre-pruning and expanding in batches to depth limit
+            if node.height > 40:
+                #batch expansion and prune children not in top NN picks AFTER checking for immediate wins/losses
+                pre_pruning = False
+            else:
+                # batch expansion only on children in top NN picks
+                #(misses potential instant gameovers not in top NN picks, so only call early in game)
+                pre_pruning = True
+        expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pre_pruning)
 
 def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
     with async_update_lock:
@@ -212,23 +200,29 @@ def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCT
     play_MCTS_game_with_expansions(move, depth+1, depth_limit, sim_info,
                                    this_height + 1, MCTS_Type, policy_net)  # search until depth limit
 
-def expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pruning=False): #use if we want traditional MCTS
+def expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pre_pruning=False): #use if we want traditional MCTS
     if not node.expanded: #in case we're multithreading and we ended up with the same node to expand
-        without_enumerating = False
+        if pre_pruning:
+            without_enumerating = True
+        else:
+            without_enumerating = False
         expand_descendants_to_depth_wrt_NN([node], without_enumerating, depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
-            # visit_single_node_and_expand([node, node.color])
-            # sim_info.game_tree.append(node)
-            # with NN_queue_lock: #for async updates
-            #     NN_input_queue.append(node)
-            # update_values_from_policy_net([node], policy_net, pruning) #for single-threading expansions with POST pruning;
 
-def async_node_updates(done, pruning, policy_net): #thread enters here
+def expand_node_async(node):
+    with NN_queue_lock:  # for async updates
+        NN_input_queue.append(node)
+    visit_single_node_and_expand([node, node.color])
+
+def async_node_updates(done, pruning, sim_info, policy_net): #thread enters here
         if len (NN_input_queue) > 0:
+            without_enumerating = True
+            depth = depth_limit = 0
             with NN_queue_lock:
                 thread = threading.local() #we don't need to pass this in, right?
                 thread.batch_examples = NN_input_queue.copy()
                 NN_input_queue.clear() #reset the queue to empty
-            update_value_from_policy_net_async(thread.batch_examples, async_update_lock, policy_net)
+            # update_value_from_policy_net_async(thread.batch_examples, async_update_lock, policy_net)
+            expand_descendants_to_depth_wrt_NN(thread.batch_examples, without_enumerating, depth, depth_limit, sim_info, async_update_lock, policy_net)
 
 
 def play_simulation(root, sim_info, this_height):

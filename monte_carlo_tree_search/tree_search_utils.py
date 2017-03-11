@@ -106,11 +106,15 @@ def find_best_UCT_child(node):
     return best
 
 def get_UCT(node, parent_visits):
-    if node.win_status == True:
-        UCT = -999
-    elif node.win_status == False:
-        UCT = 999
-    elif node.visits == 0:
+    # TODO: change this? stops exploring subtrees that dumber opponent may lead to if 1 good move exists
+    # Con: may not search preferentially search the tree that the opponent is more likely to pick
+    # maybe I should add some value to the UCT multiplier when a win_status is declared? is this necessary due to the overwhelming
+    # amount of wins/losses backpropagated?
+    # if node.win_status == True:
+    #     UCT = -999
+    # elif node.win_status == False:
+    #     UCT = 999
+    if node.visits == 0:
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
         UCT_multiplier = node.UCT_multiplier
@@ -129,8 +133,8 @@ def randomly_choose_a_winning_move(node): #for stochasticity: choose among equal
         win_can_be_forced, best_nodes = check_for_forced_win(node.children)
         if not win_can_be_forced:
             best_nodes = get_best_children(node.children)
-    if len(best_nodes) == 0:
-        True
+    # if len(best_nodes) == 0:
+    #     True
     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
 
 def check_for_forced_win(node_children):
@@ -258,13 +262,14 @@ def update_child(child, NN_output, top_children_indexes):
     child_index = child.index
     child_val = NN_output[child_index]
     # normalized_value = (child_val / sum_for_normalization) * 100
-    normalized_value = child_val * 100
+    normalized_value = child_val  * 100
     if child_index in top_children_indexes:  # weight top moves higher for exploitation
         #  ex. even if all same rounded visits, rank 0 will have visits + 50
         rank = top_children_indexes.index(child_index)
         if rank == 0:
             child.parent.best_child = child #mark as node to expand first
-        child.UCT_multiplier  = 1 + normalized_value/10 #prefer to choose NN's top picks as a function of probability returned by NN; policy trajectory stays close to NN trajectory
+            #TODO: #2 implemented 03102017 9:56 PM consider changing this to + child_val for a lighter UCT multiplier; 9:58 PM play with this number
+        child.UCT_multiplier  = 1 +child_val#prefer to choose NN's top picks as a function of probability returned by NN; policy trajectory stays close to NN trajectory
     weighted_wins = int(normalized_value)
     weighted_wins = max(weighted_wins, 1) #if we aren't pruning and the NN probability is less than 1%
     update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,

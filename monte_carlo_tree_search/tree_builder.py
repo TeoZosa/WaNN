@@ -168,7 +168,8 @@ def update_with_top_children(parent, NN_output, num_top_children, lock):
             # normalized_value = (NN_output[child.index] / sum_for_normalization) * 100
             #NN output for child is probability already, but for some reason there are very tiny probabilites
             if child.gameover is False and child.win_status is None:  # update and expand only if not the end of the game or unknown
-                if child_val > .30:#TODO: play with this? maybe we need the filter to be more aggressive?
+                best_child_val = NN_output[top_children_indexes[0]]
+                if child_val > .30 or abs(best_child_val - child_val) < 10:  #if #1 or over threshold or within 10% of best child#TODO: play with this? maybe we need the filter to be more aggressive?
                     update_child(child, NN_output, top_children_indexes)
                     unexpanded_children.append(child)
             else:
@@ -195,10 +196,16 @@ def enumerate_and_update_with_top_children(parent, NN_output, num_top_children, 
 
         # normalized_value = (NN_output[child.index] / sum_for_normalization) * 100
         if child.gameover is False and child.win_status is None:  # update only if not the end of the game
-            if child.index in top_children_indexes:  # TODO filter children under average normalized value or probability from NN?? i.e. less than 30% visit chance => toss
-                if child_val > .30 or child.index == top_children_indexes[0]: #if #1 or over threshold
-                    pruned_children.append(child)  # always keeps top children who aren't losses for parent
-                    update_child(child, NN_output, top_children_indexes)
+            # #TODO: #1 implemented 03102017 9:56 PM  if we filter based on within 10% of best_val this isn't necessary?
+            # also opens up the tree to more lines of play if best child sucks to begin with.
+            # in the worst degenerate case where best_val = ~4.5%, will include all children which actually is pretty justified.
+            # if child.index in top_children_indexes:
+            best_child_val = NN_output[top_children_indexes[0]]
+            # TODO filter children under average normalized value or probability from NN?? i.e. less than 30% visit chance => toss
+            #TODO: pruning is super aggressive, maybe we should also add top children who are close to best child?
+            if child_val > .30 or abs(best_child_val - child_val) < .10: #absolute value not necessary ; if #1 or over threshold or within 10% of best child
+                pruned_children.append(child)  # always keeps top children who aren't losses for parent
+                update_child(child, NN_output, top_children_indexes)
         else:  # if it has a win status and not already in NN choices, keep it (should always be a game winning node)
             pruned_children.append(child)
             child.expanded = True  # don't need to check it any more

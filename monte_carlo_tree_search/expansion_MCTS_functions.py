@@ -126,7 +126,8 @@ def run_MCTS_with_expansions_simulation(args): #change back to starmap?
 
 def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
     #todo: should we really assume opponent is as smart as we are and not check subtrees of nodes with win statuses?
-    if root.gameover is False and root.win_status is None: #terminates at end-of-game moves or guaranteed wins/losses
+    if root.gameover is False: #terminates at end-of-game moves #03/10/2017 originally had it stop at "guaranteed" wins/losses
+        # but it prematurely stops search even though opponent may not be as smart; might as well let it keep searching just in case
         if root.children is None: #reached non-game ending leaf node
             expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
         else:#keep searching tree
@@ -144,12 +145,12 @@ def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type
     #TODO: check; this should work for both. depth_limit 1 = Expansion MCTS with pre-pruning, depth_limit > 1 = EBFS MCTS
     expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
     sim_info.game_tree.append(node)
-    if node.win_status is None:  # if we don't know the win status, search deeper
-        if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
-            depth = depth_limit
-        # else:
-        #     sim_info.game_tree.append(node)
-        select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
+    # if node.win_status is None:  # if we don't know the win status, search deeper
+    if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
+        depth = depth_limit
+    # else:
+    #     sim_info.game_tree.append(node)
+    select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
 
     # else:
     #     # hacky fix: if node expanded child is a winner/loser, won't prune children and doesn't initialize all visits => buggy UCT values

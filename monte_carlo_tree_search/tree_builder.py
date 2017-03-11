@@ -140,6 +140,7 @@ def update_parent(without_enumerating_children, parent, NN_output, num_top_child
         else:
             abort = False
             parent.expanded = True
+            sim_info.game_tree.append(parent)
     # TODO: check if removing the lock here causes problems.
     if not abort:  # if the node hasn't already been updated by another thread
         if without_enumerating_children:
@@ -156,7 +157,12 @@ def update_with_top_children(parent, NN_output, num_top_children, lock):
     children = []
     children_win_statuses = []
     # sum_for_normalization = update_sum_for_normalization(parent, NN_output, top_children_indexes)
-
+    best_child_val = 0
+    for i in range(0, len(top_children_indexes)):  # find best legal child value
+        top_move = move_lookup_by_index(top_children_indexes[i], parent.color)
+        if check_legality_MCTS(parent.game_board, top_move):
+            best_child_val = NN_output[top_children_indexes[i]]
+            break
     for child_index in top_children_indexes:
         move = move_lookup_by_index(child_index, parent_color)  # turn the child indexes into moves
         if check_legality_MCTS(parent.game_board, move):
@@ -168,7 +174,6 @@ def update_with_top_children(parent, NN_output, num_top_children, lock):
             # normalized_value = (NN_output[child.index] / sum_for_normalization) * 100
             #NN output for child is probability already, but for some reason there are very tiny probabilites
             if child.gameover is False and child.win_status is None:  # update and expand only if not the end of the game or unknown
-                best_child_val = NN_output[top_children_indexes[0]]
                 if child_val > .30 or abs(best_child_val - child_val) < 10:  #if #1 or over threshold or within 10% of best child#TODO: play with this? maybe we need the filter to be more aggressive?
                     update_child(child, NN_output, top_children_indexes)
                     unexpanded_children.append(child)
@@ -187,6 +192,13 @@ def enumerate_and_update_with_top_children(parent, NN_output, num_top_children, 
     children_win_statuses = []
     top_children_indexes = get_top_children(NN_output, num_top_children)
     # sum_for_normalization = update_sum_for_normalization(parent, NN_output, top_children_indexes)
+    best_child_val = 0
+    for i in range(0, len(top_children_indexes)): #find best legal child value
+        top_move = move_lookup_by_index(top_children_indexes[i], parent.color)
+        if check_legality_MCTS(parent.game_board, top_move):
+            best_child_val = NN_output[top_children_indexes[i]]
+            break
+
     for child_as_move in children_as_moves:
         move = child_as_move['From'] + r'-' + child_as_move['To']
         child = init_child_node_and_board(move, parent)
@@ -200,7 +212,6 @@ def enumerate_and_update_with_top_children(parent, NN_output, num_top_children, 
             # also opens up the tree to more lines of play if best child sucks to begin with.
             # in the worst degenerate case where best_val = ~4.5%, will include all children which actually is pretty justified.
             # if child.index in top_children_indexes:
-            best_child_val = NN_output[top_children_indexes[0]]
             # TODO filter children under average normalized value or probability from NN?? i.e. less than 30% visit chance => toss
             #TODO: pruning is super aggressive, maybe we should also add top children who are close to best child?
             if child_val > .30 or abs(best_child_val - child_val) < .10: #absolute value not necessary ; if #1 or over threshold or within 10% of best child
@@ -213,7 +224,7 @@ def enumerate_and_update_with_top_children(parent, NN_output, num_top_children, 
         if len(pruned_children) > 0:
             parent.children = pruned_children
             set_win_status_from_children(parent, children_win_statuses)
-        else:
+        else: #shouldn't happen
             parent.children = None
     return pruned_children
 

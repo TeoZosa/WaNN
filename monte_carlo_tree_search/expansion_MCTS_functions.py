@@ -144,7 +144,6 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type,
 def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
     #TODO: check; this should work for both. depth_limit 1 = Expansion MCTS with pre-pruning, depth_limit > 1 = EBFS MCTS
     expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
-    sim_info.game_tree.append(node)
     # if node.win_status is None:  # if we don't know the win status, search deeper
     if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
         depth = depth_limit

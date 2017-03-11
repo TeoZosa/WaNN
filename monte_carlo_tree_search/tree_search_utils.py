@@ -118,7 +118,7 @@ def get_UCT(node, parent_visits):
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
         UCT_multiplier = node.UCT_multiplier
-        stochasticity_for_multithreading = random.random()/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
+        stochasticity_for_multithreading = random.random() #/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
 
         exploration_constant = 1.0 + stochasticity_for_multithreading # 1.414 ~ √2
 
@@ -133,8 +133,8 @@ def randomly_choose_a_winning_move(node): #for stochasticity: choose among equal
         win_can_be_forced, best_nodes = check_for_forced_win(node.children)
         if not win_can_be_forced:
             best_nodes = get_best_children(node.children)
-    # if len(best_nodes) == 0:
-    #     True
+    if len(best_nodes) == 0:
+        True
     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
 
 def check_for_forced_win(node_children):
@@ -251,28 +251,34 @@ def update_value_from_policy_net_async(game_tree, lock, policy_net, thread = Non
 #TODO: fold the below functions into one
 def update_child(child, NN_output, top_children_indexes):
     #use if we are assigning values to any child
-    parent = child.parent
-    if parent.children is not None:
-        legal_indexes = [kid.index for kid in parent.children]
-    if parent.sum_for_children_normalization is None:
-        parent.sum_for_children_normalization = sum(map(lambda child_index:
-                                    NN_output[child_index],
-                                    top_children_indexes)) #or top_children indexes, not sure which is better. if we are pruning, should we normalize only over top n?
-    sum_for_normalization = parent.sum_for_children_normalization
-    child_index = child.index
-    child_val = NN_output[child_index]
+    # parent = child.parent
+    # if parent.children is not None:
+    #     legal_indexes = [kid.index for kid in parent.children]
+    # if parent.sum_for_children_normalization is None:
+    #     parent.sum_for_children_normalization = sum(map(lambda child_index:
+    #                                 NN_output[child_index],
+    #                                 top_children_indexes)) #or top_children indexes, not sure which is better. if we are pruning, should we normalize only over top n?
+    # sum_for_normalization = parent.sum_for_children_normalization
+    child_val = NN_output[child.index]
     # normalized_value = (child_val / sum_for_normalization) * 100
-    normalized_value = child_val  * 100
-    if child_index in top_children_indexes:  # weight top moves higher for exploitation
+    normalized_value = int(child_val  * 100)
+    if child.index in top_children_indexes:  # weight top moves higher for exploitation
         #  ex. even if all same rounded visits, rank 0 will have visits + 50
-        rank = top_children_indexes.index(child_index)
+        rank = top_children_indexes.index(child.index)
         if rank == 0:
             child.parent.best_child = child #mark as node to expand first
             #TODO: #2 implemented 03102017 9:56 PM consider changing this to + child_val for a lighter UCT multiplier; 9:58 PM play with this number
-        child.UCT_multiplier  = 1 +child_val#prefer to choose NN's top picks as a function of probability returned by NN; policy trajectory stays close to NN trajectory
-    weighted_wins = int(normalized_value)
-    weighted_wins = max(weighted_wins, 1) #if we aren't pruning and the NN probability is less than 1%
-    update_tree_losses(child, weighted_wins)  # say we won (child lost) every time we visited,
+        child.UCT_multiplier  = 1 + child_val#prefer to choose NN's top picks as a function of probability returned by NN; policy trajectory stays close to NN trajectory
+
+    #TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
+    # i.e. if policy chooses child with 30% probability => 30/100 games
+    # => randomly decide which of those 30 games are wins and which are losses
+    weighted_wins = random.randint(0, normalized_value) # int(normalized_value)
+    weighted_wins = max(weighted_wins, 1) #if we aren't pruning and the NN probability is less than 1% => 1 win for parent
+    weighted_losses = max (normalized_value - weighted_wins, 0) #if normalized value < 1 => 1 visit, 1 win, 0 losses
+    if weighted_losses > 0: #just saves on backpropagating computation when weighted losses is 0
+        update_tree_losses(child, weighted_losses)  # say we won (child lost) every time we visited,
+    update_tree_wins(child, weighted_wins)
     # or else it may be a high visit count with low win count
 
 def update_sum_for_normalization(parent, NN_output, top_children_indexes):

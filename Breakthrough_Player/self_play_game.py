@@ -9,7 +9,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   white_wins = 0
   time_to_think = 60
   depth_limit = 1 #for EBFS MCTS, will get to depth 7 by move 60
-  date = r'03102017'
+  date = r'03112017'
   file_designator = ''
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'

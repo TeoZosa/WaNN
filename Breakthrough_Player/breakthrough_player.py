@@ -19,7 +19,10 @@ class MyPool(pool.Pool):  # make a special class to allow for an inner process p
 
 
 
-def play_game(player_is_white, file_to_write=sys.stdout):
+def play_game(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
+    policy_net = NeuralNet()
+    computer_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
+
     print("Teo's Fabulous Breakthrough Player")
     game_board = initial_game_board()
     gameover = False
@@ -28,7 +31,7 @@ def play_game(player_is_white, file_to_write=sys.stdout):
     web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     while not gameover:
         print_board(game_board)
-        move, color_to_move = get_move(game_board, player_is_white, move_number)
+        move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree)
         print_move(move, color_to_move)
         game_board = move_piece(game_board, move, color_to_move)
         move = move.split(r'-')
@@ -40,49 +43,45 @@ def play_game(player_is_white, file_to_write=sys.stdout):
     print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
     return winner_color
 
-def get_move(game_board, player_is_white, move_number):
+def get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree):
     if move_number % 2 == 0:  # white's turn
         color_to_move = 'White'
-        move = get_whites_move(game_board, player_is_white)
+        move = get_whites_move(game_board, white_player, computer_MCTS_tree)
     else:  # black's turn
         color_to_move = 'Black'
-        move = get_blacks_move(game_board, player_is_white)
+        move = get_blacks_move(game_board, black_opponent, computer_MCTS_tree)
     return move, color_to_move
 
-def get_whites_move(game_board, player_is_white):
+def get_whites_move(game_board, white_player, computer_MCTS_tree):
     move = None
-    if player_is_white:
-        player_move_legal = False
-        while not player_move_legal:
-            move = input('Enter your move: ')
-            player_move_legal = check_legality(game_board, move)
-            if not player_move_legal:
-                print("Error, illegal move. Please enter a legal move.")
+    color_to_move = 'White'
+    if white_player == 'Human':
+        move = get_human_move(game_board)
     else:#get policy net move
-        ranked_moves = generate_policy_net_moves(game_board, 'White')
-        move = get_best_move(game_board, ranked_moves)
-
-        # move = get_random_move(game_board, 'White')
+        get_player_move(game_board, color_to_move, "Expansion MCTS Pruning", computer_MCTS_tree)
     return move
 
-def get_blacks_move(game_board, player_is_white):
+def get_blacks_move(game_board, black_opponent, computer_MCTS_tree):
     move = None
-    if player_is_white:#get policy net move
-        ranked_moves = generate_policy_net_moves(game_board, 'Black')
-        move = get_best_move(game_board, ranked_moves)
-        # move = get_random_move(game_board, 'Black')
-    else:
-        player_move_legal = False
-        while not player_move_legal:
-            move = input('Enter your move: ')
-            player_move_legal = check_legality(game_board, move)
-            if not player_move_legal:
-                print("Error, illegal move. Please enter a legal move.")
+    color_to_move = 'Black'
+    if black_opponent == 'Human':
+        move = get_human_move(game_board)
+    else:#get policy net move
+        get_player_move(game_board, color_to_move, "Expansion MCTS Pruning", computer_MCTS_tree)
+    return move
+
+def get_human_move(game_board):
+    player_move_legal = False
+    while not player_move_legal:
+        move = input('Enter your move: ')
+        player_move_legal = check_legality(game_board, move)
+        if not player_move_legal:
+            print("Error, illegal move. Please enter a legal move.")
     return move
 
 def self_play_game(white_player, black_opponent, depth_limit, time_to_think, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
-    tf_session, output_node, input_node = get_NN()
-    policy_net = NeuralNet(tf_session, output_node, input_node)
+    #Initialize policy net; use single net instance for both players
+    policy_net = NeuralNet()
 
     white_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
     black_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file, policy_net)
@@ -94,8 +93,7 @@ def self_play_game(white_player, black_opponent, depth_limit, time_to_think, fil
     winner_color = None
     web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     while not gameover:
-        white_MCTS_tree.height = move_number
-        black_MCTS_tree.height = move_number
+        white_MCTS_tree.height = black_MCTS_tree.height = move_number
         print_board(game_board, file=file_to_write)
         move, color_to_move = get_move_self_play(game_board, white_player, move_number, black_opponent, white_MCTS_tree, black_MCTS_tree)
         print_move(move, color_to_move, file_to_write)
@@ -153,7 +151,7 @@ def MCTS_move_multithread(game_board, player_color, white_MCTS_tree):
     # to dealloc memory upon thread close;
     # if we call directly without forking a new process, ,
     # keeps memory until next call, causing huge bloat before it can garbage collect
-    # if we increase processes, we get root-level parallelism (must pull out best move)
+    # we can't actually use multiple cores as multiple tensorflow sessions throw errors
 
     pool_func = MyPool
     with pool_func(processes=1) as processes:

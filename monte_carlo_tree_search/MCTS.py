@@ -1,6 +1,6 @@
 from monte_carlo_tree_search.expansion_MCTS_functions import MCTS_with_expansions
 from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit
-from Breakthrough_Player.board_utils import generate_policy_net_moves, get_best_move
+from Breakthrough_Player.board_utils import generate_policy_net_moves, get_best_move, get_NN
 from tools.utils import convert_board_to_2d_matrix_POEB, batch_split_no_labels
 
 
@@ -40,18 +40,19 @@ class MCTS(object):
         elif self.MCTS_type == 'BFS MCTS':
             self.selected_child, move = MCTS_BFS_to_depth_limit(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file, self.policy_net)
         elif self.MCTS_type == 'Policy':
-            ranked_moves = self.policy_net.call_policy_net(game_board, player_color)
+            ranked_moves = self.policy_net.evaluate(game_board, player_color)
             move = get_best_move(game_board, ranked_moves)
         return move
 
 
 class NeuralNet():
-    def __init__(self, sess, output, input):
-        self.sess = sess
-        self.output = output
-        self.input = input
 
-    def call_policy_net(self, game_nodes, player_color = None):
+    #initialize the Neural Net (only 1 as of 03/10/2017)
+    def __init__(self):
+        self.sess, self.output, self.input = get_NN()
+
+    #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
+    def evaluate(self, game_nodes, player_color = None):
         if player_color is not None: #1 board + 1 color from direct policy net call
             board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
         else:
@@ -68,5 +69,6 @@ class NeuralNet():
     def __enter__(self):
         return self
 
+    #close the tensorflow session when we are done.
     def __exit__(self, exc_type, exc_value, traceback):
         self.sess.close()

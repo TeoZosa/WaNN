@@ -119,7 +119,9 @@ def run_MCTS_with_expansions_simulation(args): #change back to starmap?
         print_forced_win(root.win_status, sim_info)
     if root.win_status is True: # if we have a guaranteed win, we are done
         return True
-    else:#just because a good opponent has a good reply for every move doesn't mean all opponents will
+    else:#just because a good opponent has a good reply for every move doesn't mean all opponents will;
+        #fix this, since the MCTS is running for both colors,
+        # this just returns for the entire TTT since the UCT is hardcoded to give back a winning move at each depth
         return False
 
 def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
@@ -172,14 +174,14 @@ def expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_ne
             #batch expansion and prune children not in top NN picks AFTER checking for immediate wins/losses
             expand_descendants_to_depth_wrt_NN_midgame([node], depth,
                                                depth_limit,
-                                               sim_info, policy_net)  # searches to a depth to take advantage of NN batch processing
+                                               sim_info, async_update_lock, policy_net)  # searches to a depth to take advantage of NN batch processing
 
         else:
             # batch expansion only on children in top NN picks
             #(misses potential instant gameovers not in top NN picks, so only call early in game)
             expand_descendants_to_depth_wrt_NN([node], depth,
                                                depth_limit,
-                                               sim_info, policy_net)  # searches to a depth to take advantage of NN batch processing
+                                               sim_info, async_update_lock, policy_net)  # searches to a depth to take advantage of NN batch processing
 
 
 def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
@@ -195,9 +197,8 @@ def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCT
                                    this_height + 1, MCTS_Type, policy_net)  # search until depth limit
 
 def expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pruning=False): #use if we want traditional MCTS
-    # with async_update_lock:
-        if not node.expanded: #in case we're multithreading and we ended up with the same node to expand
-            expand_descendants_to_depth_wrt_NN_midgame([node], depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
+    if not node.expanded: #in case we're multithreading and we ended up with the same node to expand
+        expand_descendants_to_depth_wrt_NN_midgame([node], depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
             # visit_single_node_and_expand([node, node.color])
             # sim_info.game_tree.append(node)
             # with NN_queue_lock: #for async updates

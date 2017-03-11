@@ -146,7 +146,7 @@ def get_best_children(node_children):#TODO: make sure to not pick winning childr
     best, best_val = get_best_child(node_children)
     best_nodes = []
     for child in node_children:  # find equally best children
-        if not child.win_status == True: #don't even consider children who will win
+        if not child.win_status == True: #don't even consider children who will win #TODO: fix this just in case we have a doomed root but still want to search in case the opponent makes a mistake?
             child_win_rate = child.wins / child.visits
             if child_win_rate == best_val:
                 if best.visits == child.visits:
@@ -174,7 +174,7 @@ def get_best_child(node_children):
 def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=False): #takes in a list of parents with children,
     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated))
     # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do that
-    NN_output = policy_net.call_policy_net(game_tree)
+    NN_output = policy_net.evaluate(game_tree)
     if lock is None: #make a useless lock so we can have clean code either way
         lock = threading.Lock()
     with lock:
@@ -210,7 +210,7 @@ def update_value_from_policy_net_async(game_tree, lock, policy_net, thread = Non
         thread = threading.local()
     with lock:
         thread.game_tree = game_tree
-    thread.NN_output = policy_net.call_policy_net(thread.game_tree)
+    thread.NN_output = policy_net.evaluate(thread.game_tree)
 
     #TODO: test thread safety without lock using local variables
     thread.parent_index = 0

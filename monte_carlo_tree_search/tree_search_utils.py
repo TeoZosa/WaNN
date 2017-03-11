@@ -16,6 +16,7 @@ class SimulationInfo():
         self.game_tree = []
         self.game_tree_height = 0
         self.start_time = None
+        self.time_to_think = None
         self.root = None
 
     def __enter__(self):
@@ -76,38 +77,38 @@ def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS
         parent.visits -= child.visits
         parent = parent.parent
 
-def choose_UCT_move(node):
+def choose_UCT_move(node, start_time, time_to_think):
     best = None #shouldn't ever return None
     if node.children is not None:
-        best = find_best_UCT_child(node)
+        best = find_best_UCT_child(node, start_time, time_to_think)
     return best  #because a win for me = a loss for child?
 
-def choose_UCT_or_best_child(node):
+def choose_UCT_or_best_child(node, start_time, time_to_think):
     best = None  # shouldn't ever return None
     if node.best_child is not None: #expand best child if not already previously expanded
         if node.best_child.visited is False:
             best = node.best_child
             node.best_child.visited = True
         else:
-            best = find_best_UCT_child(node)
+            best = find_best_UCT_child(node, start_time, time_to_think)
     elif node.children is not None: #if this node has children to choose from: should always happen
-        best = find_best_UCT_child(node)
+        best = find_best_UCT_child(node, start_time, time_to_think)
     return best  # because a win for me = a loss for child?
 
-def find_best_UCT_child(node):
+def find_best_UCT_child(node, start_time, time_to_think):
     parent_visits = node.visits
     best = node.children[0]
-    best_val = get_UCT(node.children[0], parent_visits)
+    best_val = get_UCT(node.children[0], parent_visits, start_time, time_to_think)
     for i in range(1, len(node.children)):
-        child_value = get_UCT(node.children[i], parent_visits)
+        child_value = get_UCT(node.children[i], parent_visits, start_time, time_to_think)
         if child_value > best_val:
             best = node.children[i]
             best_val = child_value
     return best
 
-def get_UCT(node, parent_visits):
+def get_UCT(node, parent_visits, start_time, time_to_think):
     # TODO: change this? stops exploring subtrees that dumber opponent may lead to if 1 good move exists
-    # Con: may not search preferentially search the tree that the opponent is more likely to pick
+    # Con: may not  preferentially search the tree that the opponent is more likely to pick
     # maybe I should add some value to the UCT multiplier when a win_status is declared? is this necessary due to the overwhelming
     # amount of wins/losses backpropagated?
     # if node.win_status == True:
@@ -118,7 +119,14 @@ def get_UCT(node, parent_visits):
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
         UCT_multiplier = node.UCT_multiplier
-        stochasticity_for_multithreading = random.random() #/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
+
+        # 03/11/2017 games actually good with this and no division, but annealing seems right?
+        # stochasticity_for_multithreading = random.random()  #/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
+
+        #TODO test this. SEEMS like a good idea since it will explore early and exploit later
+        annealed_factor = 1 - ((start_time - time.time())/time_to_think)  #  starts at 1 and trends towards 0 as search proceeds
+        # with stochasticity multiplier between .5 and 1 so multithreading sees different values
+        stochasticity_for_multithreading = (1- random.random()/2) * annealed_factor
 
         exploration_constant = 1.0 + stochasticity_for_multithreading # 1.414 ~ √2
 
@@ -204,131 +212,80 @@ def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=Fa
                         #no need to update child. if it has a win status, either it was expanded or was an instant game over
                 parent.children = pruned_children
 
-def update_value_from_policy_net_async_03112017(game_tree, lock, policy_net, thread = None, pruning=False): #takes in a list of parents with children,
-    # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated))
-    # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do tha
-    # NN_processing = False
 
-    #TODO: figure out if this even needs thread local storage since threads enter separate function calls?
+# def update_value_from_policy_net_async(game_tree, lock, policy_net, thread = None, pruning=False): #takes in a list of parents with children,
+#     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated))
+#     # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do tha
+#     # NN_processing = False
+#
+#     #TODO: figure out if this even needs thread local storage since threads enter separate function calls?
+#
+#     if thread is None:
+#         thread = threading.local()
+#     with lock:
+#         thread.game_tree = game_tree
+#     thread.NN_output = policy_net.evaluate(thread.game_tree)
+#
+#     #TODO: test thread safety without lock using local variables
+#     thread.parent_index = 0
+#     # with lock:
+#     while thread.parent_index < len(thread.NN_output): #batch of nodes unique to thread in block
+#         thread.pruned_children = []
+#         thread.top_children_indexes = get_top_children(thread.NN_output[thread.parent_index], num_top=5)#TODO: play with this number
+#         thread.parent = thread.game_tree[thread.parent_index]
+#         if thread.parent.children is not None:
+#             thread.child_index = 0
+#             while thread.child_index < len(thread.parent.children):
+#                 thread.child = thread.parent.children[thread.child_index]
+#                 if thread.child.index in thread.top_children_indexes:
+#                     thread.pruned_children.append(thread.child)
+#                     if thread.child.gameover is False:  # update only if not the end of the game
+#                         with lock:
+#                             update_child(thread.child, thread.NN_output[thread.parent_index], thread.top_children_indexes)
+#                 elif thread.child.win_status is not None: #if win/loss for thread.parent, keep
+#                     thread.pruned_children.append(thread.child)
+#                     #no need to update child. if it has a win status, either it was expanded or was an instant game over
+#                 elif pruning:
+#                     subtract_child_wins_and_visits(thread.parent, thread.child)
+#                 elif not pruning:#if unknown and not pruning, keep non-top child
+#                     if thread.child.gameover is False:
+#                         with lock:
+#                             update_child(thread.child, thread.NN_output[thread.parent_index], thread.top_children_indexes)
+#                     thread.pruned_children.append(thread.child)
+#                 thread.child_index += 1
+#         thread.parent.children = thread.pruned_children
+#         thread.parent_index += 1
 
-    if thread is None:
-        thread = threading.local()
-
-    NN_output = policy_net.evaluate(game_tree)
-
-    #TODO: test thread safety without lock using local variables
-    parent_index = 0
-    # with lock:
-    while parent_index < len(NN_output): #batch of nodes unique to thread in block
-        pruned_children = []
-        top_children_indexes = get_top_children(NN_output[parent_index], num_top=5)#TODO: play with this number
-        parent = game_tree[parent_index]
-        if parent.children is not None:
-            child_index = 0
-            while child_index < len(parent.children):
-                child = parent.children[child_index]
-                if child.index in top_children_indexes:
-                    pruned_children.append(child)
-                    if child.gameover is False:  # update only if not the end of the game
-                        with lock:
-                            update_child(child, NN_output[parent_index], top_children_indexes)
-                elif child.win_status is not None: #if win/loss for parent, keep
-                    pruned_children.append(child)
-                    #no need to update child. if it has a win status, either it was expanded or was an instant game over
-                elif pruning:
-                    subtract_child_wins_and_visits(parent, child)
-                elif not pruning:#if unknown and not pruning, keep non-top child
-                    if child.gameover is False:
-                        with lock:
-                            update_child(child, NN_output[parent_index], top_children_indexes)
-                    pruned_children.append(child)
-                child_index += 1
-        parent.children = pruned_children
-        parent_index += 1
-
-def update_value_from_policy_net_async(game_tree, lock, policy_net, thread = None, pruning=False): #takes in a list of parents with children,
-    # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated))
-    # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do tha
-    # NN_processing = False
-
-    #TODO: figure out if this even needs thread local storage since threads enter separate function calls?
-
-    if thread is None:
-        thread = threading.local()
-    with lock:
-        thread.game_tree = game_tree
-    thread.NN_output = policy_net.evaluate(thread.game_tree)
-
-    #TODO: test thread safety without lock using local variables
-    thread.parent_index = 0
-    # with lock:
-    while thread.parent_index < len(thread.NN_output): #batch of nodes unique to thread in block
-        thread.pruned_children = []
-        thread.top_children_indexes = get_top_children(thread.NN_output[thread.parent_index], num_top=5)#TODO: play with this number
-        thread.parent = thread.game_tree[thread.parent_index]
-        if thread.parent.children is not None:
-            thread.child_index = 0
-            while thread.child_index < len(thread.parent.children):
-                thread.child = thread.parent.children[thread.child_index]
-                if thread.child.index in thread.top_children_indexes:
-                    thread.pruned_children.append(thread.child)
-                    if thread.child.gameover is False:  # update only if not the end of the game
-                        with lock:
-                            update_child(thread.child, thread.NN_output[thread.parent_index], thread.top_children_indexes)
-                elif thread.child.win_status is not None: #if win/loss for thread.parent, keep
-                    thread.pruned_children.append(thread.child)
-                    #no need to update child. if it has a win status, either it was expanded or was an instant game over
-                elif pruning:
-                    subtract_child_wins_and_visits(thread.parent, thread.child)
-                elif not pruning:#if unknown and not pruning, keep non-top child
-                    if thread.child.gameover is False:
-                        with lock:
-                            update_child(thread.child, thread.NN_output[thread.parent_index], thread.top_children_indexes)
-                    thread.pruned_children.append(thread.child)
-                thread.child_index += 1
-        thread.parent.children = thread.pruned_children
-        thread.parent_index += 1
-
-#TODO: fold the below functions into one
 def update_child(child, NN_output, top_children_indexes):
-    #use if we are assigning values to any child
-    # parent = child.parent
-    # if parent.children is not None:
-    #     legal_indexes = [kid.index for kid in parent.children]
-    # if parent.sum_for_children_normalization is None:
-    #     parent.sum_for_children_normalization = sum(map(lambda child_index:
-    #                                 NN_output[child_index],
-    #                                 top_children_indexes)) #or top_children indexes, not sure which is better. if we are pruning, should we normalize only over top n?
-    # sum_for_normalization = parent.sum_for_children_normalization
     child_val = NN_output[child.index]
-    # normalized_value = (child_val / sum_for_normalization) * 100
     normalized_value = int(child_val  * 100)
     if child.index in top_children_indexes:  # weight top moves higher for exploitation
-        #  ex. even if all same rounded visits, rank 0 will have visits + 50
         rank = top_children_indexes.index(child.index)
         if rank == 0:
             child.parent.best_child = child #mark as node to expand first
             #TODO: #2 implemented 03102017 9:56 PM consider changing this to + child_val for a lighter UCT multiplier; 9:58 PM play with this number
-        child.UCT_multiplier  = 1 + child_val#prefer to choose NN's top picks as a function of probability returned by NN; policy trajectory stays close to NN trajectory
+        child.UCT_multiplier  = 1 + child_val# stay close to policy (net) trajectory by biasing UCT selection of
+                                             # NN's top picks as a function of probability returned by NN
 
     #TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
     # i.e. if policy chooses child with 30% probability => 30/100 games
     # => randomly decide which of those 30 games are wins and which are losses
-    weighted_wins = random.randint(0, normalized_value) # int(normalized_value)
+    weighted_wins = random.randint(0, normalized_value)
     weighted_wins = max(weighted_wins, 1) #if we aren't pruning and the NN probability is less than 1% => 1 win for parent
     weighted_losses = max (normalized_value - weighted_wins, 0) #if normalized value < 1 => 1 visit, 1 win, 0 losses
-    if weighted_losses > 0: #just saves on backpropagating computation when weighted losses is 0
-        update_tree_losses(child, weighted_losses)  # say we won (child lost) every time we visited,
+    if weighted_losses > 0: #just saves on backpropagation computation when weighted losses is 0
+        update_tree_losses(child, weighted_losses)
     update_tree_wins(child, weighted_wins)
-    # or else it may be a high visit count with low win count
 
-def update_sum_for_normalization(parent, NN_output, top_children_indexes):
+def update_sum_for_normalization(parent, NN_output, child_indexes):
+    #if we want to normalize over legal/top children vs relying on NN's softmax
     if parent.sum_for_children_normalization is None:
         parent.sum_for_children_normalization = sum(map(lambda child_index:
                                     NN_output[child_index],
-                                    top_children_indexes)) #or top_children indexes, no
+                                                        child_indexes))
     return parent.sum_for_children_normalization
 
+#returns a sorted list (best to worst as evaluated by the NN) of the children as move indexes
 def get_top_children(NN_output, num_top=0):
     if num_top == 0:
         num_top = len(NN_output)

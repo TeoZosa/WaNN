@@ -230,6 +230,7 @@ def check_for_winning_move(child_node):
 def set_game_over_values(node, node_color, winner_color):
     node.gameover = True
     overwhelming_amount = 9999999# is this value right? technically true and will draw parent towards siblings of winning moves
+    #but will make it too greedy when choosing a best move; maybe make best move be conservative? choose safest child?
     if winner_color == node_color:
         update_tree_wins(node, overwhelming_amount) #draw agent towards subtree
         node.win_status = True

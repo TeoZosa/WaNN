@@ -74,9 +74,9 @@ NN_input_queue = [] #for expanded nodes that need to be evaluated asynchronously
 def MCTS_with_expansions(game_board, player_color, time_to_think,
                          depth_limit, previous_move, move_number, log_file=sys.stdout, MCTS_Type='Expansion MCTS Pruning', policy_net=None):
     with SimulationInfo(log_file) as sim_info:
-
         sim_info.root = root = assign_root(game_board, player_color, previous_move, move_number, sim_info)
-        start_time = time.time()
+        sim_info.start_time = start_time = time.time()
+        sim_info.time_to_think = time_to_think
         done = False
         if MCTS_Type == 'Expansion MCTS Pruning':
             pruning = True
@@ -90,7 +90,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
                 NN_args = [done, pruning, sim_info, policy_net]
                 thread1.apply_async(async_node_updates, NN_args)
             else:
-                MCTS_args = [[root,depth_limit, start_time, sim_info, MCTS_Type, policy_net] * num_processes]
+                MCTS_args = [[root,depth_limit, time_to_think, sim_info, MCTS_Type, policy_net, start_time] * num_processes]
                 thread2.map_async(run_MCTS_with_expansions_simulation, MCTS_args)
                 done = run_MCTS_with_expansions_simulation(MCTS_args[0]) #have the main thread return done
         best_child = randomly_choose_a_winning_move(root)
@@ -123,14 +123,15 @@ def run_MCTS_with_expansions_simulation(args): #change back to starmap?
     # root, depth_limit, start_time, sim_info, MCTS_Type, policy_net = arg for arg in args
     root = args[0]
     depth_limit = args[1]
-    start_time = args[2]
+    time_to_think = args[2]
     sim_info = args[3]
     MCTS_Type = args[4]
     policy_net = args[5]
-    play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info, 0, MCTS_Type, policy_net)
+    start_time = args[6]
+    play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info, 0, MCTS_Type, policy_net, start_time, time_to_think)
     with async_update_lock: #so prints aren't interleaved
         if sim_info.counter  % 5 == 0:  # log every 5th simulation
-            print_expansion_statistics(sim_info, start_time)
+            print_expansion_statistics(sim_info, sim_info.start_time)
         sim_info.prev_game_tree_size = len(sim_info.game_tree)
         sim_info.counter += 1
         print_forced_win(root.win_status, sim_info)
@@ -141,28 +142,28 @@ def run_MCTS_with_expansions_simulation(args): #change back to starmap?
         # this just returns for the entire TTT since the UCT is hardcoded to give back a winning move at each depth
         return False
 
-def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
+def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     #todo: should we really assume opponent is as smart as we are and not check subtrees of nodes with win statuses?
     if root.gameover is False: #terminates at end-of-game moves #03/10/2017 originally had it stop at "guaranteed" wins/losses
         # but it prematurely stops search even though opponent may not be as smart; might as well let it keep searching just in case
         if root.children is None: #reached non-game ending leaf node
-            expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
+            expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
         else:#keep searching tree
-            select_best_child(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
+            select_best_child(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
-def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
+def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     if depth < depth_limit:
-        expand_and_select(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
+        expand_and_select(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
     else:  # reached depth limit
         play_simulation(root, sim_info, this_height)
         # return here
 
 
-def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
+def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
     if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
         depth = depth_limit
-    select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
+    select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
 #TODO: EBFS  MCTS class increases depth limit as game progresses
 def expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
@@ -188,17 +189,17 @@ def expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_ne
                 pre_pruning = True
         expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pre_pruning)
 
-def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
+def select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     with async_update_lock:
         move = node
         while move.children is not None: #get furthest descendant; happens if another thread expanded this node before we had a chance
-            move = choose_UCT_move(move)
+            move = choose_UCT_move(move, start_time, time_to_think)
             this_height += 1
 
     # fact: since this node was previously unexpanded, all subsequent nodes will be unexpanded
     # => will increment depth each subsequent call
     play_MCTS_game_with_expansions(move, depth+1, depth_limit, sim_info,
-                                   this_height + 1, MCTS_Type, policy_net)  # search until depth limit
+                                   this_height + 1, MCTS_Type, policy_net, start_time, time_to_think)  # search until depth limit
 
 def expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pre_pruning=False): #use if we want traditional MCTS
     if not node.expanded: #in case we're multithreading and we ended up with the same node to expand
@@ -225,6 +226,11 @@ def async_node_updates(done, pruning, sim_info, policy_net): #thread enters here
             expand_descendants_to_depth_wrt_NN(thread.batch_examples, without_enumerating, depth, depth_limit, sim_info, async_update_lock, policy_net)
 
 
+def select_best_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
+    with async_update_lock: #make sure it's not being updated asynchronously
+        move = choose_UCT_or_best_child(node, start_time, time_to_think) #if child is a leaf, chooses policy net's top choice
+    play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info, this_height + 1, MCTS_Type, policy_net, start_time, time_to_think)
+
 def play_simulation(root, sim_info, this_height):
     random_rollout(root)
     log_max_tree_height(sim_info, this_height)
@@ -233,24 +239,62 @@ def log_max_tree_height(sim_info, this_height):
     if this_height > sim_info.game_tree_height:  # keep track of max tree height
         sim_info.game_tree_height = this_height
 
-def select_best_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
-    with async_update_lock: #make sure it's not being updated asynchronously
-        move = choose_UCT_or_best_child(node) #if child is a leaf, chooses policy net's top choice
-    play_MCTS_game_with_expansions(move, depth, depth_limit, sim_info, this_height + 1, MCTS_Type, policy_net)
-
 def print_simulation_statistics(sim_info):#TODO: try not calling this and see if this is what is slowing down the program
+    root = sim_info.root
+    start_time = sim_info.start_time
+    time_to_think = sim_info.time_to_think
     print("Monte Carlo Game {iteration}\n"
           "Played at root   Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}\n".format(
-        height = sim_info.root.height, color=sim_info.root.color, uct=0, wins=sim_info.root.wins, visits=sim_info.root.visits,
+        height = root.height, color=root.color, uct=0, wins=root.wins, visits=root.visits,
         iteration=sim_info.counter+1), file=sim_info.file)
     print_board(sim_info.root.game_board, sim_info.file)
     print("\n", file=sim_info.file)
+    #to see best reply
+    if sim_info.root.children is not None:
+        best_child = randomly_choose_a_winning_move(root)
+        best_move =  move_lookup_by_index(best_child.index, root.color)
+        best_child_UCT = get_UCT(best_child, root.visits, start_time, time_to_think)
+        print("Current (Random) Best Move   {best_move}\n"
+              "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}\n".format(
+            best_move=best_move,
+            height=best_child.height, color=best_child.color, uct=best_child_UCT, wins=best_child.wins,
+            visits=best_child.visits), file=sim_info.file)
+        print_board(best_child.game_board, sim_info.file)
+        #to see predicted best counter
+        if best_child.children is not None:
+            best_counter_child = randomly_choose_a_winning_move(best_child)
+            best_counter_move = move_lookup_by_index(best_counter_child.index, best_child.color)
+            best_counter_child_UCT = get_UCT(best_counter_child, best_child.visits, start_time, time_to_think)
+            print("Current Best Move (Random) Best Counter Move   {best_counter_move}\n"
+                  "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}\n".format(
+                best_counter_move=best_counter_move,
+                height=best_counter_child.height, color=best_counter_child.color, uct=best_counter_child_UCT, wins=best_counter_child.wins,
+                visits=best_counter_child.visits), file=sim_info.file)
+            print_board(best_counter_child.game_board, sim_info.file)
+            print("All Counter Moves",file=sim_info.file)
+            for counter_child in best_child.children:
+                counter_move = move_lookup_by_index(counter_child.index, best_child.color)
+                counter_child_UCT = get_UCT(counter_child, best_child.visits, start_time, time_to_think)
+                print("Counter Move   {counter_move}    UCT = {uct}     wins = {wins}       visits = {visits}\n".format(
+                    counter_move=counter_move,
+                    uct=counter_child_UCT,
+                    wins=counter_child.wins,
+                    visits=counter_child.visits), file=sim_info.file)
+        else:
+            print("No Counter Moves explored",file=sim_info.file)
+    else:
+        print("No Moves explored", file=sim_info.file)
+
+
+
+    print("\n", file=sim_info.file)
+
     for i in range(0, len(sim_info.game_tree)):
         node_parent = sim_info.game_tree[i].parent
         if node_parent is None:
             UCT = 0
         else:
-            UCT = get_UCT(sim_info.game_tree[i], node_parent.visits)
+            UCT = get_UCT(sim_info.game_tree[i], node_parent.visits, start_time, time_to_think)
         print("Node {i} Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}".format(
             i=i, height=sim_info.game_tree[i].height, color=sim_info.game_tree[i].color, uct=UCT, wins=sim_info.game_tree[i].wins, visits=sim_info.game_tree[i].visits),
             file=sim_info.file)

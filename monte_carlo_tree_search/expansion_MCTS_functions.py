@@ -10,30 +10,33 @@ from multiprocessing import Process, Pool
 from multiprocessing.pool import ThreadPool
 import threading
 
-# Expansion MCTS: Traditional MCTS with expansion using policy net to generate prior values
-# start with root and put in NN queue, (level 0)
-# while time to think,
-# 1. MCTS search to find the best move
-# 2. When we reach a leaf node, expand, evaluate with policy net, and update prior values on children
-# 3. keep searching to desired depth (final depth = depth at expansion + depth_limit)
-# 4. do random rollouts. repeat 1.
-# Note: if this is the case,
-
-#OR
-
-# Expansion MCTS + pruning (EBFS MCTS with depth_limit=1): Traditional MCTS with expansion using policy net to generate prior values and pruning of top kids.
-# start with root and put in NN queue, (level 0)
+# Expansion MCTS with tree saving and (optional) tree parallelization:
+# Traditional MCTS with expansion using policy net to generate prior values
+# start with root and expand with NN, (level 0)
 # while time to think,
 # 1. MCTS search to find the best move
 # 2. When we reach a leaf node, expand, evaluate with policy net, and update prior values on children
 # 3. keep searching to desired depth (final depth = depth at expansion + depth_limit)
 # 4. do random rollouts. repeat 1.
 
-#OR
 
+#OR
+#BEST SO FAR
+# Expansion MCTS with pruning, tree saving and (optional) tree parallelization (EBFS MCTS with depth_limit=1):
+# Traditional MCTS with expansion using policy net to generate prior values and pruning of unpromising children..
+# start with root and expand with NN, (level 0)
+# while time to think,
+# 1. MCTS search to find the best move
+# 2. When we reach a leaf node, expand, evaluate with policy net, and update prior values on children
+# 3. keep searching to desired depth (final depth = depth at expansion + depth_limit)
+# 4. do random rollouts. repeat 1.
+
+#OR
+#not so good (but tested prior to more fine-grained pruning or multithreading)
 # EBFS MCTS: Hybrid BFS MCTS with expansion to desired depth using policy net to generate prior values
-# since policy prunes children inherently(O = num_top_moves^depth), makes continued expansion tractable.
-# Therefore, we can expand tree nodes prior to MCTS to take advantage of batch NN processing
+# since we can use policy net to prune children, makes continued expansion tractable.
+# (O = num_moves_over_threshold ^depth)
+# Therefore, we can expand tree nodes in batches during MCTS to take advantage of batch NN processing
 #
 # start with root and put in NN queue, (level 0)
 # while time to think,
@@ -42,6 +45,22 @@ import threading
 #   evaluate with policy net, and update prior values on children
 # 3. Find the best unexpanded descendant
 # 4. do a random rollout. repeat 1.
+
+#OR
+# Pretty bad performance, the normal MCTS-running thread is mostly useless as python isn't fast enough for it to
+# move away from dumb moves. Maybe if we had multiple threads doing policy net updates it wouldn't be so bad?
+#
+# MCTS with asynchronous policy net updates and pruning:
+# normal MCTS while another thread waits for policy net output and updates/prunes accordingly.
+# policy net output updater thread expands tree nodes in batches (whenever the queue has some element, it runs)
+#
+# start with root and put in NN queue, (level 0)
+# while time to think,
+# 1. MCTS search to find the best move
+# 2. When we reach a leaf node, expand, add to policy net queue for evaluation
+# 2.a Separate thread evaluates policy net queue and updates/prunes children
+# 3. keep searching to desired depth (final depth = depth at expansion + depth_limit)
+# 4. do random rollouts. repeat 1.
 
 #TODO: for root-level parallelism here, add stochasticity to UCT constant?
 

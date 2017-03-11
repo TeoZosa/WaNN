@@ -134,7 +134,7 @@ def randomly_choose_a_winning_move(node): #for stochasticity: choose among equal
         if not win_can_be_forced:
             best_nodes = get_best_children(node.children)
     if len(best_nodes) == 0:
-        True
+        breakpoint = True
     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
 
 def check_for_forced_win(node_children):

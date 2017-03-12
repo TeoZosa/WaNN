@@ -83,7 +83,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         else:
             pruning = False
         thread1 = ThreadPool(processes=3)
-        num_processes = 10
+        num_processes = 100
         thread2 = ThreadPool(processes=num_processes)#TODO check this
         while time.time() - start_time < time_to_think and not done:
             if MCTS_Type ==  'MCTS Asynchronous':
@@ -93,6 +93,8 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
                 MCTS_args = [[root,depth_limit, time_to_think, sim_info, MCTS_Type, policy_net, start_time] * num_processes]
                 thread2.map_async(run_MCTS_with_expansions_simulation, MCTS_args)
                 done = run_MCTS_with_expansions_simulation(MCTS_args[0]) #have the main thread return done
+        thread2.close()
+        thread2.join()
         best_child = randomly_choose_a_winning_move(root)
         best_move = move_lookup_by_index(best_child.index, player_color)
         print_best_move(player_color, best_move, sim_info)

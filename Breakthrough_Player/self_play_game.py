@@ -4,10 +4,10 @@ import os.path
 
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
-  num_games_to_play = 10
+  num_games_to_play = 100
   black_wins = 0
   white_wins = 0
-  time_to_think = 60
+  time_to_think = 10
   depth_limit = 1
   date = r'03112017'
   file_designator = ''

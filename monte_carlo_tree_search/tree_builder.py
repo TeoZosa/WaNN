@@ -190,7 +190,7 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
     child = init_child_node_and_board(move, parent)
     check_for_winning_move(child)  # 1-step lookahead for gameover
     child_val = NN_output[child.index]
-    if child.gameover is False and child.win_status is None:  # update only if not the end of the game
+    if child.gameover is False:  # update only if not the end of the game
 
         #  opens up the tree to more lines of play if best child sucks to begin with.
         # in the worst degenerate case where best_val == ~4.5%, will include all children which is actually pretty justified.

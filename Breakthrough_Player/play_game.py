@@ -6,7 +6,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
 
 
   num_games_to_play = 10
-  time_to_think = 60
+  time_to_think = 10
   depth_limit = 1
   date = r'03102017'
   file_designator = ''

@@ -3,6 +3,8 @@ from Breakthrough_Player.board_utils import print_board, move_piece, game_over, 
 from monte_carlo_tree_search.MCTS import MCTS, NeuralNet
 import sys
 from multiprocessing import  Process, pool, Pool
+import pexpect
+
 
 class NoDaemonProcess(Process):
     # make 'daemon' attribute always return False
@@ -17,6 +19,44 @@ class NoDaemonProcess(Process):
 class MyPool(pool.Pool):  # make a special class to allow for an inner process pool
     Process = NoDaemonProcess
 
+def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
+    policy_net = NeuralNet()
+    computer_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
+
+    if black_opponent == 'Wanderer':
+        open_input_engine = r'\Users\TeofiloZosa\Clion\Breakthrough\BreakthroughInput\bin\Release\BreakthroughInput'
+        color_to_be = r' white '
+        wanderer_executable = r'\Users\TeofiloZosa\Clion\Breakthrough\BreakthroughCurrent\bin\Release\BreakthroughCurrent --ttt=10'
+        wanderer = pexpect.spawn(open_input_engine + color_to_be + wanderer_executable)
+        wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file, wanderer)
+        wanderer.log_file = sys.stdout
+
+    else:
+        wanderer = None
+        wanderer_MCTS_tree = None
+
+    print("{white} Vs. {black}".format(white=white_player, black=black_opponent), file=file_to_write)
+
+    game_board = initial_game_board()
+    gameover = False
+    move_number = 0
+    winner_color = None
+    web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
+    while not gameover:
+        print_board(game_board)
+        move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree)
+        print_move(move, color_to_move)
+        game_board = move_piece(game_board, move, color_to_move)
+        move = move.split(r'-')
+        wanderer.expect("Input White's move (in format a1-a2 or a2xb3) or enter \'quit\': ")
+        wanderer.sendline(move)
+        web_visualizer_link = web_visualizer_link + move[0] + move[1]
+        gameover, winner_color = game_over(game_board)
+        move_number += 1
+    print_board(game_board, file=file_to_write)
+    print("Game over. {} wins".format(winner_color), file=file_to_write)
+    print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
+    return winner_color
 
 
 def play_game(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
@@ -43,31 +83,36 @@ def play_game(white_player, black_opponent, depth_limit=1, time_to_think=10, fil
     print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
     return winner_color
 
-def get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree):
+def get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree = None):
     if move_number % 2 == 0:  # white's turn
         color_to_move = 'White'
-        move = get_whites_move(game_board, white_player, computer_MCTS_tree)
+        move = get_whites_move(game_board, white_player, computer_MCTS_tree, wanderer_MCTS_tree)
     else:  # black's turn
         color_to_move = 'Black'
-        move = get_blacks_move(game_board, black_opponent, computer_MCTS_tree)
+        move = get_blacks_move(game_board, black_opponent, computer_MCTS_tree, wanderer_MCTS_tree)
     return move, color_to_move
 
-def get_whites_move(game_board, white_player, computer_MCTS_tree):
+def get_whites_move(game_board, white_player, computer_MCTS_tree, wanderer_MCTS_tree):
     move = None
     color_to_move = 'White'
     if white_player == 'Human':
         move = get_human_move(game_board)
+    elif white_player == 'Wanderer':
+        move = get_player_move(game_board, color_to_move, "Expansion MCTS Pruning", wanderer_MCTS_tree)
+
     else:#get policy net move
-        get_player_move(game_board, color_to_move, "Expansion MCTS Pruning", computer_MCTS_tree)
+        move = get_player_move(game_board, color_to_move, "Expansion MCTS Pruning", computer_MCTS_tree)
     return move
 
-def get_blacks_move(game_board, black_opponent, computer_MCTS_tree):
+def get_blacks_move(game_board, black_opponent, computer_MCTS_tree, wanderer_MCTS_tree):
     move = None
     color_to_move = 'Black'
     if black_opponent == 'Human':
         move = get_human_move(game_board)
+    elif black_opponent == 'Wanderer':
+        move = get_player_move(game_board, color_to_move, "Expansion MCTS Pruning", wanderer_MCTS_tree)
     else:#get policy net move
-        get_player_move(game_board, color_to_move, "Expansion MCTS Pruning", computer_MCTS_tree)
+        move = get_player_move(game_board, color_to_move, "Expansion MCTS Pruning", computer_MCTS_tree)
     return move
 
 def get_human_move(game_board):
@@ -145,6 +190,7 @@ def get_player_move(game_board, color_to_move, player, MCTS_tree):
         or player == 'Expansion MCTS Pruning' \
         or player == 'EBFS MCTS' \
         or player == 'MCTS Asynchronous'\
+        or player == 'Wanderer'\
         or player == 'Policy':
         move = MCTS_tree.evaluate(game_board, color_to_move)
     elif player == 'BFS MCTS':  # BFS to depth MCTS

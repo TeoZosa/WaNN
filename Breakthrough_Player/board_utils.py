@@ -47,7 +47,7 @@ def move_piece(board_state, move, whose_move):
     empty = 'e'
     white_move_index = 10
     is_white_index = 9
-    move = move.split('-')
+    move = move.split('-').split('x')#x for wanderer captures.
     _from = move[0].lower()
     to = move[1].lower()
     next_board_state = copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?

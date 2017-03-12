@@ -2,7 +2,7 @@ from monte_carlo_tree_search.expansion_MCTS_functions import MCTS_with_expansion
 from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit
 from Breakthrough_Player.board_utils import generate_policy_net_moves, get_best_move, get_NN
 from tools.utils import convert_board_to_2d_matrix_POEB, batch_split_no_labels
-
+import re
 
 class MCTS(object):
     #Option B: Traditional MCTS with expansion using policy net to generate prior values and prune tree
@@ -43,6 +43,27 @@ class MCTS(object):
         elif self.MCTS_type == 'Policy':
             ranked_moves = self.policy_net.evaluate(game_board, player_color)
             move = get_best_move(game_board, ranked_moves)
+        elif self.MCTS_type == 'Wanderer':
+            move_regex = re.compile(r".*uct:\s([a-h]\d.[a-h]\d)",
+                                    re.IGNORECASE)
+            self.policy_net.expect("The best move inside ")
+
+
+            move = self.policy_net.read()
+            move = move_regex.search(move).group(1)
+
+            # child.expect('Name .*: ')
+            # child.sendline('anonymous')
+            # child.expect('Password:')
+            # child.sendline('noah@example.com')
+            # child.expect('ftp> ')
+            # child.sendline('lcd /tmp')
+            # child.expect('ftp> ')
+            # child.sendline('cd pub/OpenBSD')
+            # child.expect('ftp> ')
+            # child.sendline('get README')
+            # child.expect('ftp> ')
+            # child.sendline('bye')
         return move
 
 

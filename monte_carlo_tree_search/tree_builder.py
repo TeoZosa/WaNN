@@ -208,8 +208,7 @@ def assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
         if len(pruned_children) > 0:
             parent.children = pruned_children
             set_win_status_from_children(parent, children_win_statuses)
-        else:  # shouldn't happen
-            parent.children = None
+
 
 def set_expanded(node):
     node.expanded = True

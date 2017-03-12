@@ -95,6 +95,8 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
                 done = run_MCTS_with_expansions_simulation(MCTS_args[0]) #have the main thread return done
         thread2.close()
         thread2.join()
+        thread1.close()
+        thread1.join()
         best_child = randomly_choose_a_winning_move(root)
         best_move = move_lookup_by_index(best_child.index, player_color)
         print_best_move(player_color, best_move, sim_info)

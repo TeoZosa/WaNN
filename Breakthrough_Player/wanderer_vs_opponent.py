@@ -25,20 +25,21 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   policy = "Policy"
   # player_for_path = 'EMCTSPruning'
   player_for_path = EBFS_MCTS
-  # path = r'G:\TruncatedLogs\PythonDatasets'
+  Windows_path = r'G:\TruncatedLogs\PythonDatasets'
   OSX_path = r'/Users/TeofiloZosa/BreakthroughData/03122017SelfPlay'
+  path = Windows_path
   white_player = EBFS_MCTS
   black_opponent = wanderer
 
   for i in range(0, num_games_to_play):
-    gameplay_file = open(os.path.join(OSX_path,
+    gameplay_file = open(os.path.join(path,
                                     r'{date}'
                                     # r'_2RandStartMoves_randBestMoves_'
                                     # r'normalizedNNupdate_rankingOffset_'
                                     r'White{opponent}vsWanderer{designator}.txt'.format(date=date, opponent=player_for_path,
                                                                                         designator=file_designator)),
                        'a')
-    MCTS_logging_file = open(os.path.join(OSX_path,
+    MCTS_logging_file = open(os.path.join(path,
                                             r'{date}{opponent}vsWanderer'
                                             r'depth{depth}_'
                                             r'ttt{time_to_think}{designator}.txt'.format(date=date, opponent=player_for_path,

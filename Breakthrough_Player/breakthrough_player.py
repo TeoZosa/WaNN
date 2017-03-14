@@ -5,6 +5,7 @@ import sys
 import os
 from multiprocessing import  Process, pool, Pool
 import pexpect
+from pexpect.popen_spawn import PopenSpawn
 
 
 class NoDaemonProcess(Process):
@@ -25,16 +26,19 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     computer_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
 
     if black_opponent == 'Wanderer':
-        open_input_engine = r'/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughInput/bin/Release/BreakthroughInput'
+        OSX_input_engine = '/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughInput/bin/Release/BreakthroughInput'
+        OSX_wanderer_executable = r'/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughCurrent/bin/Release/BreakthroughCurrent'
+
+        open_input_engine = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughInput.exe'
         color_to_be = r'white'
-        wanderer_executable = r'/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughCurrent/bin/Release/BreakthroughCurrent'
+        wanderer_executable= r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent.exe'
         ttt = r'--ttt=10'
-        wanderer = pexpect.spawn(open_input_engine,  args= [color_to_be, wanderer_executable, ttt])
+        full_command = open_input_engine + ' ' + color_to_be + ' ' + wanderer_executable + ' ' + ttt
+        # wanderer = pexpect.spawn(open_input_engine,  args= [color_to_be, wanderer_executable, ttt])
+        wanderer = PopenSpawn(full_command)
         wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file, wanderer)
         wanderer.log_file = sys.stdout
-
     else:
-        wanderer = None
         wanderer_MCTS_tree = None
 
     print("{white} Vs. {black}".format(white=white_player, black=black_opponent), file=file_to_write)
@@ -49,9 +53,6 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
         move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
         print_move(move, color_to_move, file_to_write)
         game_board = move_piece(game_board, move, color_to_move)
-        # wanderer.expect("Input White's move (in format a1-a2 or a2xb3) or enter \'quit\': ")
-        # print(wanderer.read())
-
         if move[2] == r'-':
             move = move.split(r'-')
         else:

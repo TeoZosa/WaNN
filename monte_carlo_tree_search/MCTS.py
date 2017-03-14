@@ -46,29 +46,15 @@ class MCTS(object):
             ranked_moves = self.policy_net.evaluate(game_board, player_color)
             move = get_best_move(game_board, ranked_moves)
         elif self.MCTS_type == 'Wanderer':
-            # time.sleep(self.time_to_think)
+
             move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",
                                     re.IGNORECASE)
             self.policy_net.expect('play b .*')
-
-            # self.policy_net.expect(".*play b")
 
             move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
             print(move, file=self.log_file)
             move = move_regex.search(move).group(1)
 
-            # child.expect('Name .*: ')
-            # child.sendline('anonymous')
-            # child.expect('Password:')
-            # child.sendline('noah@example.com')
-            # child.expect('ftp> ')
-            # child.sendline('lcd /tmp')
-            # child.expect('ftp> ')
-            # child.sendline('cd pub/OpenBSD')
-            # child.expect('ftp> ')
-            # child.sendline('get README')
-            # child.expect('ftp> ')
-            # child.sendline('bye')
         return move
 
 

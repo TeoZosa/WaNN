@@ -80,7 +80,10 @@ def print_board(game_board, file=sys.stdout):
           .apply(lambda x: x.apply(lambda y: new_piece_map[y])), file=file)  # transmogrify e's to _'s
 
 def check_legality(game_board, move):
-    move = move.split('-')
+    if move[2] == '-':
+        move = move.split('-')
+    else:
+        move = move.split('x')
     move_from = move[0].lower()
     move_to = move[1].lower()
     player_color_index = 9

@@ -46,7 +46,7 @@ def update_tree_losses(node, amount=1): # visit and no win = loss
         update_tree_wins(parent, amount)
 
 #backpropagate guaranteed win status
-def update_win_statuses(node, win_status): #is win status really necessary? shouldn't the UCT do the same thing with huge wins/losses?
+def update_win_statuses(node, win_status):
     node.win_status = win_status
     parent = node.parent
     if parent is not None:#parent may now know if it is a win or loss.
@@ -70,6 +70,7 @@ def set_win_status_from_children(node, children_win_statuses):
         update_win_statuses(node, False)#all children winners = node is a loss no matter what
     #else:
        # some kids are winners, some kids are unknown => can't say anything with certainty
+
 def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS using async updates
     parent = node
     while parent is not None:
@@ -81,11 +82,11 @@ def choose_UCT_move(node, start_time, time_to_think):
     best = None #shouldn't ever return None
     if node.children is not None:
         best = find_best_UCT_child(node, start_time, time_to_think)
-    return best  #because a win for me = a loss for child?
+    return best  #because a win for me = a loss for child
 
 def choose_UCT_or_best_child(node, start_time, time_to_think):
     best = None  # shouldn't ever return None
-    if node.best_child is not None: #expand best child if not already previously expanded
+    if node.best_child is not None: #return best child if not already previously expanded
         if node.best_child.visited is False:
             best = node.best_child
             node.best_child.visited = True
@@ -93,7 +94,7 @@ def choose_UCT_or_best_child(node, start_time, time_to_think):
             best = find_best_UCT_child(node, start_time, time_to_think)
     elif node.children is not None: #if this node has children to choose from: should always happen
         best = find_best_UCT_child(node, start_time, time_to_think)
-    return best  # because a win for me = a loss for child?
+    return best  # because a win for me = a loss for child
 
 def find_best_UCT_child(node, start_time, time_to_think):
     parent_visits = node.visits
@@ -131,10 +132,12 @@ def get_UCT(node, parent_visits, start_time, time_to_think):
         exploration_constant = 1.0 + stochasticity_for_multithreading # 1.414 ~ √2
 
         exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
-        exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits) #03/10/2017 added 2 * from literature
+        exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
         UCT = np.float64((exploitation_factor + exploration_factor) * UCT_multiplier) #TODO change back to non-np float? shouldn't have problems with 0 UCT nodes anymore
     return UCT #UCT from parent's POV
 
+#TODO: undiagnosed threading bug.
+# Will sometimes be given an expanded root with no children (usually near the end of the game)
 def randomly_choose_a_winning_move(node): #for stochasticity: choose among equally successful children
     best_nodes = []
     if node.children is not None:
@@ -160,7 +163,7 @@ def get_best_children(node_children):#TODO: make sure to not pick winning childr
     best, best_val = get_best_child(node_children)
     best_nodes = []
     for child in node_children:  # find equally best children
-        if not child.win_status == True: #don't even consider children who will win #TODO: fix this just in case we have a doomed root but still want to search in case the opponent makes a mistake?
+        if not child.win_status == True: #only consider children who will not lead to a win for opponent
             child_win_rate = child.wins / child.visits
             if child_win_rate == best_val:
                 if best.visits == child.visits:
@@ -186,7 +189,7 @@ def get_best_child(node_children):
     return best, best_val
 
 def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=False): #takes in a list of parents with children,
-    # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated))
+    # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated)
     # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do that
     NN_output = policy_net.evaluate(game_tree)
     if lock is None: #make a useless lock so we can have clean code either way

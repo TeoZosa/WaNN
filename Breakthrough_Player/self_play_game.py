@@ -8,9 +8,9 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   black_wins = 0
   white_wins = 0
   time_to_think = 10
-  depth_limit = 1
-  date = r'03112017'
-  file_designator = ''
+  depth_limit = 7
+  date = r'03142017'
+  file_designator = 'Depth10ToExpansion10'
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
@@ -22,7 +22,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
 
   policy = "Policy"
 
-  opponent = 'EMCTSPruning'
+  opponent = EBFS_MCTS.strip(' ')
   path = r'G:\TruncatedLogs\PythonDatasets'
 
   #possible policy net opponents
@@ -44,7 +44,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
                                                                                          depth=depth_limit,
                                                                                          time_to_think=time_to_think)),
                                'a')
-    winner_color = self_play_game(white_player=expansion_MCTS_pruning, black_opponent=policy, depth_limit=depth_limit,
+    winner_color = self_play_game(white_player=EBFS_MCTS, black_opponent=policy, depth_limit=depth_limit,
                                   time_to_think=time_to_think, file_to_write=gameplay_file, MCTS_log_file=MCTS_logging_file)
     if winner_color == 'White':
       white_wins += 1

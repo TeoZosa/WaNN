@@ -84,7 +84,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
             pruning = False
         thread1 = ThreadPool(processes=3)
         num_processes = 100
-        thread2 = ThreadPool(processes=num_processes)#TODO check this
+        thread2 = ThreadPool(processes=num_processes)
         while time.time() - start_time < time_to_think and not done:
             if MCTS_Type ==  'MCTS Asynchronous':
                 NN_args = [done, pruning, sim_info, policy_net]
@@ -165,8 +165,9 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type,
 
 def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
-    if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
-        depth = depth_limit
+    #TODO: separate the in-tree depth limit vs the batch expansion depth limit.
+    # if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
+    #     depth = depth_limit
     select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
 #TODO: EBFS  MCTS class increases depth limit as game progresses

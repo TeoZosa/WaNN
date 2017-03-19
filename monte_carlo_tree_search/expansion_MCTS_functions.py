@@ -7,7 +7,7 @@ from Breakthrough_Player.board_utils import print_board
 import time
 import sys
 import random
-from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import ThreadPool, Pool
 import threading
 
 # Expansion MCTS with tree saving and (optional) tree parallelization:
@@ -247,6 +247,17 @@ def random_rollout_EOG(node, depth, depth_limit, sim_info, this_height, MCTS_Typ
                 node = random.sample(node.children, 1)[0]  # if child is a leaf, chooses policy net's top choice
                 this_height += 1
         expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
+
+def true_random_rollout_EOG(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net):
+    while node.gameover is False:
+        while node.children is not None:
+            node = random.sample(node.children, 1)[0]  #
+            this_height += 1
+        with Pool(processes=2) as process:
+            all_children = process.map(visit_single_node_and_expand,[node])
+        with async_update_lock:
+            if node.children is None: #if not already updated by another thread
+                node.children = all_children
 
 def expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pre_pruning=False): #use if we want traditional MCTS
     if not node.expanded: #in case we're multithreading and we ended up with the same node to expand

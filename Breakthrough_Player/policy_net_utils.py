@@ -22,6 +22,7 @@ def instantiate_session():#todo: return the graph as well in case we want to run
     sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
                    intra_op_parallelism_threads=NUM_CORES))
     saver.restore(sess, path)
+    # tf.train.write_graph(sess.graph_def, 'cppModels/', 'policyNet.pb', as_text=False)
     return sess, y_pred, X
 
 def build_policy_net():

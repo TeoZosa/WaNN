@@ -15,6 +15,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
+  async_MCTS = 'MCTS Asynchronous'
 
   human = 'Human'
   wanderer = 'Wanderer'

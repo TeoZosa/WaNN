@@ -147,6 +147,8 @@ def run_MCTS_with_expansions_simulation(args): #change back to starmap?
         # this just returns for the entire TTT since the UCT is hardcoded to give back a winning move at each depth
         return False
 
+
+
 def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     #todo: should we really assume opponent is as smart as we are and not check subtrees of nodes with win statuses?
     if root.gameover is False: #terminates at end-of-game moves #03/10/2017 originally had it stop at "guaranteed" wins/losses

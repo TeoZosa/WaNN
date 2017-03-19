@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import os
+import multiprocessing
 from tensorflow.python.framework.ops import reset_default_graph
 
 def call_policy_net(board_representation):#Deprecated: instantiate session directly and call inside of NeuralNet Class
@@ -17,7 +18,9 @@ def instantiate_session():#todo: return the graph as well in case we want to run
     y_pred, X = build_policy_net()
     saver = tf.train.Saver()
     path = os.path.join(r'..', r'policy_net_model', r'model')
-    sess = tf.Session()
+    NUM_CORES = multiprocessing.cpu_count()
+    sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
+                   intra_op_parallelism_threads=NUM_CORES))
     saver.restore(sess, path)
     return sess, y_pred, X
 

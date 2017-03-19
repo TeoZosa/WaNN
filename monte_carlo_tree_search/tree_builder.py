@@ -1,7 +1,7 @@
 from Breakthrough_Player.board_utils import game_over, enumerate_legal_moves, move_piece
 from tools.utils import index_lookup_by_move, move_lookup_by_index
 from monte_carlo_tree_search.TreeNode import TreeNode
-from Breakthrough_Player.board_utils import  check_legality_MCTS
+from Breakthrough_Player.board_utils import  check_legality_MCTS, generate_policy_net_moves_batch
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, \
     get_top_children, update_child, set_win_status_from_children
 from multiprocessing import Pool
@@ -113,6 +113,11 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
     if len(unexpanded_nodes) > 0: #if any nodes to expand;
         # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
         NN_output = policy_net.evaluate(unexpanded_nodes)
+        # process = Pool(processes=1)
+        # NN_output = process.map(generate_policy_net_moves_batch,[unexpanded_nodes])
+        # process.join()
+        # process.close()
+
         unexpanded_children = []
         for i in range(0, len(unexpanded_nodes)):
             parent = unexpanded_nodes[i]

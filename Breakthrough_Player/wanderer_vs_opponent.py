@@ -11,7 +11,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   time_to_think = 10
   depth_limit = 5
   date = r'01_03182017'
-  file_designator = 'multiplier_greedyRollout'
+  file_designator = 'multiplier_UCTRollout'
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'

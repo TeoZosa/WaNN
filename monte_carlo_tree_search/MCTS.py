@@ -49,7 +49,7 @@ class MCTS(object):
 
             move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",
                                     re.IGNORECASE)
-            self.policy_net.expect('play b .*')
+            self.policy_net.expect('play b.*')
 
             move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
             print(move, file=self.log_file)

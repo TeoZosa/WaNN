@@ -101,10 +101,12 @@ def find_best_UCT_child(node, start_time, time_to_think):
     best = node.children[0]
     best_val = get_UCT(node.children[0], parent_visits, start_time, time_to_think)
     for i in range(1, len(node.children)):
-        child_value = get_UCT(node.children[i], parent_visits, start_time, time_to_think)
-        if child_value > best_val:
-            best = node.children[i]
-            best_val = child_value
+        #TODO: 03/18/2017 10 PM don't consider children with a win status? seems right?
+        if node.children[i].win_status is None: #only consider subtrees where we don't already know what's going to happen
+            child_value = get_UCT(node.children[i], parent_visits, start_time, time_to_think)
+            if child_value > best_val:
+                best = node.children[i]
+                best_val = child_value
     return best
 
 def get_UCT(node, parent_visits, start_time, time_to_think):
@@ -188,6 +190,63 @@ def get_best_child(node_children):
                 best_val = child_win_rate
     return best, best_val
 
+def random_rollout(node):
+    move = node
+    while move.children is not None:
+        move = random.sample(move.children, 1)[0]
+    outcome = evaluation_function(node)
+    if outcome == 0:
+        update_tree_losses(node, 1)
+    else:
+        update_tree_wins(node, 1)
+
+def evaluation_function(root):
+    # row 2:
+    # if white piece or (?) no diagonal black pieces in row 3
+    weighted_board = {  #50%
+        8: {'a': 24, 'b': 24, 'c': 24, 'd': 24, 'e': 24, 'f': 24, 'g': 24, 'h': 24},
+        7: {'a': 21, 'b': 23, 'c': 23, 'd': 23, 'e': 23, 'f': 23, 'g': 23, 'h': 21},
+        6: {'a': 14, 'b': 22, 'c': 22, 'd': 22, 'e': 22, 'f': 22, 'g': 22, 'h': 14},
+        5: {'a': 9, 'b': 15, 'c': 21, 'd': 21, 'e': 21, 'f': 21, 'g': 15, 'h': 19},
+        4: {'a': 6, 'b': 9, 'c': 16, 'd': 16, 'e': 16, 'f': 16, 'g': 9, 'h': 6},
+        3: {'a': 3, 'b': 5, 'c': 10, 'd': 10, 'e': 10, 'f': 10, 'g': 5, 'h': 3},
+        2: {'a': 2, 'b': 3, 'c': 3, 'd': 3, 'e': 3, 'f': 3, 'g': 3, 'h': 2},
+        1: {'a': 5, 'b': 28, 'c': 28, 'd': 12, 'e': 12, 'f': 28, 'g': 28, 'h': 5}
+    }
+    white = 'White'
+    black = 'Black'
+    is_white_index = 9
+    white_move_index = 10
+    player_color = root.color
+    opponent_dict = { 'White': 'Black',
+             'Black': 'White'
+
+    }
+    win_weight = 0
+    result = 0
+    for row in root.game_board:
+        if row != is_white_index and row != white_move_index:  # don't touch these indexes
+            for col in root.game_board[row]:
+                if root.game_board[row][col] == white:
+                # if row == 2:
+                #     if col == player_color:
+                #         win_weight += 1
+                #     if
+                    result += weighted_board[row][col]
+                elif root.game_board[row][col] == black:
+                    result -= weighted_board[9-row][col]
+
+    if result > 0:
+        if player_color == white:
+            return 1
+        else:
+            return 0
+    else:
+        if player_color == black:
+            return 1
+        else:
+            return 0
+
 def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=False): #takes in a list of parents with children,
     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated)
     # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do that
@@ -267,17 +326,19 @@ def update_child(child, NN_output, top_children_indexes):
         if rank == 0:
             child.parent.best_child = child #mark as node to expand first
             #TODO: #2 implemented 03102017 9:56 PM consider changing this to + child_val for a lighter UCT multiplier; 9:58 PM play with this number
+
+        #TODO: 03/15/2017 removed based on prof Lorentz input
         child.UCT_multiplier  = 1 + child_val# stay close to policy (net) trajectory by biasing UCT selection of
                                              # NN's top picks as a function of probability returned by NN
 
     #TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
     # i.e. if policy chooses child with 30% probability => 30/100 games
     # => randomly decide which of those 30 games are wins and which are losses
-    weighted_wins = random.randint(0, normalized_value)
-    weighted_wins = max(weighted_wins, 1) #if we aren't pruning and the NN probability is less than 1% => 1 win for parent
-    weighted_losses = max (normalized_value - weighted_wins, 0) #if normalized value < 1 => 1 visit, 1 win, 0 losses
-    if weighted_losses > 0: #just saves on backpropagation computation when weighted losses is 0
-        update_tree_losses(child, weighted_losses)
+
+    #TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
+    weighted_losses = normalized_value
+    weighted_wins = 100-weighted_losses
+    update_tree_losses(child, weighted_losses)
     update_tree_wins(child, weighted_wins)
 
 def update_sum_for_normalization(parent, NN_output, child_indexes):

@@ -1,7 +1,7 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import choose_UCT_move, \
     update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, SimulationInfo, update_win_status_from_children
-from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand, random_rollout
+from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand, random_eval
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board
 import time
@@ -44,7 +44,7 @@ def run_BFS_MCTS_simulation(sim_info):
 def BFS_MCTS_game(root):
     if root.children is None:
         #bottom of tree; random rollout
-       random_rollout(root)
+       random_eval(root)
     else:
         move = choose_UCT_move(root)
         BFS_MCTS_game(move)

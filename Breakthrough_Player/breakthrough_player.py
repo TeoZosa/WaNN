@@ -30,12 +30,14 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
         OSX_wanderer_executable = r'/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughCurrent/bin/Release/BreakthroughCurrent'
 
         open_input_engine = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughInput.exe'
+
         color_to_be = r'white'
         wanderer_executable= r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent.exe'
         ttt = r'--ttt=10'
         full_command = open_input_engine + ' ' + color_to_be + ' ' + wanderer_executable + ' ' + ttt
         # wanderer = pexpect.spawn(open_input_engine,  args= [color_to_be, wanderer_executable, ttt])
-        wanderer = PopenSpawn(full_command)
+        # wanderer = PopenSpawn(full_command, cwd=r'C:\Users\damon\PycharmProjects\BreakthroughANN' )
+        wanderer = PopenSpawn([open_input_engine, color_to_be, wanderer_executable, ttt])
         wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file, wanderer)
         wanderer.log_file = sys.stdout
     else:
@@ -63,6 +65,9 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     print_board(game_board, file=file_to_write)
     print("Game over. {} wins".format(winner_color), file=file_to_write)
     print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
+
+    if wanderer_MCTS_tree is not None:
+        wanderer_MCTS_tree.policy_net.sendline('quit')
     return winner_color
 
 

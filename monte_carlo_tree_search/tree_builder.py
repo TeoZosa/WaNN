@@ -35,7 +35,7 @@ def visit_to_depth_limit(player_color, depth, unvisited_queue, depth_limit):
 def update_bottom_of_tree(unvisited_queue):#don't do this as it will mark the bottom as losses
     #NN will take care of these wins.
     for node in unvisited_queue:  # bottom of tree, so percolate visits to the top
-        random_rollout(node)
+        random_eval(node)
         #don't return bottom of tree so it doesn't run inference on these nodes
     # visited_queue = unvisited_queue
     # return visited_queue
@@ -238,7 +238,7 @@ def set_game_over_values(node, node_color, winner_color):
         update_tree_losses(node, overwhelming_amount) #keep agent away from subtree and towards subtrees of the same level
         node.win_status = False
 
-def random_rollout(node):
+def random_eval(node):
     amount = 1  # increase to pretend to outweigh NN?
     win = random.randint(0, 1)
     if win == 1:

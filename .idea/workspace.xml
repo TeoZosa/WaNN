@@ -3,14 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -158,8 +151,8 @@
               <file leaf-file-name="expansion_MCTS_functions.py" pinned="false" current-in-tab="true">
                 <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py">
                   <provider selected="true" editor-type-id="text-editor">
-                    <state relative-caret-position="-2701">
-                      <caret line="182" column="0" lean-forward="true" selection-start-line="182" selection-start-column="0" selection-end-line="182" selection-end-column="0" />
+                    <state relative-caret-position="1207">
+                      <caret line="248" column="70" lean-forward="false" selection-start-line="248" selection-start-column="70" selection-end-line="248" selection-end-column="70" />
                       <folding>
                         <element signature="e#0#53#0" expanded="true" />
                       </folding>
@@ -925,13 +918,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00139" summary="put policy net into breakthrough_player. Fixed bugs.">
-      <created>1488587739718</created>
-      <option name="number" value="00139" />
-      <option name="presentableId" value="LOCAL-00139" />
-      <option name="project" value="LOCAL" />
-      <updated>1488587739718</updated>
-    </task>
     <task id="LOCAL-00140" summary="added logic to know who won and cute print message">
       <created>1488588461297</created>
       <option name="number" value="00140" />
@@ -1268,7 +1254,14 @@
       <option name="project" value="LOCAL" />
       <updated>1489533416634</updated>
     </task>
-    <option name="localTasksCounter" value="188" />
+    <task id="LOCAL-00188" summary="Ugly changes for due-in-two-weeks paper experiments">
+      <created>1489936575249</created>
+      <option name="number" value="00188" />
+      <option name="presentableId" value="LOCAL-00188" />
+      <option name="project" value="LOCAL" />
+      <updated>1489936575250</updated>
+    </task>
+    <option name="localTasksCounter" value="189" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1342,7 +1335,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="added logging for games against policy net" />
     <MESSAGE value="adding win_status updates to help for endgame moves" />
     <MESSAGE value="refactored, made MCTS class for more abstraction and to reuse game tree, made more readable, pulled up arguments to higher level scripts, efficiency tweaks" />
     <MESSAGE value="put height variable in tree nodes as height logging got out of sync from tree reuse" />
@@ -1367,7 +1359,8 @@
     <MESSAGE value="fixed human v computer move. debugging pipe to play wanderer" />
     <MESSAGE value="testing EBFS MCTS (the king is back)" />
     <MESSAGE value="porting back to windows" />
-    <option name="LAST_COMMIT_MESSAGE" value="porting back to windows" />
+    <MESSAGE value="Ugly changes for due-in-two-weeks paper experiments" />
+    <option name="LAST_COMMIT_MESSAGE" value="Ugly changes for due-in-two-weeks paper experiments" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1809,8 +1802,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2701">
-          <caret line="182" column="0" lean-forward="true" selection-start-line="182" selection-start-column="0" selection-end-line="182" selection-end-column="0" />
+        <state relative-caret-position="1207">
+          <caret line="248" column="70" lean-forward="false" selection-start-line="248" selection-start-column="70" selection-end-line="248" selection-end-column="70" />
           <folding>
             <element signature="e#0#53#0" expanded="true" />
           </folding>

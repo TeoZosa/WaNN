@@ -177,11 +177,13 @@ def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type
     # select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
         #TODO: 03/18/2017 10 PM greedy rollouts. Can also do eval from here if we don't want to do random rollouts
-    greedy_rollout(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
+    # greedy_rollout(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
 
+    # TODO: 03/19/2017 9 AM UCT rollouts.
     UCT_rollout(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
-    random_rollout_EOG(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
+    # TODO: 03/19/2017 9 AM random rollouts. (mac)
+    # random_rollout_EOG(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
 
     ##TODO: 03/18/2017 1 PMrandom rollouts to eval at unexpanded node
     # play_simulation(node, sim_info, this_height)
@@ -240,7 +242,7 @@ def random_rollout_EOG(node, depth, depth_limit, sim_info, this_height, MCTS_Typ
     while node.gameover is False:
         with async_update_lock:  # make sure it's not being updated asynchronously
             while node.children is not None:
-                node = random.sample(node.children, 1)  # if child is a leaf, chooses policy net's top choice
+                node = random.sample(node.children, 1)[0]  # if child is a leaf, chooses policy net's top choice
                 this_height += 1
         expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
 

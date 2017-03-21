@@ -1,10 +1,9 @@
 from monte_carlo_tree_search.expansion_MCTS_functions import MCTS_with_expansions
 from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit
-from Breakthrough_Player.board_utils import generate_policy_net_moves, get_best_move, get_NN
+from Breakthrough_Player.board_utils import get_best_move, get_NN
 from tools.utils import convert_board_to_2d_matrix_POEB, batch_split_no_labels
 import re
-import time
-import pexpect
+
 
 class MCTS(object):
     #Option B: Traditional MCTS with expansion using policy net to generate prior values and prune tree
@@ -65,12 +64,15 @@ class NeuralNet():
         self.sess, self.output, self.input = get_NN()
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
-    def evaluate(self, game_nodes, player_color = None):
-        if player_color is not None: #1 board + 1 color from direct policy net call
-            board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
+    def evaluate(self, game_nodes, player_color=None, already_converted=False):
+        if not already_converted:
+            if player_color is not None: #1 board + 1 color from direct policy net call
+                board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
+            else:
+                board_representations = [convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in
+                                     game_nodes]
         else:
-            board_representations = [convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in
-                                 game_nodes]
+            board_representations = game_nodes
         batch_size = 16384
         inference_batches = batch_split_no_labels(board_representations, batch_size)
         output = []

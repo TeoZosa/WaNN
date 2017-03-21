@@ -1,7 +1,7 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import choose_UCT_move, \
-    update_values_from_policy_net, get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, SimulationInfo, update_win_status_from_children
-from monte_carlo_tree_search.tree_builder import build_game_tree, visit_single_node_and_expand, random_eval
+    update_values_from_policy_net, random_eval, randomly_choose_a_winning_move, SimulationInfo
+from monte_carlo_tree_search.tree_builder import build_game_tree
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board
 import time
@@ -20,7 +20,7 @@ def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_
         # wanderer = 93,650k nodes  6GB
         #this = 270k nodes 50 GB..
         start_time = time.time()
-        root = TreeNode(game_board, player_color, None, None)
+        root = TreeNode(game_board, player_color, None, None, 0)
         sim_info.game_tree = build_game_tree(player_color, 0, [root], depth_limit)
         print("Number of Tree Nodes = {nodes} in {time} seconds".format(nodes=len(sim_info.game_tree), time=time.time()-start_time))
         update_values_from_policy_net(sim_info.game_tree)
@@ -37,9 +37,9 @@ def MCTS_BFS_to_depth_limit(game_board, player_color, time_to_think=1000, depth_
 def run_BFS_MCTS_simulation(sim_info):
     root = sim_info.game_tree[0]
     BFS_MCTS_game(root)
-    if sim_info.counter % 400 == 0:  # log every 400th simulation
-        print_simulation_statistics(sim_info)
-    sim_info.counter += 1
+    # if sim_info.counter % 400 == 0:  # log every 400th simulation
+        # print_simulation_statistics(sim_info)
+    # sim_info.counter += 1
 
 def BFS_MCTS_game(root):
     if root.children is None:

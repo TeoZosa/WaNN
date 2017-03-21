@@ -10,8 +10,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 10
   time_to_think = 10
   depth_limit = 5
-  date = r'01_03182017'
-  file_designator = 'multiplier_UCTRollout'
+  date = r'01_03212017'
+  file_designator = 'multiplier_TrueRandomRollout4Deep'
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
@@ -32,8 +32,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   white_player = EBFS_MCTS
   black_opponent = wanderer
 
-  for time_to_think in range(20, 21, 10):
-      for depth_limit in range(5, 9):
+  for time_to_think in range(10, 21, 10):
+      for depth_limit in range(1, 9):
           white_wins = 0
           black_wins = 0
           for i in range(0, num_games_to_play):

@@ -1,12 +1,12 @@
-from Breakthrough_Player.board_utils import generate_policy_net_moves_batch, generate_policy_net_moves
+# from Breakthrough_Player.board_utils import generate_policy_net_moves_batch, generate_policy_net_moves
 import math
 import numpy as np
 import random
 import time
-from multiprocessing import Pool
-from multiprocessing.pool import ThreadPool
-import threading
-from multiprocessing import Pool
+# from multiprocessing import Pool
+# from multiprocessing.pool import ThreadPool
+# import threading
+# from multiprocessing import Pool
 
 class SimulationInfo():
     def __init__(self, file):
@@ -166,29 +166,54 @@ def get_best_children(node_children):#TODO: make sure to not pick winning childr
     best_nodes = []
     for child in node_children:  # find equally best children
         if not child.win_status == True: #only consider children who will not lead to a win for opponent
-            child_win_rate = child.wins / child.visits
-            if child_win_rate == best_val:
-                if best.visits == child.visits:
-                    best_nodes.append(child)
-                    # should now have list of equally best children
+            if child.visits > 0:
+                child_win_rate = child.wins / child.visits
+                if child_win_rate == best_val:
+                    if best.visits == child.visits:
+                        best_nodes.append(child)
+                        # should now have list of equally best children
     if len(best_nodes) == 0: #all children are winners => checkmated, just make the best move you have
         best_nodes.append(best)
     return best_nodes
 
 def get_best_child(node_children):
-    best = node_children[0]
-    best_val = node_children[0].wins / node_children[0].visits
-    for i in range(1, len(node_children)):  # find best child
-        child = node_children[i]
-        child_win_rate = child.wins / child.visits
-        if child_win_rate < best_val:  # get the child with the lowest win rate
-            best = child
-            best_val = child_win_rate
-        elif child_win_rate == best_val:  # if both have equal win rate (i.e. both 0/visits), get the one with the most visits
-            if best.visits < child.visits:
-                best = child
-                best_val = child_win_rate
+    k = 0
+    while node_children[k].visits <=0 and k < len(node_children):
+        k+= 1
+    if k < len(node_children):
+        best = node_children[k]
+        best_val = node_children[k].wins / node_children[k].visits
+        for i in range(k, len(node_children)):  # find best child
+            child = node_children[i]
+            if child.visits > 0:
+                child_win_rate = child.wins / child.visits
+                if child_win_rate < best_val:  # get the child with the lowest win rate
+                    best = child
+                    best_val = child_win_rate
+                elif child_win_rate == best_val:  # if both have equal win rate (i.e. both 0/visits), get the one with the most visits
+                    if best.visits < child.visits:
+                        best = child
+                        best_val = child_win_rate
+    else:
+        #no children with value? happens if search is too slow
+        best = random.sample(node_children, 1)[0]
+        best_val = 0
     return best, best_val
+
+
+def random_eval(node):
+    amount = 1  # increase to pretend to outweigh NN?
+    win = random.randint(0, 1)
+    if win == 1:
+        update_tree_wins(node, amount)
+    else:
+        update_tree_losses(node, amount)
+
+
+
+
+
+
 
 def random_rollout(node):
     move = node
@@ -251,8 +276,8 @@ def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=Fa
     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated)
     # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do that
     NN_output = policy_net.evaluate(game_tree)
-    if lock is None: #make a useless lock so we can have clean code either way
-        lock = threading.Lock()
+    # if lock is None: #make a useless lock so we can have clean code either way
+    #     lock = threading.Lock()
     with lock:
         for i in range(0, len(NN_output)):
             top_children_indexes = get_top_children(NN_output[i], num_top=5)#TODO: play with this number

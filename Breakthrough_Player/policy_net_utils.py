@@ -23,7 +23,7 @@ def instantiate_session():#todo: return the graph as well in case we want to run
                    intra_op_parallelism_threads=NUM_CORES))
     saver.restore(sess, path)
     # tf.train.write_graph(sess.graph_def, 'cppModels/', 'policyNet.pb', as_text=False)
-    tf.python.framework.graph_util.convert_variables_to_constants(sess, sess.graph.as_graph_def(), y_pred.name)
+    # tf.python.framework.graph_util.convert_variables_to_constants(sess, sess.graph.as_graph_def(), y_pred.name)
     return sess, y_pred, X
 
 def build_policy_net():

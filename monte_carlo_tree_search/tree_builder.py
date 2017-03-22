@@ -122,7 +122,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
             unexpanded_children = []
             for i in range(0, len(unexpanded_nodes)):
                 parent = unexpanded_nodes[i]
-                unexpanded_children = update_parent(without_enumerating, parent, NN_output[i], sim_info, lock)
+                unexpanded_children.extend(update_parent(without_enumerating, parent, NN_output[i], sim_info, lock))
             unexpanded_nodes = unexpanded_children
             depth += 1
             # if depth < depth_limit-1: #keep expanding; offset makes it so depth_limit = 1 => Normal Expansion MCTS

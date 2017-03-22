@@ -98,7 +98,8 @@ def expand_node(parent_node, rollout=False):
         children_win_statuses.append(child_node.win_status)
         child_nodes.append(child_node)
     set_win_status_from_children(parent_node, children_win_statuses)
-    parent_node.children = child_nodes
+    if parent_node.children is None: #if another thread didn't expand and update this node
+       parent_node.children = child_nodes
     parent_node.expanded = True
     return child_nodes
 
@@ -205,7 +206,7 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
 
         #  opens up the tree to more lines of play if best child sucks to begin with.
         # in the worst degenerate case where best_val == ~4.5%, will include all children which is actually pretty justified.
-        if child.index in top_n_children or abs( best_child_val - child_val) < .10:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
+        if child_val > .30 or best_child_val - child_val < .10:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
             pruned_child = child  # always keeps top children who aren't losses for parent
             update_child(child, NN_output, top_children_indexes)
     else:  # if it has a win status and not already in NN choices, keep it (should always be a game winning node)

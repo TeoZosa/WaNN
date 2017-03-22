@@ -10,8 +10,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 10
   time_to_think = 10
   depth_limit = 5
-  date = r'01_03212017'
-  file_designator = 'multiplier_TrueRandomRollout4Deep'
+  date = r'01_03222017'
+  file_designator = 'multiplier_weightedEval_30probThreshold_singleDL'
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'

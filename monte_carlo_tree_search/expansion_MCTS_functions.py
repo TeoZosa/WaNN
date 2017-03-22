@@ -172,10 +172,10 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type,
 def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
     #TODO: separate the in-tree depth limit vs the batch expansion depth limit.
-    # if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
-    #     depth = depth_limit
+    if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
+        depth = depth_limit
         
-    # select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
+    select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
         #TODO: 03/18/2017 10 PM greedy rollouts. Can also do eval from here if we don't want to do random rollouts
     # greedy_rollout(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
@@ -187,9 +187,12 @@ def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type
     # random_rollout_EOG(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
 
 
-    # TODO: 03/20/2017  9 AM true random rollouts. (windows)
-    node = choose_UCT_or_best_child(node, start_time, time_to_think)
-    true_random_rollout_EOG(node)
+    # TODO: 03/21/2017  9 AM true random rollouts. (windows)
+    # with async_update_lock:
+    #     if node.children is not None: #if this thread was the first to try and expand this node
+    #          node = choose_UCT_or_best_child(node, start_time, time_to_think)
+    #          true_random_rollout_EOG(node)
+        #else, let the thread that was first take care of this node
 
     ##TODO: 03/18/2017 1 PMrandom rollouts to eval at unexpanded node
     # play_simulation(node, sim_info, this_height)

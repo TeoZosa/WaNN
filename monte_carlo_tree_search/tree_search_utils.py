@@ -219,11 +219,11 @@ def random_rollout(node):
     move = node
     while move.children is not None:
         move = random.sample(move.children, 1)[0]
-    outcome = evaluation_function(node)
+    outcome = evaluation_function(move)
     if outcome == 0:
-        update_tree_losses(node, 1)
+        update_tree_losses(move, 1)
     else:
-        update_tree_wins(node, 1)
+        update_tree_wins(move, 1)
 
 def evaluation_function(root):
     # row 2:

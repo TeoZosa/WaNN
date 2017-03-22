@@ -165,9 +165,14 @@ def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name
                                           n_filters_out],
                                    initializer=tf.random_normal_initializer(mean=0.0, stddev=std_dev_He)#mean, std?
                                    )
+        variable_summaries(kernel)
+
         bias = tf.get_variable(name='bias',
                                  shape=[n_filters_out],
                                  initializer=tf.constant_initializer(0.01))#karpathy: for relu, 0.01 ensures all relus fire in the beginning
+
+        variable_summaries(bias)
+
         hidden_layer = activation(
             tf.nn.bias_add(
                 tf.nn.conv2d(input=prev_layer,
@@ -177,6 +182,7 @@ def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name
                 bias
             )
         )
+        tf.summary.histogram('activations', hidden_layer)
         return hidden_layer
 
 def output_layer_init(layer_in, name='output_layer', reuse=None):
@@ -189,32 +195,54 @@ def output_layer_init(layer_in, name='output_layer', reuse=None):
             shape=[n_features, 155], # 1 x 64 filter in, 1 class out
             dtype=tf.float32,
             initializer=tf.contrib.layers.xavier_initializer())
+        variable_summaries(kernel)
 
         bias = tf.get_variable(
             name='bias',
             shape=[155],
             dtype=tf.float32,
             initializer=tf.constant_initializer(0.0))
+        variable_summaries(bias)
 
         unscaled_output = (tf.nn.bias_add(
             name='output',
             value=tf.matmul(layer_in, kernel),
             bias=bias))
+        tf.summary.histogram('unscaled_output', unscaled_output)
         return unscaled_output, kernel
 
 def loss(output_layer, labels):
-    with tf.name_scope("loss"):
-        losses = tf.nn.softmax_cross_entropy_with_logits(outer_layer, labels)
-        loss = tf.reduce_mean(losses)
+    with tf.variable_scope("cross_entropy"):
+        losses = tf.nn.softmax_cross_entropy_with_logits(logits=output_layer, labels=labels)
+        # loss = tf.reduce_mean(losses)
+        tf.summary.histogram('cross_entropy', losses)
+    return losses
 
-def compute_accuracy(examples, labels):
-    return sess.run(accuracy,feed_dict={X: examples, y: labels})
+def compute_accuracy(examples, labels, accuracy_function, merged, test_writer, batch):
+    summary, accuracy_score = sess.run([merged, accuracy_function],feed_dict={X: examples, y: labels})
+    test_writer.add_summary(summary, batch)
+    return  accuracy_score
 
-def train_model(examples, labels):
-    sess.run(optimizer, feed_dict={
+def train_model(examples, labels, optimizer, merged, train_writer, batch):
+    summary, _ = sess.run([merged, optimizer], feed_dict={
         X: examples,
         y: labels
     })
+    train_writer.add_summary(summary, batch)
+
+def variable_summaries(var):
+  """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
+  with tf.variable_scope(var.op.name):
+      with tf.name_scope('summaries'):
+        mean = tf.reduce_mean(var)
+        tf.summary.scalar('mean', mean)
+        with tf.name_scope('stddev'):
+          stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
+        tf.summary.scalar('stddev', stddev)
+        tf.summary.scalar('max', tf.reduce_max(var))
+        tf.summary.scalar('min', tf.reduce_min(var))
+        tf.summary.histogram('histogram', var)
+
 def print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file_to_write):
     print("\nAdam Optimizer"
           "\nNum Filters: {num_filters}"
@@ -229,11 +257,12 @@ def print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hi
         num_hidden=num_hidden), end="\n", file=file_to_write)
 
 def print_partition_accuracy_statistics(examples, labels, partition, file_to_write):
-    print("Final Test Accuracy ({partition}-states): {accuracy}".format(
-        partition=partition,
-        accuracy=compute_accuracy(examples, labels)),
-        end="\n",
-        file=file_to_write)
+    with tf.name_scope(partition+r'-states'):
+        print("Final Test Accuracy ({partition}-states): {accuracy}".format(
+            partition=partition,
+            accuracy=compute_accuracy(examples, labels, accuracy_function, merged, test_writer, 0 )),
+            end="\n",
+            file=file_to_write)
 
 def print_prediction_statistics(examples, labels, file_to_write):
     num_top_moves = 10
@@ -272,9 +301,65 @@ def print_prediction_statistics(examples, labels, file_to_write):
         y_act_black=utils.move_lookup_by_index(correct_move_index, 'Black')),
         end="\n", file=file_to_write)
 
+    correct_prediction_position = [0] * 155
+    not_in_top_10 = 0
+    labels_predictions = sess.run(y_pred, feed_dict={X: examples})
+    with tf.name_scope('partition_probability_difference'):
+        for example_num in range(0, len(labels_predictions)):
+            correct_move_index = np.argmax(labels[example_num])
+            predicted_move_index = np.argmax(labels_predictions[example_num])
+            top_n_indexes = sorted(range(len(labels_predictions[example_num])),
+                                   key=lambda i: labels_predictions[example_num][i], reverse=True)[
+                            :
+                            # num_top_moves
+                            ]
+            if (correct_move_index in top_n_indexes):
+                rank_in_prediction = top_n_indexes.index(correct_move_index)  # 0 indexed
+                correct_prediction_position[rank_in_prediction] += 1
+                correct_move_predicted_prob = labels_predictions[example_num][correct_move_index] * 100
+
+                if correct_move_index != predicted_move_index:
+                    print("Incorrect prediction. Correct move was ranked {}".format(rank_in_prediction + 1),
+                          file=file_to_write)
+                    top_move_predicted_prob = labels_predictions[example_num][predicted_move_index] * 100
+                    difference = tf.add(top_move_predicted_prob, - correct_move_predicted_prob)
+                    print("Predicted move probability = %{pred_prob}. \n"
+                          "Correct move probability = %{correct_prob}\n"
+                          "Difference = %{prob_diff}\n".format(pred_prob=top_move_predicted_prob,
+                                                               correct_prob=correct_move_predicted_prob,
+                                                               prob_diff=difference),
+                          file=file_to_write)
+                    in_top_n = True
+                    tf.summary.scalar('incorrect prediction: probability difference between top move and correct',difference)
+                    difference = tf.add(100, - correct_move_predicted_prob)
+                    tf.summary.scalar('incorrect prediction: predicted probability difference of correct move',difference)
+
+
+                else:
+                    difference = tf.add(100, - correct_move_predicted_prob)
+                    tf.summary.scalar('correct prediction: probability difference',difference)
+
+
+            else:
+                # rank_in_prediction = in_top_n = False
+                not_in_top_10 += 1
+
+    total_predictions = sum(correct_prediction_position) + not_in_top_10
+    percent_in_top = 0
+    for i in range(0, len(correct_prediction_position)):
+        rank_percent = (correct_prediction_position[i] * 100) / total_predictions
+        print("Correct move was in predicted rank {num} slot = %{percent}".format(num=i + 1, percent=rank_percent),
+              file=file_to_write)
+        percent_in_top += rank_percent
+        print("Percent in top {num} predictions = %{percent}\n".format(num=i + 1, percent=percent_in_top),
+              file=file_to_write)
+    print("Percentage of time not in predictions = {}".format((not_in_top_10 * 100) / total_predictions),
+          file=file_to_write)
+
+
 def print_partition_statistics(examples, labels, partition, file):
     print_partition_accuracy_statistics(examples, labels, partition, file)
-    print_prediction_statistics(examples, labels, file)
+    # print_prediction_statistics(examples, labels, file)
 
 # TODO: excise code to be run in main script.
 
@@ -313,19 +398,26 @@ else:
     testing_examples_partition_k, testing_labels_partition_k = load_examples_and_labels(os.path.join(input_path, r'TestDataEnd'))
 
 
-file = open(os.path.join(input_path,
-                         r'ExperimentLogs',
-                         game_stage + '192_512Filters1_10LayersTF_CE__He_weightsPOE.txt'), 'a')
+# file = open(os.path.join(input_path,
+#                          r'ExperimentLogs',
+#                          game_stage + '03222017192Filters4and7LayersTF_CE__He_weightsPOE.txt'), 'a')
 # file = sys.stdout
-print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
+# print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
 
-for num_hidden in [i for i in range(1,10)]:
+for num_hidden in [i for i in [4, 7]
+                   # range(1,10)
+                   ]:
+    file = open(os.path.join(input_path,
+                             r'ExperimentLogs',
+                             game_stage + '03222017192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)), 'a')
+    print("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
     for n_filters in [
                       #  64,
                       # 128,
                       192,
-                        256,
-                        512]:
+                        # 256,
+                        # 512
+    ]:
         for learning_rate in [
             0.001,
             # 0.0011,
@@ -363,7 +455,9 @@ for num_hidden in [i for i in range(1,10)]:
             y_pred = tf.nn.softmax(outer_layer)
 
             #tf's internal softmax; else, put softmax back in output layer
-            cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+            # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+            cost = loss(outer_layer, y)
+
             # # alternative implementation
             # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
 
@@ -376,13 +470,26 @@ for num_hidden in [i for i in range(1,10)]:
 
             #SGD used in AlphaGO
             # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+            with tf.name_scope('accuracy'):
+                correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
+                accuracy_function = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+            tf.summary.scalar('accuracy', accuracy_function)
 
-            correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
-            accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+
+
             #save the model
             saver = tf.train.Saver()
 
             sess = tf.Session()
+
+            #tensorboard summaries
+            merged = tf.summary.merge_all()
+            train_writer = tf.summary.FileWriter(os.path.join(input_path,
+                                                              r'ExperimentLogs', 'trainingSummaries'),
+                                                 sess.graph)
+            test_writer = tf.summary.FileWriter(os.path.join(input_path,
+                                                             r'ExperimentLogs', 'testingSummaries'))
+
             sess.run(tf.global_variables_initializer())
 
 
@@ -414,15 +521,17 @@ for num_hidden in [i for i in range(1,10)]:
 
                 #train model
                 for i in range(0, len(training_example_batches)):
-                    train_model(training_example_batches[i], training_label_batches[i])
+                    train_model(training_example_batches[i], training_label_batches[i], optimizer, merged, train_writer, (epoch_i*len(training_example_batches))+i)
 
                     # show stats at every 1/10th interval of epoch
                     if (i+1)%(len(training_example_batches)//10)==0:
                         loss = sess.run(cost, feed_dict={
                             X: training_example_batches[i],
                             y: training_label_batches[i]
-                            })
-                        accuracy_score = compute_accuracy(valid_examples, valid_labels)
+                        })
+
+                        accuracy_score = compute_accuracy(valid_examples, valid_labels, accuracy_function, merged, test_writer, (epoch_i*len(training_example_batches))+i)
+
                         print("Loss: {}".format(loss), end="\n", file=file)
                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
                         print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
@@ -431,8 +540,8 @@ for num_hidden in [i for i in range(1,10)]:
                             accuracy_score=accuracy_score), end="\n", file=file)
 
 
-                #show accuracy at end of epoch
-                accuracy_score = compute_accuracy(valid_examples, valid_labels)
+#show accuracy at end of epoch
+                accuracy_score = compute_accuracy(valid_examples, valid_labels, accuracy_function, merged, test_writer, (epoch_i*len(training_example_batches))+ len(training_example_batches)-1)
                 print ('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
                     epoch_num=epoch_i+1,
                     accuracy_score=accuracy_score), end="\n", file=file)
@@ -445,20 +554,26 @@ for num_hidden in [i for i in range(1,10)]:
             
             #this partition
             print_partition_statistics(test_examples, test_labels, net_type, file)
+            print_prediction_statistics(test_examples, test_labels, file)
 
             #partition i
             print_partition_statistics(testing_examples_partition_i, testing_labels_partition_i, partition_i, file)
+            print_prediction_statistics(testing_examples_partition_i, testing_labels_partition_i, file)
+
             
             #partition j
             print_partition_statistics(testing_examples_partition_j, testing_labels_partition_j, partition_j, file)
+            print_prediction_statistics(testing_examples_partition_j, testing_labels_partition_j, file)
+
 
             #partition k (only for full policy net)
             if (net_type == 'Full'):
                 print_partition_statistics(testing_examples_partition_k, testing_labels_partition_k, partition_k, file)
+                print_prediction_statistics(testing_examples_partition_k, testing_labels_partition_k, file)
 
 
-            # #save the model now
-            # save_path = saver.save(sess, os.path.join(input_path, r'model'))
+            #save the model now
+            save_path = saver.save(sess, os.path.join(input_path, r'model', num_hidden))
 
             sess.close()
 file.close()

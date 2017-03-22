@@ -32,8 +32,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   white_player = EBFS_MCTS
   black_opponent = wanderer
 
-  for time_to_think in range(10, 21, 10):
-      for depth_limit in range(1, 9):
+  for time_to_think in range(10, 11, 10):
+      for depth_limit in range(3, 9):
           white_wins = 0
           black_wins = 0
           for i in range(0, num_games_to_play):

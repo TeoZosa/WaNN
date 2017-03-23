@@ -287,6 +287,14 @@ def select_UCT_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type,
             node = choose_UCT_or_best_child(node, start_time, time_to_think) #if child is a leaf, chooses policy net's top choice
     play_MCTS_game_with_expansions(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
+def select_random_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
+    with async_update_lock: #make sure it's not being updated asynchronously
+        while node.children is not None and node.expanded:
+            this_height += 1
+            node = random.sample(node.children, 1)[0] #more MCTS-y.
+            # also, prevents UCT from marking best child as visited.(which actually may be better since always visiting a best child may lead to very asymmetric growth)
+    play_MCTS_game_with_expansions(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
+
 def select_best_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     with async_update_lock: #make sure it's not being updated asynchronously
         while node.children is not None:

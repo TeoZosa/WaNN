@@ -322,7 +322,7 @@ def print_prediction_statistics(examples, labels, file_to_write):
                     print("Incorrect prediction. Correct move was ranked {}".format(rank_in_prediction + 1),
                           file=file_to_write)
                     top_move_predicted_prob = labels_predictions[example_num][predicted_move_index] * 100
-                    difference = tf.add(top_move_predicted_prob, - correct_move_predicted_prob)
+                    difference = sess.run(tf.add(top_move_predicted_prob, - correct_move_predicted_prob))
                     print("Predicted move probability = %{pred_prob}. \n"
                           "Correct move probability = %{correct_prob}\n"
                           "Difference = %{prob_diff}\n".format(pred_prob=top_move_predicted_prob,
@@ -573,7 +573,7 @@ for num_hidden in [i for i in [4, 7]
 
 
             #save the model now
-            save_path = saver.save(sess, os.path.join(input_path, r'model', num_hidden))
+            save_path = saver.save(sess, os.path.join(input_path, r'model', str(num_hidden)))
 
             sess.close()
 file.close()

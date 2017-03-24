@@ -122,7 +122,8 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
             unexpanded_children = []
             for i in range(0, len(unexpanded_nodes)):
                 parent = unexpanded_nodes[i]
-                unexpanded_children.extend(update_parent(without_enumerating, parent, NN_output[i], sim_info, lock))
+                # unexpanded_children.extend(update_parent(without_enumerating, parent, NN_output[i], sim_info, lock))
+                unexpanded_children = update_parent(without_enumerating, parent, NN_output[i], sim_info, lock)
             unexpanded_nodes = unexpanded_children
             depth += 1
             # if depth < depth_limit-1: #keep expanding; offset makes it so depth_limit = 1 => Normal Expansion MCTS
@@ -177,9 +178,10 @@ def enumerate_update_and_prune(parent, NN_output, lock):
     best_child_val = get_best_child_val(parent, NN_output, top_children_indexes)
 
     children_as_moves = enumerate_legal_moves(parent.game_board, parent.color)
+    num_legal_moves = len(children_as_moves)
     for child_as_move in children_as_moves:
         move = child_as_move['From'] + r'-' + child_as_move['To']
-        pruned_child, child_win_status = get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_val, lock)
+        pruned_child, child_win_status = get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_val, lock, num_legal_moves)
         if pruned_child is not None:
             pruned_children.append(pruned_child)
             children_win_statuses.append(child_win_status)
@@ -195,20 +197,24 @@ def get_best_child_val(parent, NN_output, top_children_indexes):
             break
     return best_child_val
 
-def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_val, lock):
+def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_val, lock, num_legal_children):
     pruned_child = None
     child = init_child_node_and_board(move, parent)
     check_for_winning_move(child)  # 1-step lookahead for gameover
     child_val = NN_output[child.index]
-    num_top_to_consider = 6
+    num_top_to_consider = max(1, int(num_legal_children/5))
     top_n_children = top_children_indexes[:num_top_to_consider]
     if child.gameover is False:  # update only if not the end of the game
 
         #  opens up the tree to more lines of play if best child sucks to begin with.
         # in the worst degenerate case where best_val == ~4.5%, will include all children which is actually pretty justified.
-        if child_val > .30 or best_child_val - child_val < .10:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
-            pruned_child = child  # always keeps top children who aren't losses for parent
-            update_child(child, NN_output, top_children_indexes)
+        # if child_val > .30 or best_child_val - child_val < .10:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
+        if child.index in top_n_children:
+            backprop_win = True
+        else:
+            backprop_win = False
+        pruned_child = child  # always keeps top children who aren't losses for parent
+        update_child(child, NN_output, top_children_indexes, backprop_win)
     else:  # if it has a win status and not already in NN choices, keep it (should always be a game winning node)
         pruned_child = child
         child.expanded = True  # don't need to check it any more

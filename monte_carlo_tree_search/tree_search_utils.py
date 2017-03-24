@@ -124,12 +124,12 @@ def get_UCT(node, parent_visits, start_time, time_to_think):
         UCT_multiplier = node.UCT_multiplier
 
         # 03/11/2017 games actually good with this and no division, but annealing seems right?
-        # stochasticity_for_multithreading = random.random()  #/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
+        stochasticity_for_multithreading = random.random()  /2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
 
-        #TODO test this. SEEMS like a good idea since it will explore early and exploit later
-        annealed_factor = 1 - ((start_time - time.time())/time_to_think)  #  starts at 1 and trends towards 0 as search proceeds
-        # with stochasticity multiplier between .5 and 1 so multithreading sees different values
-        stochasticity_for_multithreading = (1- random.random()/2) * annealed_factor
+        # #TODO test this. SEEMS like a good idea since it will explore early and exploit later
+        # annealed_factor = 1 - ((start_time - time.time())/time_to_think)  #  starts at 1 and trends towards 0 as search proceeds
+        # # with stochasticity multiplier between .5 and 1 so multithreading sees different values
+        # stochasticity_for_multithreading = (1- random.random()/2) * annealed_factor
 
         exploration_constant = 1.0 + stochasticity_for_multithreading # 1.414 ~ √2
 
@@ -343,7 +343,7 @@ def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=Fa
 #         thread.parent.children = thread.pruned_children
 #         thread.parent_index += 1
 
-def update_child(child, NN_output, top_children_indexes):
+def update_child(child, NN_output, top_children_indexes, backprop_win=False):
     child_val = NN_output[child.index]
     normalized_value = int(child_val  * 100)
     if child.index in top_children_indexes:  # weight top moves higher for exploitation
@@ -363,8 +363,16 @@ def update_child(child, NN_output, top_children_indexes):
     #TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
     weighted_losses = normalized_value
     weighted_wins = 100-weighted_losses
-    update_tree_losses(child, weighted_losses)
-    update_tree_wins(child, weighted_wins)
+    child.wins = weighted_wins
+    child.visits = 100
+    # update_tree_wins(child, weighted_wins)
+    # update_tree_losses(child, weighted_losses)
+
+    #TODO: 03232017 based on prof lorentz input, only backprop a single win/loss value
+    if backprop_win is True:
+        update_tree_wins(child.parent, 1)
+    else:
+        update_tree_losses(child.parent, 1)
 
 def update_sum_for_normalization(parent, NN_output, child_indexes):
     #if we want to normalize over legal/top children vs relying on NN's softmax

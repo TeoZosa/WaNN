@@ -207,6 +207,7 @@ def get_player_move(game_board, color_to_move, player, MCTS_tree):
         move = get_random_move(game_board, color_to_move)
     elif player == 'Expansion MCTS' \
         or player == 'Expansion MCTS Pruning' \
+        or player == 'Expansion MCTS Post-Pruning' \
         or player == 'EBFS MCTS' \
         or player == 'MCTS Asynchronous'\
         or player == 'Wanderer'\

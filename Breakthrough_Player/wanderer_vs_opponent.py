@@ -7,11 +7,11 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   white_wins = 0
   black_wins = 0
 
-  num_games_to_play = 10
+  num_games_to_play = 500
   time_to_think = 10
   depth_limit = 5
-  date = r'01_03222017'
-  file_designator = 'multiplier_weightedEval_30probThreshold_singleDL'
+  date = r'01_03232017'
+  file_designator = '500Games_multiplier_allKidsOnlyBackpropWinIfTop_singleDL'
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
@@ -29,11 +29,11 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   Windows_path = r'G:\TruncatedLogs\PythonDatasets'
   OSX_path = r'/Users/TeofiloZosa/BreakthroughData/03122017SelfPlay'
   path = Windows_path
-  white_player = EBFS_MCTS
+  white_player = expansion_MCTS_post_pruning
   black_opponent = wanderer
 
   for time_to_think in range(10, 11, 10):
-      for depth_limit in range(3, 9):
+      for depth_limit in range(1, 2):
           white_wins = 0
           black_wins = 0
           for i in range(0, num_games_to_play):

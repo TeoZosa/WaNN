@@ -172,10 +172,11 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type,
 def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
     #TODO: separate the in-tree depth limit vs the batch expansion depth limit.
-    if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
-        depth = depth_limit
-        
-    select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
+    # if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
+    #     depth = depth_limit
+    #
+    #TODO: 03/23/2017 comment out so no eval or anything after expansion
+    # select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
         #TODO: 03/18/2017 10 PM greedy rollouts. Can also do eval from here if we don't want to do random rollouts
     # greedy_rollout(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
@@ -205,7 +206,8 @@ def expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_ne
         if MCTS_Type == 'Expansion MCTS' or \
                 MCTS_Type == 'Expansion MCTS Post-Pruning':
             pre_pruning = False
-            depth = depth_limit
+            #TODO: 03/23/2017 commented out so it does the number of expansions it's supposed to
+            # depth = depth_limit
         elif MCTS_Type == 'Expansion MCTS Pruning': #03/07/2017 best performance?
             pre_pruning = True
             depth = depth_limit

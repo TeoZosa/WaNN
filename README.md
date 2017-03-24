@@ -5,6 +5,7 @@
   <img src="https://cloud.githubusercontent.com/assets/13070236/23594196/f8bf7854-01cc-11e7-9823-4e0a9bd4d2b8.png" title="One of the feature planes as seen by the neural network"></img>
 </div>
 -----------------
+
 - To see an example of a full game between the policy net and an agent using the policy net for node expansion in MCTS, click the game board image above (courtesy of www.trmph.com)
 - The neural networks herein will eventually be merged with a C++ program that uses a Monte Carlo tree search.<p>
 - Through [`breakthrough_player.py`](../master/Breakthrough_Player/breakthrough_player.py), a user can play against a trained policy net, or MCTS+policy net variants.<p> 

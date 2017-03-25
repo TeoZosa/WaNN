@@ -155,14 +155,15 @@ def update_and_prune(parent, NN_output, lock):
 
     # comparing to child val should reduce this considerably,
     # yet still allows us to call parent function from a top-level asynchronous tree updater
-    top_children_indexes = get_top_children(NN_output, 30)
+    num_to_check_for_legality = 30
+    top_children_indexes = get_top_children(NN_output, num_to_check_for_legality)
 
     best_child_val = get_best_child_val(parent, NN_output, top_children_indexes)
     for child_index in top_children_indexes:
         move = move_lookup_by_index(child_index, parent.color)  # turn the child indexes into moves
         if check_legality_MCTS(parent.game_board, move):
             pruned_child, child_win_status = get_pruned_child(parent, move, NN_output, top_children_indexes,
-                                                              best_child_val, lock)
+                                                              best_child_val, lock, num_to_check_for_legality)
             if pruned_child is not None:
                 pruned_children.append(pruned_child)
                 children_win_statuses.append(child_win_status)
@@ -202,19 +203,23 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
     child = init_child_node_and_board(move, parent)
     check_for_winning_move(child)  # 1-step lookahead for gameover
     child_val = NN_output[child.index]
-    num_top_to_consider = max(1, int(num_legal_children/5))
+
+    num_top_to_consider = 3
     top_n_children = top_children_indexes[:num_top_to_consider]
+
     if child.gameover is False:  # update only if not the end of the game
 
         #  opens up the tree to more lines of play if best child sucks to begin with.
         # in the worst degenerate case where best_val == ~4.5%, will include all children which is actually pretty justified.
-        # if child_val > .30 or best_child_val - child_val < .10:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
-        if child.index in top_n_children:
-            backprop_win = True
-        else:
-            backprop_win = False
-        pruned_child = child  # always keeps top children who aren't losses for parent
-        update_child(child, NN_output, top_children_indexes, backprop_win)
+        if child_val > .30 or best_child_val - child_val < .10:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
+            # if child.index in top_n_children:
+            #     backprop_win = True
+            # else:
+            #     backprop_win = False
+            # update_child(child, NN_output, top_children_indexes, backprop_win)
+
+            update_child(child, NN_output, top_children_indexes, num_legal_children)
+            pruned_child = child  # always keeps top children who aren't losses for parent
     else:  # if it has a win status and not already in NN choices, keep it (should always be a game winning node)
         pruned_child = child
         child.expanded = True  # don't need to check it any more

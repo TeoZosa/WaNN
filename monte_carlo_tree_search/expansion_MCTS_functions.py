@@ -98,8 +98,12 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         thread2.join()
         thread1.close()
         thread1.join()
+        search_time = time() - start_time
         best_child = randomly_choose_a_winning_move(root)
+        print("Time spent searching tree = {}".format(search_time), file=log_file)
         best_move = move_lookup_by_index(best_child.index, player_color)
+        print_expansion_statistics(sim_info, time())
+
         print_best_move(player_color, best_move, sim_info)
     return best_child, best_move #save this root to use next time
 
@@ -112,6 +116,7 @@ def assign_root(game_board, player_color, previous_move, move_number, sim_info):
             if child.game_board == game_board:
                 root = child
                 root.parent = None # separate new root from old parent reference
+                print("Reused old tree", file=sim_info.file)
                 break
         if root is None: #can't reuse tree
             root = TreeNode(game_board, player_color, None, None, move_number)
@@ -135,11 +140,11 @@ def run_MCTS_with_expansions_simulation(args): #change back to starmap?
     start_time = args[6]
     play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info, 0, MCTS_Type, policy_net, start_time, time_to_think)
     with async_update_lock: #so prints aren't interleaved
-        if sim_info.counter  % 5 == 0:  # log every 5th simulation
-            print_expansion_statistics(sim_info, sim_info.start_time)
+        # if sim_info.counter  % 5 == 0:  # log every 5th simulation
+        #     print_expansion_statistics(sim_info, sim_info.start_time)
         sim_info.prev_game_tree_size = len(sim_info.game_tree)
         sim_info.counter += 1
-        print_forced_win(root.win_status, sim_info)
+    print_forced_win(root.win_status, sim_info)
     if root.win_status is True: # if we have a guaranteed win, we are done
         return True
     else:#just because a good opponent has a good reply for every move doesn't mean all opponents will;
@@ -172,9 +177,9 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type,
 def expand_and_select(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
     expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
     #TODO: separate the in-tree depth limit vs the batch expansion depth limit.
-    # if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
-    #     depth = depth_limit
-    #
+    if MCTS_Type == 'EBFS MCTS': # since NN expansion went depth_limit deeper, this will just make it end up at a rollout
+        depth = depth_limit
+
     #TODO: 03/23/2017 comment out so no eval or anything after expansion
     # select_unexpanded_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 
@@ -428,7 +433,7 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
 def print_expansion_statistics(sim_info, start_time):
     print_simulation_statistics(sim_info)
     print("Number of Tree Nodes added in simulation {counter} = "
-          "{nodes} in {time} seconds\n"
+          "{nodes}. Time to print this statistic =  {time} seconds\n"
           "Current tree height = {height}".format(counter=sim_info.counter+1,
                                                   nodes=len(sim_info.game_tree) - sim_info.prev_game_tree_size,
                                                   time=time() - start_time,

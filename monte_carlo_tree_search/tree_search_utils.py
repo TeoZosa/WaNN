@@ -123,13 +123,13 @@ def get_UCT(node, parent_visits, start_time, time_to_think):
     else:
         UCT_multiplier = node.UCT_multiplier
 
-        # 03/11/2017 games actually good with this and no division, but annealing seems right?
-        stochasticity_for_multithreading = random.random()  /2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
+        # # 03/11/2017 games actually good with this and no division, but annealing seems right?
+        # stochasticity_for_multithreading = random.random()  /2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
 
-        # #TODO test this. SEEMS like a good idea since it will explore early and exploit later
-        # annealed_factor = 1 - ((start_time - time.time())/time_to_think)  #  starts at 1 and trends towards 0 as search proceeds
-        # # with stochasticity multiplier between .5 and 1 so multithreading sees different values
-        # stochasticity_for_multithreading = (1- random.random()/2) * annealed_factor
+        #TODO test this. SEEMS like a good idea since it will explore early and exploit later
+        annealed_factor = 1 - ((start_time - time.time())/time_to_think)  #  starts at 1 and trends towards 0 as search proceeds
+        # with stochasticity multiplier between .5 and 1 so multithreading sees different values
+        stochasticity_for_multithreading = (1- random.random()/2) * annealed_factor
 
         exploration_constant = 1.0 + stochasticity_for_multithreading # 1.414 ~ √2
 
@@ -219,11 +219,12 @@ def random_rollout(node):
     move = node
     while move.children is not None:
         move = random.sample(move.children, 1)[0]
-    outcome = evaluation_function(move)
+    outcome, result = evaluation_function(move)
     if outcome == 0:
         update_tree_losses(move, 1)
     else:
         update_tree_wins(move, 1)
+    return result
 
 def evaluation_function(root):
     # row 2:
@@ -238,8 +239,8 @@ def evaluation_function(root):
         2: {'a': 2, 'b': 3, 'c': 3, 'd': 3, 'e': 3, 'f': 3, 'g': 3, 'h': 2},
         1: {'a': 5, 'b': 28, 'c': 28, 'd': 12, 'e': 12, 'f': 28, 'g': 28, 'h': 5}
     }
-    white = 'White'
-    black = 'Black'
+    white = 'w'
+    black = 'b'
     is_white_index = 9
     white_move_index = 10
     player_color = root.color
@@ -260,17 +261,26 @@ def evaluation_function(root):
                     result += weighted_board[row][col]
                 elif root.game_board[row][col] == black:
                     result -= weighted_board[9-row][col]
-
+    # print(result)
+    max_result_can_be = 141
+    max_result_can_be = max_result_can_be/1.5
     if result > 0:
         if player_color == white:
-            return 1
+            outcome = 1
+            result = result / max(max_result_can_be, result)
         else:
-            return 0
+            outcome =  0
+            result = 1 - (result / max(max_result_can_be, result))
+
     else:
         if player_color == black:
-            return 1
+            outcome = 1
+            result = abs(result / max(max_result_can_be, result))
+
         else:
-            return 0
+            outcome = 0
+            result = 1 - abs(result / max(max_result_can_be, result))
+    return outcome, result
 
 def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=False): #takes in a list of parents with children,
     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss info already backpropagated)
@@ -343,7 +353,7 @@ def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=Fa
 #         thread.parent.children = thread.pruned_children
 #         thread.parent_index += 1
 
-def update_child(child, NN_output, top_children_indexes, backprop_win=False):
+def update_child(child, NN_output, top_children_indexes, num_legal_children):
     child_val = NN_output[child.index]
     normalized_value = int(child_val  * 100)
     if child.index in top_children_indexes:  # weight top moves higher for exploitation
@@ -363,16 +373,27 @@ def update_child(child, NN_output, top_children_indexes, backprop_win=False):
     #TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
     weighted_losses = normalized_value
     weighted_wins = 100-weighted_losses
-    child.wins = weighted_wins
-    child.visits = 100
+
     # update_tree_wins(child, weighted_wins)
     # update_tree_losses(child, weighted_losses)
 
-    #TODO: 03232017 based on prof lorentz input, only backprop a single win/loss value
-    if backprop_win is True:
-        update_tree_wins(child.parent, 1)
-    else:
-        update_tree_losses(child.parent, 1)
+    # num_top_to_consider = max(1, int(num_legal_children/2.5))
+    # num_winners = max(1, int(num_top_to_consider/2))
+    # num_losers = min (num_winners, num_top_to_consider)
+    # top_n_winners = top_children_indexes[:num_winners]
+    # top_n_losers = top_children_indexes[num_winners:num_losers]
+    #
+    # #TODO: 03232017 based on prof lorentz input, only backprop a single win/loss value
+    # if child.index in top_n_winners:
+    #     update_tree_wins(child.parent, 1)
+    # elif child.index in top_n_losers:
+    #     update_tree_losses(child.parent, 1)
+    # child.visits = 100
+    # child.wins = weighted_wins
+
+    child.visits = normalized_value
+    child.wins = normalized_value * random_rollout(child)
+    # assert (child.visits >= child.wins)
 
 def update_sum_for_normalization(parent, NN_output, child_indexes):
     #if we want to normalize over legal/top children vs relying on NN's softmax

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import tensorflow as tf
 import os
 import random
@@ -20,6 +21,7 @@ def load_examples_and_labels(path):
 
 def print_prediction_statistics(examples, labels, file_to_write, policy_net):
     correct_prediction_position = [0] * 155
+    correct_rank_count = []
     not_in_top_10 = 0
 
     num_top_moves = 10
@@ -34,6 +36,7 @@ def print_prediction_statistics(examples, labels, file_to_write, policy_net):
         if (correct_move_index in top_n_indexes):
             rank_in_prediction = top_n_indexes.index(correct_move_index) # 0 indexed
             correct_prediction_position[rank_in_prediction] += 1
+            correct_rank_count.append(rank_in_prediction+1)
             if correct_move_index != predicted_move_index:
                 print("Incorrect prediction. Correct move was ranked {}".format(rank_in_prediction+1), file=file_to_write)
                 top_move_predicted_prob = labels_predictions[example_num][predicted_move_index] * 100
@@ -58,6 +61,15 @@ def print_prediction_statistics(examples, labels, file_to_write, policy_net):
         percent_in_top += rank_percent
         print("Percent in top {num} predictions = %{percent}\n".format(num=i + 1, percent=percent_in_top), file=file_to_write)
     print("Percentage of time not in predictions = {}".format((not_in_top_10*100)/total_predictions), file=file_to_write)
+
+    values, base = np.histogram(correct_rank_count, bins=155)
+    # evaluate the cumulative
+    cumulative = np.cumsum(values)
+    # plot the cumulative function
+    plt.plot(base[:-1], cumulative, c='red')
+
+    plt.show()
+
 
 
     # top_n_white_moves = list(map(lambda index: utils.move_lookup_by_index(index, 'White'), top_n_indexes))
@@ -88,5 +100,5 @@ for game_stage in ['1stThird', '2ndThird', '3rdThird', 'AllThird']:
     input_path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}{game_stage}'.format(features='POE', net_type='PolicyNet', game_stage=game_stage)
     training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
     # training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, 16384)
-    with open(os.path.join(r'..', r'policy_net_model', r'metrics', '03212017PolicyNetPredictionMetrics{}.txt'.format(game_stage)), 'a') as output_file:
+    with open(os.path.join(r'..', r'policy_net_model', r'metrics', '03242017PolicyNetPredictionMetrics{}.txt'.format(game_stage)), 'a') as output_file:
         print_prediction_statistics(training_examples, training_labels, output_file, policy_net)

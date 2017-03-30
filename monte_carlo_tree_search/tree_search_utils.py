@@ -1,5 +1,5 @@
 # from Breakthrough_Player.board_utils import generate_policy_net_moves_batch, generate_policy_net_moves
-import math
+from math import log, sqrt
 import numpy as np
 import random
 import time
@@ -87,56 +87,68 @@ def choose_UCT_move(node, start_time, time_to_think):
 def choose_UCT_or_best_child(node, start_time, time_to_think):
     best = None  # shouldn't ever return None
     if node.best_child is not None: #return best child if not already previously expanded
-        if node.best_child.visited is False:
+        if node.best_child.visited is False and not node.best_child.subtree_checked:
             best = node.best_child
-            node.best_child.visited = True
+            if best.children is None:
+                best.threads_checking_node += 1
         else:
             best = find_best_UCT_child(node, start_time, time_to_think)
+        node.best_child.visited = True
     elif node.children is not None: #if this node has children to choose from: should always happen
         best = find_best_UCT_child(node, start_time, time_to_think)
     return best  # because a win for me = a loss for child
 
 def find_best_UCT_child(node, start_time, time_to_think):
     parent_visits = node.visits
-    best = node.children[0]
-    best_val = get_UCT(node.children[0], parent_visits, start_time, time_to_think)
-    for i in range(1, len(node.children)):
-        #TODO: 03/18/2017 10 PM don't consider children with a win status? seems right?
-        if node.children[i].win_status is None: #only consider subtrees where we don't already know what's going to happen
-            child_value = get_UCT(node.children[i], parent_visits, start_time, time_to_think)
-            if child_value > best_val:
-                best = node.children[i]
-                best_val = child_value
+    best = None
+    viable_children = list(filter(lambda x: not x.subtree_checked and x.threads_checking_node <=0, node.children))
+    if len(viable_children)>0:
+        best = viable_children[0]
+        best_val = get_UCT(best, parent_visits, start_time, time_to_think)
+        children_to_check = False
+
+        for i in range(1, len(viable_children)):
+            if node.win_status is True or node.win_status is None:
+                predicate = viable_children[i].win_status is None  # only consider subtrees where we don't already know what's going to happen
+            else:  # all children are True (winners)
+                predicate = True  # the node is a loser (all children are winners); keep checking in case opponent makes a move into a subtree we wouldn't have expected
+            if predicate:
+                child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think)
+                if child_value > best_val:
+                    best = viable_children[i]
+                    best_val = child_value
+                    children_to_check = True
+
+        if not children_to_check and best.win_status is False:  # all children were False (losers);
+            for i in range(1, len(viable_children)):
+                    child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think)
+                    if child_value > best_val:
+                        best = viable_children[i]
+                        best_val = child_value
+
+        if best.children is None:
+            best.threads_checking_node =1
     return best
 
 def get_UCT(node, parent_visits, start_time, time_to_think):
-    # TODO: change this? stops exploring subtrees that dumber opponent may lead to if 1 good move exists
-    # Con: may not  preferentially search the tree that the opponent is more likely to pick
-    # maybe I should add some value to the UCT multiplier when a win_status is declared? is this necessary due to the overwhelming
-    # amount of wins/losses backpropagated?
-    # if node.win_status == True:
-    #     UCT = -999
-    # elif node.win_status == False:
-    #     UCT = 999
     if node.visits == 0:
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
-        UCT_multiplier = node.UCT_multiplier
-
         # # 03/11/2017 games actually good with this and no division, but annealing seems right?
         # stochasticity_for_multithreading = random.random()  /2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
 
-        #TODO test this. SEEMS like a good idea since it will explore early and exploit later
-        annealed_factor = 1 - ((start_time - time.time())/time_to_think)  #  starts at 1 and trends towards 0 as search proceeds
-        # with stochasticity multiplier between .5 and 1 so multithreading sees different values
-        stochasticity_for_multithreading = (1- random.random()/2) * annealed_factor
+        # #TODO test this. SEEMS like a good idea since it will explore early and exploit later
+        # annealed_factor = 1 - ((start_time - time.time())/time_to_think)  #  starts at 1 and trends towards 0 as search proceeds
+        # # with stochasticity multiplier between .5 and 1 so multithreading sees different values
+        # stochasticity_for_multithreading = (1- random.random()/2) * max(0.25, annealed_factor) #in printed stats games, probably never got to a low value
+        #
+        # # stochasticity_for_multithreading = (random.random()*4) * max(0.25, annealed_factor) #in printed stats games, probably never got to a low value
 
-        exploration_constant = 1.0 + stochasticity_for_multithreading # 1.414 ~ √2
-
+        exploration_constant = 1.0 #+ stochasticity_for_multithreading # 1.414 ~ √2
         exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
-        exploration_factor = exploration_constant * math.sqrt(math.log(parent_visits) / node.visits)
-        UCT = np.float64((exploitation_factor + exploration_factor) * UCT_multiplier) #TODO change back to non-np float? shouldn't have problems with 0 UCT nodes anymore
-    return UCT #UCT from parent's POV
+        exploration_factor = exploration_constant * sqrt(log(max(1,parent_visits)) / node.visits)
+        UCT = (exploitation_factor + exploration_factor)
+    return UCT * (node.UCT_multiplier ) #UCT from parent's POV
 
 #TODO: undiagnosed threading bug.
 # Will sometimes be given an expanded root with no children (usually near the end of the game)
@@ -163,11 +175,14 @@ def check_for_forced_win(node_children):
 
 def get_best_children(node_children):#TODO: make sure to not pick winning children?
     best, best_val = get_best_child(node_children)
+    # best, best_val = get_best_most_visited_child(node_children)
     best_nodes = []
     for child in node_children:  # find equally best children
         if not child.win_status == True: #only consider children who will not lead to a win for opponent
             if child.visits > 0:
-                child_win_rate = child.wins / child.visits
+                NN_scaling_factor = 1
+
+                child_win_rate = (child.wins / child.visits)/NN_scaling_factor#keep a bias towards policy net's prediction
                 if child_win_rate == best_val:
                     if best.visits == child.visits:
                         best_nodes.append(child)
@@ -182,11 +197,12 @@ def get_best_child(node_children):
         k+= 1
     if k < len(node_children):
         best = node_children[k]
-        best_val = node_children[k].wins / node_children[k].visits
+        best_val = (node_children[k].wins / node_children[k].visits)/node_children[k].UCT_multiplier #keep a bias towards policy net's prediction
         for i in range(k, len(node_children)):  # find best child
             child = node_children[i]
+            NN_scaling_factor = 1
             if child.visits > 0:
-                child_win_rate = child.wins / child.visits
+                child_win_rate = (child.wins / child.visits)/child.UCT_multiplier#keep a bias towards policy net's prediction
                 if child_win_rate < best_val:  # get the child with the lowest win rate
                     best = child
                     best_val = child_win_rate
@@ -200,6 +216,38 @@ def get_best_child(node_children):
         best_val = 0
     return best, best_val
 
+def get_best_most_visited_child(node_children):
+    k = 0
+    threshold_kids = []
+    best = None
+    best_visits = 0
+    best_val = 100
+    sorted_by_visit_count = sorted(node_children, key=lambda x: x.visits, reverse=True)
+    for child in sorted_by_visit_count:
+        if best is not None:
+            if child.visits > 0:
+                child_win_rate = child.wins / child.visits
+                if best_visits == 0:
+                    visit_ratio = 1
+                    visit_difference = 0
+                else:
+                    visit_ratio = child.visits/sorted_by_visit_count[0].visits #should always be 1 or less than since we are walking down sorted array
+                    visit_difference = abs(best_visits-child.visits)
+                if child_win_rate < best_val and (visit_ratio > .5 or best_val > .5) and child_win_rate < .50:#Should be fine since the huge gameover values will make this ratio small compared to trees with no gameover values
+                    best = child
+                    best_val = child_win_rate
+                    best_visits = child.visits
+        else:
+            best = child
+            if child.visits > 0:
+                child_win_rate = child.wins / child.visits
+                best_val = child_win_rate
+            best_visits = child.visits
+    if best is None:
+        best = random.sample(node_children, 1)[0]
+        best_val = 0
+    return best, best_val
+
 
 def random_eval(node):
     amount = 1  # increase to pretend to outweigh NN?
@@ -208,12 +256,6 @@ def random_eval(node):
         update_tree_wins(node, amount)
     else:
         update_tree_losses(node, amount)
-
-
-
-
-
-
 
 def random_rollout(node):
     move = node
@@ -233,7 +275,7 @@ def evaluation_function(root):
         8: {'a': 24, 'b': 24, 'c': 24, 'd': 24, 'e': 24, 'f': 24, 'g': 24, 'h': 24},
         7: {'a': 21, 'b': 23, 'c': 23, 'd': 23, 'e': 23, 'f': 23, 'g': 23, 'h': 21},
         6: {'a': 14, 'b': 22, 'c': 22, 'd': 22, 'e': 22, 'f': 22, 'g': 22, 'h': 14},
-        5: {'a': 9, 'b': 15, 'c': 21, 'd': 21, 'e': 21, 'f': 21, 'g': 15, 'h': 19},
+        5: {'a': 9, 'b': 15, 'c': 21, 'd': 21, 'e': 21, 'f': 21, 'g': 15, 'h': 9},
         4: {'a': 6, 'b': 9, 'c': 16, 'd': 16, 'e': 16, 'f': 16, 'g': 9, 'h': 6},
         3: {'a': 3, 'b': 5, 'c': 10, 'd': 10, 'e': 10, 'f': 10, 'g': 5, 'h': 3},
         2: {'a': 2, 'b': 3, 'c': 3, 'd': 3, 'e': 3, 'f': 3, 'g': 3, 'h': 2},
@@ -265,7 +307,7 @@ def evaluation_function(root):
     max_result_can_be = 141
     max_result_can_be = max_result_can_be/1.5
     if result > 0:
-        if player_color == white:
+        if player_color == 'White':
             outcome = 1
             result = result / max(max_result_can_be, result)
         else:
@@ -273,7 +315,7 @@ def evaluation_function(root):
             result = 1 - (result / max(max_result_can_be, result))
 
     else:
-        if player_color == black:
+        if player_color == 'Black':
             outcome = 1
             result = abs(result / max(max_result_can_be, result))
 
@@ -355,15 +397,40 @@ def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=Fa
 
 def update_child(child, NN_output, top_children_indexes, num_legal_children):
     child_val = NN_output[child.index]
-    normalized_value = int(child_val  * 100)
-    if child.index in top_children_indexes:  # weight top moves higher for exploitation
-        rank = top_children_indexes.index(child.index)
-        if rank == 0:
-            child.parent.best_child = child #mark as node to expand first
-            #TODO: #2 implemented 03102017 9:56 PM consider changing this to + child_val for a lighter UCT multiplier; 9:58 PM play with this number
+    # normalized_value = int(max(1,child_val  * 100))
+    # if child.index in top_children_indexes:  # weight top moves higher for exploitation
+    if top_children_indexes[0] == child.index: #rank 1 child
+        child.parent.best_child = child #mark as node to expand first
+        # if child_val >= .90:
+        #     child_val *= 2
+    #     else:
+    #         if child_val >.20:
+    #             child_val = max(child_val, .491780905081678) #sometimes it gets over confident
+    # elif top_children_indexes[1] == child.index:
+    #     child_val = max(child_val, .18969851788510255)
+    # elif top_children_indexes[2] == child.index:
+    #     child_val = max(child_val,.10004993248995586)
+    # elif top_children_indexes[3] == child.index:
+    #     child_val = max(child_val,.05907234751883528)
+    # elif top_children_indexes[4] == child.index:
+    #     child_val = max(child_val,.036425774953655967)
+    # elif top_children_indexes[5] == child.index:
+    #     child_val = max(child_val,.024950243991511947)
+    # elif top_children_indexes[6] == child.index:
+    #     child_val = max(child_val,.017902280093502234)
+    # elif top_children_indexes[7] == child.index:
+    #     child_val = max(child_val,.013378707110885424)
+    # elif top_children_indexes[8] == child.index:
+    #     child_val = max(child_val,.010220394763159517)
+    # elif top_children_indexes[9] == child.index:
+    #     child_val = max(child_val,.008041201598780913)
 
-        #TODO: 03/15/2017 removed based on prof Lorentz input
-        child.UCT_multiplier  = 1 + child_val# stay close to policy (net) trajectory by biasing UCT selection of
+
+
+    normalized_value = int(child_val * 100)
+
+    #TODO: 03/15/2017 removed based on prof Lorentz input
+    child.UCT_multiplier  = 1 + child_val# stay close to policy (net) trajectory by biasing UCT selection of
                                              # NN's top picks as a function of probability returned by NN
 
     #TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
@@ -372,7 +439,7 @@ def update_child(child, NN_output, top_children_indexes, num_legal_children):
 
     #TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
     weighted_losses = normalized_value
-    weighted_wins = 100-weighted_losses
+    weighted_wins = max(0, 100-weighted_losses)
 
     # update_tree_wins(child, weighted_wins)
     # update_tree_losses(child, weighted_losses)
@@ -391,9 +458,26 @@ def update_child(child, NN_output, top_children_indexes, num_legal_children):
     # child.visits = 100
     # child.wins = weighted_wins
 
-    child.visits = normalized_value
-    child.wins = normalized_value * random_rollout(child)
-    # assert (child.visits >= child.wins)
+    # if child.height > 40 : #at this point, we are rolling out till EOG
+    #     child.visits = 100
+    #     child.wins = weighted_wins
+    # else: #if
+    #     child.visits = normalized_value #UCT needs max (1, visits) for log function
+    #     child.wins = normalized_value * random_rollout(child)
+
+    #TODO: 03/25/2017 testing this on deep searches
+    # eval_child(child)
+    #else, EOG rollout will update wins/visits
+    child.visits = 100
+    child.wins = weighted_wins
+
+def eval_child(child):
+    if child.height < 47:  # pre-rollout
+        outcome, _ = evaluation_function(child)
+        if outcome == 1:
+            update_tree_losses(child.parent)
+        else:
+            update_tree_wins(child.parent)
 
 def update_sum_for_normalization(parent, NN_output, child_indexes):
     #if we want to normalize over legal/top children vs relying on NN's softmax
@@ -407,4 +491,5 @@ def update_sum_for_normalization(parent, NN_output, child_indexes):
 def get_top_children(NN_output, num_top=0):
     if num_top == 0:
         num_top = len(NN_output)
-    return sorted(range(len(NN_output)), key=lambda k: NN_output[k], reverse=True)[:num_top]
+    # return sorted(range(len(NN_output)), key=lambda k: NN_output[k], reverse=True)[:num_top]
+    return NN_output.argsort()[::-1][:num_top]

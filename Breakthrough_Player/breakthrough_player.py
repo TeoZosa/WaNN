@@ -6,6 +6,7 @@ import os
 from multiprocessing import  Process, pool, Pool
 import pexpect
 from pexpect.popen_spawn import PopenSpawn
+import pickle
 
 
 class NoDaemonProcess(Process):
@@ -21,9 +22,11 @@ class NoDaemonProcess(Process):
 class MyPool(pool.Pool):  # make a special class to allow for an inner process pool
     Process = NoDaemonProcess
 
-def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
+def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout, root=None):
     policy_net = NeuralNet()
     computer_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
+    if root is not None:
+        computer_MCTS_tree.selected_child = root
 
     if black_opponent == 'Wanderer':
         OSX_input_engine = '/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughInput/bin/Release/BreakthroughInput'
@@ -52,6 +55,7 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     while not gameover:
         print_board(game_board, file=file_to_write)
+        computer_MCTS_tree.height = wanderer_MCTS_tree.height = move_number
         move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
         print_move(move, color_to_move, file_to_write)
         game_board = move_piece(game_board, move, color_to_move)
@@ -59,12 +63,23 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
             move = move.split(r'-')
         else:
             move = move.split(r'x')
+        if color_to_move == 'Black':
+            move_to_send = move[0]+'-' +move[1]
+            computer_MCTS_tree.last_opponent_move = move_to_send
         web_visualizer_link = web_visualizer_link + move[0] + move[1]
         gameover, winner_color = game_over(game_board)
         move_number += 1
     print_board(game_board, file=file_to_write)
     print("Game over. {} wins".format(winner_color), file=file_to_write)
     print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
+
+    # final_policy_move = computer_MCTS_tree.selected_child
+    # while final_policy_move.parent is not None:
+    #     final_policy_move = final_policy_move.parent
+    # output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\FreshRoot{}.p'.format(str(6)), 'wb')
+    # # online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
+    # pickle.dump(final_policy_move, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+    # output_file.close()
 
     if wanderer_MCTS_tree is not None:
         wanderer_MCTS_tree.policy_net.sendline('quit')
@@ -183,6 +198,7 @@ def get_move_self_play(game_board, white_player, move_number, black_opponent, wh
 def get_whites_move_self_play(game_board, white_player, move_number, white_MCTS_tree):
     color_to_move = 'White' # explicitly declared here since this is only for white
     if white_player == 'Random' or white_player == 'Policy':
+
         move = get_player_move(game_board, color_to_move, white_player, white_MCTS_tree)
     else:#
         if move_number <= 4:

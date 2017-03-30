@@ -1,17 +1,18 @@
 from Breakthrough_Player import breakthrough_player
 from multiprocessing import freeze_support
 import os
+import pickle
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
 
   white_wins = 0
   black_wins = 0
 
-  num_games_to_play = 500
+  num_games_to_play = 501
   time_to_think = 10
   depth_limit = 5
-  date = r'01_03242017'
-  file_designator = '500Annealing_multiplier_BuggedExpansion_Threshold_singleDL_backprop1ValScaleWinsNoPrints'
+  date = r'03302017'
+  file_designator = 'NewRoot_Prints_PreferWinrate_ThresholdEOG'
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
@@ -31,9 +32,17 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   path = Windows_path
   white_player = EBFS_MCTS
   black_opponent = wanderer
-
+  # root = None
+  # input_file = open(
+  #     r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\AgnosticRoot{}.p'.format(str(6)),
+  #     'r+b')
+  input_file = open(
+      r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\FreshRoot{}.p'.format(str(6)),
+      'r+b')
+  root = pickle.load(input_file)
+  input_file.close()
   for time_to_think in range(10, 11, 10):
-      for depth_limit in range(5, 6):
+      for depth_limit in range(500, 501):
           white_wins = 0
           black_wins = 0
           for i in range(0, num_games_to_play):
@@ -55,7 +64,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
                                                                                                  depth=depth_limit,
                                                                                                  time_to_think=time_to_think)),
                                        'a')
-            winner_color =   breakthrough_player.play_game_vs_wanderer(white_player, black_opponent, depth_limit, time_to_think, gameplay_file, MCTS_logging_file)
+            winner_color =   breakthrough_player.play_game_vs_wanderer(white_player, black_opponent, depth_limit, time_to_think, gameplay_file, MCTS_logging_file, root)
 
             if winner_color == 'White':
               white_wins += 1

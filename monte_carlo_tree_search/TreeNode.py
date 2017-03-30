@@ -13,6 +13,11 @@ class TreeNode(object):
         self.height = height #if root is first state in game MCTS saw
         self.best_child = None #to expand best child first
         self.expanded = False #if already expanded  for NN evaluation_function in tree reuse
+        self.num_children_checked = 0
+        self.subtree_checked = False
+        self.num_children_with_win_status = 0
+        self.being_checked = False
+        self.threads_checking_node = 0
         self.visited = False #for best child, visit first if not already visited
         self.win_status = None
         self.UCT_multiplier = 1

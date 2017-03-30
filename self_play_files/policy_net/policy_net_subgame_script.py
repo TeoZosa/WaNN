@@ -404,7 +404,7 @@ else:
 # file = sys.stdout
 # print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
 
-for num_hidden in [i for i in [4, 7]
+for num_hidden in [i for i in [4]
                    # range(1,10)
                    ]:
     file = open(os.path.join(input_path,
@@ -414,9 +414,9 @@ for num_hidden in [i for i in [4, 7]
     for n_filters in [
                       #  64,
                       # 128,
-                      192,
+                      # 192,
                         # 256,
-                        # 512
+                        512
     ]:
         for learning_rate in [
             0.001,
@@ -485,10 +485,10 @@ for num_hidden in [i for i in [4, 7]
             #tensorboard summaries
             merged = tf.summary.merge_all()
             train_writer = tf.summary.FileWriter(os.path.join(input_path,
-                                                              r'ExperimentLogs', 'trainingSummaries'),
+                                                              r'ExperimentLogs', 'trainingSummaries', str(num_hidden)+'_'+str(n_filters)),
                                                  sess.graph)
             test_writer = tf.summary.FileWriter(os.path.join(input_path,
-                                                             r'ExperimentLogs', 'testingSummaries'))
+                                                             r'ExperimentLogs', 'testingSummaries', str(num_hidden)+'_'+str(n_filters)))
 
             sess.run(tf.global_variables_initializer())
 

@@ -47,6 +47,15 @@ def print_prediction_statistics(examples, labels, file_to_write, policy_net):
                                                            correct_prob=correct_move_predicted_prob,
                                                            prob_diff= top_move_predicted_prob-correct_move_predicted_prob),
                       file=file_to_write)
+            else:
+                print("Correct prediction.",
+                      file=file_to_write)
+                correct_move_predicted_prob = labels_predictions[example_num][correct_move_index] * 100
+                print("Correct move probability = %{correct_prob}   "
+                      "Difference = %{prob_diff}\n".format(correct_prob=correct_move_predicted_prob,
+                                                           prob_diff=100 - correct_move_predicted_prob),
+                      file=file_to_write)
+
             # in_top_n = True
         else:
             # rank_in_prediction = in_top_n = False
@@ -62,13 +71,13 @@ def print_prediction_statistics(examples, labels, file_to_write, policy_net):
         print("Percent in top {num} predictions = %{percent}\n".format(num=i + 1, percent=percent_in_top), file=file_to_write)
     print("Percentage of time not in predictions = {}".format((not_in_top_10*100)/total_predictions), file=file_to_write)
 
-    values, base = np.histogram(correct_rank_count, bins=155)
-    # evaluate the cumulative
-    cumulative = np.cumsum(values)
-    # plot the cumulative function
-    plt.plot(base[:-1], cumulative, c='red')
-
-    plt.show()
+    # values, base = np.histogram(correct_rank_count, bins=155)
+    # # evaluate the cumulative
+    # cumulative = np.cumsum(values)
+    # # plot the cumulative function
+    # plt.plot(base[:-1], cumulative, c='red')
+    #
+    # plt.show()
 
 
 
@@ -100,5 +109,5 @@ for game_stage in ['1stThird', '2ndThird', '3rdThird', 'AllThird']:
     input_path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}{game_stage}'.format(features='POE', net_type='PolicyNet', game_stage=game_stage)
     training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
     # training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, 16384)
-    with open(os.path.join(r'..', r'policy_net_model', r'metrics', '03242017PolicyNetPredictionMetrics{}.txt'.format(game_stage)), 'a') as output_file:
+    with open(os.path.join(r'..', r'policy_net_model', r'metrics', '03242017PolicyNetPredictionMetrics{}.txt'.format(game_stage)), 'w') as output_file:
         print_prediction_statistics(training_examples, training_labels, output_file, policy_net)

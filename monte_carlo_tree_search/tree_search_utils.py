@@ -18,6 +18,7 @@ class SimulationInfo():
         self.start_time = None
         self.time_to_think = None
         self.root = None
+        self.game_num = 0
 
     def __enter__(self):
         return self
@@ -101,18 +102,25 @@ def choose_UCT_or_best_child(node, start_time, time_to_think):
 def find_best_UCT_child(node, start_time, time_to_think):
     parent_visits = node.visits
     best = None
-    viable_children = list(filter(lambda x: not x.subtree_checked and x.threads_checking_node <=0, node.children))
+    #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss
+    viable_children = list(filter(lambda x: not x.subtree_checked and x.win_status is None and x.threads_checking_node <=0, node.children))
     if len(viable_children)>0:
         best = viable_children[0]
         best_val = get_UCT(best, parent_visits, start_time, time_to_think)
         children_to_check = False
 
         for i in range(1, len(viable_children)):
-            if node.win_status is True or node.win_status is None:
-                predicate = viable_children[i].win_status is None  # only consider subtrees where we don't already know what's going to happen
-            else:  # all children are True (winners)
-                predicate = True  # the node is a loser (all children are winners); keep checking in case opponent makes a move into a subtree we wouldn't have expected
-            if predicate:
+            #TODO: play with search after a height (ex. if keeping all children and we know win_status, we don't need to search those subtrees anymore)
+
+            # if (node.win_status is True and node.height <60) or node.win_status is None:
+            #     predicate = viable_children[i].win_status is None  # only consider subtrees where we don't already know what's going to happen
+            # else:  # all children are True (winners)
+            #     predicate = True  # the node is a loser (all children are winners); keep checking in case opponent makes a move into a subtree we wouldn't have expected
+
+            #for RL, just constrain the search space and assume wanderer has a win status if we do as well.
+            # predicate = viable_children[i].win_status is None  # only consider subtrees where we don't already know what's going to happen
+            #
+            # if predicate:
                 child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think)
                 if child_value > best_val:
                     best = viable_children[i]
@@ -120,6 +128,7 @@ def find_best_UCT_child(node, start_time, time_to_think):
                     children_to_check = True
 
         if not children_to_check and best.win_status is False:  # all children were False (losers);
+            print("RL Error: UCT shouldn't have chosen a subtree with children who have win statuses")
             for i in range(1, len(viable_children)):
                     child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think)
                     if child_value > best_val:
@@ -152,17 +161,17 @@ def get_UCT(node, parent_visits, start_time, time_to_think):
 
 #TODO: undiagnosed threading bug.
 # Will sometimes be given an expanded root with no children (usually near the end of the game)
-def randomly_choose_a_winning_move(node): #for stochasticity: choose among equally successful children
+def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose among equally successful children
     best_nodes = []
     if node.children is not None:
-        win_can_be_forced, best_nodes = check_for_forced_win(node.children)
+        win_can_be_forced, best_nodes = check_for_forced_win(node.children, game_num)
         if not win_can_be_forced:
-            best_nodes = get_best_children(node.children)
+            best_nodes = get_best_children(node.children, game_num)
     if len(best_nodes) == 0:
         breakpoint = True
     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
 
-def check_for_forced_win(node_children):
+def check_for_forced_win(node_children, game_num):
     guaranteed_children = []
     forced_win = False
     for child in node_children:
@@ -170,18 +179,18 @@ def check_for_forced_win(node_children):
             guaranteed_children.append(child)
             forced_win = True
     if len(guaranteed_children) > 0: #TODO: does it really matter which losing child is the best if all are losers?
-        guaranteed_children = get_best_children(guaranteed_children)
+        guaranteed_children = get_best_children(guaranteed_children, game_num)
     return forced_win, guaranteed_children
 
-def get_best_children(node_children):#TODO: make sure to not pick winning children?
-    best, best_val = get_best_child(node_children)
+def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
+    best, best_val = get_best_child(node_children, game_num)
+    scaling_strength = 1+(game_num/50) #TODO: increase as a function of game_num? more games => stronger scaling strength since we can more safely ignore NN predictions?
     # best, best_val = get_best_most_visited_child(node_children)
     best_nodes = []
     for child in node_children:  # find equally best children
         if not child.win_status == True: #only consider children who will not lead to a win for opponent
             if child.visits > 0:
-                NN_scaling_factor = 1
-
+                NN_scaling_factor = child.UCT_multiplier/scaling_strength
                 child_win_rate = (child.wins / child.visits)/NN_scaling_factor#keep a bias towards policy net's prediction
                 if child_win_rate == best_val:
                     if best.visits == child.visits:
@@ -191,18 +200,20 @@ def get_best_children(node_children):#TODO: make sure to not pick winning childr
         best_nodes.append(best)
     return best_nodes
 
-def get_best_child(node_children):
+def get_best_child(node_children, game_num):
     k = 0
+    scaling_strength = 1+(game_num/50)
     while node_children[k].visits <=0 and k < len(node_children):
         k+= 1
     if k < len(node_children):
         best = node_children[k]
-        best_val = (node_children[k].wins / node_children[k].visits)/node_children[k].UCT_multiplier #keep a bias towards policy net's prediction
+        NN_scaling_factor  = node_children[k].UCT_multiplier/scaling_strength
+        best_val = (node_children[k].wins / node_children[k].visits)/NN_scaling_factor #keep a bias towards policy net's prediction
         for i in range(k, len(node_children)):  # find best child
             child = node_children[i]
-            NN_scaling_factor = 1
+            NN_scaling_factor = child.UCT_multiplier/scaling_strength
             if child.visits > 0:
-                child_win_rate = (child.wins / child.visits)/child.UCT_multiplier#keep a bias towards policy net's prediction
+                child_win_rate = (child.wins / child.visits)/NN_scaling_factor#keep a bias towards policy net's prediction
                 if child_win_rate < best_val:  # get the child with the lowest win rate
                     best = child
                     best_val = child_win_rate

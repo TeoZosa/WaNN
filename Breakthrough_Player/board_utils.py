@@ -272,6 +272,8 @@ def check_left_diagonal_move(game_board, row, column, player_color):
         _from = column + str(row)
         if player_color == 'White':
             row_ahead = row + 1
+            # if isinstance(game_board, int) or isinstance(game_board[row_ahead], int):
+            #     True
             if game_board[row_ahead][left_diagonal_column] != white:  # can move left diagonally if black or empty there
                 to = left_diagonal_column + str(row_ahead)
                 move = {'From': _from, 'To': to}

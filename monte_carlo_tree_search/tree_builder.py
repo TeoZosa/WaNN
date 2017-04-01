@@ -129,8 +129,8 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
         # if len (unexpanded_nodes) > 0:
         #     if unexpanded_nodes[0] is None:
         #         True
-        unexpanded_nodes = list(filter(lambda x: x.children is None and  x.win_status is None, unexpanded_nodes)) #redundant
 
+        unexpanded_nodes = list(filter(lambda x: (x.children is None and not x.gameover ), unexpanded_nodes)) #redundant
         if len(unexpanded_nodes) > 0: #if any nodes to expand;
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
             NN_output = policy_net.evaluate(unexpanded_nodes)
@@ -146,7 +146,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
             for i in range(0, len(unexpanded_nodes)):
                 parent = unexpanded_nodes[i]
                 with lock:
-                    if  parent.threads_checking_node <= 1 and parent.children is None:
+                    if  parent.threads_checking_node <= 1 and parent.children is None :
                         if parent.threads_checking_node <=0:
                             parent.threads_checking_node = 1
                         abort = False
@@ -210,6 +210,8 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
             #     expand_descendants_to_depth_wrt_NN(unexpanded_children, without_enumerating, depth + 1, depth_limit, sim_info, lock, policy_net)
                 # return here
                 #return here
+            if len(unexpanded_nodes)==0:
+                prune_from_win_status(parent)
         else:
             depth = depth_limit #done if no nodes to expand
 
@@ -246,7 +248,7 @@ def update_parent_for_process(args):
     lock = Lock()
     pruned_children = []
     with lock:  # Lock after the NN update and check if we still need to update the parent
-        if parent.children is not None:
+        if parent.children is not None or not parent.expanded:
             abort = True
         else:
             abort = False
@@ -292,13 +294,19 @@ def enumerate_update_and_prune(parent, NN_output,sim_info, lock):
 
     children_as_moves = enumerate_legal_moves(parent.game_board, parent.color)
     num_legal_moves = len(children_as_moves)
-    for child_as_move in children_as_moves:
-        move = child_as_move['From'] + r'-' + child_as_move['To']
-        pruned_child, child_win_status = get_cached_child(parent, move, NN_output, top_children_indexes, best_child_val, sim_info, lock, num_legal_moves, aggressive=None)
-        if pruned_child is not None:
-            pruned_children.append(pruned_child)
-            children_win_statuses.append(child_win_status)
-    assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
+    if parent.children is None:
+        predicate = True
+    else:
+        predicate = num_legal_moves != len(parent.children)
+    if predicate:#if we don't already have all legal children
+        for child_as_move in children_as_moves:
+            move = child_as_move['From'] + r'-' + child_as_move['To']
+            pruned_child, child_win_status = get_cached_child(parent, move, NN_output, top_children_indexes, best_child_val, sim_info, lock, num_legal_moves, aggressive=None)
+            if pruned_child is not None:
+                pruned_children.append(pruned_child)
+                children_win_statuses.append(child_win_status)
+        assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
+    #else: parent already has all of its legal children
     return pruned_children
 
 def get_cached_child(parent, move, NN_output, top_children_indexes, best_child_val, sim_info, lock, num_legal_moves, aggressive=None, on = False):
@@ -312,9 +320,6 @@ def get_cached_child(parent, move, NN_output, top_children_indexes, best_child_v
 
             else: #defensive
                 opening_moves.extend(['a1-b2', 'h1-g2'])
-
-
-
         move_number = ceil(parent.height/2)
         if move_number < len(opening_moves): #or parent.height <20
              # : #opening moves
@@ -354,15 +359,15 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
     child = init_child_node_and_board(move, parent)
     check_for_winning_move(child)  # 1-step lookahead for gameover
     child_val = NN_output[child.index]
-    if best_child_val <0.7:
-        num_top_to_consider = 2
-    else:
-        num_top_to_consider = 1
+    # if child.height>60: #not seeing forced wins, play with pruning at later depths
+    #     num_top_to_consider = 2
+    # else:
+    #     num_top_to_consider = 1
     num_top_to_consider = 1
     top_n_children = top_children_indexes[:num_top_to_consider]
 
     if child.gameover is False:  # update only if not the end of the game
-        if opening_move:#keep the opening move
+        if opening_move or parent.height >= 600:#keep all children
             predicate = True
         else: #prune as needed
             predicate = child.index in top_n_children or \
@@ -389,20 +394,73 @@ def assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
     with lock:
         parent.being_checked = False
         parent.threads_checking_node -=1
-        if len(pruned_children) > 0 and parent.children is None:
+        if len(pruned_children) > 0:
+            if parent.children is None:
+                parent.children = pruned_children
+                backpropagate_num_checked_children(parent)
+                set_win_status_from_children(parent, children_win_statuses)
+                prune_from_win_status(parent)
+            else: #had children but we are now adding all children past a certain height
+                new_children_added = False
+                new_children = []
+                for new_child in pruned_children:
+                    duplicate_game_board = False
+                    for child in parent.children:
+                        if new_child.game_board == child.game_board:
+                            duplicate_game_board = True
+                    if not duplicate_game_board:
+                        new_children.append(new_child)
+                        new_children_added = True
+                if new_children_added:
+                    parent.children.extend(new_children)
+                    backpropagate_num_checked_children(parent, reexpansion=True)
+                    set_win_status_from_children(parent, children_win_statuses)
+                    prune_from_win_status(parent)
 
-            parent.children = pruned_children
-            backpropagate_num_checked_children(parent)
-            set_win_status_from_children(parent, children_win_statuses)
 
-def backpropagate_num_checked_children(node):
+def prune_from_win_status(node, height_cutoff = 600):
+    unvisited_queue = [node]
+    parent = node.parent
+    while len(unvisited_queue) >0:
+        node = unvisited_queue.pop()
+        if node.height >= height_cutoff and not node.gameover:
+            if node.win_status is True:  # pick all losing children
+                losing_children = []
+                for child in node.children:
+                    if child.win_status is False:
+                        losing_children.append(child)
+                node.children = losing_children  # all forced wins
+                # unvisited_queue.extend(node.children)
+    #         else:
+    #             if node.children is not None:
+    #                 # unvisited_queue.extend(node.children)
+    # #
+    # while parent is not None and parent.height >= height_cutoff:#tell parents to prune too
+    #     if parent.win_status is True:
+    #         losing_children = []
+    #         for child in parent.children:
+    #             if child.win_status is False:
+    #                 losing_children.append(child)
+    #         parent.children = losing_children  # all forced wins
+    #         parent = parent.parent
+
+
+
+def backpropagate_num_checked_children(node, reexpansion=False):
     while node is not None:
         set_num_checked_children(node)
-        if node.num_children_checked ==  len(node.children): #all children have been searched; since this is going backwards, will only return true if recursively true
-            node.subtree_checked = True
+        if reexpansion:
+            if node.num_children_checked != len(node.children):
+               node.subtree_checked = False #may have to reupdate parent trees
+            else:
+               node.subtree_checked = True
             node = node.parent
         else:
-            node = None
+            if node.num_children_checked ==  len(node.children): #all children have been searched; since this is going backwards, will only return true if recursively true
+                node.subtree_checked = True
+                node = node.parent
+            else:
+                node = None
 
 def set_num_checked_children(node): #necessary for gameover kids: wouldn't have reported that they are expanded since another node may also be
     count = 0
@@ -412,6 +470,7 @@ def set_num_checked_children(node): #necessary for gameover kids: wouldn't have 
     node.num_children_checked = count
 
 def init_child_node_and_board(child_as_move, parent_node):
+
     game_board = parent_node.game_board
     parent_color= parent_node.color
     child_color = get_opponent_color(parent_color)
@@ -487,7 +546,8 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
               file=sim_info.file)
         new_root_parent.children.append(new_root)  # attach new root to parent
 
-
+    backpropagate_num_checked_children(new_root_parent, True)
+    update_win_status_from_children(new_root_parent)
     return new_root
 
 def check_for_winning_move(child_node, rollout=False):
@@ -500,21 +560,24 @@ def set_game_over_values(node, node_color, winner_color, rollout=False):
     node.expanded = True
     node.subtree_checked = True
     node.visited = True
-
+    #
     if rollout is False:
         overwhelming_amount = 9999999# is this value right? technically true and will draw parent towards siblings of winning moves
         #but will make it too greedy when choosing a best move; maybe make best move be conservative? choose safest child?
     else:
         overwhelming_amount = 1
-    if winner_color == node_color:
-        node.wins = 0 #overwhelming amount replaces this
-        update_tree_wins(node, overwhelming_amount) #draw agent towards subtree
-        node.win_status = True
-    else:
-        node.wins = 0 # this node will never win;
-        update_tree_losses(node, overwhelming_amount) #keep agent away from subtree and towards subtrees of the same level
-        node.win_status = False
+    if node.parent.children is None:
+        # overwhelming_amount = 10000
 
+        if winner_color == node_color:
+            node.wins = 0 #overwhelming amount replaces this
+            update_tree_wins(node, overwhelming_amount) #draw agent towards subtree
+            node.win_status = True
+        else:
+            node.wins = 0 # this node will never win;
+            update_tree_losses(node, overwhelming_amount) #keep agent away from subtree and towards subtrees of the same level
+            node.win_status = False
+    #else: had children already and this is coming from a reexpansion; don't send back duplicate gameover values
 
 def reset_game_over_values(node):
     if node.gameover is True:

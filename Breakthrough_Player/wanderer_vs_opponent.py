@@ -30,8 +30,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   Windows_path = r'G:\TruncatedLogs\PythonDatasets'
   OSX_path = r'/Users/TeofiloZosa/BreakthroughData/03122017SelfPlay'
   path = Windows_path
-  white_player = EBFS_MCTS
-  black_opponent = wanderer
+  white_player = wanderer
+  black_opponent = EBFS_MCTS
   root = None
 
   # # input_file = open(
@@ -62,7 +62,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
             MCTS_logging_file = open(os.path.join(path,
                                                     r'{date}log_{opponent}vsWanderer'
                                                     r'depth{depth}_'
-                                                    r'ttt{time_to_think}{designator}.txt'.format(date=date, opponent=player_for_path,
+                                                    r'ttt{time_to_think}{designator}_{i}.txt'.format(i=i,date=date, opponent=player_for_path,
                                                                                                  designator=file_designator,
                                                                                                  depth=depth_limit,
                                                                                                  time_to_think=time_to_think)),

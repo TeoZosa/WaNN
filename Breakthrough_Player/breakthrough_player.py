@@ -23,29 +23,41 @@ class MyPool(pool.Pool):  # make a special class to allow for an inner process p
     Process = NoDaemonProcess
 
 def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout, root=None, game_num=-1):
+
+
+
+
+    if black_opponent == 'Wanderer':
+        wanderer_color = 'Black'
+        WaNN_color = 'White'
+        wand_player = black_opponent
+        WaNN_player = white_player
+
+
+    else:
+        wanderer_color = 'White'
+        WaNN_color = 'Black'
+        wand_player = white_player
+        WaNN_player = black_opponent
+    OSX_input_engine = '/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughInput/bin/Release/BreakthroughInput'
+    OSX_wanderer_executable = r'/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughCurrent/bin/Release/BreakthroughCurrent'
+
+    open_input_engine = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughInput.exe'
+
+    wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent.exe'
+    ttt = r'--ttt=10'
+    full_command = open_input_engine + ' ' + WaNN_color + ' ' + wanderer_executable + ' ' + ttt
+    # wanderer = pexpect.spawn(open_input_engine,  args= [color_to_be, wanderer_executable, ttt])
+    # wanderer = PopenSpawn(full_command, cwd=r'C:\Users\damon\PycharmProjects\BreakthroughANN' )
+    wanderer = PopenSpawn([open_input_engine, WaNN_color, wanderer_executable, ttt])
+    wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer)
+    wanderer.log_file = sys.stdout
+
     policy_net = NeuralNet()
-    computer_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
+    computer_MCTS_tree = MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net)
     computer_MCTS_tree.game_num = game_num
     if root is not None:
         computer_MCTS_tree.selected_child = root
-
-    if black_opponent == 'Wanderer':
-        OSX_input_engine = '/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughInput/bin/Release/BreakthroughInput'
-        OSX_wanderer_executable = r'/Users/TeofiloZosa/Clion/Breakthrough/BreakthroughCurrent/bin/Release/BreakthroughCurrent'
-
-        open_input_engine = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughInput.exe'
-
-        color_to_be = r'white'
-        wanderer_executable= r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent.exe'
-        ttt = r'--ttt=10'
-        full_command = open_input_engine + ' ' + color_to_be + ' ' + wanderer_executable + ' ' + ttt
-        # wanderer = pexpect.spawn(open_input_engine,  args= [color_to_be, wanderer_executable, ttt])
-        # wanderer = PopenSpawn(full_command, cwd=r'C:\Users\damon\PycharmProjects\BreakthroughANN' )
-        wanderer = PopenSpawn([open_input_engine, color_to_be, wanderer_executable, ttt])
-        wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file, wanderer)
-        wanderer.log_file = sys.stdout
-    else:
-        wanderer_MCTS_tree = None
 
     print("{white} Vs. {black}".format(white=white_player, black=black_opponent), file=file_to_write)
 
@@ -64,7 +76,7 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
             move = move.split(r'-')
         else:
             move = move.split(r'x')
-        if color_to_move == 'Black':
+        if (color_to_move == 'Black' and wanderer_color =='Black') or (color_to_move == 'White' and wanderer_color =='White'):
             move_to_send = move[0]+'-' +move[1]
             computer_MCTS_tree.last_opponent_move = move_to_send
         web_visualizer_link = web_visualizer_link + move[0] + move[1]

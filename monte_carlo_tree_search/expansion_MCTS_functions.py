@@ -81,7 +81,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         sim_info.game_num = game_num
         sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
         if move_number == 0:
-            time_to_think = 600000
+            time_to_think = 60000
         if root.height >= 60: #still missing forced wins
             time_to_think = 60
         sim_info.time_to_think = time_to_think
@@ -239,6 +239,26 @@ def assign_root_reinforcement_learning(game_board, player_color, previous_move, 
             if answer.lower() != 'yes':
                 exit(-10)
             root = TreeNode(game_board, player_color, None, None, move_number)
+    elif move_number == 1: #WaNN is black
+        root = None
+        if previous_move.children is not None:
+            for child in previous_move.children:  # check if we can reuse tree
+                if child.game_board == game_board:
+                    root = child
+                    print("Reused old tree", file=sim_info.file)
+                    break
+        if root is None:  # no subtree; append new subtree to old parent
+            root = init_new_root(last_opponent_move, game_board, player_color, previous_move, policy_net, sim_info,
+                                 async_update_lock)
+            print("Initialized and appended new subtree", file=sim_info.file)
+
+        if root.being_checked:  # if terminating threads didn't end correctly, clean this up on the way down.
+            root.being_checked = False
+        if root.threads_checking_node != 0:
+            root.threads_checking_node = 0
+        if root.children is None and not root.gameover:
+            root.expanded = False
+
     else:#should have some tree to reuse or append a new one
         root = None
         if previous_move.children is not None:

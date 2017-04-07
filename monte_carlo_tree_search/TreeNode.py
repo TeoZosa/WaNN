@@ -23,6 +23,7 @@ class TreeNode(object):
         self.UCT_multiplier = 1
         self.sum_for_children_normalization = None #so we don't calculate for each child.
 
+        self.rolled_out_from = False
         self.reexpanded = False
 
 class NeuralNetInput(object):

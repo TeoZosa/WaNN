@@ -14,7 +14,7 @@ class MCTS(object):
     # 3. keep searching to desired depth (final depth = depth at expansion + depth_limit)
     # 4. do random rollouts. repeat 1.
 
-    def __init__(self, depth_limit, time_to_think, MCTS_type, MCTS_log_file, neural_net):
+    def __init__(self, depth_limit, time_to_think, color, MCTS_type, MCTS_log_file, neural_net):
         self.time_to_think = time_to_think
         self.depth_limit = depth_limit
         self.selected_child = None
@@ -24,6 +24,7 @@ class MCTS(object):
         self.height = 0
         self.policy_net = neural_net
         self.game_num = -1
+        self.color = color
 
         def __enter__(self):
             return self
@@ -47,14 +48,22 @@ class MCTS(object):
             ranked_moves = self.policy_net.evaluate(game_board, player_color)
             move = get_best_move(game_board, ranked_moves)
         elif self.MCTS_type == 'Wanderer':
+            if self.color == 'White':
+                move_regex = re.compile(r".*play\sw\s([a-h]\d.[a-h]\d).*",
+                                        re.IGNORECASE)
+                self.policy_net.expect('play w.*')
 
-            move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",
-                                    re.IGNORECASE)
-            self.policy_net.expect('play b.*')
+                move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
+                print(move, file=self.log_file)
+                move = move_regex.search(move).group(1)
+            else:
+                move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",
+                                        re.IGNORECASE)
+                self.policy_net.expect('play b.*')
 
-            move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
-            print(move, file=self.log_file)
-            move = move_regex.search(move).group(1)
+                move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
+                print(move, file=self.log_file)
+                move = move_regex.search(move).group(1)
 
         return move
 

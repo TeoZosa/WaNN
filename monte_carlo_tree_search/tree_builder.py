@@ -358,24 +358,91 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
     pruned_child = None
     child = init_child_node_and_board(move, parent)
     check_for_winning_move(child)  # 1-step lookahead for gameover
+
     child_val = NN_output[child.index]
-    # if child.height>60: #not seeing forced wins, play with pruning at later depths
-    #     num_top_to_consider = 2
-    # else:
-    #     num_top_to_consider = 1
-    num_top_to_consider = 1
-    top_n_children = top_children_indexes[:num_top_to_consider]
+
+    # num_top_to_consider = 6
+    # top_n_children = top_children_indexes[:num_top_to_consider]
 
     if child.gameover is False:  # update only if not the end of the game
-        if opening_move or parent.height >= 600:#keep all children
-            predicate = True
-        else: #prune as needed
-            predicate = child.index in top_n_children or \
-                child_val > .30 or best_child_val - child_val < .10
-        #  opens up the tree to more lines of play if best child sucks to begin with.
+        if top_children_indexes[0] == child.index:  # rank 1 child
+            child.parent.best_child = child  # mark as node to expand first
+        # opens up the tree to more lines of play if best child sucks to begin with.
         # in the worst degenerate case where best_val == ~4.5%, will include all children which is actually pretty justified.
+        num_to_consider_dict = {
+            60: 4,
+            62: 3
+        }
+        # TODO: maybe remove this     parent is sim_info.root or
+        if parent.height < 80 or not opening_move:
+            # or if root, top3?
+
+            if parent is sim_info.root:
+                num_top_to_consider = 3
+                top_n_children = top_children_indexes[:num_top_to_consider]
+                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+            # elif parent.height in num_to_consider_dict.keys():
+            #     num_top_to_consider = num_to_consider_dict[parent.height]
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+
+            # 70-79
+            elif parent.height >= 70:
+                num_top_to_consider = 3
+                top_n_children = top_children_indexes[:num_top_to_consider]
+                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+
+            # 2?   65-69
+            # elif parent.height < 70 and parent.height >= 65:
+            #     num_top_to_consider = 2 #else play with child val threshold?
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+
+            # 4?   60-64
+            elif parent.height < 65 and parent.height >= 60:
+                num_top_to_consider = 4  # else play with child val threshold?
+                top_n_children = top_children_indexes[:num_top_to_consider]
+                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+
+            # 7 or 4?   50-59
+            # elif parent.height < 60 and parent.height >= 55:
+            #     num_top_to_consider = 4 #else play with child val threshold?
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+
+            # 3?   46-54
+            elif parent.height < 55 and parent.height >= 46:
+                num_top_to_consider = 4  # else play with child val threshold?
+                top_n_children = top_children_indexes[:num_top_to_consider]
+                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+
+            # 5    40-49
+            # elif parent.height < 50 and parent.height >= 40:
+            #     num_top_to_consider = 5 #else play with child val threshold?
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+
+            # 2    30-39
+            elif parent.height < 40 and parent.height >= 30:
+                num_top_to_consider = 2  # else play with child val threshold?
+                top_n_children = top_children_indexes[:num_top_to_consider]
+                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+
+            # 2    20-29
+            # elif parent.height < 30 and parent.height >= 20 and not parent.height < 20 :
+            #     num_top_to_consider = 2 #else play with child val threshold?
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+            else:
+                num_top_to_consider = 1  # else play with child val threshold?
+                top_n_children = top_children_indexes[:num_top_to_consider]
+                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+                # predicate = True
+        else:
+            predicate = True
+            #  predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+            # predicate = True
         if predicate:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
-            #TODO: keep all children past a certain height?
             # if child.index in top_n_children:
             #     backprop_win = True
             # else:
@@ -500,8 +567,10 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
             top_children_indexes = get_top_children(NN_output)
             update_child(new_root, NN_output, top_children_indexes,
                          len(new_root_parent.children))  # update prior values on the node NOTE: never a game over
-            print("PRUNING INVESTIGATION: new root's probability = %{}".format((100 - new_root.wins) / 100),
-                  file=sim_info.file)
+            rank = list(top_children_indexes).index(new_root.index)
+            print("PRUNING INVESTIGATION: new root's probability = %{prob} Rank = {rank}".format(
+                prob=((new_root.UCT_multiplier - 1) * 100), rank=rank + 1),
+                file=sim_info.file)
             new_root_parent.children = [new_root]
 
         else: #now expanded with some children; check if new root is one of them
@@ -526,14 +595,16 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
                 top_children_indexes = get_top_children(NN_output)
                 update_child(new_root, NN_output, top_children_indexes,
                              len(new_root_parent.children))  # update prior values on the node NOTE: never a game over
-                print("PRUNING INVESTIGATION: new root's probability = %{}".format((100 - new_root.wins) ),
-                      file=sim_info.file)
+                rank = list(top_children_indexes).index(new_root.index)
+                print("PRUNING INVESTIGATION: new root's probability = %{prob} Rank = {rank}".format(
+                    prob=((new_root.UCT_multiplier - 1) * 100), rank=rank + 1),
+                    file=sim_info.file)
                 new_root_parent.children.append(new_root) #attach new root to parent
             else:
                 new_root = duplicate_child
 
     else:#has kids but new_root wasn't in them.
-        print("Pruning investigation: New root's parent still did not have the actual new root after expansion",
+        print("Pruning investigation: New root's parent did not have new root after initial expansion",
               file=sim_info.file)
         new_root_index = index_lookup_by_move(new_root_as_move)
         new_root = TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
@@ -542,8 +613,10 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
         top_children_indexes = get_top_children(NN_output)
         update_child(new_root, NN_output, top_children_indexes,
                      len(new_root_parent.children))  # update prior values on the node NOTE: never a game over
-        print("PRUNING INVESTIGATION: new root's probability = %{}".format((100-new_root.wins)),
-              file=sim_info.file)
+        rank = list(top_children_indexes).index(new_root.index)
+        print("PRUNING INVESTIGATION: new root's probability = %{prob} Rank = {rank}".format(
+            prob=((new_root.UCT_multiplier - 1) * 100), rank=rank + 1),
+            file=sim_info.file)
         new_root_parent.children.append(new_root)  # attach new root to parent
 
     backpropagate_num_checked_children(new_root_parent, True)

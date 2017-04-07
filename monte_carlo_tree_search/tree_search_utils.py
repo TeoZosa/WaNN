@@ -184,48 +184,62 @@ def check_for_forced_win(node_children, game_num):
 
 def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
     best, best_val = get_best_child(node_children, game_num)
-    scaling_strength = 1+(game_num/50) #TODO: increase as a function of game_num? more games => stronger scaling strength since we can more safely ignore NN predictions?
+    scaling_handicap = 1+(game_num/50) #TODO: increase as a function of game_num? more games => stronger scaling strength since we can more safely ignore NN predictions?
     # best, best_val = get_best_most_visited_child(node_children)
     best_nodes = []
     for child in node_children:  # find equally best children
-        if not child.win_status == True: #only consider children who will not lead to a win for opponent
+        NN_scaling_factor = 1  # ((child.UCT_multiplier-1)/scaling_handicap)+1 #scale the probability
+        if not child.win_status == True:  # only consider children who will not lead to a win for opponent
             if child.visits > 0:
-                NN_scaling_factor = child.UCT_multiplier/scaling_strength
-                child_win_rate = (child.wins / child.visits)/NN_scaling_factor#keep a bias towards policy net's prediction
-                if child_win_rate == best_val:
+                child_NN_scaled__win_rate = NN_scaling_factor * ((child.visits - child.wins) / child.visits)
+                if child_NN_scaled__win_rate == best_val:
                     if best.visits == child.visits:
                         best_nodes.append(child)
                         # should now have list of equally best children
-    if len(best_nodes) == 0: #all children are winners => checkmated, just make the best move you have
+    if len(best_nodes) == 0:  # all children are winners => checkmated, just make the best move you have
         best_nodes.append(best)
     return best_nodes
 
 def get_best_child(node_children, game_num):
+    scaling_handicap = 1+(game_num/50)
+    overwhelming_amount = 999999
     k = 0
-    scaling_strength = 1+(game_num/50)
-    while node_children[k].visits <=0 and k < len(node_children):
-        k+= 1
+    while node_children[k].visits <= 0 and k < len(node_children):
+        k += 1
     if k < len(node_children):
         best = node_children[k]
-        NN_scaling_factor  = node_children[k].UCT_multiplier/scaling_strength
-        best_val = (node_children[k].wins / node_children[k].visits)/NN_scaling_factor #keep a bias towards policy net's prediction
+        NN_scaling_factor = 1  # ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
+        best_val_NN_scaled = NN_scaling_factor * (
+        (node_children[k].visits - node_children[k].wins) / node_children[k].visits)
         for i in range(k, len(node_children)):  # find best child
             child = node_children[i]
-            NN_scaling_factor = child.UCT_multiplier/scaling_strength
+            NN_scaling_factor = 1  # ((child.UCT_multiplier-1)/scaling_handicap)+1
+
+            best_loss_rate = (best.visits - best.wins) / best.visits
             if child.visits > 0:
-                child_win_rate = (child.wins / child.visits)/NN_scaling_factor#keep a bias towards policy net's prediction
-                if child_win_rate < best_val:  # get the child with the lowest win rate
-                    best = child
-                    best_val = child_win_rate
-                elif child_win_rate == best_val:  # if both have equal win rate (i.e. both 0/visits), get the one with the most visits
+                child_loss_rate = (child.visits - child.wins) / child.visits
+                child_NN_scaled_loss_rate = NN_scaling_factor * child_loss_rate
+                if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss rate
+                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount) or \
+                        (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
+                        (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
+                        ((child_loss_rate) - (best_loss_rate) >= .10):
+                        # if both have searched to game overs, (best case # 1)
+                        # if neither have searched to game overs,
+                        # if new child has searched to a gameover and current best hasn't (best case # 2)
+                        # if new child hasn't searched to a gameover, best has, but new child has a better loss-rate (i.e. current best has a lot of losses, new child looks better)
+                        best = child
+                        best_val_NN_scaled = child_NN_scaled_loss_rate
+
+                elif child_NN_scaled_loss_rate == best_val_NN_scaled:  # if both have equal win rate (i.e. both 0/visits), get the one with the most visits
                     if best.visits < child.visits:
                         best = child
-                        best_val = child_win_rate
+                        best_val_NN_scaled = child_NN_scaled_loss_rate
     else:
-        #no children with value? happens if search is too slow
+        # no children with value? happens if search is too slow
         best = random.sample(node_children, 1)[0]
-        best_val = 0
-    return best, best_val
+        best_val_NN_scaled = 0
+    return best, best_val_NN_scaled
 
 def get_best_most_visited_child(node_children):
     k = 0
@@ -278,6 +292,20 @@ def random_rollout(node):
     else:
         update_tree_wins(move, 1)
     return result
+
+def rollout(node_to_update, descendant_to_eval):
+    outcome, _ = evaluation_function(descendant_to_eval)
+    descendant_to_eval.rolled_out_from = True
+    if outcome == 1:
+        if node_to_update.color == descendant_to_eval.color: #future board where I am mover
+            update_tree_wins(node_to_update)
+        else:
+            update_tree_losses(node_to_update)
+    elif outcome == 0:#loss
+        if node_to_update.color == descendant_to_eval.color: #future board where I am mover
+            update_tree_losses(node_to_update)
+        else:
+            update_tree_wins(node_to_update)
 
 def evaluation_function(root):
     # row 2:
@@ -408,80 +436,128 @@ def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=Fa
 
 def update_child(child, NN_output, top_children_indexes, num_legal_children):
     child_val = NN_output[child.index]
-    # normalized_value = int(max(1,child_val  * 100))
-    # if child.index in top_children_indexes:  # weight top moves higher for exploitation
-    if top_children_indexes[0] == child.index: #rank 1 child
-        child.parent.best_child = child #mark as node to expand first
-        # if child_val >= .90:
-        #     child_val *= 2
+
+    # if top_children_indexes[0] == child.index:  # rank 1 child
+    #     child.parent.best_child = child  # mark as node to expand first
+    # child_val *= 2
+    #     if child_val >= .90:
+    #         child_val =1.5
     #     else:
-    #         if child_val >.20:
-    #             child_val = max(child_val, .491780905081678) #sometimes it gets over confident
+    #         if child_val > .20:
+    #             child_val = max(child_val, .491780905081678)  # sometimes it gets under confident
     # elif top_children_indexes[1] == child.index:
     #     child_val = max(child_val, .18969851788510255)
     # elif top_children_indexes[2] == child.index:
-    #     child_val = max(child_val,.10004993248995586)
+    #     child_val = max(child_val, .10004993248995586)
     # elif top_children_indexes[3] == child.index:
-    #     child_val = max(child_val,.05907234751883528)
+    #     child_val = max(child_val, .05907234751883528)
     # elif top_children_indexes[4] == child.index:
-    #     child_val = max(child_val,.036425774953655967)
+    #     child_val = max(child_val, .036425774953655967)
     # elif top_children_indexes[5] == child.index:
-    #     child_val = max(child_val,.024950243991511947)
+    #     child_val = max(child_val, .024950243991511947)
     # elif top_children_indexes[6] == child.index:
-    #     child_val = max(child_val,.017902280093502234)
+    #     child_val = max(child_val, .017902280093502234)
     # elif top_children_indexes[7] == child.index:
-    #     child_val = max(child_val,.013378707110885424)
+    #     child_val = max(child_val, .013378707110885424)
     # elif top_children_indexes[8] == child.index:
-    #     child_val = max(child_val,.010220394763159517)
+    #     child_val = max(child_val, .010220394763159517)
     # elif top_children_indexes[9] == child.index:
-    #     child_val = max(child_val,.008041201598780913)
-
-
+    #     child_val = max(child_val, .008041201598780913)
 
     normalized_value = int(child_val * 100)
 
-    #TODO: 03/15/2017 removed based on prof Lorentz input
-    child.UCT_multiplier  = 1 + child_val# stay close to policy (net) trajectory by biasing UCT selection of
-                                             # NN's top picks as a function of probability returned by NN
+    # TODO: 03/15/2017 removed based on prof Lorentz input
+    # if child.color == 'Black':
+    #     child.UCT_multiplier  = 1 + (child_val*2)# stay close to policy (net) trajectory by biasing UCT selection of
+    #                                      # NN's top picks as a function of probability returned by NN
+    # else:
+    #     child.UCT_multiplier = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selection of
+    #     # NN's top picks as a function of probability returned by NN
 
-    #TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
+    child.UCT_multiplier = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selection of
+    # NN's top picks as a function of probability returned by NN
+
+    # TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
     # i.e. if policy chooses child with 30% probability => 30/100 games
     # => randomly decide which of those 30 games are wins and which are losses
 
-    #TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
-    weighted_losses = normalized_value
-    weighted_wins = max(0, 100-weighted_losses)
+    # TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
+    prior_value_multiplier = 10
+    weighted_losses = normalized_value * prior_value_multiplier
+    child.visits = 100 * prior_value_multiplier
+    # weighted_wins = (child.visits-weighted_losses)
+    weighted_wins = ((
+                     child.visits - weighted_losses) ** 2) / child.visits  # may be a negative number if we are increasing probability
+    child.wins = weighted_wins
 
     # update_tree_wins(child, weighted_wins)
     # update_tree_losses(child, weighted_losses)
 
-    # num_top_to_consider = max(1, int(num_legal_children/2.5))
-    # num_winners = max(1, int(num_top_to_consider/2))
-    # num_losers = min (num_winners, num_top_to_consider)
-    # top_n_winners = top_children_indexes[:num_winners]
-    # top_n_losers = top_children_indexes[num_winners:num_losers]
+    #  num_top_to_consider = max(1, int(num_legal_children/2.5))
+    #  top_n_to_consider = top_children_indexes[:num_top_to_consider]
+    #  num_winners = max(1, int(num_top_to_consider/2))
+    #  num_losers = min (num_winners, num_top_to_consider)
+    #  top_n_winners = top_children_indexes[:num_winners]
+    #  top_n_losers = top_children_indexes[num_winners:num_losers]
     #
-    # #TODO: 03232017 based on prof lorentz input, only backprop a single win/loss value
-    # if child.index in top_n_winners:
-    #     update_tree_wins(child.parent, 1)
-    # elif child.index in top_n_losers:
-    #     update_tree_losses(child.parent, 1)
-    # child.visits = 100
-    # child.wins = weighted_wins
+    #  #TODO: 03232017 based on prof lorentz input, only backprop a single win/loss value
+    # #01_03242017move_EBFS MCTSvsWandererdepth1_ttt10Annealing_Multiplier_BackpropOnlyTopKids_singleDL is using this + predicate!
+    #  if child.index in top_n_winners:
+    #      update_tree_wins(child.parent, 1)
+    #  elif child.index in top_n_losers:
+    #      update_tree_losses(child.parent, 1)
 
-    # if child.height > 40 : #at this point, we are rolling out till EOG
-    #     child.visits = 100
-    #     child.wins = weighted_wins
-    # else: #if
-    #     child.visits = normalized_value #UCT needs max (1, visits) for log function
-    #     child.wins = normalized_value * random_rollout(child)
+    # if child.index in top_n_to_consider:
+    # outcome, _ = evaluation_function(child)
+    # if outcome == 1:
+    #     update_tree_losses(child.parent)
+    # else:
+    #     if child_val> .90:
+    #         amount = 1
+    #     else:
+    #         amount = 1
+    #     update_tree_wins(child.parent, amount)
 
-    #TODO: 03/25/2017 testing this on deep searches
-    # eval_child(child)
-    #else, EOG rollout will update wins/visits
-    child.visits = 100
-    child.wins = weighted_wins
+    # if child_val > .30:
+    #     update_tree_wins(child.parent)
+    # else:
+    #     update_tree_losses(child.parent)
+    # if child.height >= 60:
+    # random_prob = random.random()
+    random_prob = 1
+    if random_prob > .50:
+        rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
 
+
+        # child.visits = normalized_value
+        # child.wins = normalized_value * random_rollout(child)
+        # assert (child.visits >= child.wins)
+def random_to_depth_rollout(parent_to_update, depth=0): #bad because will not find every depth d child
+    descendant_to_eval = parent_to_update #this turns into child to rollout
+    descendant_exists = True
+    while depth > 0 and descendant_exists:
+        if descendant_to_eval.children is not None:
+            candidates = list(filter(lambda x: x.depth == depth, descendant_to_eval.children))
+            descendant_to_eval = random.sample(candidates, 1)[0]  # more MCTS-y.
+            depth -=1
+        else:
+            descendant_exists = False
+    if depth == 0 and not descendant_to_eval.rolled_out_from:
+        rollout(parent_to_update, descendant_to_eval)
+
+ #TODO: better to keep track of subtree height so we can randomly rollout which of the subtrees we know has depth d?
+
+def rollout_and_eval_if_parent_at_depth(descendant_to_eval, depth = 0): #bad because will find every depth d child
+    parent_to_update = descendant_to_eval #this turns into parent to update
+    parent_exists = True
+    while depth > 0 and parent_exists:
+        if parent_to_update.parent is not None:
+            parent_to_update = parent_to_update.parent
+            depth -=1
+        else:
+            parent_exists = False
+    if depth == 0 and not descendant_to_eval.rolled_out_from:
+        rollout(parent_to_update, descendant_to_eval)
 def eval_child(child):
     if child.height < 47:  # pre-rollout
         outcome, _ = evaluation_function(child)

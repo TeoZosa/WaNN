@@ -1,6 +1,6 @@
 from Breakthrough_Player.board_utils import print_board, move_piece, game_over, \
     initial_game_board, check_legality, generate_policy_net_moves, get_best_move, get_random_move, get_NN
-from monte_carlo_tree_search.MCTS import MCTS, NeuralNet
+from monte_carlo_tree_search.MCTS import MCTS, NeuralNetsCombined
 import sys
 import os
 from multiprocessing import  Process, pool, Pool
@@ -53,7 +53,7 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer)
     wanderer.log_file = sys.stdout
 
-    policy_net = NeuralNet()
+    policy_net = NeuralNetsCombined()
     computer_MCTS_tree = MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net)
     computer_MCTS_tree.game_num = game_num
     if root is not None:
@@ -111,7 +111,7 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
 
 
 def play_game(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=open(os.devnull, 'w')):
-    policy_net = NeuralNet()
+    policy_net = NeuralNetsCombined()
     computer_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
 
     print("Teo's Fabulous Breakthrough Player")
@@ -184,7 +184,7 @@ def get_human_move(game_board):
 
 def self_play_game(white_player, black_opponent, depth_limit, time_to_think, file_to_write=sys.stdout, MCTS_log_file=sys.stdout):
     #Initialize policy net; use single net instance for both players
-    policy_net = NeuralNet()
+    policy_net = NeuralNetsCombined()
 
     white_MCTS_tree = MCTS(depth_limit, time_to_think, white_player, MCTS_log_file, policy_net)
     black_MCTS_tree = MCTS(depth_limit, time_to_think, black_opponent, MCTS_log_file, policy_net)

@@ -4,7 +4,7 @@ import tensorflow as tf
 import os
 import random
 import h5py
-from monte_carlo_tree_search.MCTS import MCTS, NeuralNet
+from monte_carlo_tree_search.MCTS import MCTS, NeuralNetsCombined, NeuralNet
 from tools import utils
 
 def load_examples_and_labels(path):
@@ -19,13 +19,13 @@ def load_examples_and_labels(path):
 
 
 
-def print_prediction_statistics(examples, labels, file_to_write, policy_net):
+def print_prediction_statistics(examples, labels, file_to_write, policy_net, color=None):
     correct_prediction_position = [0] * 155
     correct_rank_count = []
     not_in_top_10 = 0
 
     num_top_moves = 10
-    labels_predictions = policy_net.evaluate(examples, already_converted=True)
+    labels_predictions = policy_net.evaluate(examples, color, already_converted=True)
     for example_num in range (0, len(labels_predictions)):
         correct_move_index = np.argmax(labels[example_num])
         predicted_move_index = np.argmax(labels_predictions[example_num])
@@ -104,10 +104,26 @@ def print_prediction_statistics(examples, labels, file_to_write, policy_net):
     #     y_act_white=utils.move_lookup_by_index(correct_move_index, 'White'),
     #     y_act_black=utils.move_lookup_by_index(correct_move_index, 'Black')),
     #     end="\n", file=file_to_write)
-policy_net = NeuralNet()
-for game_stage in ['1stThird', '2ndThird', '3rdThird', 'AllThird']:
-    input_path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}{game_stage}'.format(features='POE', net_type='PolicyNet', game_stage=game_stage)
-    training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
-    # training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, 16384)
-    with open(os.path.join(r'..', r'policy_net_model', r'metrics', '03242017PolicyNetPredictionMetrics{}.txt'.format(game_stage)), 'w') as output_file:
-        print_prediction_statistics(training_examples, training_labels, output_file, policy_net)
+
+dual_nets = True
+
+if dual_nets:
+    policy_net = NeuralNetsCombined()
+    for color in ['White', 'Black']:
+        for game_stage in ['1stThird', '2ndThird', '3rdThird', 'AllThird']:
+            input_path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}{game_stage}{color}'.format(features='POE', net_type='PolicyNet', game_stage=game_stage, color=color)
+            training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
+            # training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, 16384)
+            with open(os.path.join(r'..', r'policy_net_model', r'metrics', '04102017PolicyNetPredictionMetrics{game_stage}{color}.txt'.format(game_stage=game_stage, color=color)), 'w') as output_file:
+                print_prediction_statistics(training_examples, training_labels, output_file, policy_net, color)
+
+else:
+    policy_net = NeuralNet
+    for game_stage in ['1stThird', '2ndThird', '3rdThird', 'AllThird']:
+        input_path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}{game_stage}'.format(
+            features='POE', net_type='PolicyNet', game_stage=game_stage)
+        training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
+        # training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, 16384)
+        with open(os.path.join(r'..', r'policy_net_model', r'metrics',
+                               '04102017PolicyNetPredictionMetrics{}.txt'.format(game_stage)), 'w') as output_file:
+            print_prediction_statistics(training_examples, training_labels, output_file, policy_net)

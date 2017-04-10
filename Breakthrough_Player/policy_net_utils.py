@@ -13,15 +13,6 @@ def call_policy_net(board_representation):#Deprecated: instantiate session direc
         predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
     return predicted_moves
 
-def call_policy_net_both(board_representation):#Deprecated: instantiate session directly and call inside of NeuralNet Class
-    reset_default_graph()#TODO: keep policy net open for entire game instead of opening it on every move
-
-    sess, y_pred, X = instantiate_session()
-    if isinstance(board_representation, list):  # batch of positions to evaluate
-        predicted_moves = sess.run(y_pred, feed_dict={X: board_representation})
-    else: #just one position
-        predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
-    return predicted_moves
 
 def instantiate_session_both():#todo: return the graph as well in case we want to run multiple NNs in the same session?
     reset_default_graph()

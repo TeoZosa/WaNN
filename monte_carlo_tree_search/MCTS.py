@@ -68,11 +68,11 @@ class MCTS(object):
         return move
 
 
-class NeuralNet():
+class NeuralNetsCombined():
 
-    #initialize the Neural Net (only 1 as of 03/10/2017)
+    #initialize the Neural Net (Only works with combined net for now)
     def __init__(self):
-        self.sess, self.output_white, self.input_white, self.output_black, self.input_black= get_NN()
+        self.sess, self.output_white, self.input_white, self.output_black, self.input_black= get_NN(separate=True)
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):
@@ -84,11 +84,12 @@ class NeuralNet():
                                      game_nodes]
         else:
             board_representations = game_nodes
-        node_color = game_nodes[0].color
+        if player_color is None and not already_converted:
+            player_color = game_nodes[0].color
         batch_size = 16384
         inference_batches = batch_split_no_labels(board_representations, batch_size)
         output = []
-        if node_color == 'White':
+        if player_color == 'White':
             y_pred = self.output_white
             X = self.input_white
         else:
@@ -109,33 +110,33 @@ class NeuralNet():
     def __exit__(self, exc_type, exc_value, traceback):
         self.sess.close()
 
-# class NeuralNet():
-#
-#     #initialize the Neural Net (only 1 as of 03/10/2017)
-#     def __init__(self):
-#         self.sess, self.output_white, self.input_black = get_NN()
-#
-#     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
-#     def evaluate(self, game_nodes, player_color=None, already_converted=False):
-#         if not already_converted:
-#             if player_color is not None: #1 board + 1 color from direct policy net call
-#                 board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
-#             else:
-#                 board_representations = [convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in
-#                                      game_nodes]
-#         else:
-#             board_representations = game_nodes
-#         batch_size = 16384
-#         inference_batches = batch_split_no_labels(board_representations, batch_size)
-#         output = []
-#         for batch in inference_batches:
-#             predicted_moves = self.sess.run(self.output_white, feed_dict={self.input_black: batch})
-#             output.extend(predicted_moves)
-#         return output
-#
-#     def __enter__(self):
-#         return self
-#
-#     #close the tensorflow session when we are done.
-#     def __exit__(self, exc_type, exc_value, traceback):
-#         self.sess.close()
+class NeuralNet():
+
+    #initialize the Neural Net (only 1 as of 03/10/2017)
+    def __init__(self):
+        self.sess, self.output_white, self.input_black = get_NN(separate=False)
+
+    #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
+    def evaluate(self, game_nodes, player_color=None, already_converted=False):
+        if not already_converted:
+            if player_color is not None: #1 board + 1 color from direct policy net call
+                board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
+            else:
+                board_representations = [convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in
+                                     game_nodes]
+        else:
+            board_representations = game_nodes
+        batch_size = 16384
+        inference_batches = batch_split_no_labels(board_representations, batch_size)
+        output = []
+        for batch in inference_batches:
+            predicted_moves = self.sess.run(self.output_white, feed_dict={self.input_black: batch})
+            output.extend(predicted_moves)
+        return output
+
+    def __enter__(self):
+        return self
+
+    #close the tensorflow session when we are done.
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.sess.close()

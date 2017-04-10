@@ -38,10 +38,17 @@ def SelfPlayLogsToDataStructures():
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough3',
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4'
   ]
+  paths_april = [
+    r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough0',
+    r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough2',
+    r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough3',
+    r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough4',
+  ]
   processes = MyPool(processes=len(paths))
   processes.map_async(convertLog.driver, paths)#map processes to arg lists
   processes.close()
   processes.join()
+  # convertLog.driver(paths_april[0])
 
    
 def AggregateSelfPlayDataStructures():
@@ -75,28 +82,56 @@ def AggregateSelfPlayDataStructures():
     outputList.close()
 
 def self_play_data_structures_to_numpy():
-  path = r'G:\TruncatedLogs\PythonDataSets\DataStructures'
-  files = [
-           r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
-           r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
-           r'0806-0824selfPlayLogsBreakthrough4DataPython.p',
-           r'0824-1006selfPlayLogsBreakthrough1DataPython.p',
-           r'0824-1006selfPlayLogsBreakthrough2DataPython.p',
-           r'0824-1006selfPlayLogsBreakthrough3DataPython.p',
-           r'0824-1006selfPlayLogsBreakthrough4DataPython.p',
-           r'1018-1024selfPlayLogsBreakthrough1DataPython.p',
-           r'1018-1024selfPlayLogsBreakthrough2DataPython.p',
-           r'1018-1024selfPlayLogsBreakthrough3DataPython.p',
-           r'1018-1024selfPlayLogsBreakthrough4DataPython.p',
-           r'1024-1129selfPlayLogsBreakthrough1DataPython.p',
-           r'1024-1129selfPlayLogsBreakthrough2DataPython.p',
-           r'1024-1129selfPlayLogsBreakthrough3DataPython.p',
-           r'1024-1129selfPlayLogsBreakthrough4DataPython.p'
-           ]
-
-  # arg_lists = [[r'Self-Play', r'Policy', path, file] for file in files]
-  # processes = Pool(processes=len(arg_lists))
-  # processes.starmap_async(numpy_array.self_player_driver, arg_lists)#map processes to arg lists
-  # processes.close()
-  # processes.join()
-  numpy_array.self_player_driver(r'Self-Play', r'Policy', path, files[0])
+    for color in ['White', 'Black']:
+        for game_stage in ['All', '1st', '2nd', '3rd']:
+              path = r'G:\TruncatedLogs\PythonDataSets\DataStructures'
+              files = [
+                       r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
+                       r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
+                       r'0806-0824selfPlayLogsBreakthrough4DataPython.p',
+                       r'0824-1006selfPlayLogsBreakthrough1DataPython.p',
+                       r'0824-1006selfPlayLogsBreakthrough2DataPython.p',
+                       r'0824-1006selfPlayLogsBreakthrough3DataPython.p',
+                       r'0824-1006selfPlayLogsBreakthrough4DataPython.p',
+                       r'1018-1024selfPlayLogsBreakthrough1DataPython.p',
+                       r'1018-1024selfPlayLogsBreakthrough2DataPython.p',
+                       r'1018-1024selfPlayLogsBreakthrough3DataPython.p',
+                       r'1018-1024selfPlayLogsBreakthrough4DataPython.p',
+                       r'1024-1129selfPlayLogsBreakthrough1DataPython.p',
+                       r'1024-1129selfPlayLogsBreakthrough2DataPython.p',
+                       r'1024-1129selfPlayLogsBreakthrough3DataPython.p',
+                       r'1024-1129selfPlayLogsBreakthrough4DataPython.p'
+                       ]
+              files_april = [
+                  r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
+                  r'0802-0805selfPlayLogsWorkstationxxDataPython.p',
+                  r'0806-0824selfPlayLogsBreakthrough4DataPython.p',
+                  r'0824-1006selfPlayLogsBreakthrough1DataPython.p',
+                  r'0824-1006selfPlayLogsBreakthrough2DataPython.p',
+                  r'0824-1006selfPlayLogsBreakthrough3DataPython.p',
+                  r'0824-1006selfPlayLogsBreakthrough4DataPython.p',
+                  r'1018-1024selfPlayLogsBreakthrough1DataPython.p',
+                  r'1018-1024selfPlayLogsBreakthrough2DataPython.p',
+                  r'1018-1024selfPlayLogsBreakthrough3DataPython.p',
+                  r'1018-1024selfPlayLogsBreakthrough4DataPython.p',
+                  r'1024-1129selfPlayLogsBreakthrough1DataPython.p',
+                  r'1024-1129selfPlayLogsBreakthrough2DataPython.p',
+                  r'1024-1129selfPlayLogsBreakthrough3DataPython.p',
+                  r'1024-1129selfPlayLogsBreakthrough4DataPython.p',
+                  r'03xx17-040717selfPlayLogsBreakthrough0DataPython.p',
+                  r'03xx17-040717selfPlayLogsBreakthrough2DataPython.p',
+                  r'03xx17-040717selfPlayLogsBreakthrough3DataPython.p',
+                  r'03xx17-040717selfPlayLogsBreakthrough4DataPython.p'
+              ]
+              # color='Black'
+              # color = 'White'
+              #   game_stage = 'All'
+                # game_stage = '1st'
+                # game_stage = '2nd'
+                # game_stage = '3rd'
+              arg_lists = [[r'Self-Play', r'Policy', path, file, game_stage, color] for file in files_april]
+              processes = Pool(processes=len(arg_lists))
+              processes.starmap_async(numpy_array.self_player_driver, arg_lists)#map processes to arg lists
+              processes.close()
+              processes.join()
+              # numpy_array.self_player_driver(r'Self-Play', r'Policy', path, files[0])

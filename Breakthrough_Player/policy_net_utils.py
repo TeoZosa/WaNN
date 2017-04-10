@@ -13,14 +13,71 @@ def call_policy_net(board_representation):#Deprecated: instantiate session direc
         predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
     return predicted_moves
 
-def instantiate_session():#todo: return the graph as well in case we want to run multiple NNs in the same session?
+def call_policy_net_both(board_representation):#Deprecated: instantiate session directly and call inside of NeuralNet Class
+    reset_default_graph()#TODO: keep policy net open for entire game instead of opening it on every move
+
+    sess, y_pred, X = instantiate_session()
+    if isinstance(board_representation, list):  # batch of positions to evaluate
+        predicted_moves = sess.run(y_pred, feed_dict={X: board_representation})
+    else: #just one position
+        predicted_moves = sess.run(y_pred, feed_dict={X: [board_representation]})
+    return predicted_moves
+
+def instantiate_session_both():#todo: return the graph as well in case we want to run multiple NNs in the same session?
     reset_default_graph()
+
+    with tf.variable_scope('black_net', reuse=False):
+        y_pred_black, X_black = build_policy_net()
+    with tf.variable_scope('white_net', reuse=False):
+        y_pred_white, X_white = build_policy_net()
+    NUM_CORES = multiprocessing.cpu_count()
+    sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
+                   intra_op_parallelism_threads=NUM_CORES))
+
+    saver = tf.train.Saver()
+    path = os.path.join(r'..',r'policy_net_model',  r'combined_policy_nets', r'4')
+    saver.restore(sess, path)
+
+    return sess, y_pred_white, X_white, y_pred_black, X_black
+
+
+def instantiate_session():  # todo: return the graph as well in case we want to run multiple NNs in the same session?
+    reset_default_graph()
+
     y_pred, X = build_policy_net()
     saver = tf.train.Saver()
     path = os.path.join(r'..', r'policy_net_model', r'model')
     NUM_CORES = multiprocessing.cpu_count()
     sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
-                   intra_op_parallelism_threads=NUM_CORES))
+                                            intra_op_parallelism_threads=NUM_CORES))
+    saver.restore(sess, path)
+    # tf.train.write_graph(sess.graph_def, 'cppModels/', 'policyNet.pb', as_text=False)
+    # tf.python.framework.graph_util.convert_variables_to_constants(sess, sess.graph.as_graph_def(), y_pred.name)
+    return sess, y_pred, X
+
+def instantiate_session_white():  # todo: return the graph as well in case we want to run multiple NNs in the same session?
+    reset_default_graph()
+    with tf.variable_scope('white_net', reuse=False):
+       y_pred, X = build_policy_net()
+    saver = tf.train.Saver()
+    path = os.path.join(r'..', r'policy_net_model', r'white_policy_net', r'4')
+    NUM_CORES = multiprocessing.cpu_count()
+    sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
+                                            intra_op_parallelism_threads=NUM_CORES))
+    saver.restore(sess, path)
+    # tf.train.write_graph(sess.graph_def, 'cppModels/', 'policyNet.pb', as_text=False)
+    # tf.python.framework.graph_util.convert_variables_to_constants(sess, sess.graph.as_graph_def(), y_pred.name)
+    return sess, y_pred, X
+
+def instantiate_session_black():  # todo: return the graph as well in case we want to run multiple NNs in the same session?
+    reset_default_graph()
+    with tf.variable_scope('black_net', reuse=False):
+        y_pred, X = build_policy_net()
+    saver = tf.train.Saver()
+    path = os.path.join(r'..', r'policy_net_model', r'black_policy_net', r'BLACK_Policy_Net')
+    NUM_CORES = multiprocessing.cpu_count()
+    sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
+                                            intra_op_parallelism_threads=NUM_CORES))
     saver.restore(sess, path)
     # tf.train.write_graph(sess.graph_def, 'cppModels/', 'policyNet.pb', as_text=False)
     # tf.python.framework.graph_util.convert_variables_to_constants(sess, sess.graph.as_graph_def(), y_pred.name)

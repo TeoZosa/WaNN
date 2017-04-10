@@ -383,7 +383,7 @@ def output_layer_init(layer_in, name='output_layer', reuse=None):
         return unscaled_output, kernel
 
 def loss(output_layer, labels):
-    with tf.name_scope("loss"):
+    with tf.name_scope("loss_init"):
         losses = tf.nn.softmax_cross_entropy_with_logits(outer_layer, labels)
         loss = tf.reduce_mean(losses)
 
@@ -519,8 +519,8 @@ for num_hidden in [i for i in range(12,13)]:
                                        y: y_valid
                                        })
                         print("Loss: {}".format(loss), end="\n", file=file)
-                        # print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
-                        # print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
+                        # print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss_init))), end="\n", file=file)
+                        # print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss_init))), end="\n", file=file)
                         print('Interval {interval} of 10 Accuracy: {accuracy}'.format(
                             interval=(i+1)//(len(X_train_batches)//10),
                             accuracy=accuracy_score), end="\n", file=file)

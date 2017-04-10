@@ -6,7 +6,7 @@ import copy
 import math
 from multiprocessing import Pool
 from tools import utils
-from Breakthrough_Player import  breakthrough_player #for enumerating possible moves
+from Breakthrough_Player.board_utils import enumerate_legal_moves
 
 def driver(path):
     player_list = process_directory_of_breakthrough_files_multithread(path)
@@ -204,10 +204,10 @@ def convert_board_states_to_arrays(board_states, player_color):
     new_board_states['PlayerPOV'] = []
     for state in states:
         new_board_states['States'].append(
-            convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(state, player_color, False))  # These can be inputs to value net
+            convert_board_to_1d_array_POEB(state, player_color))  # These can be inputs to value net
     for POV_state in POV_states:
         new_board_states['PlayerPOV'].append(
-            convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(POV_state, player_color, True))  # These can be inputs to policy net
+            convert_board_to_1d_array_POEB(POV_state, player_color))  # These can be inputs to policy net
     return new_board_states
 
 '''Feature Planes:
@@ -368,10 +368,10 @@ def mark_all_possible_moves(state, player_color):
     #we can't do the naive solution and specify a plane of 3 distinct values, for each move (amount of moves isn't constant);
     # maybe set some upper bound on # moves (i.e. 16 x 3 = 48) and if <48, just leave them empty (plane of 0's)?
     #not feasible using binary planes since we'd need 2 boards per move (1 for move to, 1 for move from)  => 96 planes
-    #not worth the information loss vs specifying a plane per transition
+    #not worth the information loss_init vs specifying a plane per transition
 
     #specifying a plane of 1's or 0's for each of the 155 transitions is also not feasible (would PROBABLY require too much data)
-    legal_moves = breakthrough_player.enumerate_legal_moves(state, player_color)
+    legal_moves = enumerate_legal_moves(state, player_color)
     board_with_moves = copy.deepcopy(state)# edit copy of board_state
     for move in legal_moves:
         _from = move['From']
@@ -502,7 +502,7 @@ def reflect_board_state(state):  # since black needs to have a POV representatio
 def mirror_board_state(state):  # helper method for reflect_board_state
     mirror_state_with_win = copy.deepcopy(state)  # edit copy of board_state
     mirror_state = mirror_state_with_win[0]
-    state = state[0]  # the board state; state[1] is the win or loss value, state [2] is the transition vector
+    state = state[0]  # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
     is_white_index = 9
     white_move_index = 10
     for row in sorted(state):

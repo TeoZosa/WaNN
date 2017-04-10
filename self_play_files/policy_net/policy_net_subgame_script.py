@@ -7,19 +7,10 @@ from __future__ import print_function
 import matplotlib.pyplot as plot
 import numpy as np
 import pandas as pd
-import  pprint
 import tensorflow as tf
-from tensorflow.contrib import learn
-from tensorflow.python.ops import nn
-from tensorflow.python.framework import dtypes
-from sklearn import model_selection, metrics, grid_search, datasets
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
+from sklearn import model_selection
 from sklearn.utils import shuffle
-from sklearn.learning_curve import learning_curve, validation_curve
-from tensorflow.contrib.learn.python.learn.estimators import run_config
 import time
-from scipy import stats ,integrate
 import seaborn as sns
 from tools import utils
 import h5py
@@ -28,7 +19,7 @@ from PIL import Image
 import random
 from tensorflow.python.framework.ops import reset_default_graph
 import sys
-import pickle
+import multiprocessing
 
 sns.set(color_codes=True)
 
@@ -131,7 +122,7 @@ def assign_path(deviceName ='Workstation'):
     elif deviceName == 'MBP2011':
        path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}AllThird'.format(features='POE', net_type='PolicyNet')
+        path =r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}AllThirdBlack'.format(features='POE', net_type='PolicyNet')
     else:
         path = ''#todo:error checking
     return path
@@ -214,7 +205,7 @@ def output_layer_init(layer_in, name='output_layer', reuse=None):
 def loss(output_layer, labels):
     with tf.variable_scope("cross_entropy"):
         losses = tf.nn.softmax_cross_entropy_with_logits(logits=output_layer, labels=labels)
-        # loss = tf.reduce_mean(losses)
+        # loss_init = tf.reduce_mean(losses)
         tf.summary.histogram('cross_entropy', losses)
     return losses
 
@@ -301,60 +292,60 @@ def print_prediction_statistics(examples, labels, file_to_write):
         y_act_black=utils.move_lookup_by_index(correct_move_index, 'Black')),
         end="\n", file=file_to_write)
 
-    correct_prediction_position = [0] * 155
-    not_in_top_10 = 0
-    labels_predictions = sess.run(y_pred, feed_dict={X: examples})
-    with tf.name_scope('partition_probability_difference'):
-        for example_num in range(0, len(labels_predictions)):
-            correct_move_index = np.argmax(labels[example_num])
-            predicted_move_index = np.argmax(labels_predictions[example_num])
-            top_n_indexes = sorted(range(len(labels_predictions[example_num])),
-                                   key=lambda i: labels_predictions[example_num][i], reverse=True)[
-                            :
-                            # num_top_moves
-                            ]
-            if (correct_move_index in top_n_indexes):
-                rank_in_prediction = top_n_indexes.index(correct_move_index)  # 0 indexed
-                correct_prediction_position[rank_in_prediction] += 1
-                correct_move_predicted_prob = labels_predictions[example_num][correct_move_index] * 100
-
-                if correct_move_index != predicted_move_index:
-                    print("Incorrect prediction. Correct move was ranked {}".format(rank_in_prediction + 1),
-                          file=file_to_write)
-                    top_move_predicted_prob = labels_predictions[example_num][predicted_move_index] * 100
-                    difference = sess.run(tf.add(top_move_predicted_prob, - correct_move_predicted_prob))
-                    print("Predicted move probability = %{pred_prob}. \n"
-                          "Correct move probability = %{correct_prob}\n"
-                          "Difference = %{prob_diff}\n".format(pred_prob=top_move_predicted_prob,
-                                                               correct_prob=correct_move_predicted_prob,
-                                                               prob_diff=difference),
-                          file=file_to_write)
-                    in_top_n = True
-                    tf.summary.scalar('incorrect prediction: probability difference between top move and correct',difference)
-                    difference = tf.add(100, - correct_move_predicted_prob)
-                    tf.summary.scalar('incorrect prediction: predicted probability difference of correct move',difference)
-
-
-                else:
-                    difference = tf.add(100, - correct_move_predicted_prob)
-                    tf.summary.scalar('correct prediction: probability difference',difference)
-
-
-            else:
-                # rank_in_prediction = in_top_n = False
-                not_in_top_10 += 1
-
-    total_predictions = sum(correct_prediction_position) + not_in_top_10
-    percent_in_top = 0
-    for i in range(0, len(correct_prediction_position)):
-        rank_percent = (correct_prediction_position[i] * 100) / total_predictions
-        print("Correct move was in predicted rank {num} slot = %{percent}".format(num=i + 1, percent=rank_percent),
-              file=file_to_write)
-        percent_in_top += rank_percent
-        print("Percent in top {num} predictions = %{percent}\n".format(num=i + 1, percent=percent_in_top),
-              file=file_to_write)
-    print("Percentage of time not in predictions = {}".format((not_in_top_10 * 100) / total_predictions),
-          file=file_to_write)
+    # correct_prediction_position = [0] * 155
+    # not_in_top_10 = 0
+    # labels_predictions = sess.run(y_pred, feed_dict={X: examples})
+    # with tf.name_scope('partition_probability_difference'):
+    #     for example_num in range(0, len(labels_predictions)):
+    #         correct_move_index = np.argmax(labels[example_num])
+    #         predicted_move_index = np.argmax(labels_predictions[example_num])
+    #         top_n_indexes = sorted(range(len(labels_predictions[example_num])),
+    #                                key=lambda i: labels_predictions[example_num][i], reverse=True)[
+    #                         :
+    #                         # num_top_moves
+    #                         ]
+    #         if (correct_move_index in top_n_indexes):
+    #             rank_in_prediction = top_n_indexes.index(correct_move_index)  # 0 indexed
+    #             correct_prediction_position[rank_in_prediction] += 1
+    #             correct_move_predicted_prob = labels_predictions[example_num][correct_move_index] * 100
+    #
+    #             if correct_move_index != predicted_move_index:
+    #                 print("Incorrect prediction. Correct move was ranked {}".format(rank_in_prediction + 1),
+    #                       file=file_to_write)
+    #                 top_move_predicted_prob = labels_predictions[example_num][predicted_move_index] * 100
+    #                 difference = sess.run(tf.add(top_move_predicted_prob, - correct_move_predicted_prob))
+    #                 print("Predicted move probability = %{pred_prob}. \n"
+    #                       "Correct move probability = %{correct_prob}\n"
+    #                       "Difference = %{prob_diff}\n".format(pred_prob=top_move_predicted_prob,
+    #                                                            correct_prob=correct_move_predicted_prob,
+    #                                                            prob_diff=difference),
+    #                       file=file_to_write)
+    #                 in_top_n = True
+    #                 tf.summary.scalar('incorrect prediction: probability difference between top move and correct',difference)
+    #                 difference = tf.add(100, - correct_move_predicted_prob)
+    #                 tf.summary.scalar('incorrect prediction: predicted probability difference of correct move',difference)
+    #
+    #
+    #             else:
+    #                 difference = tf.add(100, - correct_move_predicted_prob)
+    #                 tf.summary.scalar('correct prediction: probability difference',difference)
+    #
+    #
+    #         else:
+    #             # rank_in_prediction = in_top_n = False
+    #             not_in_top_10 += 1
+    #
+    # total_predictions = sum(correct_prediction_position) + not_in_top_10
+    # percent_in_top = 0
+    # for i in range(0, len(correct_prediction_position)):
+    #     rank_percent = (correct_prediction_position[i] * 100) / total_predictions
+    #     print("Correct move was in predicted rank {num} slot = %{percent}".format(num=i + 1, percent=rank_percent),
+    #           file=file_to_write)
+    #     percent_in_top += rank_percent
+    #     print("Percent in top {num} predictions = %{percent}\n".format(num=i + 1, percent=percent_in_top),
+    #           file=file_to_write)
+    # print("Percentage of time not in predictions = {}".format((not_in_top_10 * 100) / total_predictions),
+    #       file=file_to_write)
 
 
 def print_partition_statistics(examples, labels, partition, file):
@@ -368,7 +359,7 @@ def print_partition_statistics(examples, labels, partition, file):
 # config = run_config.RunConfig(num_cores=-1)
 input_path = assign_path()
 device = assign_device(input_path)
-game_stage = input_path[-8:]#ex. 1stThird
+game_stage = input_path[-13:-5]#ex. 1stThird
 net_type = get_net_type(game_stage)
 
 #for experiment with states from entire games, test data are totally separate games
@@ -407,17 +398,19 @@ else:
 for num_hidden in [i for i in [4]
                    # range(1,10)
                    ]:
-    file = open(os.path.join(input_path,
-                             r'ExperimentLogs',
-                             game_stage + '03222017192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)), 'a')
-    print("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
+
     for n_filters in [
                       #  64,
                       # 128,
-                      # 192,
+                      192,
                         # 256,
-                        512
+                        # 512
     ]:
+        file = open(os.path.join(input_path,
+                                 r'ExperimentLogs',
+                                 game_stage + '{n_filters}Filters{num_hidden}LayersTF_CE__He_weightsPOE.txt'.format(n_filters=n_filters,num_hidden=num_hidden)),
+                    'a')
+        print("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
         for learning_rate in [
             0.001,
             # 0.0011,
@@ -480,7 +473,9 @@ for num_hidden in [i for i in [4]
             #save the model
             saver = tf.train.Saver()
 
-            sess = tf.Session()
+            NUM_CORES = multiprocessing.cpu_count()
+            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
+                                                    intra_op_parallelism_threads=NUM_CORES))
 
             #tensorboard summaries
             merged = tf.summary.merge_all()
@@ -576,7 +571,7 @@ for num_hidden in [i for i in [4]
             save_path = saver.save(sess, os.path.join(input_path, r'model', str(num_hidden)))
 
             sess.close()
-file.close()
+        file.close()
 
 
 

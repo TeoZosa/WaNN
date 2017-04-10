@@ -197,7 +197,7 @@ def output_layer_init(layer_in, name='output_layer', reuse=None):
         return unscaled_output, kernel
 
 def loss(output_layer, labels):
-    with tf.name_scope("loss"):
+    with tf.name_scope("loss_init"):
         losses = tf.nn.softmax_cross_entropy_with_logits(outer_layer, labels)
         loss = tf.reduce_mean(losses)
 

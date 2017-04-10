@@ -86,13 +86,24 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     print("Game over. {} wins".format(winner_color), file=file_to_write)
     print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
 
+#TODO: consider permutations of winning subsequences? cut down on space/ have playbook. edit distance? as current subsequence gets farther from old subsequence, stop trying to match moves?
+
     final_policy_move = computer_MCTS_tree.selected_child
-    while final_policy_move.parent is not None:
+    while final_policy_move.parent is not None:#root doesn't need this updated so it's fine to not update after
+        if winner_color == WaNN_color:
+            final_policy_move.wins_down_this_tree +=1
+        else:
+            final_policy_move.losses_down_this_tree += 1
         final_policy_move = final_policy_move.parent
-    output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\FreshRootSearchAllFromRootAggressivePruningPrototype{}.p'.format(str(0)), 'wb')
-    # online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
-    pickle.dump(final_policy_move, output_file, protocol=pickle.HIGHEST_PROTOCOL)
-    output_file.close()
+
+    # output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\FreshRootTrueWinLossFieldBlackPrototype04082017{}.p'.format(str(0)), 'wb')
+    # # online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
+    # pickle.dump(final_policy_move, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+    # output_file.close()
+
+    # final_policy_move = computer_MCTS_tree.selected_child
+    # while final_policy_move.parent is not None:
+    #     final_policy_move = final_policy_move.parent
 
     if wanderer_MCTS_tree is not None:
         wanderer_MCTS_tree.policy_net.sendline('quit')

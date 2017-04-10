@@ -1,9 +1,9 @@
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, \
-    SimulationInfo, random_rollout, update_tree_losses, update_tree_wins
+    SimulationInfo, random_rollout
 from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, expand_descendants_to_depth_wrt_NN, init_new_root
 from tools.utils import move_lookup_by_index
-from Breakthrough_Player.board_utils import print_board, enumerate_legal_moves
+from Breakthrough_Player.board_utils import print_board, initial_game_board
 from time import time, sleep
 from sys import stdout
 from math import ceil
@@ -80,15 +80,15 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         # sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
         sim_info.game_num = game_num
         sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
-        if move_number == 0:
-            time_to_think = 60000
+        # if move_number == 0 or move_number == 1:
+        #     time_to_think = 60
         if root.height >= 60: #still missing forced wins
-            time_to_think = 60
+            time_to_think = 6000
         sim_info.time_to_think = time_to_think
 
 
         #TODO: prune the tree later once it gets too big? Does this matter since current search will only check a subtree without a win status?
-        # i.e. from height 60 (where all children are enumerated), if a node is a guaranteed loss for parent, remove?
+        # i.e. from height 60 (where all children are enumerated), if a node is a guaranteed loss_init for parent, remove?
         # ex if True, remove all but one loser child (since we only need one route to win)
         #if False
 
@@ -117,7 +117,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
                                 losing_children.append(child)
                         node.children = losing_children#some forced win
                         unvisited_queue.extend(losing_children)
-                        #note: this may be bad if path to loss is so long and you don't kkno
+                        #note: this may be bad if path to loss_init is so long and you don't kkno
                     # elif node.win_status is False: #pick one out of all of your losing children.
                     #     winning_child = None
                     #     for child in node.children:
@@ -143,6 +143,13 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
             pruning = True
         else:
             pruning = False
+
+        #
+        # if root.children is not None:
+        #     for child in root.children:
+        #         net_real_wins = child.wins_down_this_tree # - child.losses_down_this_tree
+        #         if net_real_wins > 0:
+        #             done = True
         async_NN_update_threads = ThreadPool(processes=3)
         # num_processes = 64
         # parallel_search_threads = ThreadPool(processes=num_processes)
@@ -175,24 +182,30 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         async_NN_update_threads.join()
         best_child = randomly_choose_a_winning_move(root, max(0, game_num))
 
-        if move_number == 0 and game_num > -1: #save each iteration. If training makes it worse, we can revert back to a better version and change search parameters.
-            output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\FreshRootSearchAllAfter60IterationPRIME{}.p'.format(str(game_num)), 'wb')
-            #online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
-            pickle.dump(root, output_file, protocol=pickle.HIGHEST_PROTOCOL)
-            output_file.close()
+        if (move_number == 0 or move_number == 1) and game_num > -1: #save each iteration. If training makes it worse, we can revert back to a better version and change search parameters.
+            top_root = root
+            while top_root.parent is not None:
+                top_root = top_root.parent
 
-        if done: #subtree checked or has a win status: prune off unnecessary subtrees after height 60
-            prune_red_herrings_from_parents_with_win_status(root)# note:
+            output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\0409201710secsDepth80_TrueWinLossFieldBlack{}.p'.format(str(game_num)), 'wb')
+            #online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
+            pickle.dump(top_root, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+            output_file.close()
+            print("done saving root in seconds = ")
+            print(search_time)
+
+        # if done: #subtree checked or has a win status: prune off unnecessary subtrees after height 60
+        #     prune_red_herrings_from_parents_with_win_status(root)# note:
 
         print_forced_win(root.win_status, sim_info)
         print("Time spent searching tree = {}".format(search_time), file=log_file)
+        print("Time spent searching tree = {}".format(search_time))
+
 
         best_move = get_best_move(best_child, player_color, move_number, aggressive=None)
         print_expansion_statistics(sim_info, time())
 
         print_best_move(player_color, best_move, sim_info)
-        print("done saving root in seconds = ")
-        print(search_time)
         print(best_move)
 
     return best_child, best_move #save this root to use next time
@@ -240,24 +253,34 @@ def assign_root_reinforcement_learning(game_board, player_color, previous_move, 
                 exit(-10)
             root = TreeNode(game_board, player_color, None, None, move_number)
     elif move_number == 1: #WaNN is black
-        root = None
-        if previous_move.children is not None:
-            for child in previous_move.children:  # check if we can reuse tree
-                if child.game_board == game_board:
-                    root = child
-                    print("Reused old tree", file=sim_info.file)
-                    break
-        if root is None:  # no subtree; append new subtree to old parent
+        if previous_move is None: #saving new board
+            print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info.file)
+            answer = input("WARNING: INITIALIZING A NEW BOARD TO BE SAVED, ENTER \'yes\' TO CONTINUE")
+            if answer.lower() != 'yes':
+                exit(-10)
+            previous_move = TreeNode(initial_game_board(), 'White', None, None, 0) #initialize a dummy start board state to get white's info
             root = init_new_root(last_opponent_move, game_board, player_color, previous_move, policy_net, sim_info,
                                  async_update_lock)
             print("Initialized and appended new subtree", file=sim_info.file)
+        else:
+            root = None
+            if previous_move.children is not None:
+                for child in previous_move.children:  # check if we can reuse tree
+                    if child.game_board == game_board:
+                        root = child
+                        print("Reused old tree", file=sim_info.file)
+                        break
+            if root is None:  # no subtree; append new subtree to old parent
+                root = init_new_root(last_opponent_move, game_board, player_color, previous_move, policy_net, sim_info,
+                                     async_update_lock)
+                print("Initialized and appended new subtree", file=sim_info.file)
 
-        if root.being_checked:  # if terminating threads didn't end correctly, clean this up on the way down.
-            root.being_checked = False
-        if root.threads_checking_node != 0:
-            root.threads_checking_node = 0
-        if root.children is None and not root.gameover:
-            root.expanded = False
+            if root.being_checked:  # if terminating threads didn't end correctly, clean this up on the way down.
+                root.being_checked = False
+            if root.threads_checking_node != 0:
+                root.threads_checking_node = 0
+            if root.children is None and not root.gameover:
+                root.expanded = False
 
     else:#should have some tree to reuse or append a new one
         root = None
@@ -337,6 +360,8 @@ def run_MCTS_with_expansions_simulation( #args
             return True # no need to keep searching the tree
         else:
             return False
+    else:
+        return True
 
 
     # if root.win_status is True: # if we have a guaranteed win, we are done

@@ -4,14 +4,19 @@ import numpy as np
 import sys
 import random
 import pandas as pd
-from Breakthrough_Player.policy_net_utils import call_policy_net, instantiate_session
+from Breakthrough_Player.policy_net_utils import call_policy_net, instantiate_session, instantiate_session_both, instantiate_session_black, instantiate_session_white
 
 def generate_policy_net_moves(game_board, player_color):
     board_representation = utils.convert_board_to_2d_matrix_POEB(game_board, player_color)
     return call_policy_net(board_representation)
 
-def get_NN():
-    return instantiate_session()
+def get_NN(player_color=None):
+    if player_color == 'White':
+        return instantiate_session_white()
+    elif player_color == 'Black':
+        return instantiate_session_black()
+    else:
+        return instantiate_session_both()
 
 def generate_policy_net_moves_batch(game_nodes, batch_size=16384):
 

@@ -378,7 +378,7 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
             # or if root, top3?
 
             if parent is sim_info.root:
-                num_top_to_consider = 3
+                num_top_to_consider = 1
                 top_n_children = top_children_indexes[:num_top_to_consider]
                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
             # elif parent.height in num_to_consider_dict.keys():
@@ -387,10 +387,10 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
 
             # 70-79
-            elif parent.height >= 70:
-                num_top_to_consider = 3
-                top_n_children = top_children_indexes[:num_top_to_consider]
-                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+            # elif parent.height >= 70:
+            #     num_top_to_consider = 3
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
 
             # 2?   65-69
             # elif parent.height < 70 and parent.height >= 65:
@@ -399,10 +399,10 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
 
             # 4?   60-64
-            elif parent.height < 65 and parent.height >= 60:
-                num_top_to_consider = 4  # else play with child val threshold?
-                top_n_children = top_children_indexes[:num_top_to_consider]
-                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+            # elif parent.height < 65 and parent.height >= 60:
+            #     num_top_to_consider = 4  # else play with child val threshold?
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
 
             # 7 or 4?   50-59
             # elif parent.height < 60 and parent.height >= 55:
@@ -411,10 +411,10 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
 
             # 3?   46-54
-            elif parent.height < 55 and parent.height >= 46:
-                num_top_to_consider = 4  # else play with child val threshold?
-                top_n_children = top_children_indexes[:num_top_to_consider]
-                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+            # elif parent.height < 55 and parent.height >= 46:
+            #     num_top_to_consider = 4  # else play with child val threshold?
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
 
             # 5    40-49
             # elif parent.height < 50 and parent.height >= 40:
@@ -423,10 +423,10 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
 
             # 2    30-39
-            elif parent.height < 40 and parent.height >= 30:
-                num_top_to_consider = 2  # else play with child val threshold?
-                top_n_children = top_children_indexes[:num_top_to_consider]
-                predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
+            # elif parent.height < 40 and parent.height >= 30:
+            #     num_top_to_consider = 2  # else play with child val threshold?
+            #     top_n_children = top_children_indexes[:num_top_to_consider]
+            #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
 
             # 2    20-29
             # elif parent.height < 30 and parent.height >= 20 and not parent.height < 20 :
@@ -485,7 +485,7 @@ def assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
                     prune_from_win_status(parent)
 
 
-def prune_from_win_status(node, height_cutoff = 600):
+def prune_from_win_status(node, height_cutoff = 0):
     unvisited_queue = [node]
     parent = node.parent
     while len(unvisited_queue) >0:
@@ -546,7 +546,6 @@ def init_child_node_and_board(child_as_move, parent_node):
     return TreeNode(child_board, child_color, child_index, parent_node, parent_node.height+1)
 
 def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_parent, policy_net, sim_info, lock): #online reinforcement learning if wanderer made a move that wasn't in the tree
-
 
 
 
@@ -620,7 +619,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
         new_root_parent.children.append(new_root)  # attach new root to parent
 
     backpropagate_num_checked_children(new_root_parent, True)
-    update_win_status_from_children(new_root_parent)
+    update_win_status_from_children(new_root_parent, new_subtree=True)
     return new_root
 
 def check_for_winning_move(child_node, rollout=False):

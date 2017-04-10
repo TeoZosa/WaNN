@@ -25,20 +25,20 @@ def write_np_array_to_disk(path, X, y, filterType, NNType):
         yVector = open(path + r'value_net_rank_binary/NPDataSets/WBPOE/yVectorByRankBinaryFeaturesWBPOEBiasNoZero.p', 'wb')
         pickle.dump(y, yVector)
     elif filterType == r'Self-Play':
-        h5f = h5py.File(path + r'POEBiasWhiteWinners.hdf5', 'w', driver='core')
+        h5f = h5py.File(path + r'POEB.hdf5', 'w', driver='core')
         h5f.create_dataset(r'X', data=X)
         h5f.create_dataset(r'y', data=y)
         h5f.close()
     else:
         print ("Error: You must specify a valid Filter")
 
-def filter_training_examples_and_labels(player_list, filter, NNType='ANN'):
+def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_stage='All', color='Both'):
     if filter == 'Win Ratio':
         training_data = filter_by_win_ratio(player_list)
     elif filter == 'Rank':
         training_data = filter_by_rank(player_list)
     elif filter == 'Self-Play':
-        training_data = filter_for_self_play(player_list, NNType)
+        training_data = filter_for_self_play(player_list, NNType, game_stage, color)
     else:
         training_data = None
         print('Invalid Filter Specified')
@@ -74,27 +74,38 @@ def filter_by_win_ratio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
-def filter_for_self_play(self_play_data, NNType, game_stage=None, percent=50):
+def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both', percent=50):
     training_data = []
+
     for self_play_log in self_play_data:
         i = 0
         for game in self_play_log['Games']:
-            if i%2 ==0:#white game:
+            if color == 'White': #train on all white games
+                color_to_filter = i % 2 == 0
+                win_filter = True
+            elif color =='Black': #only train on winning black games
+                color_to_filter = i % 2 == 1
+                win_filter = game['Win'] is True
+            else:
+                color_to_filter = True
+                win_filter = True
+
+            if color_to_filter:
                 i+=1
-                if game['Win'] is True:
+                if win_filter:
                     game_length = len(game['BoardStates']['PlayerPOV'])
-                    if game_stage == None:
+                    if game_stage == 'All':
                         start = 0
                         end = game_length
-                    elif game_stage == 'Start':
+                    elif game_stage == '1st':
                         # Start-Game Value Net
                         start = 0
                         end = math.floor(game_length / 3)
-                    elif game_stage == 'Mid':
+                    elif game_stage == '2nd':
                         # Mid-Game Value Net
                         start = math.floor(game_length / 3)
                         end = math.floor(game_length / 3) * 2
-                    elif game_stage == 'End':
+                    elif game_stage == '3rd':
                         # End-Game Value Net
                         start = math.floor(game_length / 3) * 2
                         end = game_length
@@ -114,7 +125,7 @@ def filter_for_self_play(self_play_data, NNType, game_stage=None, percent=50):
                     training_data.extend(mirror_states_random_subset)
             else:
                 i+=1
-    print('# of States for Self-Play {NNType} Net: {states}'.format(states=len(training_data), NNType=NNType))
+    print('# of States for Self-Play {NNType} Net Game Stage {game_stage}: {states}'.format(states=len(training_data), NNType=NNType, game_stage=game_stage))
     return training_data
 
 def split_data_to_training_examples_and_labels_for_CNN(array_to_split, NNType):
@@ -254,16 +265,17 @@ def assign_path(deviceName ='Workstation'):
         path = ''#todo:error checking
     return path
 
-def self_player_driver(filter, NNType, path, fileName):
+def self_player_driver(filter, NNType, path, fileName, game_stage='All', color='Both'):
     file = open(os.path.join(path, fileName), 'r+b')
     player_list = pickle.load(file)
     file.close()
-    for player in player_list:
-        for game in player['Games']:
-            if game['Win'] is True:
-               print(game['OriginalVisualizationURL'])
-               print(game['MirrorVisualizationURL'])
-    exit(-1)
-    training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType)
-    write_path = os.path.join(path,"NumpyArrays",'PolicyNet','POE','4DArraysHDF5(RxCxF)POE{NNType}NetAllThirdWhite'.format(NNType=NNType), fileName[0:-len(r'DataPython.p')])
+    # for player in player_list:
+    #     for game in player['Games']:
+    #         if game['Win'] is True:
+    #            print(game['OriginalVisualizationURL'])
+    #            print(game['MirrorVisualizationURL'])
+    # exit(-1)
+
+    training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType, game_stage, color)
+    write_path = os.path.join(path,"NumpyArrays",'PolicyNet','POE','4DArraysHDF5(RxCxF)POE{NNType}Net{game_stage}Third{color}'.format(NNType=NNType, game_stage=game_stage, color=color), fileName[0:-len(r'DataPython.p')])
     write_np_array_to_disk(write_path, training_examples, labels, filter, NNType)

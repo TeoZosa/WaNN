@@ -488,7 +488,7 @@ def convert_board_to_2d_matrix_POEB(game_board, player_color):
         # Note: not the same as mirror_board_state in self_play_logs_to_datastructures;
         def mirror_board_state(state):  # helper method for reflect_board_state
             mirror_state = copy.deepcopy(state)  # edit copy of board_state
-            # the board state; state[1] is the win or loss value, state [2] is the transition vector
+            # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
             is_white_index = 9
             white_move_index = 10
             for row in sorted(state):

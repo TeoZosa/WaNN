@@ -26,6 +26,10 @@ class TreeNode(object):
         self.rolled_out_from = False
         self.reexpanded = False
 
+        self.wins_down_this_tree = 0 #backprop a win down this tree
+        self.losses_down_this_tree = 0
+
+
 class NeuralNetInput(object):
     def __init__(self):
         self.samples = []

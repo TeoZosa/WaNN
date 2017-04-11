@@ -88,17 +88,47 @@ def choose_UCT_move(node, start_time, time_to_think):
 
 def choose_UCT_or_best_child(node, start_time, time_to_think):
     best = None  # shouldn't ever return None
-    if node.best_child is not None: #return best child if not already previously expanded
-        if node.best_child.visited is False and node.best_child.win_status is None:
-            best = node.best_child
-            if best.children is None:
-                best.threads_checking_node += 1
-        else:
+    # best = choose_best_true_winner(node.children)#todo: logs show white chooses ground truth over predicted choice
+    if best is None:
+        if node.best_child is not None: #return best child if not already previously expanded
+            if node.best_child.visited is False and node.best_child.win_status is None:
+                best = node.best_child
+                if best.children is None:
+                    best.threads_checking_node += 1
+            else:
+                best = find_best_UCT_child(node, start_time, time_to_think)
+            node.best_child.visited = True
+        elif node.children is not None: #if this node has children to choose from: should always happen
             best = find_best_UCT_child(node, start_time, time_to_think)
-        node.best_child.visited = True
-    elif node.children is not None: #if this node has children to choose from: should always happen
-        best = find_best_UCT_child(node, start_time, time_to_think)
     return best  # because a win for me = a loss_init for child
+
+def choose_best_true_winner(node_children):
+    best_nodes = []
+    best = None
+    if node_children is not None:
+        for child in node_children:
+            net_wins = child.wins_down_this_tree - child.losses_down_this_tree
+            if net_wins > 0:
+                best_nodes.append(child)
+
+        if len(best_nodes) > 0:
+            best_net_wins = best_nodes[0].wins_down_this_tree - best_nodes[0].losses_down_this_tree
+            best = best_nodes[0]
+
+            for potential_winner in best_nodes:  # get best
+                num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
+                if num_true_wins > best_net_wins:
+                    best_net_wins = num_true_wins
+                    best = potential_winner
+
+            for potential_winner in best_nodes:  # find another best with a higher win-rate
+                num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
+                if num_true_wins == best_net_wins and \
+                        ((potential_winner.visits - potential_winner.wins) / potential_winner.visits) >= (
+                        (best.visits - best.wins) / best.visits):
+                    best = potential_winner
+
+    return best
 
 def find_best_UCT_child(node, start_time, time_to_think):
     parent_visits = node.visits
@@ -187,50 +217,63 @@ def check_for_forced_win(node_children, game_num):
     return forced_win, guaranteed_children
 
 def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
-    best_nodes = []
-    for child in node_children:
-        net_wins = child.wins_down_this_tree - child.losses_down_this_tree
-        if net_wins > 0:
-            best_nodes.append(child)
 
-    if len(best_nodes) > 0:
-        best_net_wins = best_nodes[0].wins_down_this_tree - best_nodes[0].losses_down_this_tree
-        best = best_nodes[0]
-
-        for potential_winner in best_nodes: #get best
-            num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
-            if num_true_wins > best_net_wins:
-                best_net_wins = num_true_wins
-                best = potential_winner
+    best = choose_best_true_winner(node_children)
 
 
-        for potential_winner in best_nodes: #find another best with a higher win-rate
-            num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
-            if num_true_wins == best_net_wins and \
-                    ((potential_winner.visits - potential_winner.wins) / potential_winner.visits) >= ((best.visits - best.wins)/best.visits):
-                best = potential_winner
-        best_nodes = [best]#return the kid to check.
+    # for child in node_children:
+    #     net_wins = child.wins_down_this_tree - child.losses_down_this_tree
+    #     if net_wins > 0:
+    #         best_nodes.append(child)
+    #
+    # if len(best_nodes) > 0:
+    #     best_net_wins = best_nodes[0].wins_down_this_tree - best_nodes[0].losses_down_this_tree
+    #     best = best_nodes[0]
+    #
+    #     for potential_winner in best_nodes: #get best
+    #         num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
+    #         if num_true_wins > best_net_wins:
+    #             best_net_wins = num_true_wins
+    #             best = potential_winner
+    #
+    #
+    #     for potential_winner in best_nodes: #find another best with a higher win-rate
+    #         num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
+    #         if num_true_wins == best_net_wins and \
+    #                 ((potential_winner.visits - potential_winner.wins) / potential_winner.visits) >= ((best.visits - best.wins)/best.visits):
+    #             best = potential_winner
+    #     best_nodes = [best]#return the kid to check.
 
-    else:
+
+    if best is None:
         best, best_val = get_best_child(node_children, game_num)
-        scaling_handicap = 1+(game_num/100) #TODO: increase as a function of game_num? more games => stronger scaling strength since we can more safely ignore NN predictions?
+        scaling_handicap = 1/4#+(game_num/100) #TODO: increase as a function of game_num? more games => stronger scaling strength since we can more safely ignore NN predictions?
         # best, best_val = get_best_most_visited_child(node_children)
         best_nodes = []
         for child in node_children:  # find equally best children
+
             NN_scaling_factor =  ((child.UCT_multiplier-1)/scaling_handicap)+1 #scale the probability
+
+
             if not child.win_status == True:  # only consider children who will not lead to a win for opponent
                 if child.visits > 0:
-                    child_NN_scaled__win_rate = NN_scaling_factor * ((child.visits - child.wins) / child.visits)
+                    child_loss_rate = ((child.visits - child.wins) / child.visits)
+                    child_NN_scaled__win_rate = NN_scaling_factor * child_loss_rate
+                    # probability = (child.UCT_multiplier-1)
+                    # child_NN_scaled__win_rate = (probability + child_loss_rate)/(1+probability)
+
                     if child_NN_scaled__win_rate == best_val:
                         if best.visits == child.visits:
                             best_nodes.append(child)
                             # should now have list of equally best children
         if len(best_nodes) == 0:  # all children are winners => checkmated, just make the best move you have
             best_nodes.append(best)
+    else:
+        best_nodes = [best]
     return best_nodes
 
 def get_best_child(node_children, game_num):
-    scaling_handicap = 1+(game_num/100)
+    scaling_handicap = 1/4#+(game_num/100)
     overwhelming_amount = 999999
     k = 0
     while node_children[k].visits <= 0 and k < len(node_children):
@@ -238,16 +281,27 @@ def get_best_child(node_children, game_num):
     if k < len(node_children):
         best = node_children[k]
         NN_scaling_factor =  ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
-        best_val_NN_scaled = NN_scaling_factor * (
-        (node_children[k].visits - node_children[k].wins) / node_children[k].visits)
+        best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
+
+        best_val_NN_scaled = NN_scaling_factor * best_loss_rate
+
+        # probability = node_children[k].UCT_multiplier-1
+        # best_val_NN_scaled = (probability+ best_loss_rate)/(1+probability)
+
         for i in range(k, len(node_children)):  # find best child
             child = node_children[i]
             NN_scaling_factor = ((child.UCT_multiplier-1)/scaling_handicap)+1
 
-            best_loss_rate = (best.visits - best.wins) / best.visits
             if child.visits > 0:
+                best_loss_rate = (best.visits - best.wins) / best.visits
                 child_loss_rate = (child.visits - child.wins) / child.visits
                 child_NN_scaled_loss_rate = NN_scaling_factor * child_loss_rate
+
+
+
+                # probability = (child.UCT_multiplier-1)
+                # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
+
                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
                     if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount) or \
                         (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \

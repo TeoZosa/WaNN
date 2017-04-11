@@ -82,8 +82,8 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
         # if move_number == 0 or move_number == 1:
         #     time_to_think = 60
-        if root.height >= 60: #still missing forced wins
-            time_to_think = 6000
+        # if root.height >= 60: #still missing forced wins
+        #     time_to_think = 6000
         sim_info.time_to_think = time_to_think
 
 
@@ -182,17 +182,17 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         async_NN_update_threads.join()
         best_child = randomly_choose_a_winning_move(root, max(0, game_num))
 
-        if (move_number == 0 or move_number == 1) and game_num > -1: #save each iteration. If training makes it worse, we can revert back to a better version and change search parameters.
-            top_root = root
-            while top_root.parent is not None:
-                top_root = top_root.parent
-
-            output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\0409201710secsDepth80_TrueWinLossFieldBlack{}.p'.format(str(game_num)), 'wb')
-            #online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
-            pickle.dump(top_root, output_file, protocol=pickle.HIGHEST_PROTOCOL)
-            output_file.close()
-            print("done saving root in seconds = ")
-            print(search_time)
+        # if (move_number == 0 or move_number == 1) and game_num > -1: #save each iteration. If training makes it worse, we can revert back to a better version and change search parameters.
+        #     top_root = root
+        #     while top_root.parent is not None:
+        #         top_root = top_root.parent
+        #
+        #     output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\04102017DualNets10secsDepth80_TrueWinLossFieldBlack{}.p'.format(str(game_num)), 'wb')
+        #     #online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
+        #     pickle.dump(top_root, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+        #     output_file.close()
+        #     print("done saving root in seconds = ")
+        #     print(search_time)
 
         # if done: #subtree checked or has a win status: prune off unnecessary subtrees after height 60
         #     prune_red_herrings_from_parents_with_win_status(root)# note:
@@ -555,9 +555,9 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
     time_to_think = sim_info.time_to_think
     overwhelming_amount = 9999999
     print("Monte Carlo Game {iteration}\n"
-          "Played at root   Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}\n".format(
+          "Played at root   Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}\n".format(
         height = root.height, color=root.color, uct=0, wins=root.wins/overwhelming_amount, visits=root.visits/overwhelming_amount,
-        iteration=sim_info.counter+1), file=sim_info.file)
+        iteration=sim_info.counter+1, prob=(root.UCT_multiplier-1)*100), file=sim_info.file)
     print_board(sim_info.root.game_board, sim_info.file)
     print("\n", file=sim_info.file)
     #to see best reply
@@ -566,10 +566,10 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
         best_move =  move_lookup_by_index(best_child.index, root.color)
         best_child_UCT = get_UCT(best_child, root.visits/overwhelming_amount, start_time, time_to_think)
         print("Current (Random) Best Move   {best_move}\n"
-              "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}\n".format(
+              "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}   prob = %{prob}\n".format(
             best_move=best_move,
             height=best_child.height, color=best_child.color, uct=best_child_UCT, wins=best_child.wins/overwhelming_amount,
-            visits=best_child.visits/overwhelming_amount), file=sim_info.file)
+            visits=best_child.visits/overwhelming_amount, prob=(best_child.UCT_multiplier-1)*100), file=sim_info.file)
         print_board(best_child.game_board, sim_info.file)
 
         print("All Moves", file=sim_info.file)
@@ -577,11 +577,11 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
             move = move_lookup_by_index(child.index, root.color)
 
             child_UCT = get_UCT(child, child.visits/overwhelming_amount, start_time, time_to_think)
-            print(" Move   {move}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}\n".format(
+            print(" Move   {move}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}\n".format(
                 move=move,
                 uct=child_UCT,
                 wins=child.wins/overwhelming_amount,
-                visits=child.visits/overwhelming_amount), file=sim_info.file)
+                visits=child.visits/overwhelming_amount, prob=(child.UCT_multiplier-1)*100), file=sim_info.file)
             print_board(child.game_board, sim_info.file)
 
         #to see predicted best counter
@@ -590,10 +590,10 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
             best_counter_move = move_lookup_by_index(best_counter_child.index, best_child.color)
             best_counter_child_UCT = get_UCT(best_counter_child, best_child.visits/overwhelming_amount, start_time, time_to_think)
             print("Current Best Move (Random) Best Counter Move   {best_counter_move}\n"
-                  "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}\n".format(
+                  "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}\n".format(
                 best_counter_move=best_counter_move,
                 height=best_counter_child.height, color=best_counter_child.color, uct=best_counter_child_UCT, wins=best_counter_child.wins/overwhelming_amount,
-                visits=best_counter_child.visits/overwhelming_amount), file=sim_info.file)
+                visits=best_counter_child.visits/overwhelming_amount, prob=(best_counter_child.UCT_multiplier-1)*100), file=sim_info.file)
             print_board(best_counter_child.game_board, sim_info.file)
            
                 
@@ -602,11 +602,11 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
                 counter_move = move_lookup_by_index(counter_child.index, best_child.color)
 
                 counter_child_UCT = get_UCT(counter_child, best_child.visits/overwhelming_amount, start_time, time_to_think)
-                print("Counter Move   {counter_move}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}\n".format(
+                print("Counter Move   {counter_move}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}\n".format(
                     counter_move=counter_move,
                     uct=counter_child_UCT,
                     wins=counter_child.wins/overwhelming_amount,
-                    visits=counter_child.visits/overwhelming_amount), file=sim_info.file)
+                    visits=counter_child.visits/overwhelming_amount, prob=(counter_child.UCT_multiplier-1)*100), file=sim_info.file)
                 print_board(counter_child.game_board, sim_info.file)
 
         else:

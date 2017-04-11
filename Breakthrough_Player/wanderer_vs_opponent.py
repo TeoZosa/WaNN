@@ -2,6 +2,7 @@ from Breakthrough_Player import breakthrough_player
 from multiprocessing import freeze_support
 import os
 import pickle
+from copy import deepcopy
 if __name__ == '__main__':#for Windows since it lacks os.fork
   freeze_support()
 
@@ -11,8 +12,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 501
   time_to_think = 10
   depth_limit = 5
-  date = r'04102017'
-  file_designator = 'NewRoot_WinLossField_Depth80_'
+  date = r'04112017'
+  file_designator = '__17Root_BatchExpansions_Depth80__3at40to65_2at65to69_3at70_WhiteMoves_2at40to51_3at52to60_2at61to69BlackMoves_4xNNScaling'
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
@@ -37,18 +38,24 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   # # input_file = open(
   # #     r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\AgnosticRoot{}.p'.format(str(6)),
   # #     'r+b')
-  input_file = open(
-      r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\0409201710secsDepth80_TrueWinLossFieldBlack_{}.p'.format(
-          str(0)),
-      'r+b')
-  root = pickle.load(input_file)
-  input_file.close()
+  # input_file = open(
+  #     r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\0409201710secsDepth80_TrueWinLossFieldBlack{}.p'.format(
+  #         str(17)),  # 17?
+  #     'r+b')
+  # original_root = pickle.load(input_file)
+  # input_file.close()
+
   for time_to_think in range(10, 11, 10):
-      for depth_limit in range(500, 501):
+      for depth_limit in range(1, 2):
           white_wins = 0
           black_wins = 0
-          for i in range(1, num_games_to_play):
-
+          for i in range(0, num_games_to_play):
+            input_file = open(
+                  r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\0409201710secsDepth80_TrueWinLossFieldBlack{}.p'.format(
+                      str(17)),  # 17?
+                  'r+b')
+            root = pickle.load(input_file)
+            input_file.close()
             gameplay_file = open(os.path.join(path,
                                               r'{date}move_{opponent}vsWanderer'
                                               r'depth{depth}_'

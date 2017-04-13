@@ -44,6 +44,12 @@ def initial_game_board():
         1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
     }
 
+def initial_piece_arrays():
+    white_pieces = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2',
+                         'h2', ]
+    black_pieces = ['a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7', 'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8',
+                         'h8', ]
+    return white_pieces, black_pieces
 #Note: not the same as move_piece in self_play_logs_to_datastructures; is white index now changes as we are sharing a board,
 #so player U opponent = self_play_log_board with is_white_index changing based on who owns the board
 def move_piece(board_state, move, whose_move):
@@ -66,6 +72,35 @@ def move_piece(board_state, move, whose_move):
         next_board_state[white_move_index] = 0
         next_board_state[is_white_index] = 1 #since black made this move, white makes next move
     return next_board_state
+
+def move_piece_update_piece_arrays(board_state, move, whose_move):
+    empty = 'e'
+    remove_opponent_piece = False
+    white_move_index = 10
+    is_white_index = 9
+    if move[2] == '-':
+        move = move.split('-')
+    else:
+        move = move.split('x')#x for wanderer captures.
+    _from = move[0].lower()
+    to = move[1].lower()
+    next_board_state = copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
+    to_position =  next_board_state[int(to[1])][to[0]]
+    player_piece_to_remove = _from #this will always become empty
+    player_piece_to_add = to
+    next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
+    next_board_state[int(_from[1])][_from[0]] = empty
+    if whose_move == 'White':
+        next_board_state[white_move_index] = 1
+        next_board_state[is_white_index] = 0 #next move isn't white's
+        if to_position == 'b':
+            remove_opponent_piece = True
+    else:
+        next_board_state[white_move_index] = 0
+        next_board_state[is_white_index] = 1 #since black made this move, white makes next move
+        if to_position == 'w':
+            remove_opponent_piece = True
+    return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
 
 def get_random_move(game_board, player_color):
     possible_moves = enumerate_legal_moves(game_board, player_color)
@@ -245,6 +280,23 @@ def enumerate_legal_moves(game_board, player_color):
         for column in columns:
             if game_board[row][column] == player:
                 legal_moves.extend(get_possible_move(game_board, row, column, player_color))
+    return legal_moves
+
+def enumerate_legal_moves_using_piece_arrays(node):
+    player_color = node.color
+    game_board = node.game_board
+    if player_color == 'White':
+        player = 'w'
+        pieces = node.white_pieces
+    else: #player_color =='Black':
+        player = 'b'
+        pieces = node.black_pieces
+    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    legal_moves = []
+    for piece in pieces:
+        row = int(piece[1])
+        column = piece[0]
+        legal_moves.extend(get_possible_move(game_board, row, column, player_color))
     return legal_moves
 
 def get_possible_move(game_board, row, column, player_color):

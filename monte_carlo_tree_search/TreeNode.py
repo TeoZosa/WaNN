@@ -1,5 +1,5 @@
 class TreeNode(object):
-    def __init__(self, game_board, player_color, index, parent, height):
+    def __init__(self, game_board, white_pieces, black_pieces, player_color, index, parent, height):
         self.game_board = game_board
         self.color = player_color
         self.index = index #if None => root
@@ -29,6 +29,9 @@ class TreeNode(object):
         self.wins_down_this_tree = 0 #backprop a win down this tree
         self.losses_down_this_tree = 0
 
+        # self.expand_all = False
+        self.white_pieces = white_pieces
+        self.black_pieces = black_pieces
 
 class NeuralNetInput(object):
     def __init__(self):

@@ -13,7 +13,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   time_to_think = 10
   depth_limit = 5
   date = r'04112017'
-  file_designator = '__17Root_BatchExpansions_Depth80__3at40to65_2at65to69_3at70_WhiteMoves_2at40to51_3at52to60_2at61to69BlackMoves_4xNNScaling'
+  file_designator = '_BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM_4xNNScaling_reexpandDoomed'
+  #
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
@@ -50,14 +51,15 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
           white_wins = 0
           black_wins = 0
           for i in range(0, num_games_to_play):
-            input_file = open(
-                  r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\0409201710secsDepth80_TrueWinLossFieldBlack{}.p'.format(
-                      str(17)),  # 17?
-                  'r+b')
-            root = pickle.load(input_file)
-            input_file.close()
+            # input_file = open(
+            #       r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\0409201710secsDepth80_TrueWinLossFieldBlack{}.p'.format(
+            #           str(17)),  # 17?
+            #       'r+b')
+            # root = pickle.load(input_file)
+            # input_file.close()
+            root=None
             gameplay_file = open(os.path.join(path,
-                                              r'{date}move_{opponent}vsWanderer'
+                                              r'{date}move_'#{opponent}vsWanderer'
                                               r'depth{depth}_'
                                               r'ttt{time_to_think}{designator}.txt'.format(date=date,
                                                                                            opponent=player_for_path,
@@ -67,7 +69,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
                                  'a')
 
             MCTS_logging_file = open(os.path.join(path,
-                                                    r'{date}log_{opponent}vsWanderer'
+                                                    r'{date}log_'#{opponent}vsWanderer'
                                                     r'depth{depth}_'
                                                     r'ttt{time_to_think}{designator}_{i}.txt'.format(i=i,date=date, opponent=player_for_path,
                                                                                                  designator=file_designator,

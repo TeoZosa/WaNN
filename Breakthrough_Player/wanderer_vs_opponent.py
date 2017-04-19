@@ -12,9 +12,9 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 501
   time_to_think = 10
   depth_limit = 5
-  date = r'04112017'
-  file_designator = '_BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM_4xNNScaling_reexpandDoomed'
-  #
+  date = r'04182017'
+  file_designator = '065AccNet30_2056Batch_LessPruning__4xNNScalingUnder05WR_EvenlyBranchThreadsAtRoot_Stochasticity'
+  #BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
   expansion_MCTS_post_pruning = 'Expansion MCTS Post-Pruning'
@@ -46,7 +46,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   # original_root = pickle.load(input_file)
   # input_file.close()
 
-  for time_to_think in range(10, 11, 10):
+  for time_to_think in range(160, 161, 10):
       for depth_limit in range(1, 2):
           white_wins = 0
           black_wins = 0

@@ -1,6 +1,9 @@
+#cython: language_level=3, boundscheck=False
+
 from monte_carlo_tree_search.expansion_MCTS_functions import MCTS_with_expansions
-from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit
-from Breakthrough_Player.board_utils import get_best_move, get_NN
+#from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit
+from Breakthrough_Player.board_utils import get_best_move
+from Breakthrough_Player.policy_net_utils import instantiate_session_both, instantiate_session
 from tools.utils import convert_board_to_2d_matrix_POEB, batch_split_no_labels
 import re
 
@@ -42,8 +45,8 @@ class MCTS(object):
             or self.MCTS_type ==  'MCTS Asynchronous'\
             or self.MCTS_type == 'Expansion MCTS Post-Pruning': #pruning with no depth expansions       #NOTE: seemed to be good initially
             self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.last_opponent_move, self.height, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
-        elif self.MCTS_type == 'BFS MCTS':
-            self.selected_child, move = MCTS_BFS_to_depth_limit(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file, self.policy_net)
+        # elif self.MCTS_type == 'BFS MCTS':
+        #     self.selected_child, move = MCTS_BFS_to_depth_limit(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file, self.policy_net)
         elif self.MCTS_type == 'Policy':
             ranked_moves = self.policy_net.evaluate(game_board, player_color)
             move = get_best_move(game_board, ranked_moves)
@@ -51,7 +54,7 @@ class MCTS(object):
             if self.color == 'White':
                 move_regex = re.compile(r".*play\sw\s([a-h]\d.[a-h]\d).*",
                                         re.IGNORECASE)
-                self.policy_net.expect('play w.*')
+                self.policy_net.expect('play w.*', timeout=200)
 
                 move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
                 print(move, file=self.log_file)
@@ -59,7 +62,7 @@ class MCTS(object):
             else:
                 move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",
                                         re.IGNORECASE)
-                self.policy_net.expect('play b.*')
+                self.policy_net.expect('play b.*', timeout=200)
 
                 move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
                 print(move, file=self.log_file)
@@ -72,7 +75,7 @@ class NeuralNetsCombined():
 
     #initialize the Neural Net (Only works with combined net for now)
     def __init__(self):
-        self.sess, self.output_white, self.input_white, self.output_black, self.input_black= get_NN(separate=True)
+        self.sess, self.output_white, self.input_white, self.output_black, self.input_black= instantiate_session_both()
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):
@@ -114,7 +117,7 @@ class NeuralNet():
 
     #initialize the Neural Net (only 1 as of 03/10/2017)
     def __init__(self):
-        self.sess, self.output_white, self.input_black = get_NN(separate=False)
+        self.sess, self.output_white, self.input_black = instantiate_session()
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):

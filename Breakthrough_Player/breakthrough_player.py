@@ -1,5 +1,7 @@
+#cython: language_level=3, boundscheck=False
+
 from Breakthrough_Player.board_utils import print_board, move_piece, game_over, \
-    initial_game_board, check_legality, generate_policy_net_moves, get_best_move, get_random_move, get_NN
+    initial_game_board, check_legality, get_random_move
 from monte_carlo_tree_search.MCTS import MCTS, NeuralNetsCombined
 import sys
 import os
@@ -44,8 +46,14 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
 
     open_input_engine = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughInput.exe'
 
-    wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent.exe'
-    ttt = r'--ttt=10'
+    # wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent.exe'
+    wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent90MNodes.exe'
+
+
+    # ttt = r'--ttt=10'
+
+    ttt = r'--ttt={}'.format(time_to_think)
+
     full_command = open_input_engine + ' ' + WaNN_color + ' ' + wanderer_executable + ' ' + ttt
     # wanderer = pexpect.spawn(open_input_engine,  args= [color_to_be, wanderer_executable, ttt])
     # wanderer = PopenSpawn(full_command, cwd=r'C:\Users\damon\PycharmProjects\BreakthroughANN' )
@@ -88,22 +96,24 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
 
 #TODO: consider permutations of winning subsequences? cut down on space/ have playbook. edit distance? as current subsequence gets farther from old subsequence, stop trying to match moves?
 
+    # final_policy_move = computer_MCTS_tree.selected_child
+    # while final_policy_move.parent is not None:#root doesn't need this updated so it's fine to not update after
+    #     if winner_color == WaNN_color:
+    #         final_policy_move.wins_down_this_tree +=1
+    #     else:
+    #         final_policy_move.losses_down_this_tree += 1
+    #     final_policy_move = final_policy_move.parent
+
     final_policy_move = computer_MCTS_tree.selected_child
-    while final_policy_move.parent is not None:#root doesn't need this updated so it's fine to not update after
-        if winner_color == WaNN_color:
-            final_policy_move.wins_down_this_tree +=1
-        else:
-            final_policy_move.losses_down_this_tree += 1
+    while final_policy_move.parent is not None:
         final_policy_move = final_policy_move.parent
 
-    # output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\FreshRootTrueWinLossFieldBlackPrototype04082017{}.p'.format(str(0)), 'wb')
-    # # online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
-    # pickle.dump(final_policy_move, output_file, protocol=pickle.HIGHEST_PROTOCOL)
-    # output_file.close()
+    output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\ttt120BlackPrototype04172017_{}.p'.format(str(game_num)), 'wb')
+    # online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
+    pickle.dump(final_policy_move, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+    output_file.close()
 
-    # final_policy_move = computer_MCTS_tree.selected_child
-    # while final_policy_move.parent is not None:
-    #     final_policy_move = final_policy_move.parent
+
 
     if wanderer_MCTS_tree is not None:
         wanderer_MCTS_tree.policy_net.sendline('quit')

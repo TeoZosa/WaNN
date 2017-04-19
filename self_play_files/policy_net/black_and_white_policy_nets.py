@@ -883,12 +883,12 @@ for num_hidden in [i for i in [4]
                    ]:
     file_WHITE = open(os.path.join(input_path_WHITE,
                                    r'ExperimentLogs',
-                                   game_stage + 'WHITE192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)),
+                                   game_stage + '065_0417WHITE192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)),
                       'a')
 
     file_BLACK = open(os.path.join(input_path_WHITE,
                                    r'ExperimentLogs',
-                                   game_stage + 'BLACK192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(
+                                   game_stage + '065_0417BLACK192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(
                                        num_hidden)), 'a')
 
     print("# of Testing Examples: {}".format(len(WHITE_testing_examples_partition_i)), end='\n', file=file_WHITE)
@@ -1044,8 +1044,10 @@ for num_hidden in [i for i in [4]
 
             valid_examples_BLACK, test_examples_BLACK, valid_labels_BLACK, test_labels_BLACK = model_selection.train_test_split(
                 validation_examples_BLACK, validation_labels_BLACK, test_size=0.5, random_state=random.randint(1, 1024))
-
-            for epoch_i in range(n_epochs):
+            epoch_i = 0
+            while compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,  X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] < 0.65 and \
+                    compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k, X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] < 0.65 :
+            # for epoch_i in range(n_epochs):
                 # WHITE
                 # reshuffle training set at each epoch
                 training_examples_WHITE, training_labels_WHITE = shuffle(training_examples_WHITE, training_labels_WHITE,
@@ -1150,10 +1152,70 @@ for num_hidden in [i for i in [4]
                     epoch_num=epoch_i + 1,
                     accuracy_score=accuracy_score), end="\n", file=file_WHITE)
 
+
                 # show example of what network is predicting vs the move oracle
                 # print_prediction_statistics(valid_examples_WHITE, valid_labels_WHITE,  y_pred_WHITE, X_WHITE, file_WHITE)
                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n",
                       file=file_WHITE)
+
+
+                if compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
+                                    X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] < 0.10 or \
+                        compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
+                                         X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] < 0.10:
+                    exit(100)
+
+                epoch_i += 1
+                save_path = saver.save(sess, os.path.join(input_path_BLACK, r'065AccIteration ({})'.format(epoch_i), r'DualWinningNets065Accuracy'))
+
+                print_partition_statistics(test_examples_WHITE, test_labels_WHITE, X_WHITE, y_WHITE, net_type,
+                                           accuracy_function_WHITE, file_WHITE)
+                print_prediction_statistics(test_examples_WHITE, test_labels_WHITE, y_pred_WHITE, X_WHITE, file_WHITE)
+
+                # partition i
+                print_partition_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i, X_WHITE,
+                                           y_WHITE, partition_i, accuracy_function_WHITE, file_WHITE)
+                print_prediction_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i,
+                                            y_pred_WHITE, X_WHITE, file_WHITE)
+
+                # partition j
+                print_partition_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j, X_WHITE,
+                                           y_WHITE, partition_j, accuracy_function_WHITE, file_WHITE)
+                print_prediction_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j,
+                                            y_pred_WHITE, X_WHITE, file_WHITE)
+
+                # partition k (only for full policy net)
+                if (net_type == 'Full'):
+                    print_partition_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
+                                               X_WHITE, y_WHITE, partition_k, accuracy_function_WHITE, file_WHITE)
+                    print_prediction_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
+                                                y_pred_WHITE, X_WHITE, file_WHITE)
+
+                    # BLACK
+                # this partition
+                print_partition_statistics(test_examples_BLACK, test_labels_BLACK, X_BLACK, y_BLACK, net_type,
+                                           accuracy_function_BLACK, file_BLACK)
+                print_prediction_statistics(test_examples_BLACK, test_labels_BLACK, y_pred_BLACK, X_BLACK, file_BLACK)
+
+                # partition i
+                print_partition_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i, X_BLACK,
+                                           y_BLACK, partition_i, accuracy_function_BLACK, file_BLACK)
+                print_prediction_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i,
+                                            y_pred_BLACK, X_BLACK, file_BLACK)
+
+                # partition j
+                print_partition_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j, X_BLACK,
+                                           y_BLACK, partition_j, accuracy_function_BLACK, file_BLACK)
+                print_prediction_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j,
+                                            y_pred_BLACK, X_BLACK, file_BLACK)
+
+                # partition k (only for full policy net)
+                if (net_type == 'Full'):
+                    print_partition_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
+                                               X_BLACK, y_BLACK, partition_k, accuracy_function_BLACK, file_BLACK)
+                    print_prediction_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
+                                                y_pred_BLACK, X_BLACK, file_BLACK)
+
 
                 # Print final test accuracy:
                 # WHITE
@@ -1207,7 +1269,7 @@ for num_hidden in [i for i in [4]
                                             y_pred_BLACK, X_BLACK, file_BLACK)
 
             # save the model now
-            save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', str(num_hidden)))
+            save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'DualWinningNets070Accuracy'))
 
             sess.close()
     file_WHITE.close()

@@ -1,29 +1,30 @@
+#cython: language_level=3, boundscheck=False
+
 import copy
 from tools import utils
-import numpy as np
 import sys
 import random
 import pandas as pd
-from Breakthrough_Player.policy_net_utils import call_policy_net, instantiate_session, instantiate_session_both, instantiate_session_black, instantiate_session_white
+# from Breakthrough_Player.policy_net_utils import call_policy_net
 
-def generate_policy_net_moves(game_board, player_color):
-    board_representation = utils.convert_board_to_2d_matrix_POEB(game_board, player_color)
-    return call_policy_net(board_representation)
+# def generate_policy_net_moves(game_board, player_color):
+#     board_representation = utils.convert_board_to_2d_matrix_POEB(game_board, player_color)
+#     return call_policy_net(board_representation)
 
-def get_NN(separate=True):
-    if separate:
-        return instantiate_session_both()
-    else:
-        return  instantiate_session()
+# def get_NN(separate=True):
+#     if separate:
+#         return instantiate_session_both()
+#     else:
+#         return  instantiate_session()
 
-def generate_policy_net_moves_batch(game_nodes, batch_size=16384):
-
-    board_representations = [utils.convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in game_nodes]
-    inference_batches = utils.batch_split_no_labels(board_representations, batch_size)
-    output = []
-    for batch in inference_batches:
-        output.extend(call_policy_net(batch))
-    return output
+# def generate_policy_net_moves_batch(game_nodes, batch_size=16384):
+#
+#     board_representations = [utils.convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in game_nodes]
+#     inference_batches = utils.batch_split_no_labels(board_representations, batch_size)
+#     output = []
+#     for batch in inference_batches:
+#         output.extend(call_policy_net(batch))
+#     return output
 
 
 def initial_game_board():

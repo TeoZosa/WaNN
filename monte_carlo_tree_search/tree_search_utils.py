@@ -1,12 +1,8 @@
-# from Breakthrough_Player.board_utils import generate_policy_net_moves_batch, generate_policy_net_moves
+#cython: language_level=3, boundscheck=False
+
 from math import log, sqrt
-import numpy as np
 import random
-import time
-# from multiprocessing import Pool
-# from multiprocessing.pool import ThreadPool
-# import threading
-# from multiprocessing import Pool
+from time import time
 
 class SimulationInfo():
     def __init__(self, file):
@@ -19,6 +15,9 @@ class SimulationInfo():
         self.time_to_think = None
         self.root = None
         self.game_num = 0
+        self.do_eval = True
+        self.main_pid = -1
+        self.root_thread_counter = 0
 
     def __enter__(self):
         return self
@@ -80,27 +79,54 @@ def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS
         parent.visits -= child.visits
         parent = parent.parent
 
-def choose_UCT_move(node, start_time, time_to_think):
+def choose_UCT_move(node, start_time, time_to_think, sim_info):
     best = None #shouldn't ever return None
     if node.children is not None:
-        best = find_best_UCT_child(node, start_time, time_to_think)
+        best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
     return best  #because a win for me = a loss_init for child
 
-def choose_UCT_or_best_child(node, start_time, time_to_think):
+def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
     best = None  # shouldn't ever return None
-    # best = choose_best_true_winner(node.children)#todo: logs show white chooses ground truth over predicted choice
-    if best is None:
+    if node is sim_info.root:
+        num_children = len(node.children)
+        if num_children>1:
+            best = node.children[sim_info.root_thread_counter%num_children]
+            sim_info.root_thread_counter+=1
+        else:
+            best = node.children[0]
+    else:
         if node.best_child is not None: #return best child if not already previously expanded
-            if node.best_child.visited is False and node.best_child.win_status is None:
+            if node.best_child.win_status is None and node.best_child.visited is False: # and not node.best_child.subtree_checked ...  node.best_child.visited is False and
                 best = node.best_child
-                if best.children is None:
-                    best.threads_checking_node += 1
             else:
-                best = find_best_UCT_child(node, start_time, time_to_think)
+                best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
             node.best_child.visited = True
         elif node.children is not None: #if this node has children to choose from: should always happen
-            best = find_best_UCT_child(node, start_time, time_to_think)
-    return best  # because a win for me = a loss_init for child
+            best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
+    return best  # because a win for me = a loss for child
+
+# def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
+#     best = None  # shouldn't ever return None
+#     for child in node.children:
+#         if child.win_status is None and child.threads_checking_node <= 0:
+#             best = child
+#             break
+#     # if node.height %2 == 0: #white's move, pick move with highest probability
+#     #     for child in node.children:
+#     #         if child.win_status is None and child.threads_checking_node <=0:
+#     #             best = child
+#     #             break
+#     # else: #black's move
+#     #     if best is None:
+#     #         if node.best_child is not None: #return best child if not already previously expanded
+#     #             if node.best_child.visited is False and node.best_child.win_status is None:
+#     #                 best = node.best_child
+#     #             else:
+#     #                 best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
+#     #             node.best_child.visited = True
+#     #         elif node.children is not None: #if this node has children to choose from: should always happen
+#     #             best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
+#     return best  # because a win for me = a loss_init for child
 
 def choose_best_true_winner(node_children):
     best_nodes = []
@@ -130,14 +156,14 @@ def choose_best_true_winner(node_children):
 
     return best
 
-def find_best_UCT_child(node, start_time, time_to_think):
+def find_best_UCT_child(node, start_time, time_to_think, sim_info):
     parent_visits = node.visits
     best = None
     #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss_init
-    viable_children = list(filter(lambda x:  x.win_status is None and x.threads_checking_node <=0, node.children))
+    viable_children = list(filter(lambda x:  x.win_status is None and (x.threads_checking_node <=0 or x.children is not None), node.children))
     if len(viable_children)>0:
         best = viable_children[0]
-        best_val = get_UCT(best, parent_visits, start_time, time_to_think)
+        best_val = get_UCT(best, parent_visits, start_time, time_to_think, sim_info)
         children_to_check = False
 
         for i in range(1, len(viable_children)):
@@ -152,7 +178,7 @@ def find_best_UCT_child(node, start_time, time_to_think):
             # predicate = viable_children[i].win_status is None  # only consider subtrees where we don't already know what's going to happen
             #
             # if predicate:
-                child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think)
+                child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think, sim_info)
                 if child_value > best_val:
                     best = viable_children[i]
                     best_val = child_value
@@ -161,16 +187,16 @@ def find_best_UCT_child(node, start_time, time_to_think):
         if not children_to_check and best.win_status is False:  # all children were False (losers);
             print("RL Error: UCT shouldn't have chosen a subtree with children who have win statuses")
             for i in range(1, len(viable_children)):
-                    child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think)
+                    child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think, sim_info)
                     if child_value > best_val:
                         best = viable_children[i]
                         best_val = child_value
 
-        if best.children is None:
-            best.threads_checking_node += 1
+        # if best.children is None:
+        #     best.threads_checking_node += 1
     return best
 
-def get_UCT(node, parent_visits, start_time, time_to_think):
+def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
     if node.visits == 0:
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
@@ -178,32 +204,66 @@ def get_UCT(node, parent_visits, start_time, time_to_think):
         # if parent_visits >= overwhelming_amount:
         #     parent_visits %= overwhelming_amount
         # # 03/11/2017 games actually good with this and no division, but annealing seems right?
-        # stochasticity_for_multithreading = random.random()  /2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
-
-        # #TODO test this. SEEMS like a good idea since it will explore early and exploit later
-        # annealed_factor = 1 - ((start_time - time.time())/time_to_think)  #  starts at 1 and trends towards 0 as search proceeds
+        stochasticity_for_multithreading = random.random()  #/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
+        # # #TODO test this. SEEMS like a good idea since it will explore early and exploit later
+        # annealed_factor = 1 - (
+        # (start_time - time()) / time_to_think)  # starts at 1 and trends towards 0 as search proceeds
         # # with stochasticity multiplier between .5 and 1 so multithreading sees different values
-        # stochasticity_for_multithreading = (1- random.random()/2) * max(0.25, annealed_factor) #in printed stats games, probably never got to a low value
-        #
-        # # stochasticity_for_multithreading = (random.random()*4) * max(0.25, annealed_factor) #in printed stats games, probably never got to a low value
+        # stochasticity_for_multithreading = (1 - random.random() / 2) * max(0.25,
+        #                                                                    annealed_factor)  # in printed stats games, probably never got to a low value
 
-        exploration_constant = 0.1 #+ stochasticity_for_multithreading # 1.414 ~ √2
+        # stochasticity_for_multithreading = (random.random()*4) * max(0.25, annealed_factor) #in printed stats games, probably never got to a low value
+
+        if node.parent is sim_info.root:
+
+            exploration_constant = 40#*stochasticity_for_multithreading
+        else:
+            # exploration_constant = 0.1 + stochasticity_for_multithreading # 1.414 ~ √2
+            exploration_constant =  stochasticity_for_multithreading # 1.414 ~ √2
+
         exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
         exploration_factor = exploration_constant * sqrt(log(max(1,parent_visits)) / node.visits)
         UCT = (exploitation_factor + exploration_factor)
     return UCT * (node.UCT_multiplier ) #UCT from parent's POV
 
-#TODO: undiagnosed threading bug.
-# Will sometimes be given an expanded root with no children (usually near the end of the game)
 def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose among equally successful children
     best_nodes = []
     if node.children is not None:
         win_can_be_forced, best_nodes = check_for_forced_win(node.children, game_num)
         if not win_can_be_forced:
-            best_nodes = get_best_children(node.children, game_num)
+            if node.win_status is False:
+                best_nodes.append(node.children[0])
+
+            else:
+                for child in node.children: #sorted by prob
+                    if child.win_status is not True and child.wins/child.visits <=.50:
+                        best_nodes.append(child)
+                        break
+
+
+            # #to stay inside policy net's prediction?
+            # if node.best_child is not None:
+            #    best = node.best_child
+            #    if best.win_status is not True:
+            #       best_nodes.append(best)
+            #       #loss_rate =  (best.visits - best.wins)/best.visits
+            #       # if loss_rate > .30:
+
+            if len(best_nodes) == 0:
+                best_nodes = get_best_children(node.children, game_num)
     if len(best_nodes) == 0:
         breakpoint = True
-    return random.sample(best_nodes, 1)[0]  # because a win for me = a loss_init for child
+    return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
+
+# def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose among equally successful children
+#     best_nodes = []
+#     if node.children is not None:
+#         win_can_be_forced, best_nodes = check_for_forced_win(node.children, game_num)
+#         if not win_can_be_forced:
+#             best_nodes = get_best_children(node.children, game_num)
+#     if len(best_nodes) == 0:
+#         breakpoint = True
+#     return random.sample(best_nodes, 1)[0]  # because a win for me = a loss_init for child
 
 def check_for_forced_win(node_children, game_num):
     guaranteed_children = []
@@ -302,11 +362,12 @@ def get_best_child(node_children, game_num):
                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
 
                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
-                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount) or \
-                        (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
+                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount and (
+                                child.visits / best.visits > 0.3) or best_loss_rate < .5) or \
                         (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
-                        ((child_loss_rate) - (best_loss_rate) >= .10):
-                        # if both have searched to game overs, (best case # 1)
+                        (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
+                        ((best_loss_rate) < .30):
+                            # if both have searched to game overs, (best case # 1)
                         # if neither have searched to game overs,
                         # if new child has searched to a gameover and current best hasn't (best case # 2)
                         # if new child hasn't searched to a gameover, best has, but new child has a better loss_init-rate (i.e. current best has a lot of losses, new child looks better)
@@ -364,10 +425,11 @@ def get_best_non_doomed_child(node_children, game_num):
                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
 
                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
-                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount) or \
-                        (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
+                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount and (
+                            child.visits / best.visits > 0.3) or best_loss_rate < .5) or \
                         (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
-                        ((child_loss_rate) - (best_loss_rate) >= .10):
+                        (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
+                        ((best_loss_rate) < .30):
                         # if both have searched to game overs, (best case # 1)
                         # if neither have searched to game overs,
                         # if new child has searched to a gameover and current best hasn't (best case # 2)
@@ -588,7 +650,7 @@ def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=Fa
 #         thread.parent.children = thread.pruned_children
 #         thread.parent_index += 1
 
-def update_child(child, NN_output, top_children_indexes, num_legal_children):
+def update_child(child, NN_output, top_children_indexes, num_legal_children, sim_info):
     child_val = NN_output[child.index]
 
     # if top_children_indexes[0] == child.index:  # rank 1 child
@@ -641,7 +703,7 @@ def update_child(child, NN_output, top_children_indexes, num_legal_children):
     child.visits = 100 * prior_value_multiplier
     # weighted_wins = (child.visits-weighted_losses)
     weighted_wins = ((
-                     child.visits - weighted_losses) ) / child.visits  # may be a negative number if we are increasing probability ** 2
+                     child.visits - weighted_losses) ) #/ child.visits  # may be a negative number if we are increasing probability ** 2
     child.wins = weighted_wins
 
     # update_tree_wins(child, weighted_wins)
@@ -679,7 +741,7 @@ def update_child(child, NN_output, top_children_indexes, num_legal_children):
     # if child.height >= 60:
     # random_prob = random.random()
     random_prob = 1
-    if random_prob > .50:
+    if sim_info.do_eval:
         rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
 
 

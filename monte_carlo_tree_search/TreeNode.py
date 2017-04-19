@@ -1,3 +1,5 @@
+#cython: language_level=3, boundscheck=False
+
 class TreeNode(object):
     def __init__(self, game_board, white_pieces, black_pieces, player_color, index, parent, height):
         self.game_board = game_board

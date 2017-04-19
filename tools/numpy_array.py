@@ -79,10 +79,11 @@ def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both',
 
     for self_play_log in self_play_data:
         i = 0
-        for game in self_play_log['Games']:
+        for game in self_play_log['Games']: #each game is appended twice; White's game, then Black's game
             if color == 'White': #train on all white games
                 color_to_filter = i % 2 == 0
-                win_filter = True
+                # win_filter = True
+                win_filter = game['Win'] is True
             elif color =='Black': #only train on winning black games
                 color_to_filter = i % 2 == 1
                 win_filter = game['Win'] is True

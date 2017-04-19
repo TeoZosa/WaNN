@@ -1,3 +1,5 @@
+#cython: language_level=3, boundscheck=False
+
 import tensorflow as tf
 import numpy as np
 import os
@@ -26,7 +28,9 @@ def instantiate_session_both():#todo: return the graph as well in case we want t
                    intra_op_parallelism_threads=NUM_CORES))
 
     saver = tf.train.Saver()
-    path = os.path.join(r'..',r'policy_net_model',  r'combined_policy_nets', r'4')
+    # path = os.path.join(r'..',r'policy_net_model',  r'combined_policy_nets', r'4')
+    path = os.path.join(r'..', r'policy_net_model', r'DualWinningNets065Accuracy', r'DualWinningNets065Accuracy')
+
     saver.restore(sess, path)
 
     return sess, y_pred_white, X_white, y_pred_black, X_black

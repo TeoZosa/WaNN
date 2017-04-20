@@ -541,13 +541,6 @@ def select_UCT_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type,
             node.threads_checking_node = 0 #clean this up on the way down
             this_height += 1
             node = choose_UCT_or_best_child(node, start_time, time_to_think, sim_info) #if child is a leaf, chooses policy net's top choice
-
-            # if node is not None:
-            #     if node.height >=60 and node.children is not None:
-            #         num_possible_children = len(enumerate_legal_moves(node.game_board, node.color))
-            #         if num_possible_children > len(node.children):
-            #             node.expanded = False
-            #             node.subtree_checked = False
     if node is not None:
         play_MCTS_game_with_expansions(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 

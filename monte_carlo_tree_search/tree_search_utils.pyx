@@ -2,7 +2,7 @@
 
 from math import log, sqrt, floor
 import random
-from bottleneck import argpartsort
+from bottleneck import argpartition
 from numpy import argsort
 # from time import time
 
@@ -293,167 +293,105 @@ def check_for_forced_win(node_children, game_num):
         guaranteed_children = get_best_children(guaranteed_children, game_num)
     return forced_win, guaranteed_children
 
-def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
 
-    best = choose_best_true_winner(node_children)
+def get_best_children(node_children):#TODO: make sure to not pick winning children?
+    best, best_val = get_best_child(node_children)
+    # best, best_val = get_best_most_visited_child(node_children)
+    best_nodes = []
+    NN_scaling_factor = 1000
+    overwhelming_amount = 65536
 
+    for child in node_children:  # find equally best children
+        # NN_scaling_factor = 1#((child.UCT_multiplier - 1) / scaling_handicap) + 1
+        NN_weighting = (NN_scaling_factor*(child.UCT_multiplier - 1))/(1+child.parent.visits)
 
-    # for child in node_children:
-    #     net_wins = child.wins_down_this_tree - child.losses_down_this_tree
-    #     if net_wins > 0:
-    #         best_nodes.append(child)
-    #
-    # if len(best_nodes) > 0:
-    #     best_net_wins = best_nodes[0].wins_down_this_tree - best_nodes[0].losses_down_this_tree
-    #     best = best_nodes[0]
-    #
-    #     for potential_winner in best_nodes: #get best
-    #         num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
-    #         if num_true_wins > best_net_wins:
-    #             best_net_wins = num_true_wins
-    #             best = potential_winner
-    #
-    #
-    #     for potential_winner in best_nodes: #find another best with a higher win-rate
-    #         num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
-    #         if num_true_wins == best_net_wins and \
-    #                 ((potential_winner.visits - potential_winner.wins) / potential_winner.visits) >= ((best.visits - best.wins)/best.visits):
-    #             best = potential_winner
-    #     best_nodes = [best]#return the kid to check.
+        # child_gameover_visits = floor(child.visits / overwhelming_amount)
+        # child_visits_norm = (child.visits % overwhelming_amount) + child_gameover_visits
+        #
+        # child_gameover_wins = floor(child.wins / overwhelming_amount)
+        # child_wins_norm = (child.wins % overwhelming_amount) + child_gameover_wins
 
+        # child_loss_rate = (child_visits_norm - child_wins_norm) / child_visits_norm
 
-    if best is None:
-        best, best_val = get_best_non_doomed_child(node_children, game_num)
-        scaling_handicap = 1/4#+(game_num/100) #TODO: increase as a function of game_num? more games => stronger scaling strength since we can more safely ignore NN predictions?
-        # best, best_val = get_best_most_visited_child(node_children)
-        best_nodes = []
-        for child in node_children:  # find equally best children
+        child_loss_rate = (child.visits - child.wins) / child.visits
 
-            NN_scaling_factor = 1# ((child.UCT_multiplier-1)/scaling_handicap)+1 #scale the probability
+        if not child.win_status == True: #only consider children who will not lead to a win for opponent
+            if child.visits > 0:
+                child_NN_scaled_loss_rate = NN_weighting + child_loss_rate
 
-
-            if not child.win_status == True:  # only consider children who will not lead to a win for opponent
-                if child.visits > 0:
-                    child_loss_rate = ((child.visits - child.wins) / child.visits)
-                    child_NN_scaled__win_rate = NN_scaling_factor * child_loss_rate
-                    # probability = (child.UCT_multiplier-1)
-                    # child_NN_scaled__win_rate = (probability + child_loss_rate)/(1+probability)
-
-                    if child_NN_scaled__win_rate == best_val:
-                        if best.visits == child.visits:
-                            best_nodes.append(child)
-                            # should now have list of equally best children
-        if len(best_nodes) == 0:  # all children are winners => checkmated, just make the best move you have
-            best_nodes.append(best)
-    else:
-        best_nodes = [best]
+                if child_NN_scaled_loss_rate == best_val:
+                    if best.visits == child.visits:
+                        best_nodes.append(child)
+                        # should now have list of equally best children
+    if len(best_nodes) == 0: #all children are winners => checkmated, just make the best move you have
+        best_nodes.append(best)
     return best_nodes
 
-def get_best_child(node_children, game_num):
-    scaling_handicap = 1/4#+(game_num/100)
+def get_best_child(node_children, non_doomed = True):
+    NN_scaling_factor = 1000#+(game_num/100)
     overwhelming_amount = 65536
     k = 0
-    while k < len(node_children)and node_children[k].visits <= 0 :
-        k += 1
-    if k < len(node_children):
-        best = node_children[k]
-        NN_scaling_factor = 1# ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
-        best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
-
-        best_val_NN_scaled = NN_scaling_factor * best_loss_rate
-
-        # probability = node_children[k].UCT_multiplier-1
-        # best_val_NN_scaled = (probability+ best_loss_rate)/(1+probability)
-
-        for i in range(k, len(node_children)):  # find best child
-            child = node_children[i]
-            NN_scaling_factor = 1#((child.UCT_multiplier-1)/scaling_handicap)+1
-
-            if child.visits > 0:
-                child_loss_rate = (child.visits - child.wins) / child.visits
-                child_NN_scaled_loss_rate = NN_scaling_factor * child_loss_rate
-
-
-
-                # probability = (child.UCT_multiplier-1)
-                # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
-
-                if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
-                    # # and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
-                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount)or \
-                        (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
-                        (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
-                        ((best_loss_rate) < .30):
-                            # if both have searched to game overs, (best case # 1)
-                        # if neither have searched to game overs,
-                        # if new child has searched to a gameover and current best hasn't (best case # 2)
-                        # if new child hasn't searched to a gameover, best has, but new child has a better loss_init-rate (i.e. current best has a lot of losses, new child looks better)
-                        best = child
-                        best_val_NN_scaled = child_NN_scaled_loss_rate
-                        best_loss_rate = (best.visits - best.wins) / best.visits
-
-
-                elif child_NN_scaled_loss_rate == best_val_NN_scaled:  # if both have equal win rate (i.e. both 0/visits),
-
-                    if best_val_NN_scaled == 0: #if both are winners insofar as we know, pick the one with the least visits? (since we're more sure we're doomed with the one visited a lot)
-                        if best.visits > child.visits:
-                            best = child
-                            best_val_NN_scaled = child_NN_scaled_loss_rate
-                            best_loss_rate = (best.visits - best.wins) / best.visits
-                    else: # get the one with the most visits
-                        if best.visits < child.visits:
-                            best = child
-                            best_val_NN_scaled = child_NN_scaled_loss_rate
-                            best_loss_rate = (best.visits - best.wins) / best.visits
-
+    if non_doomed:
+        while k < len(node_children) and (node_children[k].visits <= 0 or node_children[k].win_status is True) :
+            k += 1
     else:
-        # no children with value? happens if search is too slow
-        best = random.sample(node_children, 1)[0]
-        best_val_NN_scaled = 0
-    return best, best_val_NN_scaled
-
-def get_best_non_doomed_child(node_children, game_num):
-    scaling_handicap = 1/4#+(game_num/100)
-    overwhelming_amount = 65536
-    k = 0
-    while k < len(node_children) and (node_children[k].visits <= 0 or node_children[k].win_status is True) :
-        k += 1
+        while k < len(node_children) and node_children[k].visits <= 0:
+            k += 1
     if k < len(node_children):
         best = node_children[k]
-        NN_scaling_factor = 1# ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
+        # best_gameover_visits = floor(node_children[k].visits / overwhelming_amount)
+        # best_child_visits_norm = (node_children[k].visits % overwhelming_amount) + best_gameover_visits
+        #
+        # best_gameover_wins = floor(node_children[k].wins / overwhelming_amount)
+        # best_child_wins_norm = (node_children[k].wins % overwhelming_amount) + best_gameover_wins
+
+        # best_loss_rate = ((best_child_visits_norm - best_child_wins_norm) / best_child_visits_norm)
+
+        NN_weighting = (NN_scaling_factor*(node_children[k].UCT_multiplier - 1)) / (1+node_children[k].parent.visits)
+
         best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
 
-        best_val_NN_scaled = NN_scaling_factor * best_loss_rate
+        best_val_NN_scaled = NN_weighting + best_loss_rate
 
         # probability = node_children[k].UCT_multiplier-1
         # best_val_NN_scaled = (probability+ best_loss_rate)/(1+probability)
 
         for i in range(k, len(node_children)):  # find best child
             child = node_children[i]
-            NN_scaling_factor = 1#((child.UCT_multiplier-1)/scaling_handicap)+1
+            NN_weighting = (NN_scaling_factor*(child.UCT_multiplier - 1))/(1+child.parent.visits)
+            if non_doomed:
+                predicate = child.visits > 0 and not child.win_status is True
+            else:
+                predicate = child.visits > 0
+            if predicate: #only consider non-doomed moves
 
-            if child.visits > 0 and not child.win_status is True: #only consider non-doomed moves
+                # child_gameover_visits = floor(child.visits / overwhelming_amount)
+                # child_visits_norm = (child.visits % overwhelming_amount) + child_gameover_visits
+                #
+                # child_gameover_wins = floor(child.wins / overwhelming_amount)
+                # child_wins_norm = (child.wins % overwhelming_amount) + child_gameover_wins
+
+                # child_loss_rate = (child_visits_norm - child_wins_norm) / child_visits_norm
+
                 child_loss_rate = (child.visits - child.wins) / child.visits
-                child_NN_scaled_loss_rate = NN_scaling_factor * child_loss_rate
 
-
+                child_NN_scaled_loss_rate = NN_weighting + child_loss_rate
 
                 # probability = (child.UCT_multiplier-1)
                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
-
+                #and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
-                    # # and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
-                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount)or \
-                        (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
-                        (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
-                        ((best_loss_rate) < .30):
+                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount) or \
+                            (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
+                            (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
+                            ((best_loss_rate) < .30):
                         # if both have searched to game overs, (best case # 1)
                         # if neither have searched to game overs,
                         # if new child has searched to a gameover and current best hasn't (best case # 2)
                         # if new child hasn't searched to a gameover, best has, but new child has a better loss_init-rate (i.e. current best has a lot of losses, new child looks better)
                         best = child
                         best_val_NN_scaled = child_NN_scaled_loss_rate
-                        best_loss_rate = (best.visits - best.wins) / best.visits
+                        best_loss_rate = child_loss_rate
 
 
                 elif child_NN_scaled_loss_rate == best_val_NN_scaled:  # if both have equal win rate (i.e. both 0/visits),
@@ -462,17 +400,203 @@ def get_best_non_doomed_child(node_children, game_num):
                         if best.visits > child.visits:
                             best = child
                             best_val_NN_scaled = child_NN_scaled_loss_rate
-                            best_loss_rate = (best.visits - best.wins) / best.visits
+                            best_loss_rate = child_loss_rate
                     else: # get the one with the most visits
                         if best.visits < child.visits:
                             best = child
                             best_val_NN_scaled = child_NN_scaled_loss_rate
-                            best_loss_rate = (best.visits - best.wins) / best.visits
+                            best_loss_rate = child_loss_rate
 
     else:
-        # no children with value or all doomed
-        best, best_val_NN_scaled = get_best_child(node_children, game_num)
+        if non_doomed:
+            # no children with value or all doomed
+            best, best_val_NN_scaled = get_best_child(node_children, non_doomed=False)
+        else:
+            # no children with value? happens if search is too slow
+            best = random.sample(node_children, 1)[0]
+            best_val_NN_scaled = 0
     return best, best_val_NN_scaled
+
+#
+# def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
+#
+#     best = choose_best_true_winner(node_children)
+#
+#
+#     # for child in node_children:
+#     #     net_wins = child.wins_down_this_tree - child.losses_down_this_tree
+#     #     if net_wins > 0:
+#     #         best_nodes.append(child)
+#     #
+#     # if len(best_nodes) > 0:
+#     #     best_net_wins = best_nodes[0].wins_down_this_tree - best_nodes[0].losses_down_this_tree
+#     #     best = best_nodes[0]
+#     #
+#     #     for potential_winner in best_nodes: #get best
+#     #         num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
+#     #         if num_true_wins > best_net_wins:
+#     #             best_net_wins = num_true_wins
+#     #             best = potential_winner
+#     #
+#     #
+#     #     for potential_winner in best_nodes: #find another best with a higher win-rate
+#     #         num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
+#     #         if num_true_wins == best_net_wins and \
+#     #                 ((potential_winner.visits - potential_winner.wins) / potential_winner.visits) >= ((best.visits - best.wins)/best.visits):
+#     #             best = potential_winner
+#     #     best_nodes = [best]#return the kid to check.
+#
+#
+#     if best is None:
+#         best, best_val = get_best_non_doomed_child(node_children, game_num)
+#         scaling_handicap = 1/4#+(game_num/100) #TODO: increase as a function of game_num? more games => stronger scaling strength since we can more safely ignore NN predictions?
+#         # best, best_val = get_best_most_visited_child(node_children)
+#         best_nodes = []
+#         for child in node_children:  # find equally best children
+#
+#             NN_scaling_factor = 1# ((child.UCT_multiplier-1)/scaling_handicap)+1 #scale the probability
+#
+#
+#             if not child.win_status == True:  # only consider children who will not lead to a win for opponent
+#                 if child.visits > 0:
+#                     child_loss_rate = ((child.visits - child.wins) / child.visits)
+#                     child_NN_scaled__win_rate = NN_scaling_factor * child_loss_rate
+#                     # probability = (child.UCT_multiplier-1)
+#                     # child_NN_scaled__win_rate = (probability + child_loss_rate)/(1+probability)
+#
+#                     if child_NN_scaled__win_rate == best_val:
+#                         if best.visits == child.visits:
+#                             best_nodes.append(child)
+#                             # should now have list of equally best children
+#         if len(best_nodes) == 0:  # all children are winners => checkmated, just make the best move you have
+#             best_nodes.append(best)
+#     else:
+#         best_nodes = [best]
+#     return best_nodes
+# def get_best_child(node_children, game_num):
+#     scaling_handicap = 1/4#+(game_num/100)
+#     overwhelming_amount = 65536
+#     k = 0
+#     while k < len(node_children)and node_children[k].visits <= 0 :
+#         k += 1
+#     if k < len(node_children):
+#         best = node_children[k]
+#         NN_scaling_factor = 1# ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
+#         best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
+#
+#         best_val_NN_scaled = NN_scaling_factor * best_loss_rate
+#
+#         # probability = node_children[k].UCT_multiplier-1
+#         # best_val_NN_scaled = (probability+ best_loss_rate)/(1+probability)
+#
+#         for i in range(k, len(node_children)):  # find best child
+#             child = node_children[i]
+#             NN_scaling_factor = 1#((child.UCT_multiplier-1)/scaling_handicap)+1
+#
+#             if child.visits > 0:
+#                 child_loss_rate = (child.visits - child.wins) / child.visits
+#                 child_NN_scaled_loss_rate = NN_scaling_factor * child_loss_rate
+#
+#
+#
+#                 # probability = (child.UCT_multiplier-1)
+#                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
+#
+#                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
+#                     # # and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
+#                     if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount)or \
+#                         (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
+#                         (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
+#                         ((best_loss_rate) < .30):
+#                             # if both have searched to game overs, (best case # 1)
+#                         # if neither have searched to game overs,
+#                         # if new child has searched to a gameover and current best hasn't (best case # 2)
+#                         # if new child hasn't searched to a gameover, best has, but new child has a better loss_init-rate (i.e. current best has a lot of losses, new child looks better)
+#                         best = child
+#                         best_val_NN_scaled = child_NN_scaled_loss_rate
+#                         best_loss_rate = (best.visits - best.wins) / best.visits
+#
+#
+#                 elif child_NN_scaled_loss_rate == best_val_NN_scaled:  # if both have equal win rate (i.e. both 0/visits),
+#
+#                     if best_val_NN_scaled == 0: #if both are winners insofar as we know, pick the one with the least visits? (since we're more sure we're doomed with the one visited a lot)
+#                         if best.visits > child.visits:
+#                             best = child
+#                             best_val_NN_scaled = child_NN_scaled_loss_rate
+#                             best_loss_rate = (best.visits - best.wins) / best.visits
+#                     else: # get the one with the most visits
+#                         if best.visits < child.visits:
+#                             best = child
+#                             best_val_NN_scaled = child_NN_scaled_loss_rate
+#                             best_loss_rate = (best.visits - best.wins) / best.visits
+#
+#     else:
+#         # no children with value? happens if search is too slow
+#         best = random.sample(node_children, 1)[0]
+#         best_val_NN_scaled = 0
+#     return best, best_val_NN_scaled
+#
+# def get_best_non_doomed_child(node_children, game_num):
+#     scaling_handicap = 1/4#+(game_num/100)
+#     overwhelming_amount = 65536
+#     k = 0
+#     while k < len(node_children) and (node_children[k].visits <= 0 or node_children[k].win_status is True) :
+#         k += 1
+#     if k < len(node_children):
+#         best = node_children[k]
+#         NN_scaling_factor = 1# ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
+#         best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
+#
+#         best_val_NN_scaled = NN_scaling_factor * best_loss_rate
+#
+#         # probability = node_children[k].UCT_multiplier-1
+#         # best_val_NN_scaled = (probability+ best_loss_rate)/(1+probability)
+#
+#         for i in range(k, len(node_children)):  # find best child
+#             child = node_children[i]
+#             NN_scaling_factor = 1#((child.UCT_multiplier-1)/scaling_handicap)+1
+#
+#             if child.visits > 0 and not child.win_status is True: #only consider non-doomed moves
+#                 child_loss_rate = (child.visits - child.wins) / child.visits
+#                 child_NN_scaled_loss_rate = NN_scaling_factor * child_loss_rate
+#
+#
+#
+#                 # probability = (child.UCT_multiplier-1)
+#                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
+#
+#                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
+#                     # # and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
+#                     if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount)or \
+#                         (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
+#                         (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
+#                         ((best_loss_rate) < .30):
+#                         # if both have searched to game overs, (best case # 1)
+#                         # if neither have searched to game overs,
+#                         # if new child has searched to a gameover and current best hasn't (best case # 2)
+#                         # if new child hasn't searched to a gameover, best has, but new child has a better loss_init-rate (i.e. current best has a lot of losses, new child looks better)
+#                         best = child
+#                         best_val_NN_scaled = child_NN_scaled_loss_rate
+#                         best_loss_rate = (best.visits - best.wins) / best.visits
+#
+#
+#                 elif child_NN_scaled_loss_rate == best_val_NN_scaled:  # if both have equal win rate (i.e. both 0/visits),
+#
+#                     if best_val_NN_scaled == 0: #if both are winners insofar as we know, pick the one with the least visits? (since we're more sure we're doomed with the one visited a lot)
+#                         if best.visits > child.visits:
+#                             best = child
+#                             best_val_NN_scaled = child_NN_scaled_loss_rate
+#                             best_loss_rate = (best.visits - best.wins) / best.visits
+#                     else: # get the one with the most visits
+#                         if best.visits < child.visits:
+#                             best = child
+#                             best_val_NN_scaled = child_NN_scaled_loss_rate
+#                             best_loss_rate = (best.visits - best.wins) / best.visits
+#
+#     else:
+#         # no children with value or all doomed
+#         best, best_val_NN_scaled = get_best_child(node_children, game_num)
+#     return best, best_val_NN_scaled
 
 def get_best_most_visited_child(node_children):
     k = 0
@@ -814,6 +938,6 @@ def get_top_children(NN_output, num_top=0):
         num_top = len(NN_output)
         full_sort = NN_output.argsort()[::-1][:num_top]
     else:
-        partial_sort = argpartsort(NN_output, NN_output.size-num_top)[-num_top:]
+        partial_sort = argpartition(NN_output, NN_output.size-num_top+1)[-num_top:]
         full_sort = partial_sort[NN_output[partial_sort].argsort()][::-1]
     return full_sort

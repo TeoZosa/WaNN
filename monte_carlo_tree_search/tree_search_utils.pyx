@@ -208,6 +208,9 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
         overwhelming_amount = 65536
+        NN_scaling_factor = 1000#+(game_num/100)
+        NN_weighting = (NN_scaling_factor*(node.UCT_multiplier - 1))/(1+node.visits)
+
         # if parent_visits >= overwhelming_amount:
         #     parent_visits %= overwhelming_amount
         # # 03/11/2017 games actually good with this and no division, but annealing seems right?
@@ -241,7 +244,7 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         # exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
         exploration_factor = exploration_constant * sqrt(log(max(1,parent_visits)) / node.visits)
         UCT = (exploitation_factor + exploration_factor)
-    return UCT * (node.UCT_multiplier ) #UCT from parent's POV
+    return UCT + NN_weighting #* (node.UCT_multiplier ) #UCT from parent's POV
 
 def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose among equally successful children
     best_nodes = []
@@ -294,7 +297,7 @@ def check_for_forced_win(node_children, game_num):
     return forced_win, guaranteed_children
 
 
-def get_best_children(node_children):#TODO: make sure to not pick winning children?
+def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
     best, best_val = get_best_child(node_children)
     # best, best_val = get_best_most_visited_child(node_children)
     best_nodes = []
@@ -317,7 +320,7 @@ def get_best_children(node_children):#TODO: make sure to not pick winning childr
 
         if not child.win_status == True: #only consider children who will not lead to a win for opponent
             if child.visits > 0:
-                child_NN_scaled_loss_rate = NN_weighting + child_loss_rate
+                child_NN_scaled_loss_rate = child_loss_rate# + NN_weighting
 
                 if child_NN_scaled_loss_rate == best_val:
                     if best.visits == child.visits:
@@ -351,7 +354,7 @@ def get_best_child(node_children, non_doomed = True):
 
         best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
 
-        best_val_NN_scaled = NN_weighting + best_loss_rate
+        best_val_NN_scaled = best_loss_rate #+ NN_weighting
 
         # probability = node_children[k].UCT_multiplier-1
         # best_val_NN_scaled = (probability+ best_loss_rate)/(1+probability)
@@ -375,7 +378,7 @@ def get_best_child(node_children, non_doomed = True):
 
                 child_loss_rate = (child.visits - child.wins) / child.visits
 
-                child_NN_scaled_loss_rate = NN_weighting + child_loss_rate
+                child_NN_scaled_loss_rate = child_loss_rate # + NN_weighting
 
                 # probability = (child.UCT_multiplier-1)
                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)

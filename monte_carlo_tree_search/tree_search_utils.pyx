@@ -1,8 +1,10 @@
 #cython: language_level=3, boundscheck=False
 
-from math import log, sqrt
+from math import log, sqrt, floor
 import random
-from time import time
+from bottleneck import argpartsort
+from numpy import argsort
+# from time import time
 
 class SimulationInfo():
     def __init__(self, file):
@@ -87,13 +89,13 @@ def choose_UCT_move(node, start_time, time_to_think, sim_info):
 
 def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
     best = None  # shouldn't ever return None
-    if node is sim_info.root:
-        num_children = len(node.children)
+    num_children = len(node.children)
+    if num_children == 1:
+        best = node.children[0]
+    elif node is sim_info.root:
         if num_children>1:
             best = node.children[sim_info.root_thread_counter%num_children]
             sim_info.root_thread_counter+=1
-        else:
-            best = node.children[0]
     else:
         if node.best_child is not None: #return best child if not already previously expanded
             if node.best_child.win_status is None and node.best_child.visited is False: # and not node.best_child.subtree_checked ...  node.best_child.visited is False and
@@ -160,7 +162,12 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
     parent_visits = node.visits
     best = None
     #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss_init
-    viable_children = list(filter(lambda x:  x.win_status is None and (x.threads_checking_node <=0 or x.children is not None), node.children))
+    if sim_info.root.win_status is not None:
+        viable_children = list(filter(lambda x:  x.win_status is None and (x.threads_checking_node <=0 or x.children is not None), node.children))
+        if len(viable_children) == 0:
+                viable_children = list(filter(lambda x:  not x.subtree_checked and (x.threads_checking_node <=0 or x.children is not None), node.children))
+    else:
+        viable_children = list(filter(lambda x:  x.win_status is None and (x.threads_checking_node <=0 or x.children is not None), node.children))
     if len(viable_children)>0:
         best = viable_children[0]
         best_val = get_UCT(best, parent_visits, start_time, time_to_think, sim_info)
@@ -200,7 +207,7 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
     if node.visits == 0:
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
-        # overwhelming_amount = 9999999
+        overwhelming_amount = 65536
         # if parent_visits >= overwhelming_amount:
         #     parent_visits %= overwhelming_amount
         # # 03/11/2017 games actually good with this and no division, but annealing seems right?
@@ -220,8 +227,18 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         else:
             # exploration_constant = 0.1 + stochasticity_for_multithreading # 1.414 ~ √2
             exploration_constant =  stochasticity_for_multithreading # 1.414 ~ √2
+        if node.visits >= overwhelming_amount:
+            norm_visits = floor(node.visits / overwhelming_amount)+ (node.visits % overwhelming_amount)
+        else:
+            norm_visits = node.visits
+        if node.wins >= overwhelming_amount:
+            norm_wins = floor(node.wins/overwhelming_amount) + (node.wins % overwhelming_amount)
+        else:
+            norm_wins = node.wins
+        norm_loss_rate = (norm_visits-norm_wins)/norm_visits
+        exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
 
-        exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
+        # exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
         exploration_factor = exploration_constant * sqrt(log(max(1,parent_visits)) / node.visits)
         UCT = (exploitation_factor + exploration_factor)
     return UCT * (node.UCT_multiplier ) #UCT from parent's POV
@@ -312,7 +329,7 @@ def get_best_children(node_children, game_num):#TODO: make sure to not pick winn
         best_nodes = []
         for child in node_children:  # find equally best children
 
-            NN_scaling_factor =  ((child.UCT_multiplier-1)/scaling_handicap)+1 #scale the probability
+            NN_scaling_factor = 1# ((child.UCT_multiplier-1)/scaling_handicap)+1 #scale the probability
 
 
             if not child.win_status == True:  # only consider children who will not lead to a win for opponent
@@ -334,13 +351,13 @@ def get_best_children(node_children, game_num):#TODO: make sure to not pick winn
 
 def get_best_child(node_children, game_num):
     scaling_handicap = 1/4#+(game_num/100)
-    overwhelming_amount = 999999
+    overwhelming_amount = 65536
     k = 0
     while k < len(node_children)and node_children[k].visits <= 0 :
         k += 1
     if k < len(node_children):
         best = node_children[k]
-        NN_scaling_factor =  ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
+        NN_scaling_factor = 1# ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
         best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
 
         best_val_NN_scaled = NN_scaling_factor * best_loss_rate
@@ -350,7 +367,7 @@ def get_best_child(node_children, game_num):
 
         for i in range(k, len(node_children)):  # find best child
             child = node_children[i]
-            NN_scaling_factor = ((child.UCT_multiplier-1)/scaling_handicap)+1
+            NN_scaling_factor = 1#((child.UCT_multiplier-1)/scaling_handicap)+1
 
             if child.visits > 0:
                 child_loss_rate = (child.visits - child.wins) / child.visits
@@ -362,8 +379,8 @@ def get_best_child(node_children, game_num):
                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
 
                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
-                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount and (
-                                child.visits / best.visits > 0.3) or best_loss_rate < .5) or \
+                    # # and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
+                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount)or \
                         (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
                         (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
                         ((best_loss_rate) < .30):
@@ -397,13 +414,13 @@ def get_best_child(node_children, game_num):
 
 def get_best_non_doomed_child(node_children, game_num):
     scaling_handicap = 1/4#+(game_num/100)
-    overwhelming_amount = 999999
+    overwhelming_amount = 65536
     k = 0
     while k < len(node_children) and (node_children[k].visits <= 0 or node_children[k].win_status is True) :
         k += 1
     if k < len(node_children):
         best = node_children[k]
-        NN_scaling_factor =  ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
+        NN_scaling_factor = 1# ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
         best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
 
         best_val_NN_scaled = NN_scaling_factor * best_loss_rate
@@ -413,7 +430,7 @@ def get_best_non_doomed_child(node_children, game_num):
 
         for i in range(k, len(node_children)):  # find best child
             child = node_children[i]
-            NN_scaling_factor = ((child.UCT_multiplier-1)/scaling_handicap)+1
+            NN_scaling_factor = 1#((child.UCT_multiplier-1)/scaling_handicap)+1
 
             if child.visits > 0 and not child.win_status is True: #only consider non-doomed moves
                 child_loss_rate = (child.visits - child.wins) / child.visits
@@ -425,8 +442,8 @@ def get_best_non_doomed_child(node_children, game_num):
                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
 
                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
-                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount and (
-                            child.visits / best.visits > 0.3) or best_loss_rate < .5) or \
+                    # # and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
+                    if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount)or \
                         (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
                         (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
                         ((best_loss_rate) < .30):
@@ -792,7 +809,11 @@ def update_sum_for_normalization(parent, NN_output, child_indexes):
 
 #returns a sorted list (best to worst as evaluated by the NN) of the children as move indexes
 def get_top_children(NN_output, num_top=0):
+
     if num_top == 0:
         num_top = len(NN_output)
-    # return sorted(range(len(NN_output)), key=lambda k: NN_output[k], reverse=True)[:num_top]
-    return NN_output.argsort()[::-1][:num_top]
+        full_sort = NN_output.argsort()[::-1][:num_top]
+    else:
+        partial_sort = argpartsort(NN_output, NN_output.size-num_top)[-num_top:]
+        full_sort = partial_sort[NN_output[partial_sort].argsort()][::-1]
+    return full_sort

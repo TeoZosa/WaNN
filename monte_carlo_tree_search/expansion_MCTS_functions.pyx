@@ -78,7 +78,7 @@ NN_input_queue = [] #for expanded nodes that need to be evaluated asynchronously
 def MCTS_with_expansions(game_board, player_color, time_to_think,
                          depth_limit, previous_move, last_opponent_move, move_number, log_file=stdout, MCTS_Type='Expansion MCTS Pruning', policy_net=None, game_num = -1):
     with SimulationInfo(log_file) as sim_info:
-        # time_to_think = time_to_think*.88 #with threads, takes 1.125 times longer to finish up
+        time_to_think = time_to_think*.88 #with threads, takes 1.125 times longer to finish up
         # sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
         sim_info.game_num = game_num
         sim_info.time_to_think = time_to_think
@@ -141,7 +141,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         # if move_number == 0:
         #     reinit_gameover_values(root)
 
-        if root.subtree_checked or root.win_status is True:
+        if root.subtree_checked:# or root.win_status is True
             done = True
         else:
             done = False
@@ -157,12 +157,13 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         #         if net_real_wins > 0:
         #             done = True
         # async_NN_update_threads = ThreadPool(processes=3)
-        num_processes = 25
+        num_processes = 50
         parallel_search_threads = ThreadPool(processes=num_processes)
 
         sim_info.start_time = start_time = time()
         MCTS_args = [[root, depth_limit, time_to_think, sim_info, MCTS_Type, policy_net, start_time]] * int(num_processes)
-
+        #BFS tree to reset node check semaphore
+        reset_thread_flag(root)
         while time() - start_time < time_to_think and not done:
             if MCTS_Type ==  'MCTS Asynchronous':
                 NN_args = [done, pruning, sim_info, policy_net]
@@ -182,8 +183,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         parallel_search_threads.join()
         true_search_time = time() - start_time
 
-        #DFS tree to reset node check semaphore
-        reset_thread_flag(root)
+
 
             #TODO: something symmetric for if it thinks it has a forced win? i.e. best_child reexpanded = true?
                 # if it has time to think, might as well make sure? may ruin final move choice.
@@ -384,26 +384,29 @@ def run_MCTS_with_expansions_simulation( #args
             sim_info.prev_game_tree_size = len(sim_info.game_tree)
             sim_info.counter += 1
         # print_forced_win(root.win_status, sim_info)
-
-        with async_update_lock:
-            if root.win_status is True or root.subtree_checked:
-                done = True
-            elif root.win_status is False:
-                if not root.reexpanded:
-                    if root.height >=60:
-                        if root.threads_checking_node <= 0:
-                            root.reexpanded = True
-                            this_thread_reexpands_root = True
-                            root.threads_checking_node = 1
-                            done = False
-                    else:
-                        # done = True
-                        done = False
-                else:
-                    # done = True
-                    done = False
-            else:
-                done = False
+        if root.subtree_checked:
+            done = True
+        else:
+            done = False
+        # with async_update_lock:
+        #     if root.win_status is True or root.subtree_checked:
+        #         done = True
+        #     elif root.win_status is False:
+        #         if not root.reexpanded:
+        #             if root.height >=60:
+        #                 if root.threads_checking_node <= 0:
+        #                     root.reexpanded = True
+        #                     this_thread_reexpands_root = True
+        #                     root.threads_checking_node = 1
+        #                     done = False
+        #             else:
+        #                 # done = True
+        #                 done = False
+        #         else:
+        #             # done = True
+        #             done = False
+        #     else:
+        #         done = False
 
         if this_thread_reexpands_root:
             expand_descendants_to_depth_wrt_NN([root], False, 0, depth_limit, sim_info, async_update_lock,
@@ -577,7 +580,7 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
     root = sim_info.root
     start_time = sim_info.start_time
     time_to_think = sim_info.time_to_think
-    overwhelming_amount = 9999999
+    overwhelming_amount = 65536
     print("Monte Carlo Game {iteration}\n"
           "Played at root   Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}    win = {win_status}\n".format(
         height = root.height, color=root.color, uct=0, wins=root.wins/overwhelming_amount, visits=root.visits/overwhelming_amount,

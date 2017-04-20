@@ -1,3 +1,5 @@
+#cython: language_level=3, boundscheck=False
+
 import os
 import fnmatch
 import sys

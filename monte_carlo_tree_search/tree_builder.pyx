@@ -140,7 +140,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
 
         unexpanded_nodes = list(filter(lambda x: ((x.children is None or x.reexpanded) and not x.gameover ), unexpanded_nodes)) #redundant
         if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<2056: #if any nodes to expand;
-            if sim_info.root is not None:
+            if sim_info.root is not None: #aren't coming from reinitializing a root
                 if sim_info.main_pid == current_thread().name:
                     depth_limit = 1 #main thread expands once and exits to call other threads
                 # elif unexpanded_nodes[0].height > 80:
@@ -153,10 +153,15 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
                 #     depth_limit = 128
                 # elif unexpanded_nodes[0].height > 70:
                 #     depth_limit = 16
+                elif unexpanded_nodes[0].height > 50:
+                    depth_limit = 800
+                    without_enumerating = False
                 elif unexpanded_nodes[0].height > 40:
                     depth_limit = 800
+                    without_enumerating = True
                 else:
                     depth = 4
+                    without_enumerating = True
 
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
@@ -393,20 +398,30 @@ def update_and_prune(parent, NN_output,sim_info, lock):
 
     # comparing to child val should reduce this considerably,
     # yet still allows us to call parent function from a top-level asynchronous tree updater
-    num_to_check_for_legality = 30
-    top_children_indexes = get_top_children(NN_output, num_to_check_for_legality)
-
+    num_to_check_for_legality = get_num_to_consider_by_height(parent.height)
+    ranks_to_consider = num_to_check_for_legality + 2 #just in case some top choices are illegal moves
+    top_children_indexes = get_top_children(NN_output, ranks_to_consider)
     best_child_val, best_rank = get_best_child_val(parent, NN_output, top_children_indexes)
-    for child_index in top_children_indexes:
-        move = move_lookup_by_index(child_index, parent.color)  # turn the child indexes into moves
-        if check_legality_MCTS(parent.game_board, move):
-            pruned_child, child_win_status = get_cached_child(parent, move, NN_output, top_children_indexes,
-                                                              best_child_val, best_rank, sim_info, lock, num_to_check_for_legality, aggressive=None)
 
-            if pruned_child is not None:
-                pruned_children.append(pruned_child)
-                children_win_statuses.append(child_win_status)
-    pruned_children = assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
+    if num_to_check_for_legality == 1: #since this happens more often than not, make it a dedicated block
+        move = move_lookup_by_index(top_children_indexes[best_rank], parent.color)
+        pruned_child, child_win_status = get_cached_child(parent, move, NN_output, top_children_indexes,
+                                                                  best_child_val, best_rank, sim_info, lock, num_to_check_for_legality, aggressive=None)
+        pruned_children.append(pruned_child)
+        children_win_statuses.append(child_win_status)
+        pruned_children = assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
+    else:
+        top_children_indexes = top_children_indexes[best_rank:]#start from the first best legal move
+        for child_index in top_children_indexes:
+            move = move_lookup_by_index(child_index, parent.color)  # turn the child indexes into moves
+            if check_legality_MCTS(parent.game_board, move):
+                pruned_child, child_win_status = get_cached_child(parent, move, NN_output, top_children_indexes,
+                                                                  best_child_val, best_rank, sim_info, lock, num_to_check_for_legality, aggressive=None)
+
+                if pruned_child is not None:
+                    pruned_children.append(pruned_child)
+                    children_win_statuses.append(child_win_status)
+        pruned_children = assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
     return pruned_children
 
 def enumerate_update_and_prune(parent, NN_output,sim_info, lock):
@@ -582,127 +597,192 @@ def get_best_child_val(parent, NN_output, top_children_indexes):
 #         else:
 #             predicate = True
 #     return predicate
+def get_num_to_consider_by_height(height):
+    if height < 80:
+        # or if root, top3?
+
+        if height % 2 == 0:  # white moves
+            if height >= 70:
+                num_top_to_consider =  3
+            # 2?   65-69      #??
+            elif height < 70 and height >= 65:
+                num_top_to_consider =  3  # else play with child val threshold?
+            # # # 4?   60-64
+            elif height < 65 and height >= 60:
+                num_top_to_consider =   3  # else play with child val threshold
+            # 7 or 4?   50-59
+            elif height < 60 and height >= 50:
+                num_top_to_consider =   5 #else play with child val threshold?
+            # 5    40-49
+            elif height < 50 and height >= 40:
+                num_top_to_consider =   4 #else play with child val threshold?
+            # 2    30-39
+            elif height < 40 and height >= 30:
+                num_top_to_consider =   4  # else play with child val threshold?
+            # 2    20-29
+            elif height < 30 and height >= 20:
+                num_top_to_consider =   4 #else play with child val threshold?
+             # 2    0-19
+            elif height < 20 and height >= 0:
+                num_top_to_consider =   3 #else play with child val threshold?
+            else: #2?
+                num_top_to_consider =  1  # else play with child val threshold?
+        else:
+                # 3?   61-69
+            if height >= 70:
+                num_top_to_consider =  3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+                # 52-60
+            elif height < 70 and height >= 61:#2?
+                num_top_to_consider =  1#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+                # 52-60
+            elif height < 61 and height >= 52:
+                num_top_to_consider =  1#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+                # 3?   40-51
+            elif height < 52 and height >= 40:  # 40?
+                num_top_to_consider =  1#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
+            elif height < 20 and height >= 0:
+                num_top_to_consider =   1#2 #else play with child val threshold?
+            else:
+                num_top_to_consider =  1#1 # else play with child val threshold?
+    else:
+
+        num_top_to_consider = 999
+    return num_top_to_consider
 
 def get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, child_val, best_child_val, best_rank,
                                  opening_move=False):
-    if parent.height < 80 and not opening_move and not parent.reexpanded:
-        # or if root, top3?
-
-        if parent.height % 2 == 0:  # white moves
-
-            if False:
-                num_top_to_consider = best_rank + 1
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-            # elif parent.height in num_to_consider_dict.keys():
-            #     num_top_to_consider = best_rank +  num_to_consider_dict[parent.height]
-            #     top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-            #     predicate = child.index in top_n_children #or best_child_val - child_val < .10
-
-           # 70-79
-            elif parent.height >= 70:
-                num_top_to_consider = best_rank + 10
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-           #
-            # 2?   65-69      #??
-            elif parent.height < 70 and parent.height >= 65:
-                num_top_to_consider = best_rank + 3  # else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-           #
-            # # # 4?   60-64
-            elif parent.height < 65 and parent.height >= 60:
-                num_top_to_consider = best_rank +  3  # else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-
-            # 7 or 4?   50-59
-            elif parent.height < 60 and parent.height >= 50:
-                num_top_to_consider = best_rank +  5 #else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-
-            # # 4?   40-64
-            # elif parent.height < 65 and parent.height >= 40:
-            #     num_top_to_consider = best_rank + 4  # else play with child val threshold?
-            #     top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-            #     predicate = child.index in top_n_children #or best_child_val - child_val < .10
-
-            # 5    40-49
-            elif parent.height < 50 and parent.height >= 40:
-                num_top_to_consider = best_rank +  4 #else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-
-            # 2    30-39
-            elif parent.height < 40 and parent.height >= 30:
-                num_top_to_consider = best_rank +  4  # else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-           # #
-            # 2    20-29
-            elif parent.height < 30 and parent.height >= 20:
-                num_top_to_consider = best_rank +  4 #else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-             # 2    0-19
-            elif parent.height < 20 and parent.height >= 0:
-                num_top_to_consider = best_rank +  3 #else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-            #     # 70-79
-            # elif parent.height >= 49:
-            #     num_top_to_consider = best_rank + 7
-            #     top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-            #     predicate = child.index in top_n_children  # or best_child_val - child_val < .10
-            else: #2?
-                num_top_to_consider = best_rank + 1  # else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children or best_child_val - child_val < .05
-                # predicate = True
-        else:  # black's move
-            if best_child_val > 0.7:
-                num_top_to_consider = best_rank + 1
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-                # 3?   61-69
-            elif parent.height >= 70:
-                num_top_to_consider = best_rank + 10  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children  # or best_child_val - child_val < .10
-                # 52-60
-            elif parent.height < 70 and parent.height >= 61:
-                num_top_to_consider = best_rank + 2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-                # 52-60
-            elif parent.height < 61 and parent.height >= 52:
-                num_top_to_consider = best_rank + 3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-
-                # 3?   45-51
-            elif parent.height < 52 and parent.height >= 40:  # 40?
-                num_top_to_consider = best_rank + 2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-            elif parent.height < 20 and parent.height >= 0:
-                num_top_to_consider = best_rank +  2 #else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children #or best_child_val - child_val < .10
-            else:
-                num_top_to_consider = best_rank + 1 # else play with child val threshold?
-                top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-                predicate = child.index in top_n_children or best_child_val - child_val < .05
+    if parent.reexpanded:
+        num_top_to_consider = best_rank + 5  # else play with child val threshold?
     else:
-        if parent.reexpanded:
-            num_top_to_consider = best_rank + 5  # else play with child val threshold?
-            top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-            predicate = child.index in top_n_children or best_child_val - child_val < .10
-        else:
-            predicate = True
+        num_top_to_consider = get_num_to_consider_by_height(parent.height)
+
+    if num_top_to_consider == 999:
+        predicate = True
+    else:
+        top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+        predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
     return predicate
+
+# def get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, child_val, best_child_val, best_rank,
+#                                  opening_move=False):
+#     if parent.height < 80 and not opening_move and not parent.reexpanded:
+#         # or if root, top3?
+#
+#         if parent.height % 2 == 0:  # white moves
+#
+#             if False:
+#                 num_top_to_consider = best_rank + 1
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#             # elif parent.height in num_to_consider_dict.keys():
+#             #     num_top_to_consider = best_rank +  num_to_consider_dict[parent.height]
+#             #     top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#             #     predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#
+#            # 70-79
+#             elif parent.height >= 70:
+#                 num_top_to_consider = best_rank + 3
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#            #
+#             # 2?   65-69      #??
+#             elif parent.height < 70 and parent.height >= 65:
+#                 num_top_to_consider = best_rank + 3  # else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#            #
+#             # # # 4?   60-64
+#             elif parent.height < 65 and parent.height >= 60:
+#                 num_top_to_consider = best_rank +  3  # else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#
+#             # 7 or 4?   50-59
+#             elif parent.height < 60 and parent.height >= 50:
+#                 num_top_to_consider = best_rank +  5 #else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#
+#             # # 4?   40-64
+#             # elif parent.height < 65 and parent.height >= 40:
+#             #     num_top_to_consider = best_rank + 4  # else play with child val threshold?
+#             #     top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#             #     predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#
+#             # 5    40-49
+#             elif parent.height < 50 and parent.height >= 40:
+#                 num_top_to_consider = best_rank +  4 #else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#
+#             # 2    30-39
+#             elif parent.height < 40 and parent.height >= 30:
+#                 num_top_to_consider = best_rank +  4  # else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#            # #
+#             # 2    20-29
+#             elif parent.height < 30 and parent.height >= 20:
+#                 num_top_to_consider = best_rank +  4 #else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#              # 2    0-19
+#             elif parent.height < 20 and parent.height >= 0:
+#                 num_top_to_consider = best_rank +  3 #else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#             #     # 70-79
+#             # elif parent.height >= 49:
+#             #     num_top_to_consider = best_rank + 7
+#             #     top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#             #     predicate = child.index in top_n_children  # or best_child_val - child_val < .10
+#             else: #2?
+#                 num_top_to_consider = best_rank + 1  # else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or best_child_val - child_val < .05
+#                 # predicate = True
+#         else:  # black's move
+#             if best_child_val > 0.7:
+#                 num_top_to_consider = best_rank + 1
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#                 # 3?   61-69
+#             elif parent.height >= 70:
+#                 num_top_to_consider = best_rank + 3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#                 # 52-60
+#             elif parent.height < 70 and parent.height >= 61:#2?
+#                 num_top_to_consider = best_rank + 1#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#                 # 52-60
+#             elif parent.height < 61 and parent.height >= 52:
+#                 num_top_to_consider = best_rank + 1#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#
+#                 # 3?   40-51
+#             elif parent.height < 52 and parent.height >= 40:  # 40?
+#                 num_top_to_consider = best_rank + 5#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#             elif parent.height < 20 and parent.height >= 0:
+#                 num_top_to_consider = best_rank +  1#2 #else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#             else:
+#                 num_top_to_consider = best_rank + 1#1 # else play with child val threshold?
+#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#                 predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#     else:
+#         if parent.reexpanded:
+#             num_top_to_consider = best_rank + 5  # else play with child val threshold?
+#             top_n_children = top_children_indexes[best_rank:num_top_to_consider]
+#             predicate = child.index in top_n_children or child_val > best_child_val/1.1#or best_child_val - child_val < .10
+#         else:
+#             predicate = True
+#     return predicate
 
 def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank, sim_info, lock, num_legal_children, opening_move=False):
     pruned_child = None
@@ -979,7 +1059,7 @@ def set_game_over_values(node, node_color, winner_color, rollout=False):
     node.visited = True
     #
     if rollout is False:
-        overwhelming_amount = 9999999# is this value right? technically true and will draw parent towards siblings of winning moves
+        overwhelming_amount = 65536# is this value right? technically true and will draw parent towards siblings of winning moves
         #but will make it too greedy when choosing a best move; maybe make best move be conservative? choose safest child?
     else:
         overwhelming_amount = 1

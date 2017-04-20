@@ -633,13 +633,13 @@ def get_num_to_consider_by_height(height):
                 num_top_to_consider =  3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
                 # 52-60
             elif height < 70 and height >= 61:#2?
-                num_top_to_consider =  1#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+                num_top_to_consider =  2#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
                 # 52-60
             elif height < 61 and height >= 52:
-                num_top_to_consider =  1#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+                num_top_to_consider =  2#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
                 # 3?   40-51
             elif height < 52 and height >= 40:  # 40?
-                num_top_to_consider =  1#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
+                num_top_to_consider =  2#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
             elif height < 20 and height >= 0:
                 num_top_to_consider =   1#2 #else play with child val threshold?
             else:

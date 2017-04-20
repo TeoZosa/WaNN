@@ -162,10 +162,10 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
     parent_visits = node.visits
     best = None
     #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss_init
-    if sim_info.root.win_status is not None:
+    if node.win_status is not None:
         viable_children = list(filter(lambda x:  x.win_status is None and (x.threads_checking_node <=0 or x.children is not None), node.children))
         if len(viable_children) == 0:
-                viable_children = list(filter(lambda x:  not x.subtree_checked and (x.threads_checking_node <=0 or x.children is not None), node.children))
+            viable_children = list(filter(lambda x:  not x.subtree_checked and (x.threads_checking_node <=0 or x.children is not None), node.children))
     else:
         viable_children = list(filter(lambda x:  x.win_status is None and (x.threads_checking_node <=0 or x.children is not None), node.children))
     if len(viable_children)>0:
@@ -209,7 +209,6 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
     else:
         overwhelming_amount = 65536
         NN_scaling_factor = 1000#+(game_num/100)
-        NN_weighting = (NN_scaling_factor*(node.UCT_multiplier - 1))/(1+node.visits)
 
         # if parent_visits >= overwhelming_amount:
         #     parent_visits %= overwhelming_amount
@@ -232,17 +231,20 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
             exploration_constant =  stochasticity_for_multithreading # 1.414 ~ √2
         if node.visits >= overwhelming_amount:
             norm_visits = floor(node.visits / overwhelming_amount)+ (node.visits % overwhelming_amount)
+            parent_visits = floor(parent_visits/overwhelming_amount) + (parent_visits % overwhelming_amount)
         else:
             norm_visits = node.visits
         if node.wins >= overwhelming_amount:
             norm_wins = floor(node.wins/overwhelming_amount) + (node.wins % overwhelming_amount)
         else:
             norm_wins = node.wins
+        NN_weighting = (NN_scaling_factor*(node.UCT_multiplier - 1))/(1+norm_visits)
+
         norm_loss_rate = (norm_visits-norm_wins)/norm_visits
         exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
 
         # exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
-        exploration_factor = exploration_constant * sqrt(log(max(1,parent_visits)) / node.visits)
+        exploration_factor = exploration_constant * sqrt(log(1+parent_visits) / norm_visits)
         UCT = (exploitation_factor + exploration_factor)
     return UCT + NN_weighting #* (node.UCT_multiplier ) #UCT from parent's POV
 
@@ -307,16 +309,17 @@ def get_best_children(node_children, game_num):#TODO: make sure to not pick winn
     for child in node_children:  # find equally best children
         # NN_scaling_factor = 1#((child.UCT_multiplier - 1) / scaling_handicap) + 1
         NN_weighting = (NN_scaling_factor*(child.UCT_multiplier - 1))/(1+child.parent.visits)
+        if child.visits >= overwhelming_amount:
+            child_visits_norm = floor(child.visits / overwhelming_amount)+ (child.visits % overwhelming_amount) 
+        else:
+            child_visits_norm = child.visits
+        if child.wins >= overwhelming_amount:
+            child_wins_norm = floor(child.visits / overwhelming_amount) + (child.visits % overwhelming_amount)
+        else:
+            child_wins_norm = child.visits
+            
+        child_loss_rate = (child_visits_norm - child_wins_norm) / child_visits_norm
 
-        # child_gameover_visits = floor(child.visits / overwhelming_amount)
-        # child_visits_norm = (child.visits % overwhelming_amount) + child_gameover_visits
-        #
-        # child_gameover_wins = floor(child.wins / overwhelming_amount)
-        # child_wins_norm = (child.wins % overwhelming_amount) + child_gameover_wins
-
-        # child_loss_rate = (child_visits_norm - child_wins_norm) / child_visits_norm
-
-        child_loss_rate = (child.visits - child.wins) / child.visits
 
         if not child.win_status == True: #only consider children who will not lead to a win for opponent
             if child.visits > 0:
@@ -342,13 +345,16 @@ def get_best_child(node_children, non_doomed = True):
             k += 1
     if k < len(node_children):
         best = node_children[k]
-        # best_gameover_visits = floor(node_children[k].visits / overwhelming_amount)
-        # best_child_visits_norm = (node_children[k].visits % overwhelming_amount) + best_gameover_visits
-        #
-        # best_gameover_wins = floor(node_children[k].wins / overwhelming_amount)
-        # best_child_wins_norm = (node_children[k].wins % overwhelming_amount) + best_gameover_wins
+        if best.visits >= overwhelming_amount:
+            best_visits_norm = floor(best.visits / overwhelming_amount)+ (best.visits % overwhelming_amount)
+        else:
+            best_visits_norm = best.visits
+        if best.wins >= overwhelming_amount:
+            best_wins_norm = floor(best.visits / overwhelming_amount) + (best.visits % overwhelming_amount)
+        else:
+            best_wins_norm = best.visits
 
-        # best_loss_rate = ((best_child_visits_norm - best_child_wins_norm) / best_child_visits_norm)
+        best_loss_rate = ((best_visits_norm - best_wins_norm) / best_visits_norm)
 
         NN_weighting = (NN_scaling_factor*(node_children[k].UCT_multiplier - 1)) / (1+node_children[k].parent.visits)
 
@@ -368,15 +374,16 @@ def get_best_child(node_children, non_doomed = True):
                 predicate = child.visits > 0
             if predicate: #only consider non-doomed moves
 
-                # child_gameover_visits = floor(child.visits / overwhelming_amount)
-                # child_visits_norm = (child.visits % overwhelming_amount) + child_gameover_visits
-                #
-                # child_gameover_wins = floor(child.wins / overwhelming_amount)
-                # child_wins_norm = (child.wins % overwhelming_amount) + child_gameover_wins
-
-                # child_loss_rate = (child_visits_norm - child_wins_norm) / child_visits_norm
-
-                child_loss_rate = (child.visits - child.wins) / child.visits
+                if child.visits >= overwhelming_amount:
+                    child_visits_norm = floor(child.visits / overwhelming_amount)+ (child.visits % overwhelming_amount) 
+                else:
+                    child_visits_norm = child.visits
+                if child.wins >= overwhelming_amount:
+                    child_wins_norm = floor(child.visits / overwhelming_amount) + (child.visits % overwhelming_amount)
+                else:
+                    child_wins_norm = child.visits
+                    
+                child_loss_rate = (child_visits_norm - child_wins_norm) / child_visits_norm
 
                 child_NN_scaled_loss_rate = child_loss_rate # + NN_weighting
 

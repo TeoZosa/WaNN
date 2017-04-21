@@ -429,7 +429,7 @@ def run_MCTS_with_expansions_simulation( #args
 def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
 
     if root.gameover is False: #terminates at end-of-game moves
-        if root.children is None: #reached non-game ending leaf node
+        if root.children is None or root.reexpanded: #reached non-game ending leaf node
             with async_update_lock:
                 if root.threads_checking_node <=0:
                     root.threads_checking_node = 1
@@ -537,7 +537,7 @@ def select_UCT_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type,
     with async_update_lock: #make sure it's not being updated asynchronously
         # if node.height >= 60:
         #     node.subtree_checked = False
-        while node is not None and (node.children is not None) and not node.gameover:
+        while node is not None and (node.children is not None) and not node.reexpanded and not node.gameover:
             node.threads_checking_node = 0 #clean this up on the way down
             this_height += 1
             node = choose_UCT_or_best_child(node, start_time, time_to_think, sim_info) #if child is a leaf, chooses policy net's top choice

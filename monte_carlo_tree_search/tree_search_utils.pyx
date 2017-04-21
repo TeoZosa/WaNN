@@ -48,15 +48,16 @@ def update_tree_losses(node, amount=1): # visit and no win = loss_init
         update_tree_wins(parent, amount)
 
 #backpropagate guaranteed win status
-def update_win_statuses(node, win_status, new_subtree=False):
+def update_win_statuses(node, win_status, new_subtree=False, reexpanding_grandparent=False):
     node.win_status = win_status
-    parent = node.parent
-    if parent is not None:#parent may now know if it is a win or loss_init.
-        update_win_status_from_children(parent, new_subtree)
+    if not reexpanding_grandparent:
+        parent = node.parent
+        if parent is not None:#parent may now know if it is a win or loss_init.
+            update_win_status_from_children(parent, new_subtree)
 
-def update_win_status_from_children(node, new_subtree=False):
+def update_win_status_from_children(node, new_subtree=False, reexpanding_grandparent=False):
     win_statuses = get_win_statuses_of_children(node)
-    set_win_status_from_children(node, win_statuses, new_subtree)
+    set_win_status_from_children(node, win_statuses, new_subtree, reexpanding_grandparent)
 
 def get_win_statuses_of_children(node):
     win_statuses = []
@@ -65,13 +66,13 @@ def get_win_statuses_of_children(node):
             win_statuses.append(child.win_status)
     return win_statuses
 
-def set_win_status_from_children(node, children_win_statuses, new_subtree=False):
+def set_win_status_from_children(node, children_win_statuses, new_subtree=False, reexpanding_grandparent=False):
     if False in children_win_statuses: #Fact: if any child is false => parent is true
-        update_win_statuses(node, True, new_subtree)  # some kid is a loser, I have some game winning move to choose from
+        update_win_statuses(node, True, new_subtree, reexpanding_grandparent)  # some kid is a loser, I have some game winning move to choose from
     elif True in children_win_statuses and not False in children_win_statuses and not None in children_win_statuses:
-        update_win_statuses(node, False, new_subtree)#all children winners = node is a loss_init no matter what
+        update_win_statuses(node, False, new_subtree, reexpanding_grandparent)#all children winners = node is a loss_init no matter what
     elif new_subtree: #appended from opponent move not already in tree
-        update_win_statuses(node, None, new_subtree) #maybe this subtree had an inaccurate win_status before, ensure tree is correct. since this is done upon root assignment, won't take time in the middle of search.
+        update_win_statuses(node, None, new_subtree, reexpanding_grandparent) #maybe this subtree had an inaccurate win_status before, ensure tree is correct. since this is done upon root assignment, won't take time in the middle of search.
        # some kids are winners, some kids are unknown => can't say anything with certainty
 
 def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS using async updates
@@ -163,11 +164,15 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
     best = None
     #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss_init
     if node.win_status is not None:
-        viable_children = list(filter(lambda x:  x.win_status is None and (x.threads_checking_node <=0 or x.children is not None), node.children))
+        viable_children = list(filter(lambda x:  x.reexpanded and x.threads_checking_node <=0, node.children))
+        if len(viable_children) == 0:
+            viable_children = list(filter(lambda x:  (x.win_status is None) and (x.threads_checking_node <=0 or x.children is not None), node.children))
         if len(viable_children) == 0:
             viable_children = list(filter(lambda x:  not x.subtree_checked and (x.threads_checking_node <=0 or x.children is not None), node.children))
     else:
-        viable_children = list(filter(lambda x:  x.win_status is None and (x.threads_checking_node <=0 or x.children is not None), node.children))
+        viable_children = list(filter(lambda x:  x.reexpanded and x.threads_checking_node <=0, node.children))
+        if len(viable_children) == 0:
+          viable_children = list(filter(lambda x:  (x.win_status is None ) and (x.threads_checking_node <=0 or x.children is not None), node.children))
     if len(viable_children)>0:
         best = viable_children[0]
         best_val = get_UCT(best, parent_visits, start_time, time_to_think, sim_info)

@@ -27,6 +27,13 @@ class TreeNode(object):
 
         self.rolled_out_from = False
         self.reexpanded = False
+        self.parent_reexpanded = False
+        self.reexpanded_already = False
+        self.parent_reexpanded_already = False
+
+        self.winning_kids = 0
+        self.winning_sibling_count = 0
+        self.sibling_count = 0
 
         self.wins_down_this_tree = 0 #backprop a win down this tree
         self.losses_down_this_tree = 0

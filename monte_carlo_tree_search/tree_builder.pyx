@@ -600,7 +600,7 @@ def get_num_children_to_consider(parent):
     if height < 80:
         # or if root, top3?
         if parent.reexpanded:
-            num_top_to_consider = 10
+            num_top_to_consider = 3
         else:
             if height % 2 == 0:  # white moves
                 if height >= 70:

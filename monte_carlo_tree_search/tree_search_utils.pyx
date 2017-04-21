@@ -49,11 +49,16 @@ def update_tree_losses(node, amount=1): # visit and no win = loss_init
 
 #backpropagate guaranteed win status
 def update_win_statuses(node, win_status, new_subtree=False, reexpanding_grandparent=False):
-    node.win_status = win_status
-    if not reexpanding_grandparent:
-        parent = node.parent
-        if parent is not None:#parent may now know if it is a win or loss_init.
-            update_win_status_from_children(parent, new_subtree)
+    if node.color =='Black' and \
+        win_status is False and \
+        not node.reexpanded_already:
+        node.reexpanded = True
+    else:
+        node.win_status = win_status
+        if not reexpanding_grandparent:
+            parent = node.parent
+            if parent is not None:#parent may now know if it is a win or loss_init.
+                update_win_status_from_children(parent, new_subtree)
 
 def update_win_status_from_children(node, new_subtree=False, reexpanding_grandparent=False):
     win_statuses = get_win_statuses_of_children(node)

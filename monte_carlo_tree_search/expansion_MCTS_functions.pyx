@@ -509,12 +509,12 @@ def random_rollout_EOG(node, depth, depth_limit, sim_info, this_height, MCTS_Typ
         expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
 
 def expand_node_and_update_children(node, depth, depth_limit, sim_info, this_height, policy_net, pre_pruning=False): #use if we want traditional MCTS
-    if not node.expanded: #in case we're multithreading and we ended up with the same node to expand
-        if pre_pruning:
-            without_enumerating = True
-        else:
-            without_enumerating = False
-        expand_descendants_to_depth_wrt_NN([node], without_enumerating, depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
+    # if not node.expanded: #in case we're multithreading and we ended up with the same node to expand
+    if pre_pruning:
+        without_enumerating = True
+    else:
+        without_enumerating = False
+    expand_descendants_to_depth_wrt_NN([node], without_enumerating, depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
 
 def expand_node_async(node):
     with NN_queue_lock:  # for async updates

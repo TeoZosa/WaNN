@@ -15,30 +15,21 @@ class TreeNode(object):
         self.height = height #if root is first state in game MCTS saw
         self.best_child = None #to expand best child first
         self.expanded = False #if already expanded  for NN evaluation_function in tree reuse
-        self.num_children_checked = 0
         self.subtree_checked = False
-        self.num_children_with_win_status = 0
-        self.being_checked = False
         self.threads_checking_node = 0
         self.visited = False #for best child, visit first if not already visited
         self.win_status = None
         self.UCT_multiplier = 1
         self.sum_for_children_normalization = None #so we don't calculate for each child.
-
+        self.num_children_being_checked = 0
+        self.subtree_being_checked = False
         self.rolled_out_from = False
         self.reexpanded = False
-        self.parent_reexpanded = False
         self.reexpanded_already = False
-        self.parent_reexpanded_already = False
-
-        self.winning_kids = 0
-        self.winning_sibling_count = 0
-        self.sibling_count = 0
 
         self.wins_down_this_tree = 0 #backprop a win down this tree
         self.losses_down_this_tree = 0
 
-        # self.expand_all = False
         self.white_pieces = white_pieces
         self.black_pieces = black_pieces
 

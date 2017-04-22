@@ -202,7 +202,7 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
                     children_to_check = True
 
         if not children_to_check and best.win_status is False:  # all children were False (losers);
-            print("RL Error: UCT shouldn't have chosen a subtree with children who have win statuses")
+            # print("RL Error: UCT shouldn't have chosen a subtree with children who have win statuses")
             for i in range(1, len(viable_children)):
                     child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think, sim_info)
                     if child_value > best_val:

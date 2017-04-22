@@ -5,7 +5,8 @@ from Breakthrough_Player.board_utils import print_board, move_piece, game_over, 
 from monte_carlo_tree_search.MCTS import MCTS, NeuralNetsCombined
 import sys
 import os
-from multiprocessing import  Process, pool, Pool
+from multiprocessing import  Process, pool
+from multiprocessing.pool import ThreadPool
 import pexpect
 from pexpect.popen_spawn import PopenSpawn
 import pickle
@@ -25,7 +26,7 @@ class MyPool(pool.Pool):  # make a special class to allow for an inner process p
     Process = NoDaemonProcess
 
 def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout, root=None, game_num=-1):
-
+    cheat_search = True
 
 
 
@@ -74,10 +75,23 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     move_number = 0
     winner_color = None
     web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
-    while not gameover:
+    while not gameover: #TODO find a way to keep searching tree while waiting for wanderer's move instead of taking turns
         print_board(game_board, file=file_to_write)
         computer_MCTS_tree.height = wanderer_MCTS_tree.height = move_number
-        move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+        if move_number>2 and move_number %2 == 0 and cheat_search:
+            # threads = ThreadPool(processes=1)
+            # WaNN_args = [game_board, white_player, black_opponent, move_number-1, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write]
+            # threads.starmap_async(get_move, WaNN_args)
+
+            #search again while waiting for wanderer's move
+            get_move(prev_game_board, white_player, black_opponent, move_number-1, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search=True)
+
+            #get wanderer's move
+            move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+        else:
+            move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+            prev_game_board = game_board
+
         print_move(move, color_to_move, file_to_write)
         game_board = move_piece(game_board, move, color_to_move)
         if move[2] == r'-':
@@ -104,14 +118,14 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     #         final_policy_move.losses_down_this_tree += 1
     #     final_policy_move = final_policy_move.parent
 
-    final_policy_move = computer_MCTS_tree.selected_child
-    while final_policy_move.parent is not None:
-        final_policy_move = final_policy_move.parent
-
-    output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\ttt120BlackPrototype04172017_{}.p'.format(str(game_num)), 'wb')
-    # online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
-    pickle.dump(final_policy_move, output_file, protocol=pickle.HIGHEST_PROTOCOL)
-    output_file.close()
+    # final_policy_move = computer_MCTS_tree.selected_child
+    # while final_policy_move.parent is not None:
+    #     final_policy_move = final_policy_move.parent
+    #
+    # output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\ttt120BlackPrototype04172017_{}.p'.format(str(game_num)), 'wb')
+    # # online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
+    # pickle.dump(final_policy_move, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+    # output_file.close()
 
 
 
@@ -144,16 +158,16 @@ def play_game(white_player, black_opponent, depth_limit=1, time_to_think=10, fil
     print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
     return winner_color
 
-def get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write):
+def get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search=False):
     if move_number % 2 == 0:  # white's turn
         color_to_move = 'White'
-        move = get_whites_move(game_board, white_player, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+        move = get_whites_move(game_board, white_player, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search)
     else:  # black's turn
         color_to_move = 'Black'
-        move = get_blacks_move(game_board, black_opponent, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+        move = get_blacks_move(game_board, black_opponent, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search)
     return move, color_to_move
 
-def get_whites_move(game_board, white_player, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write):
+def get_whites_move(game_board, white_player, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search=False):
     move = None
     color_to_move = 'White'
     if white_player == 'Human':
@@ -163,12 +177,12 @@ def get_whites_move(game_board, white_player, computer_MCTS_tree, wanderer_MCTS_
         if not check_legality(game_board, move):
             print("Illegal move by Wanderer", file=file_to_write)
     else:#get policy net move
-        move = get_player_move(game_board, color_to_move, computer_MCTS_tree.MCTS_type, computer_MCTS_tree)
-        if wanderer_MCTS_tree is not None:
+        move = get_player_move(game_board, color_to_move, computer_MCTS_tree.MCTS_type, computer_MCTS_tree, background_search)
+        if wanderer_MCTS_tree is not None and not background_search:
             wanderer_MCTS_tree.policy_net.sendline(move)
     return move
 
-def get_blacks_move(game_board, black_opponent, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write):
+def get_blacks_move(game_board, black_opponent, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search=False):
     move = None
     color_to_move = 'Black'
     if black_opponent == 'Human':
@@ -178,8 +192,8 @@ def get_blacks_move(game_board, black_opponent, computer_MCTS_tree, wanderer_MCT
         if not check_legality(game_board, move):
             print("Illegal move by Wanderer", file=file_to_write)
     else:#get policy net move
-        move = get_player_move(game_board, color_to_move, computer_MCTS_tree.MCTS_type, computer_MCTS_tree)
-        if wanderer_MCTS_tree is not None:
+        move = get_player_move(game_board, color_to_move, computer_MCTS_tree.MCTS_type, computer_MCTS_tree, background_search)
+        if wanderer_MCTS_tree is not None and not background_search:
             wanderer_MCTS_tree.policy_net.sendline(move)
     return move
 
@@ -252,7 +266,7 @@ def get_blacks_move_self_play(game_board, black_opponent, move_number, black_MCT
             move = get_player_move(game_board, color_to_move, black_opponent, black_MCTS_tree)
     return move
 
-def get_player_move(game_board, color_to_move, player, MCTS_tree):
+def get_player_move(game_board, color_to_move, player, MCTS_tree, background_search=False):
     if player == 'Random':
         move = get_random_move(game_board, color_to_move)
     elif player == 'Expansion MCTS' \
@@ -262,7 +276,7 @@ def get_player_move(game_board, color_to_move, player, MCTS_tree):
         or player == 'MCTS Asynchronous'\
         or player == 'Wanderer'\
         or player == 'Policy':
-        move = MCTS_tree.evaluate(game_board, color_to_move)
+        move = MCTS_tree.evaluate(game_board, color_to_move, background_search)
     elif player == 'BFS MCTS':  # BFS to depth MCTS
         move = MCTS_move_multithread(game_board, color_to_move, MCTS_tree)
     return move

@@ -5,7 +5,9 @@ from tools.utils import index_lookup_by_move, move_lookup_by_index
 from monte_carlo_tree_search.TreeNode import TreeNode
 from Breakthrough_Player.board_utils import  check_legality_MCTS
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, \
-    get_top_children, update_child, set_win_status_from_children, random_rollout, update_win_status_from_children, eval_child, SimulationInfo, rollout_and_eval_if_parent_at_depth
+    get_top_children, update_child, set_win_status_from_children, random_rollout, \
+    update_win_status_from_children, eval_child, SimulationInfo, rollout_and_eval_if_parent_at_depth, \
+    increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node
 from multiprocessing import Pool, Process, pool
 from math import ceil
 from threading import Lock, current_thread
@@ -26,6 +28,7 @@ class NoDaemonProcess(Process):
 # because the latter is only a wrapper function, not a proper class.
 class MyPool(pool.Pool):  # Had to make a special class to allow for an inner process pool
     Process = NoDaemonProcess
+
 
 
 
@@ -138,7 +141,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
         #         True
         unfiltered_unexpanded_nodes = unexpanded_nodes
         unexpanded_nodes = list(filter(lambda x: ((x.children is None or x.reexpanded) and not x.gameover ), unexpanded_nodes)) #redundant
-        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<2056: #if any nodes to expand;
+        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<256: #if any nodes to expand;
             if sim_info.root is not None: #aren't coming from reinitializing a root
                 if sim_info.main_pid == current_thread().name:
                     depth_limit = 1 #main thread expands once and exits to call other threads
@@ -165,8 +168,8 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
             NN_output = policy_net.evaluate(unexpanded_nodes)
-
-            if (len(unexpanded_nodes) >= 25 and (unexpanded_nodes[0].color == 'White' or not without_enumerating)) or len(unexpanded_nodes) >=100:#lots of children to append
+            multiprocess = False
+            if multiprocess and ((len(unexpanded_nodes) >= 50 and (unexpanded_nodes[0].color == 'White' or not without_enumerating)) or len(unexpanded_nodes) >=200):#lots of children to append
                 unexpanded_children, over_time = offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, depth, depth_limit, NN_output, sim_info, lock)
             else:
                 unexpanded_children, over_time = do_updates_in_the_same_process(unexpanded_nodes, without_enumerating, depth, depth_limit, NN_output, sim_info, lock)
@@ -176,15 +179,15 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
             depth += 1
             if not over_time and depth<depth_limit:
                 for child in unexpanded_nodes: #set flag for children we were planning to check
-                    child.threads_checking_node = 1
+                    increment_threads_checking_node(child)
 
         else:
             depth = depth_limit #done if no nodes to expand or too many nodes to expand
             for parent in unfiltered_unexpanded_nodes:
-                parent.threads_checking_node = 0
+                reset_threads_checking_node(parent)
     if not entered_once:
         for parent in unexpanded_nodes:
-            parent.threads_checking_node -=1
+            decrement_threads_checking_node(parent)
 
 def offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, depth, depth_limit, NN_output, sim_info, lock):
     grandparents = []
@@ -199,7 +202,7 @@ def offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, d
                  parent.parent = None
 
              else:
-                 parent.threads_checking_node -=1
+                 decrement_threads_checking_node(parent)
         unexpanded_nodes = unchecked_nodes
 
     if len(unexpanded_nodes) > 0:
@@ -217,7 +220,7 @@ def offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, d
                 parent = expanded_parents[i]
                 grandparent = grandparents[i]
                 reattach_parent_to_grandparent(grandparent, parent)
-                parent.threads_checking_node = 0
+                reset_threads_checking_node(parent)
             for child in unexpanded_children:
                 if child.gameover is True: #child color is a loser
                     if child.parent is not None:
@@ -241,11 +244,11 @@ def do_updates_in_the_same_process(unexpanded_nodes, without_enumerating, depth,
             with lock:
                 if parent.threads_checking_node <= 1 and (parent.children is None or parent.reexpanded):
                     if parent.threads_checking_node <= 0:
-                        parent.threads_checking_node = 1
+                        increment_threads_checking_node(parent)
                     abort = False
                     parent.being_checked = True
                 else:
-                    parent.threads_checking_node -= 1
+                    decrement_threads_checking_node(parent)
                     abort = True
             if not abort:
                 children = update_parent(without_enumerating, parent, NN_output[i], sim_info, lock)
@@ -266,7 +269,7 @@ def do_updates_in_the_same_process(unexpanded_nodes, without_enumerating, depth,
 
                 unexpanded_children.extend(children_to_consider)
         else:
-            parent.threads_checking_node = 0  # have to iterate over all parents to set this
+            reset_threads_checking_node(parent)  # have to iterate over all parents to set this
             over_time = True
     return unexpanded_children, over_time
 def reattach_parent_to_children(parent, children):
@@ -291,7 +294,7 @@ def update_parent(without_enumerating_children, parent, NN_output, sim_info, loc
             sim_info.game_tree.append(parent)
         else:
             abort = True
-            parent.threads_checking_node -=1
+            decrement_threads_checking_node(parent)
     if not abort:  # if the node hasn't already been updated by another thread
         pruned_children = get_pruned_children(without_enumerating_children, parent, NN_output, sim_info,lock)
     return pruned_children
@@ -323,11 +326,11 @@ def update_parents_for_process(args):#when more than n parents, have a separate 
             with lock:
                 if parent.threads_checking_node <= 1 and (parent.children is None or parent.reexpanded):
                     if parent.threads_checking_node <= 0:
-                        parent.threads_checking_node = 1
+                        increment_threads_checking_node(parent)
                     abort = False
                     parent.being_checked = True
                 else:
-                    parent.threads_checking_node -= 1
+                    decrement_threads_checking_node(parent)
                     abort = True
             if not abort:
 
@@ -347,7 +350,7 @@ def update_parents_for_process(args):#when more than n parents, have a separate 
 
                 unexpanded_children.extend(children_to_consider)
         else:
-            parent.threads_checking_node = 0  # have to iterate over all parents to set this
+            reset_threads_checking_node(parent) # have to iterate over all parents to set this
             over_time = True
     return unexpanded_nodes, unexpanded_children, over_time
 
@@ -588,7 +591,7 @@ def get_num_children_to_consider(parent):
                     num_top_to_consider =   4 #else play with child val threshold?
                  # 2    0-19
                 elif height < 20 and height >= 0:
-                    num_top_to_consider =   3 #else play with child val threshold?
+                    num_top_to_consider =   6 #else play with child val threshold?
                 else: #2?
                     num_top_to_consider =  1  # else play with child val threshold?
             else:
@@ -657,7 +660,7 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
 def assign_pruned_children(parent, pruned_children, children_win_statuses, lock):
     with lock:
         parent.being_checked = False
-        parent.threads_checking_node -= 1
+        decrement_threads_checking_node(parent)
         if parent.reexpanded:
             reset_reexpansion_flag(parent)
 

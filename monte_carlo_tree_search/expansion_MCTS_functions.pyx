@@ -2,7 +2,7 @@
 
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, \
-    SimulationInfo, random_rollout
+    SimulationInfo, increment_threads_checking_node
 from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, expand_descendants_to_depth_wrt_NN, init_new_root
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board, initial_game_board, initial_piece_arrays
@@ -157,7 +157,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         #         if net_real_wins > 0:
         #             done = True
         # async_NN_update_threads = ThreadPool(processes=3)
-        num_processes = 50
+        num_processes = 25
         parallel_search_threads = ThreadPool(processes=num_processes)
 
         sim_info.start_time = start_time = time()
@@ -241,6 +241,7 @@ def reset_thread_flag(root):
     while len(unvisited_queue) > 0:
         node = unvisited_queue.pop()
         node.threads_checking_node = 0
+        node.subtree_being_checked = False
         node.being_checked = False
         if node.children is not None:
             unvisited_queue.extend(node.children)
@@ -449,7 +450,7 @@ def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_heig
         if root.children is None or root.reexpanded: #reached non-game ending leaf node
             with async_update_lock:
                 if root.threads_checking_node <=0:
-                    root.threads_checking_node = 1
+                    increment_threads_checking_node(root)
                     abort = False
                 else:
                     abort = True
@@ -557,6 +558,8 @@ def select_UCT_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type,
         #     node.subtree_checked = False
         while node is not None and (node.children is not None) and not node.reexpanded and not node.gameover:
             node.threads_checking_node = 0 #clean this up on the way down
+            if node.parent is not None:
+                node.parent.subtree_being_checked = False
             this_height += 1
             node = choose_UCT_or_best_child(node, start_time, time_to_think, sim_info) #if child is a leaf, chooses policy net's top choice
     if node is not None:
@@ -633,8 +636,8 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
                 height=best_counter_child.height, color=best_counter_child.color, uct=best_counter_child_UCT, wins=best_counter_child.wins/overwhelming_amount,
                 visits=best_counter_child.visits/overwhelming_amount, prob=(best_counter_child.UCT_multiplier-1)*100, win_status = best_counter_child.win_status), file=sim_info.file)
             print_board(best_counter_child.game_board, sim_info.file)
-           
-                
+
+
             print("All Counter Moves",file=sim_info.file)
             for counter_child in best_child.children:
                 counter_move = move_lookup_by_index(counter_child.index, best_child.color)

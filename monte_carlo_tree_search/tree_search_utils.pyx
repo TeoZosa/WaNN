@@ -48,21 +48,18 @@ def update_tree_losses(node, amount=1): # visit and no win = loss_init
         update_tree_wins(parent, amount)
 
 #backpropagate guaranteed win status
-def update_win_statuses(node, win_status, new_subtree=False, reexpanding_grandparent=False):
-    if node.color =='Black' and \
-        win_status is False and \
-        not node.reexpanded_already:
+def update_win_statuses(node, win_status, new_subtree=False):
+    if node.color == 'Black' and win_status is False and not node.reexpanded_already:
         node.reexpanded = True
     else:
         node.win_status = win_status
-        if not reexpanding_grandparent:
-            parent = node.parent
-            if parent is not None:#parent may now know if it is a win or loss_init.
-                update_win_status_from_children(parent, new_subtree)
+        parent = node.parent
+        if parent is not None:#parent may now know if it is a win or loss_init.
+            update_win_status_from_children(parent, new_subtree)
 
-def update_win_status_from_children(node, new_subtree=False, reexpanding_grandparent=False):
+def update_win_status_from_children(node, new_subtree=False):
     win_statuses = get_win_statuses_of_children(node)
-    set_win_status_from_children(node, win_statuses, new_subtree, reexpanding_grandparent)
+    set_win_status_from_children(node, win_statuses, new_subtree)
 
 def get_win_statuses_of_children(node):
     win_statuses = []
@@ -71,13 +68,13 @@ def get_win_statuses_of_children(node):
             win_statuses.append(child.win_status)
     return win_statuses
 
-def set_win_status_from_children(node, children_win_statuses, new_subtree=False, reexpanding_grandparent=False):
+def set_win_status_from_children(node, children_win_statuses, new_subtree=False):
     if False in children_win_statuses: #Fact: if any child is false => parent is true
-        update_win_statuses(node, True, new_subtree, reexpanding_grandparent)  # some kid is a loser, I have some game winning move to choose from
+        update_win_statuses(node, True, new_subtree)  # some kid is a loser, I have some game winning move to choose from
     elif True in children_win_statuses and not False in children_win_statuses and not None in children_win_statuses:
-        update_win_statuses(node, False, new_subtree, reexpanding_grandparent)#all children winners = node is a loss_init no matter what
+        update_win_statuses(node, False, new_subtree)#all children winners = node is a loss_init no matter what
     elif new_subtree: #appended from opponent move not already in tree
-        update_win_statuses(node, None, new_subtree, reexpanding_grandparent) #maybe this subtree had an inaccurate win_status before, ensure tree is correct. since this is done upon root assignment, won't take time in the middle of search.
+        update_win_statuses(node, None, new_subtree) #maybe this subtree had an inaccurate win_status before, ensure tree is correct. since this is done upon root assignment, won't take time in the middle of search.
        # some kids are winners, some kids are unknown => can't say anything with certainty
 
 def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS using async updates
@@ -86,6 +83,48 @@ def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS
         parent.wins -= child.wins
         parent.visits -= child.visits
         parent = parent.parent
+
+
+def _crement_threads_checking_node(node, amount):
+    if amount == 0:
+        node.threads_checking_node = 0
+    else:
+        node.threads_checking_node +=amount
+    parent = node.parent
+    if parent is not None:
+        if node.threads_checking_node <=0:
+            parent.subtree_being_checked = False
+            if parent.num_children_being_checked > 0:
+                parent.num_children_being_checked -= 1
+        else:
+            parent.num_children_being_checked += 1
+            num_children = len(parent.children)
+            if num_children == parent.num_children_being_checked:
+                parent.subtree_being_checked = True
+
+
+            
+def increment_threads_checking_node(node):
+    _crement_threads_checking_node(node, 1)
+        
+def decrement_threads_checking_node(node):
+    _crement_threads_checking_node(node, -1)
+
+def reset_threads_checking_node(node):
+    _crement_threads_checking_node(node, 0)
+
+def update_num_children_being_checked(node):
+    children_being_checked=0
+    if node.children is not None:
+        for child in node.children:
+            if child.threads_checking_node > 0:
+                children_being_checked+=1
+    node.num_children_being_checked = children_being_checked
+    if node.num_children_being_checked == len(node.children):
+        node.subtree_being_checked = True
+    else:
+        node.subtree_being_checked = False
+
 
 def choose_UCT_move(node, start_time, time_to_think, sim_info):
     best = None #shouldn't ever return None
@@ -168,16 +207,16 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
     parent_visits = node.visits
     best = None
     #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss_init
-    if node.win_status is not None:
+    if node.win_status is not None:#search subtrees that need to be reexpanded (probably won't happen anymore)
         viable_children = list(filter(lambda x:  x.reexpanded and x.threads_checking_node <=0, node.children))
-        if len(viable_children) == 0:
-            viable_children = list(filter(lambda x:  (x.win_status is None) and (x.threads_checking_node <=0 or x.children is not None), node.children))
-        if len(viable_children) == 0:
-            viable_children = list(filter(lambda x:  not x.subtree_checked and (x.threads_checking_node <=0 or x.children is not None), node.children))
-    else:
+        if len(viable_children) == 0:#search subtrees until they have a win status
+            viable_children = list(filter(lambda x:  (x.win_status is None and not x.subtree_being_checked) and (x.threads_checking_node <=0 or x.children is not None), node.children))
+        if len(viable_children) == 0:#search until all subtrees are checked
+            viable_children = list(filter(lambda x:  not x.subtree_checked and not x.subtree_being_checked and (x.threads_checking_node <=0 or x.children is not None), node.children))
+    else:#search subtrees that need to be reexpanded
         viable_children = list(filter(lambda x:  x.reexpanded and x.threads_checking_node <=0, node.children))
-        if len(viable_children) == 0:
-          viable_children = list(filter(lambda x:  (x.win_status is None ) and (x.threads_checking_node <=0 or x.children is not None), node.children))
+        if len(viable_children) == 0:#search subtrees until they have a win status
+          viable_children = list(filter(lambda x:  (x.win_status is None and not x.subtree_being_checked ) and (x.threads_checking_node <=0 or x.children is not None), node.children))
     if len(viable_children)>0:
         best = viable_children[0]
         best_val = get_UCT(best, parent_visits, start_time, time_to_think, sim_info)
@@ -218,12 +257,13 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
         overwhelming_amount = 65536
-        NN_scaling_factor = 1000#+(game_num/100)
+        NN_scaling_factor = 1000
 
-        # if parent_visits >= overwhelming_amount:
-        #     parent_visits %= overwhelming_amount
+
         # # 03/11/2017 games actually good with this and no division, but annealing seems right?
         stochasticity_for_multithreading = random.random()  #/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
+        stoch_for_NN_weighting = 1- (stochasticity_for_multithreading/4)#since this can get so huge in the beginning,
+        # maybe bouncing it around will be good so threads don't knock into each other?
         # # #TODO test this. SEEMS like a good idea since it will explore early and exploit later
         # annealed_factor = 1 - (
         # (start_time - time()) / time_to_think)  # starts at 1 and trends towards 0 as search proceeds
@@ -233,12 +273,9 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
 
         # stochasticity_for_multithreading = (random.random()*4) * max(0.25, annealed_factor) #in printed stats games, probably never got to a low value
 
-        if node.parent is sim_info.root:
-
-            exploration_constant = 40#*stochasticity_for_multithreading
-        else:
             # exploration_constant = 0.1 + stochasticity_for_multithreading # 1.414 ~ √2
-            exploration_constant =  stochasticity_for_multithreading # 1.414 ~ √2
+        exploration_constant =  stochasticity_for_multithreading # 1.414 ~ √2
+
         if node.visits >= overwhelming_amount:
             norm_visits = floor(node.visits / overwhelming_amount)+ (node.visits % overwhelming_amount)
             parent_visits = floor(parent_visits/overwhelming_amount) + (parent_visits % overwhelming_amount)

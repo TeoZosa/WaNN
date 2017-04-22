@@ -6,7 +6,6 @@ from Breakthrough_Player.board_utils import get_best_move
 from Breakthrough_Player.policy_net_utils import instantiate_session_both, instantiate_session
 from tools.utils import convert_board_to_2d_matrix_POEB, batch_split_no_labels
 import re
-# from time import sleep
 
 
 class MCTS(object):
@@ -80,6 +79,7 @@ class MCTS(object):
                 move = move_regex.search(move).group(1)
 
         return move
+
 
 
 class NeuralNetsCombined():

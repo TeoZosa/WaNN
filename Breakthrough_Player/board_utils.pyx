@@ -309,7 +309,7 @@ def enumerate_legal_moves(game_board, player_color):
     for row in range(1, 9):  # rows 1-8; if white is in row 8 or black is in row 1, game over should have been declared
         for column in columns:
             if game_board[row][column] == player:
-                legal_moves.extend(get_possible_move(game_board, row, column, player_color))
+                legal_moves.extend(get_possible_moves(game_board, row, column, player_color))
     return legal_moves
 
 def enumerate_legal_moves_using_piece_arrays(node):
@@ -326,23 +326,18 @@ def enumerate_legal_moves_using_piece_arrays(node):
     for piece in pieces:
         row = int(piece[1])
         column = piece[0]
-        legal_moves.extend(get_possible_move(game_board, row, column, player_color))
+        legal_moves.extend(get_possible_moves(game_board, row, column, player_color))
     return legal_moves
 
 def enumerate_legal_moves_using_piece_arrays_nodeless(player_color, game_board, player_pieces):
-    if player_color == 'White':
-        player = 'w'
-    else: #player_color =='Black':
-        player = 'b'
-    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     legal_moves = []
     for piece in player_pieces:
         row = int(piece[1])
         column = piece[0]
-        legal_moves.extend(get_possible_move(game_board, row, column, player_color))
+        legal_moves.extend(get_possible_moves(game_board, row, column, player_color))
     return legal_moves
 
-def get_possible_move(game_board, row, column, player_color):
+def get_possible_moves(game_board, row, column, player_color):
     possible_moves = []
 
     left_diagonal_move = check_left_diagonal_move(game_board, row, column, player_color)

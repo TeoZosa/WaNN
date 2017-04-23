@@ -27,6 +27,9 @@ class TreeNode(object):
         self.reexpanded = False
         self.reexpanded_already = False
 
+        self.eval_result = 0
+        self.sum_rollout_rewards = 0
+
         self.wins_down_this_tree = 0 #backprop a win down this tree
         self.losses_down_this_tree = 0
 

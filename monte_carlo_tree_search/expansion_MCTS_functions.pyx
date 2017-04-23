@@ -78,7 +78,7 @@ NN_input_queue = [] #for expanded nodes that need to be evaluated asynchronously
 def MCTS_with_expansions(game_board, player_color, time_to_think,
                          depth_limit, previous_move, last_opponent_move, move_number, log_file=stdout, MCTS_Type='Expansion MCTS Pruning', policy_net=None, game_num = -1):
     with SimulationInfo(log_file) as sim_info:
-        time_to_think = time_to_think*.88 #with threads, takes 1.125 times longer to finish up
+        time_to_think = time_to_think*.80 #with threads, takes 1.125 times longer to finish up
         # sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
         sim_info.game_num = game_num
         sim_info.time_to_think = time_to_think
@@ -170,8 +170,6 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
                 NN_args = [done, pruning, sim_info, policy_net]
                 # async_NN_update_threads.apply_async(async_node_updates, NN_args)
             else:
-                # MCTS_args = [[root,depth_limit, time_to_think, sim_info, MCTS_Type, policy_net, start_time]] * 5
-                # parallel_search_threads = ThreadPool(processes=num_processes)
 
                 parallel_search_threads.starmap_async(run_MCTS_with_expansions_simulation, MCTS_args)
 
@@ -377,10 +375,11 @@ def run_MCTS_with_expansions_simulation( #args
         with async_update_lock: #so prints aren't interleaved
             # if sim_info.counter  % 5 == 0:  # log every 5th simulation
             #     print_expansion_statistics(sim_info, sim_info.start_time)
-            sim_info.prev_game_tree_size = len(sim_info.game_tree)
+            game_tree_size = len(sim_info.game_tree)
+            sim_info.prev_game_tree_size = game_tree_size
             sim_info.counter += 1
         # print_forced_win(root.win_status, sim_info)
-        if root.subtree_checked:
+        if root.subtree_checked or game_tree_size>10000:
             done = True
         else:
             done = False

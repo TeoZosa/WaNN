@@ -13,7 +13,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   time_to_think = 10
   depth_limit = 5
   date = r'04222017'
-  file_designator = 'EPTrealRolloutAfter40_BackGrSearch_oldNet_2056Batch_PruningEntireGame_AGOScaling_reexpandEndDoomed'
+  file_designator = 'oldPruningPreferVisited_BackGrSearch_oldNet_2056Batch_lessNorming_PUCT_reexpandEndDoomed'
   #BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
@@ -29,7 +29,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   policy = "Policy"
   # player_for_path = 'EMCTSPruning'
   player_for_path = EBFS_MCTS
-  Windows_path = r'G:\TruncatedLogs\PythonDatasets'
+  Windows_path = r'G:\TruncatedLogs\PythonDatasets\10ttt'
   OSX_path = r'/Users/TeofiloZosa/BreakthroughData/03122017SelfPlay'
   path = Windows_path
   white_player = wanderer
@@ -46,7 +46,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   # original_root = pickle.load(input_file)
   # input_file.close()
 
-  for time_to_think in range(10, 11, 10):
+  for time_to_think in range(10, 1001, 10):
       for depth_limit in range(1, 2):
           white_wins = 0
           black_wins = 0

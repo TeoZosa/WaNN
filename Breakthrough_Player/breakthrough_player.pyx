@@ -47,8 +47,9 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
 
     open_input_engine = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughInput.exe'
 
-    # wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent.exe'
-    wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent90MNodes.exe'
+    wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent.exe'
+    # wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent90MNodes.exe'
+    # wanderer_executable = r'C:\Users\damon\PycharmProjects\BreakthroughANN\BreakthroughCurrent10KSims.exe'
 
 
     # ttt = r'--ttt=10'

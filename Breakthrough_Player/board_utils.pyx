@@ -103,6 +103,35 @@ def move_piece_update_piece_arrays(board_state, move, whose_move):
             remove_opponent_piece = True
     return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
 
+def move_piece_update_piece_arrays_in_place(board_state, move, whose_move):
+    empty = 'e'
+    remove_opponent_piece = False
+    white_move_index = 10
+    is_white_index = 9
+    if move[2] == '-':
+        move = move.split('-')
+    else:
+        move = move.split('x')#x for wanderer captures.
+    _from = move[0].lower()
+    to = move[1].lower()
+    next_board_state = board_state
+    to_position =  next_board_state[int(to[1])][to[0]]
+    player_piece_to_remove = _from #this will always become empty
+    player_piece_to_add = to
+    next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
+    next_board_state[int(_from[1])][_from[0]] = empty
+    if whose_move == 'White':
+        next_board_state[white_move_index] = 1
+        next_board_state[is_white_index] = 0 #next move isn't white's
+        if to_position == 'b':
+            remove_opponent_piece = True
+    else:
+        next_board_state[white_move_index] = 0
+        next_board_state[is_white_index] = 1 #since black made this move, white makes next move
+        if to_position == 'w':
+            remove_opponent_piece = True
+    return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
+
 def get_random_move(game_board, player_color):
     possible_moves = enumerate_legal_moves(game_board, player_color)
     random_move = random.sample(possible_moves, 1)[0]
@@ -295,6 +324,19 @@ def enumerate_legal_moves_using_piece_arrays(node):
     columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     legal_moves = []
     for piece in pieces:
+        row = int(piece[1])
+        column = piece[0]
+        legal_moves.extend(get_possible_move(game_board, row, column, player_color))
+    return legal_moves
+
+def enumerate_legal_moves_using_piece_arrays_nodeless(player_color, game_board, player_pieces):
+    if player_color == 'White':
+        player = 'w'
+    else: #player_color =='Black':
+        player = 'b'
+    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    legal_moves = []
+    for piece in player_pieces:
         row = int(piece[1])
         column = piece[0]
         legal_moves.extend(get_possible_move(game_board, row, column, player_color))

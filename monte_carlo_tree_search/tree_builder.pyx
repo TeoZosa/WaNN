@@ -7,7 +7,7 @@ from Breakthrough_Player.board_utils import  check_legality_MCTS
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, \
     get_top_children, update_child, set_win_status_from_children, random_rollout, \
     update_win_status_from_children, eval_child, SimulationInfo, rollout_and_eval_if_parent_at_depth, \
-    increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node
+    increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node, get_opponent_color
 from multiprocessing import Pool, Process, pool
 from math import ceil
 from threading import Lock, current_thread
@@ -63,12 +63,7 @@ def update_bottom_of_tree(unvisited_queue):#don't do this as it will mark the bo
     # visited_queue = unvisited_queue
     # return visited_queue
 
-def get_opponent_color(player_color):
-    if player_color == 'White':
-        opponent_color = 'Black'
-    else:
-        opponent_color = 'White'
-    return opponent_color
+
 
 def visit_all_nodes_and_expand_single_thread(unvisited_queue, player_color):
     unvisited_children = []
@@ -141,7 +136,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
         #         True
         unfiltered_unexpanded_nodes = unexpanded_nodes
         unexpanded_nodes = list(filter(lambda x: ((x.children is None or x.reexpanded) and not x.gameover ), unexpanded_nodes)) #redundant
-        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<256: #if any nodes to expand;
+        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<2048: #if any nodes to expand;
             if sim_info.root is not None: #aren't coming from reinitializing a root
                 if sim_info.main_pid == current_thread().name:
                     depth_limit = 1 #main thread expands once and exits to call other threads
@@ -168,8 +163,8 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
             NN_output = policy_net.evaluate(unexpanded_nodes)
-            multiprocess = False
-            if multiprocess and ((len(unexpanded_nodes) >= 50 and (unexpanded_nodes[0].color == 'White' or not without_enumerating)) or len(unexpanded_nodes) >=200):#lots of children to append
+            multiprocess = True
+            if multiprocess and ((len(unexpanded_nodes) >= 25 and (unexpanded_nodes[0].color == 'White' or not without_enumerating)) or len(unexpanded_nodes) >=100):#lots of children to append
                 unexpanded_children, over_time = offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, depth, depth_limit, NN_output, sim_info, lock)
             else:
                 unexpanded_children, over_time = do_updates_in_the_same_process(unexpanded_nodes, without_enumerating, depth, depth_limit, NN_output, sim_info, lock)
@@ -228,7 +223,7 @@ def offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, d
                             overwhelming_amount = 65536
                             update_tree_losses(child.parent.parent, overwhelming_amount) #if grandchild lost, parent won, grandparent lost
                 else:
-                    rollout_and_eval_if_parent_at_depth(child, 1)  # backprop eval
+                    eval_child(child)  # backprop eval
             for grandparent in grandparents:
                 update_win_status_from_children(grandparent)  # since parents may have been updated, grandparent must check these copies; maybe less duplication to do it here than in expanded parents loop?
                 backpropagate_num_checked_children(grandparent)
@@ -397,7 +392,7 @@ def enumerate_update_and_prune(parent, NN_output,sim_info, lock):
     top_children_indexes = get_top_children(NN_output, ranks_to_consider)
 
     best_child_val, best_rank = get_best_child_val(parent, NN_output, top_children_indexes)
-    if parent.children is None:
+    if parent.children is None or parent.reexpanded:
         predicate = True
     else:
         predicate = num_legal_moves != len(parent.children)
@@ -408,7 +403,7 @@ def enumerate_update_and_prune(parent, NN_output,sim_info, lock):
             if pruned_child is not None:
                 pruned_children.append(pruned_child)
                 children_win_statuses.append(child_win_status)
-        pruned_children = assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
+    pruned_children = assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
     #else: parent already has all of its legal children
     return pruned_children
 
@@ -565,56 +560,63 @@ def get_num_children_to_consider(parent):
 
     if height < 80:
         # or if root, top3?
-        if parent.reexpanded:
-            num_top_to_consider = 2
+
+        if height % 2 == 0:  # white moves
+            if height >= 70:
+                num_top_to_consider =  3
+            # 2?   65-69      #??
+            elif height < 70 and height >= 65:
+                num_top_to_consider =  3  # else play with child val threshold?
+            # # # 4?   60-64
+            elif height < 65 and height >= 60:
+                num_top_to_consider =   3  # else play with child val threshold
+            # 7 or 4?   50-59
+            elif height < 60 and height >= 50:
+                num_top_to_consider =   5 #else play with child val threshold?
+            # 5    40-49
+            elif height < 50 and height >= 40:
+                num_top_to_consider =   4 #else play with child val threshold?
+            # 2    30-39
+            elif height < 40 and height >= 30:
+                num_top_to_consider =   4  # else play with child val threshold?
+            # 2    20-29
+            elif height < 30 and height >= 20:
+                num_top_to_consider =   4 #else play with child val threshold?
+             # 2    0-19
+            elif height < 20 and height >= 0:
+                num_top_to_consider =   6 #else play with child val threshold?
+            else: #2?
+                num_top_to_consider =  1  # else play with child val threshold?
         else:
-            if height % 2 == 0:  # white moves
-                if height >= 70:
-                    num_top_to_consider =  1
-                # 2?   65-69      #??
-                elif height < 70 and height >= 65:
-                    num_top_to_consider =  3  # else play with child val threshold?
-                # # # 4?   60-64
-                elif height < 65 and height >= 60:
-                    num_top_to_consider =   3  # else play with child val threshold
-                # 7 or 4?   50-59
-                elif height < 60 and height >= 50:
-                    num_top_to_consider =   5 #else play with child val threshold?
-                # 5    40-49
-                elif height < 50 and height >= 40:
-                    num_top_to_consider =   4 #else play with child val threshold?
-                # 2    30-39
-                elif height < 40 and height >= 30:
-                    num_top_to_consider =   4  # else play with child val threshold?
-                # 2    20-29
-                elif height < 30 and height >= 20:
-                    num_top_to_consider =   4 #else play with child val threshold?
-                 # 2    0-19
-                elif height < 20 and height >= 0:
-                    num_top_to_consider =   6 #else play with child val threshold?
-                else: #2?
-                    num_top_to_consider =  1  # else play with child val threshold?
-            else:
-                    # 3?   61-69
-                if height >= 70:
-                    num_top_to_consider =  1  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                    # 52-60
-                elif height < 70 and height >= 61:#2?
-                    num_top_to_consider =  1#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                    # 52-60
-                elif height < 61 and height >= 52:
-                    num_top_to_consider =  1#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                    # 3?   40-51
-                elif height < 52 and height >= 40:  # 40?
-                    num_top_to_consider =  1#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
-                elif height < 20 and height >= 0:
-                    num_top_to_consider =   1#2 #else play with child val threshold?
+                # 3?   61-69
+            if height >= 70:
+                num_top_to_consider =  3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+                # 52-60
+            elif height < 70 and height >= 61:#2?
+                if parent.reexpanded:
+                    num_top_to_consider = 3
                 else:
-                    num_top_to_consider =  1#1 # else play with child val threshold?
+                    num_top_to_consider =  2#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+                # 52-60
+            elif height < 61 and height >= 52:
+                if parent.reexpanded:
+                    num_top_to_consider = 2
+                else:
+                    num_top_to_consider =  1#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+                # 3?   40-51
+            elif height < 52 and height >= 40:  # 40?
+                if parent.reexpanded:
+                    num_top_to_consider = 2
+                else:
+                    num_top_to_consider =  1#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
+            elif height < 20 and height >= 0:
+                num_top_to_consider =   1#2 #else play with child val threshold?
+            else:
+                num_top_to_consider =  1#1 # else play with child val threshold?
     else:
 
-        # num_top_to_consider = 999
-        num_top_to_consider = 2
+        num_top_to_consider = 999
+        # num_top_to_consider = 3
     return num_top_to_consider
 
 def get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, child_val, best_child_val, best_rank,
@@ -625,7 +627,7 @@ def get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, chi
         predicate = True
     else:
         top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-        predicate = child.index in top_n_children or child_val > best_child_val/1.3#or best_child_val - child_val < .10
+        predicate = child.gameover or child.index in top_n_children or child_val > best_child_val/1.3#or best_child_val - child_val < .10
     return predicate
 
 
@@ -638,22 +640,22 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
 
         child_val = NN_output[child.index]
 
-        if child.gameover is False:  # update only if not the end of the game
+        if child.gameover:
+            sim_info.game_tree.append(child)
+        # opens up the tree to more lines of play if best child sucks to begin with.
+        # in the worst degenerate case where best_val == ~4.5%, will include all children which is actually pretty justified.
+
+        predicate = get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, child_val, best_child_val, best_rank)
+
+        if predicate:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
             if child_val == best_child_val:  # rank 1 child
                 child.parent.best_child = child  # mark as node to expand first
-            # opens up the tree to more lines of play if best child sucks to begin with.
-            # in the worst degenerate case where best_val == ~4.5%, will include all children which is actually pretty justified.
 
-            predicate = get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, child_val, best_child_val, best_rank)
 
-            if predicate:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
+            update_child(child, NN_output, top_children_indexes, num_legal_children, sim_info)
+            pruned_child = child  # always keeps top children who aren't losses for parent
 
-                update_child(child, NN_output, top_children_indexes, num_legal_children, sim_info)
-                pruned_child = child  # always keeps top children who aren't losses for parent
-        else:  # if it has a win status and not already in NN choices, keep it (should always be a game winning node)
-            pruned_child = child
-            # child.expanded = True  # don't need to check it any more ; redundant
-            sim_info.game_tree.append(child)
+
         child_win_status = child.win_status
     return pruned_child, child_win_status
 
@@ -664,12 +666,13 @@ def assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
         if parent.reexpanded:
             reset_reexpansion_flag(parent)
 
+
         if len(pruned_children) > 0:
             if parent.children is None:
                 parent.children = pruned_children
-                if len (parent.children) >=2: #or else may try to reexpand and thrash around in tree search
+                if len (parent.children) >= get_reexpanded_amount(parent): # Virtually reexpanded;  else may try to reexpand and thrash around in tree search
                     reset_reexpansion_flag(parent)
-                set_win_status_from_children(parent, children_win_statuses)
+                set_win_status_from_children(parent, children_win_statuses)#the only place where we can use win status array to instead of iterating over kids (where it matters most since reexpansions are much rarer)
                 backpropagate_num_checked_children(parent)
 
                 # prune_from_win_status(parent)
@@ -680,8 +683,19 @@ def assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
                 # prune_from_win_status(parent)
                 pruned_children = parent.children
             parent.children.sort(key=lambda x: x.UCT_multiplier, reverse=True)#sort them by probability
+        elif parent.children is not None: #in case we tried to reexpand but came back with no new pruned children
+            update_win_status_from_children(parent)
+            backpropagate_num_checked_children(parent)
     return pruned_children
 
+def get_reexpanded_amount(node):
+    if node.color == 'Black':
+        node.reexpanded = True
+        reexpanded_amount = get_num_children_to_consider(node)
+        node.reexpanded = False
+    else:
+        reexpanded_amount = 0
+    return reexpanded_amount
 
 def reset_reexpansion_flag(parent):
     parent.reexpanded = False

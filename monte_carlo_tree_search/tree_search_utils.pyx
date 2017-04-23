@@ -3,6 +3,8 @@
 from math import log, sqrt, floor
 import random
 from bottleneck import argpartition
+from copy import deepcopy
+from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place
 from numpy import argsort
 # from time import time
 
@@ -49,7 +51,7 @@ def update_tree_losses(node, amount=1): # visit and no win = loss_init
 
 #backpropagate guaranteed win status
 def update_win_statuses(node, win_status, new_subtree=False):
-    if node.color == 'Black' and win_status is False and not node.reexpanded_already:
+    if node.color == 'Black' and win_status is False and not node.gameover and not node.reexpanded_already:
         node.reexpanded = True
     else:
         node.win_status = win_status
@@ -96,12 +98,14 @@ def _crement_threads_checking_node(node, amount):
             parent.subtree_being_checked = False
             if parent.num_children_being_checked > 0:
                 parent.num_children_being_checked -= 1
-        else:
+        elif node.threads_checking_node == 1:
             parent.num_children_being_checked += 1
             num_children = len(parent.children)
-            if num_children == parent.num_children_being_checked:
+            if num_children <= parent.num_children_being_checked:
+                parent.num_children_being_checked = num_children
                 parent.subtree_being_checked = True
-
+            else:
+                parent.subtree_being_checked = False
 
             
 def increment_threads_checking_node(node):
@@ -474,187 +478,6 @@ def get_best_child(node_children, non_doomed = True):
             best_val_NN_scaled = 0
     return best, best_val_NN_scaled
 
-#
-# def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
-#
-#     best = choose_best_true_winner(node_children)
-#
-#
-#     # for child in node_children:
-#     #     net_wins = child.wins_down_this_tree - child.losses_down_this_tree
-#     #     if net_wins > 0:
-#     #         best_nodes.append(child)
-#     #
-#     # if len(best_nodes) > 0:
-#     #     best_net_wins = best_nodes[0].wins_down_this_tree - best_nodes[0].losses_down_this_tree
-#     #     best = best_nodes[0]
-#     #
-#     #     for potential_winner in best_nodes: #get best
-#     #         num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
-#     #         if num_true_wins > best_net_wins:
-#     #             best_net_wins = num_true_wins
-#     #             best = potential_winner
-#     #
-#     #
-#     #     for potential_winner in best_nodes: #find another best with a higher win-rate
-#     #         num_true_wins = potential_winner.wins_down_this_tree - potential_winner.losses_down_this_tree
-#     #         if num_true_wins == best_net_wins and \
-#     #                 ((potential_winner.visits - potential_winner.wins) / potential_winner.visits) >= ((best.visits - best.wins)/best.visits):
-#     #             best = potential_winner
-#     #     best_nodes = [best]#return the kid to check.
-#
-#
-#     if best is None:
-#         best, best_val = get_best_non_doomed_child(node_children, game_num)
-#         scaling_handicap = 1/4#+(game_num/100) #TODO: increase as a function of game_num? more games => stronger scaling strength since we can more safely ignore NN predictions?
-#         # best, best_val = get_best_most_visited_child(node_children)
-#         best_nodes = []
-#         for child in node_children:  # find equally best children
-#
-#             NN_scaling_factor = 1# ((child.UCT_multiplier-1)/scaling_handicap)+1 #scale the probability
-#
-#
-#             if not child.win_status == True:  # only consider children who will not lead to a win for opponent
-#                 if child.visits > 0:
-#                     child_loss_rate = ((child.visits - child.wins) / child.visits)
-#                     child_NN_scaled__win_rate = NN_scaling_factor * child_loss_rate
-#                     # probability = (child.UCT_multiplier-1)
-#                     # child_NN_scaled__win_rate = (probability + child_loss_rate)/(1+probability)
-#
-#                     if child_NN_scaled__win_rate == best_val:
-#                         if best.visits == child.visits:
-#                             best_nodes.append(child)
-#                             # should now have list of equally best children
-#         if len(best_nodes) == 0:  # all children are winners => checkmated, just make the best move you have
-#             best_nodes.append(best)
-#     else:
-#         best_nodes = [best]
-#     return best_nodes
-# def get_best_child(node_children, game_num):
-#     scaling_handicap = 1/4#+(game_num/100)
-#     overwhelming_amount = 65536
-#     k = 0
-#     while k < len(node_children)and node_children[k].visits <= 0 :
-#         k += 1
-#     if k < len(node_children):
-#         best = node_children[k]
-#         NN_scaling_factor = 1# ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
-#         best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
-#
-#         best_val_NN_scaled = NN_scaling_factor * best_loss_rate
-#
-#         # probability = node_children[k].UCT_multiplier-1
-#         # best_val_NN_scaled = (probability+ best_loss_rate)/(1+probability)
-#
-#         for i in range(k, len(node_children)):  # find best child
-#             child = node_children[i]
-#             NN_scaling_factor = 1#((child.UCT_multiplier-1)/scaling_handicap)+1
-#
-#             if child.visits > 0:
-#                 child_loss_rate = (child.visits - child.wins) / child.visits
-#                 child_NN_scaled_loss_rate = NN_scaling_factor * child_loss_rate
-#
-#
-#
-#                 # probability = (child.UCT_multiplier-1)
-#                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
-#
-#                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
-#                     # # and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
-#                     if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount)or \
-#                         (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
-#                         (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
-#                         ((best_loss_rate) < .30):
-#                             # if both have searched to game overs, (best case # 1)
-#                         # if neither have searched to game overs,
-#                         # if new child has searched to a gameover and current best hasn't (best case # 2)
-#                         # if new child hasn't searched to a gameover, best has, but new child has a better loss_init-rate (i.e. current best has a lot of losses, new child looks better)
-#                         best = child
-#                         best_val_NN_scaled = child_NN_scaled_loss_rate
-#                         best_loss_rate = (best.visits - best.wins) / best.visits
-#
-#
-#                 elif child_NN_scaled_loss_rate == best_val_NN_scaled:  # if both have equal win rate (i.e. both 0/visits),
-#
-#                     if best_val_NN_scaled == 0: #if both are winners insofar as we know, pick the one with the least visits? (since we're more sure we're doomed with the one visited a lot)
-#                         if best.visits > child.visits:
-#                             best = child
-#                             best_val_NN_scaled = child_NN_scaled_loss_rate
-#                             best_loss_rate = (best.visits - best.wins) / best.visits
-#                     else: # get the one with the most visits
-#                         if best.visits < child.visits:
-#                             best = child
-#                             best_val_NN_scaled = child_NN_scaled_loss_rate
-#                             best_loss_rate = (best.visits - best.wins) / best.visits
-#
-#     else:
-#         # no children with value? happens if search is too slow
-#         best = random.sample(node_children, 1)[0]
-#         best_val_NN_scaled = 0
-#     return best, best_val_NN_scaled
-#
-# def get_best_non_doomed_child(node_children, game_num):
-#     scaling_handicap = 1/4#+(game_num/100)
-#     overwhelming_amount = 65536
-#     k = 0
-#     while k < len(node_children) and (node_children[k].visits <= 0 or node_children[k].win_status is True) :
-#         k += 1
-#     if k < len(node_children):
-#         best = node_children[k]
-#         NN_scaling_factor = 1# ((node_children[k].UCT_multiplier-1)/scaling_handicap)+1
-#         best_loss_rate = ((node_children[k].visits - node_children[k].wins) / node_children[k].visits)
-#
-#         best_val_NN_scaled = NN_scaling_factor * best_loss_rate
-#
-#         # probability = node_children[k].UCT_multiplier-1
-#         # best_val_NN_scaled = (probability+ best_loss_rate)/(1+probability)
-#
-#         for i in range(k, len(node_children)):  # find best child
-#             child = node_children[i]
-#             NN_scaling_factor = 1#((child.UCT_multiplier-1)/scaling_handicap)+1
-#
-#             if child.visits > 0 and not child.win_status is True: #only consider non-doomed moves
-#                 child_loss_rate = (child.visits - child.wins) / child.visits
-#                 child_NN_scaled_loss_rate = NN_scaling_factor * child_loss_rate
-#
-#
-#
-#                 # probability = (child.UCT_multiplier-1)
-#                 # child_NN_scaled_loss_rate = (child_loss_rate + probability) / (1+probability)
-#
-#                 if child_NN_scaled_loss_rate > best_val_NN_scaled:  # get the child with the highest loss_init rate
-#                     # # and (child.visits / best.visits > 0.3) or best_loss_rate < .5)
-#                     if (best.visits >= overwhelming_amount and child.visits >= overwhelming_amount)or \
-#                         (best.visits < overwhelming_amount and child.visits >= overwhelming_amount) or \
-#                         (best.visits < overwhelming_amount and child.visits < overwhelming_amount) or \
-#                         ((best_loss_rate) < .30):
-#                         # if both have searched to game overs, (best case # 1)
-#                         # if neither have searched to game overs,
-#                         # if new child has searched to a gameover and current best hasn't (best case # 2)
-#                         # if new child hasn't searched to a gameover, best has, but new child has a better loss_init-rate (i.e. current best has a lot of losses, new child looks better)
-#                         best = child
-#                         best_val_NN_scaled = child_NN_scaled_loss_rate
-#                         best_loss_rate = (best.visits - best.wins) / best.visits
-#
-#
-#                 elif child_NN_scaled_loss_rate == best_val_NN_scaled:  # if both have equal win rate (i.e. both 0/visits),
-#
-#                     if best_val_NN_scaled == 0: #if both are winners insofar as we know, pick the one with the least visits? (since we're more sure we're doomed with the one visited a lot)
-#                         if best.visits > child.visits:
-#                             best = child
-#                             best_val_NN_scaled = child_NN_scaled_loss_rate
-#                             best_loss_rate = (best.visits - best.wins) / best.visits
-#                     else: # get the one with the most visits
-#                         if best.visits < child.visits:
-#                             best = child
-#                             best_val_NN_scaled = child_NN_scaled_loss_rate
-#                             best_loss_rate = (best.visits - best.wins) / best.visits
-#
-#     else:
-#         # no children with value or all doomed
-#         best, best_val_NN_scaled = get_best_child(node_children, game_num)
-#     return best, best_val_NN_scaled
-
 def get_best_most_visited_child(node_children):
     k = 0
     threshold_kids = []
@@ -706,6 +529,47 @@ def random_rollout(node):
     else:
         update_tree_wins(move, 1)
     return result
+
+def real_random_rollout(node):
+    local_board = deepcopy(node.game_board)
+    current_color = player_color = node.color
+    local_white_pieces = node.white_pieces[:]
+    local_black_pieces = node.black_pieces[:]
+    gameover, winner_color = game_over(local_board)
+    while not gameover:
+        if current_color =='White':
+            player_pieces = local_white_pieces
+            opponent_pieces = local_black_pieces
+        else:
+            player_pieces = local_black_pieces
+            opponent_pieces = local_white_pieces
+
+        moves = enumerate_legal_moves_using_piece_arrays_nodeless(current_color, local_board, player_pieces)
+        random_move = random.sample(moves, 1)[0]
+        random_move =  random_move['From'] + r'-' + random_move['To']
+
+        local_board, player_piece_to_add, player_piece_to_remove, remove_opponent_piece = move_piece_update_piece_arrays_in_place(local_board, random_move, current_color)
+        update_piece_arrays_in_place(player_pieces, opponent_pieces, player_piece_to_add, player_piece_to_remove, remove_opponent_piece)
+
+        gameover, winner_color = game_over(local_board)
+        current_color = get_opponent_color(current_color)
+    if winner_color == player_color:
+        return 1
+    else:
+        return 0
+
+def get_opponent_color(player_color):
+    if player_color == 'White':
+        opponent_color = 'Black'
+    else:
+        opponent_color = 'White'
+    return opponent_color
+
+def update_piece_arrays_in_place(player_pieces, opponent_pieces, player_piece_to_add, player_piece_to_remove, remove_opponent_piece):
+    # slicing is the fastest way to make a copy
+    player_pieces[player_pieces.index(player_piece_to_remove)] = player_piece_to_add
+    if remove_opponent_piece:
+        opponent_pieces.remove(player_piece_to_add)
 
 def rollout(node_to_update, descendant_to_eval):
     outcome, _ = evaluation_function(descendant_to_eval)
@@ -878,70 +742,72 @@ def update_child(child, NN_output, top_children_indexes, num_legal_children, sim
     # elif top_children_indexes[9] == child.index:
     #     child_val = max(child_val, .008041201598780913)
 
-    normalized_value = int(child_val * 100)
-
-    # TODO: 03/15/2017 removed based on prof Lorentz input
-    # if child.color == 'Black':
-    #     child.UCT_multiplier  = 1 + (child_val*2)# stay close to policy (net) trajectory by biasing UCT selection of
-    #                                      # NN's top picks as a function of probability returned by NN
-    # else:
-    #     child.UCT_multiplier = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selection of
-    #     # NN's top picks as a function of probability returned by NN
-
     child.UCT_multiplier = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selection of
     # NN's top picks as a function of probability returned by NN
+    if not child.gameover:
+        normalized_value = int(child_val * 100)
 
-    # TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
-    # i.e. if policy chooses child with 30% probability => 30/100 games
-    # => randomly decide which of those 30 games are wins and which are losses
+        # TODO: 03/15/2017 removed based on prof Lorentz input
+        # if child.color == 'Black':
+        #     child.UCT_multiplier  = 1 + (child_val*2)# stay close to policy (net) trajectory by biasing UCT selection of
+        #                                      # NN's top picks as a function of probability returned by NN
+        # else:
+        #     child.UCT_multiplier = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selection of
+        #     # NN's top picks as a function of probability returned by NN
 
-    # TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
-    prior_value_multiplier = 1
-    weighted_losses = normalized_value * prior_value_multiplier
-    child.visits = 100 * prior_value_multiplier
-    # weighted_wins = (child.visits-weighted_losses)
-    weighted_wins = ((
-                     child.visits - weighted_losses) ) #/ child.visits  # may be a negative number if we are increasing probability ** 2
-    child.wins = weighted_wins
 
-    # update_tree_wins(child, weighted_wins)
-    # update_tree_losses(child, weighted_losses)
 
-    #  num_top_to_consider = max(1, int(num_legal_children/2.5))
-    #  top_n_to_consider = top_children_indexes[:num_top_to_consider]
-    #  num_winners = max(1, int(num_top_to_consider/2))
-    #  num_losers = min (num_winners, num_top_to_consider)
-    #  top_n_winners = top_children_indexes[:num_winners]
-    #  top_n_losers = top_children_indexes[num_winners:num_losers]
-    #
-    #  #TODO: 03232017 based on prof lorentz input, only backprop a single win/loss_init value
-    # #01_03242017move_EBFS MCTSvsWandererdepth1_ttt10Annealing_Multiplier_BackpropOnlyTopKids_singleDL is using this + predicate!
-    #  if child.index in top_n_winners:
-    #      update_tree_wins(child.parent, 1)
-    #  elif child.index in top_n_losers:
-    #      update_tree_losses(child.parent, 1)
+        # TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
+        # i.e. if policy chooses child with 30% probability => 30/100 games
+        # => randomly decide which of those 30 games are wins and which are losses
 
-    # if child.index in top_n_to_consider:
-    # outcome, _ = evaluation_function(child)
-    # if outcome == 1:
-    #     update_tree_losses(child.parent)
-    # else:
-    #     if child_val> .90:
-    #         amount = 1
-    #     else:
-    #         amount = 1
-    #     update_tree_wins(child.parent, amount)
+        # TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
+        prior_value_multiplier = 1
+        weighted_losses = normalized_value * prior_value_multiplier
+        child.visits = 100 * prior_value_multiplier
+        # weighted_wins = (child.visits-weighted_losses)
+        weighted_wins = ((
+                         child.visits - weighted_losses) ) #/ child.visits  # may be a negative number if we are increasing probability ** 2
+        child.wins = weighted_wins
 
-    # if child_val > .30:
-    #     update_tree_wins(child.parent)
-    # else:
-    #     update_tree_losses(child.parent)
-    # if child.height >= 60:
-    # random_prob = random.random()
-    random_prob = 1
-    if sim_info.do_eval:
-        rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
+        # update_tree_wins(child, weighted_wins)
+        # update_tree_losses(child, weighted_losses)
 
+        #  num_top_to_consider = max(1, int(num_legal_children/2.5))
+        #  top_n_to_consider = top_children_indexes[:num_top_to_consider]
+        #  num_winners = max(1, int(num_top_to_consider/2))
+        #  num_losers = min (num_winners, num_top_to_consider)
+        #  top_n_winners = top_children_indexes[:num_winners]
+        #  top_n_losers = top_children_indexes[num_winners:num_losers]
+        #
+        #  #TODO: 03232017 based on prof lorentz input, only backprop a single win/loss_init value
+        # #01_03242017move_EBFS MCTSvsWandererdepth1_ttt10Annealing_Multiplier_BackpropOnlyTopKids_singleDL is using this + predicate!
+        #  if child.index in top_n_winners:
+        #      update_tree_wins(child.parent, 1)
+        #  elif child.index in top_n_losers:
+        #      update_tree_losses(child.parent, 1)
+
+        # if child.index in top_n_to_consider:
+        # outcome, _ = evaluation_function(child)
+        # if outcome == 1:
+        #     update_tree_losses(child.parent)
+        # else:
+        #     if child_val> .90:
+        #         amount = 1
+        #     else:
+        #         amount = 1
+        #     update_tree_wins(child.parent, amount)
+
+        # if child_val > .30:
+        #     update_tree_wins(child.parent)
+        # else:
+        #     update_tree_losses(child.parent)
+        # if child.height >= 60:
+        # random_prob = random.random()
+        random_prob = 1
+        if sim_info.do_eval:
+            # rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
+            eval_child(child)
 
         # child.visits = normalized_value
         # child.wins = normalized_value * random_rollout(child)
@@ -972,13 +838,16 @@ def rollout_and_eval_if_parent_at_depth(descendant_to_eval, depth = 0): #bad bec
             parent_exists = False
     if depth == 0 and not descendant_to_eval.rolled_out_from:
         rollout(parent_to_update, descendant_to_eval)
+
 def eval_child(child):
-    if child.height < 47:  # pre-rollout
+    if child.height > 40:
+        outcome = real_random_rollout(child)
+    else:
         outcome, _ = evaluation_function(child)
-        if outcome == 1:
-            update_tree_losses(child.parent)
-        else:
-            update_tree_wins(child.parent)
+    if outcome == 1:
+        update_tree_losses(child.parent)
+    else:
+        update_tree_wins(child.parent)
 
 def update_sum_for_normalization(parent, NN_output, child_indexes):
     #if we want to normalize over legal/top children vs relying on NN's softmax

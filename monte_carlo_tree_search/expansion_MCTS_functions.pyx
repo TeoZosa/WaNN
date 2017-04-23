@@ -2,7 +2,7 @@
 
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, \
-    SimulationInfo, increment_threads_checking_node
+    SimulationInfo, increment_threads_checking_node, decrement_threads_checking_node
 from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, expand_descendants_to_depth_wrt_NN, init_new_root
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board, initial_game_board, initial_piece_arrays
@@ -164,6 +164,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         MCTS_args = [[root, depth_limit, time_to_think, sim_info, MCTS_Type, policy_net, start_time]] * int(num_processes)
         #BFS tree to reset node check semaphore
         reset_thread_flag(root)
+
         while time() - start_time < time_to_think and not done:
             if MCTS_Type ==  'MCTS Asynchronous':
                 NN_args = [done, pruning, sim_info, policy_net]
@@ -242,6 +243,7 @@ def reset_thread_flag(root):
         node = unvisited_queue.pop()
         node.threads_checking_node = 0
         node.subtree_being_checked = False
+        node.num_children_being_checked = 0
         node.being_checked = False
         if node.children is not None:
             unvisited_queue.extend(node.children)
@@ -249,32 +251,6 @@ def reset_thread_flag(root):
             if node.gameover is False:
                 node.expanded = False
 
-# def assign_root(game_board, player_color, previous_move, last_opponent_move, move_number, sim_info, version=0):
-#     # if move_number == 0 and version > 0:
-#     #     input_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\AgnosticRoot{}.p'.format(str(version-1)),
-#     #                            'r+b')
-#     #     root = pickle.load(input_file)
-#     #     input_file.close()
-#     if move_number == 0:
-#         if previous_move is not None: #saved root
-#             root = previous_move
-#     else:
-#         if previous_move is None or previous_move.children is None: #no tree to reuse
-#             root = TreeNode(game_board, player_color, None, None, move_number)
-#         else:
-#             new_root = None
-#             for child in previous_move.children: #check if we can reuse tree
-#                 if child.game_board == game_board:
-#                     new_root = child
-#                     # root.parent = None # separate new root from old parent reference; DON'T DO THIS WITH SAVED ROOT
-#                     print("Reused old tree", file=sim_info.file)
-#                     break
-#             if new_root  is None: #can't reuse tree #append to old parent
-#                 root = TreeNode(game_board, player_color, None, None, move_number)
-#             # previous_move.children = None #to dealloc unused tree DON'T DO THIS WITH SAVED ROOT
-#
-#
-#     return  root
 
 def assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info):
     # if move_number == 0 and version > 0:
@@ -331,6 +307,8 @@ def assign_root_reinforcement_learning(game_board, player_color, previous_move, 
     #if terminating threads didn't end correctly, clean this up on the way down.
     root.being_checked = False
     root.threads_checking_node = 0
+    root.num_children_being_checked = 0
+    root.subtree_being_checked = False
     if root.children is None and not root.gameover:
         root.expanded = False
     #can't do this anymore if we are background searching
@@ -465,7 +443,7 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type,
     if depth < depth_limit:
         expand_and_select(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
     else:  # reached depth limit
-        root.threads_checking_node -= 1
+        decrement_threads_checking_node(root)
         # play_simulation(root, sim_info, this_height)
         # return here
 

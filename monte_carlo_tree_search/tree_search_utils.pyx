@@ -530,13 +530,19 @@ def random_rollout(node):
         update_tree_wins(move, 1)
     return result
 
-def real_random_rollout(node):
+def real_random_rollout(node, end_of_game=True):
     local_board = deepcopy(node.game_board)
     current_color = player_color = node.color
     local_white_pieces = node.white_pieces[:]
     local_black_pieces = node.black_pieces[:]
     gameover, winner_color = game_over(local_board)
-    while not gameover:
+    if end_of_game:
+        depth_limit = 999
+    else:
+        depth_limit = 4
+    depth = -1
+    while not gameover and depth < depth_limit:
+        depth +=1
         if current_color =='White':
             player_pieces = local_white_pieces
             opponent_pieces = local_black_pieces
@@ -553,10 +559,14 @@ def real_random_rollout(node):
 
         gameover, winner_color = game_over(local_board)
         current_color = get_opponent_color(current_color)
-    if winner_color == player_color:
-        return 1
-    else:
-        return 0
+    if gameover:
+        if winner_color == player_color:
+            outcome =  1
+        else:
+            outcome =  0
+    else:#reached depth limit
+        outcome, _ = evaluation_function_nodeless(local_white_pieces, local_black_pieces, player_color)
+    return outcome
 
 def get_opponent_color(player_color):
     if player_color == 'White':
@@ -609,37 +619,103 @@ def evaluation_function(root):
     }
     win_weight = 0
     result = 0
-    for row in root.game_board:
-        if row != is_white_index and row != white_move_index:  # don't touch these indexes
-            for col in root.game_board[row]:
-                if root.game_board[row][col] == white:
-                # if row == 2:
-                #     if col == player_color:
-                #         win_weight += 1
-                #     if
-                    result += weighted_board[row][col]
-                elif root.game_board[row][col] == black:
-                    result -= weighted_board[9-row][col]
+    white_pieces = root.white_pieces
+    black_pieces = root.black_pieces
+    for piece in white_pieces:
+        col = piece[0]
+        row = int(piece[1])
+        result += weighted_board[row][col]
+    for piece in black_pieces:
+        col = piece[0]
+        row = int(piece[1])
+        result -= weighted_board[row][col]
+    # for row in root.game_board:
+    #     if row != is_white_index and row != white_move_index:  # don't touch these indexes
+    #         for col in root.game_board[row]:
+    #             if root.game_board[row][col] == white:
+    #             # if row == 2:
+    #             #     if col == player_color:
+    #             #         win_weight += 1
+    #             #     if
+    #                 result += weighted_board[row][col]
+    #             elif root.game_board[row][col] == black:
+    #                 result -= weighted_board[9-row][col]
     # print(result)
-    max_result_can_be = 141
-    max_result_can_be = max_result_can_be/1.5
+    # max_result_can_be = 141
+    # max_result_can_be = max_result_can_be/1.5
     if result > 0:
         if player_color == 'White':
             outcome = 1
-            result = result / max(max_result_can_be, result)
+            # result = result / max(max_result_can_be, result)
         else:
             outcome =  0
-            result = 1 - (result / max(max_result_can_be, result))
+            # result = 1 - (result / max(max_result_can_be, result))
 
     else:
         if player_color == 'Black':
             outcome = 1
-            result = abs(result / max(max_result_can_be, result))
+            # result = abs(result / max(max_result_can_be, result))
 
         else:
             outcome = 0
-            result = 1 - abs(result / max(max_result_can_be, result))
+            # result = 1 - abs(result / max(max_result_can_be, result))
     return outcome, result
+
+def evaluation_function_nodeless(white_pieces, black_pieces, player_color):
+    # row 2:
+    # if white piece or (?) no diagonal black pieces in row 3
+    weighted_board = {  #50%
+        8: {'a': 24, 'b': 24, 'c': 24, 'd': 24, 'e': 24, 'f': 24, 'g': 24, 'h': 24},
+        7: {'a': 21, 'b': 23, 'c': 23, 'd': 23, 'e': 23, 'f': 23, 'g': 23, 'h': 21},
+        6: {'a': 14, 'b': 22, 'c': 22, 'd': 22, 'e': 22, 'f': 22, 'g': 22, 'h': 14},
+        5: {'a': 9, 'b': 15, 'c': 21, 'd': 21, 'e': 21, 'f': 21, 'g': 15, 'h': 9},
+        4: {'a': 6, 'b': 9, 'c': 16, 'd': 16, 'e': 16, 'f': 16, 'g': 9, 'h': 6},
+        3: {'a': 3, 'b': 5, 'c': 10, 'd': 10, 'e': 10, 'f': 10, 'g': 5, 'h': 3},
+        2: {'a': 2, 'b': 3, 'c': 3, 'd': 3, 'e': 3, 'f': 3, 'g': 3, 'h': 2},
+        1: {'a': 5, 'b': 28, 'c': 28, 'd': 12, 'e': 12, 'f': 28, 'g': 28, 'h': 5}
+    }
+    white = 'w'
+    black = 'b'
+    is_white_index = 9
+    white_move_index = 10
+    opponent_dict = { 'White': 'Black',
+             'Black': 'White'
+
+    }
+    win_weight = 0
+    result = 0
+
+    for piece in white_pieces:
+        col = piece[0]
+        row = int(piece[1])
+        result += weighted_board[row][col]
+    for piece in black_pieces:
+        col = piece[0]
+        row = int(piece[1])
+        result -= weighted_board[row][col]
+    # print(result)
+    # max_result_can_be = 141
+    # max_result_can_be = max_result_can_be/1.5
+    if result > 0:
+        if player_color == 'White':
+            outcome = 1
+            # result = result / max(max_result_can_be, result)
+        else:
+            outcome =  0
+            # result = 1 - (result / max(max_result_can_be, result))
+
+    else:
+        if player_color == 'Black':
+            outcome = 1
+            # result = abs(result / max(max_result_can_be, result))
+
+        else:
+            outcome = 0
+            # result = 1 - abs(result / max(max_result_can_be, result))
+    return outcome, result
+
+
+
 
 def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=False): #takes in a list of parents with children,
     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss_init info already backpropagated)
@@ -841,9 +917,9 @@ def rollout_and_eval_if_parent_at_depth(descendant_to_eval, depth = 0): #bad bec
 
 def eval_child(child):
     if child.height > 40:
-        outcome = real_random_rollout(child)
+        outcome = real_random_rollout(child, end_of_game=True)
     else:
-        outcome, _ = evaluation_function(child)
+        outcome = real_random_rollout(child, end_of_game=False)
     if outcome == 1:
         update_tree_losses(child.parent)
     else:

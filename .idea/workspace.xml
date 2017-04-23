@@ -3,11 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" afterPath="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" afterPath="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
@@ -24,7 +20,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/BreakthroughANN$wander_vs_opponent.coverage" NAME="wander_vs_opponent Coverage Results" MODIFIED="1492969174429" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Breakthrough_Player" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$wander_vs_opponent.coverage" NAME="wander_vs_opponent Coverage Results" MODIFIED="1492971465990" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Breakthrough_Player" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayerDataDirectoryToAnalysisFormatBinaryFeaturePlanes.coverage" NAME="PlayerDataDirectoryToAnalysisFormatBinaryFeaturePlanes Coverage Results" MODIFIED="1465274866441" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$ValueNetByRankBinaryFeaturePlanes.coverage" NAME="ValueNetByRankBinaryFeaturePlanes Coverage Results" MODIFIED="1466031440108" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughANN$ValueNetByRankBinaryFeaturePlanes__1_.coverage" NAME="selfPlaytoData Coverage Results" MODIFIED="1482178856277" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PlayersToDataStructure" />
@@ -83,7 +79,7 @@
         <entry file="file://$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="255">
-              <caret line="15" column="33" lean-forward="false" selection-start-line="15" selection-start-column="33" selection-end-line="15" selection-end-column="33" />
+              <caret line="15" column="24" lean-forward="false" selection-start-line="15" selection-start-column="24" selection-end-line="15" selection-end-column="24" />
               <folding>
                 <element signature="e#0#51#0" expanded="true" />
               </folding>
@@ -91,7 +87,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="policy_net_utils.pyx" pinned="false" current-in-tab="false">
+      <file leaf-file-name="policy_net_utils.pyx" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="170">
@@ -101,11 +97,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="true">
+      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="803">
-              <caret line="845" column="47" lean-forward="false" selection-start-line="845" selection-start-column="47" selection-end-line="845" selection-end-column="47" />
+            <state relative-caret-position="1078">
+              <caret line="635" column="32" lean-forward="true" selection-start-line="635" selection-start-column="32" selection-end-line="635" selection-end-column="32" />
               <folding>
                 <element signature="e#46#79#0" expanded="true" />
               </folding>
@@ -116,8 +112,8 @@
       <file leaf-file-name="tree_builder.pyx" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4641">
-              <caret line="653" column="0" lean-forward="true" selection-start-line="653" selection-start-column="0" selection-end-line="653" selection-end-column="0" />
+            <state relative-caret-position="8826">
+              <caret line="821" column="42" lean-forward="false" selection-start-line="821" selection-start-column="42" selection-end-line="821" selection-end-column="42" />
               <folding>
                 <element signature="e#46#173#0" expanded="true" />
               </folding>
@@ -178,9 +174,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>get_UCT\((.*)\)</find>
-      <find>uct</find>
-      <find>choose_UCT_move\((.*)\)</find>
       <find>choose_UCT_or_best_child</find>
       <find>or child_val &gt; best_child_val/2</find>
       <find>NN_scaling_factor =</find>
@@ -206,8 +199,11 @@
       <find>backpropagate_num_checke</find>
       <find>reexpanded_already</find>
       <find>enumerate_legal</find>
-      <find>backpropagate_nu</find>
       <find>move_pi</find>
+      <find>backpropagate_nu</find>
+      <find>root.</find>
+      <find>evaluation_</find>
+      <find>evaluation_function</find>
     </findStrings>
     <replaceStrings>
       <replace>sim_info.file</replace>
@@ -300,10 +296,10 @@
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" />
-        <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
+        <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
       </list>
     </option>
   </component>
@@ -1059,13 +1055,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00167" summary="abstracted details so Expansion MCTS = EBFS MCTS with depth_limit = 0">
-      <created>1488952058834</created>
-      <option name="number" value="00167" />
-      <option name="presentableId" value="LOCAL-00167" />
-      <option name="project" value="LOCAL" />
-      <updated>1488952058834</updated>
-    </task>
     <task id="LOCAL-00168" summary="correction, depth_limit = 1 =&gt; regular Expansion MCTS. Made it easier to assign players, better logging, fixed outstanding bugs">
       <created>1488955840508</created>
       <option name="number" value="00168" />
@@ -1402,7 +1391,14 @@
       <option name="project" value="LOCAL" />
       <updated>1492886719371</updated>
     </task>
-    <option name="localTasksCounter" value="216" />
+    <task id="LOCAL-00216" summary="added real random rollouts. Still very inefficient.">
+      <created>1492969656145</created>
+      <option name="number" value="00216" />
+      <option name="presentableId" value="LOCAL-00216" />
+      <option name="project" value="LOCAL" />
+      <updated>1492969656145</updated>
+    </task>
+    <option name="localTasksCounter" value="217" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1477,7 +1473,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="exporting graph def" />
     <MESSAGE value="added true random rollout (multiprocessing since we aren't using NN)" />
     <MESSAGE value="added metrics, unfinished policy net class, moved code, cleaned up code for random rollouts and such, more testing, re-added including top n children as tests on incorrectly predicted moves revealed high percent differences between predicted moves and correct moves" />
     <MESSAGE value="rollout from the final move not node passed in, put threshold back as top 6 killed performance" />
@@ -1502,7 +1497,8 @@
     <MESSAGE value="fixed the reexpansion bugs I think?" />
     <MESSAGE value="fixed last bug?" />
     <MESSAGE value="Added cheat mode (keep searching while opponent is thinking)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added cheat mode (keep searching while opponent is thinking)" />
+    <MESSAGE value="added real random rollouts. Still very inefficient." />
+    <option name="LAST_COMMIT_MESSAGE" value="added real random rollouts. Still very inefficient." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1931,29 +1927,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="32" column="0" lean-forward="true" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="44" lean-forward="true" selection-start-line="0" selection-start-column="44" selection-end-line="0" selection-end-column="44" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="33" lean-forward="false" selection-start-line="15" selection-start-column="33" selection-end-line="15" selection-end-column="33" />
-          <folding>
-            <element signature="e#0#51#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1975,8 +1953,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4641">
-          <caret line="653" column="0" lean-forward="true" selection-start-line="653" selection-start-column="0" selection-end-line="653" selection-end-column="0" />
+        <state relative-caret-position="8826">
+          <caret line="821" column="42" lean-forward="false" selection-start-line="821" selection-start-column="42" selection-end-line="821" selection-end-column="42" />
           <folding>
             <element signature="e#46#173#0" expanded="true" />
           </folding>
@@ -1985,11 +1963,29 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="803">
-          <caret line="845" column="47" lean-forward="false" selection-start-line="845" selection-start-column="47" selection-end-line="845" selection-end-column="47" />
+        <state relative-caret-position="1078">
+          <caret line="635" column="32" lean-forward="true" selection-start-line="635" selection-start-column="32" selection-end-line="635" selection-end-column="32" />
           <folding>
             <element signature="e#46#79#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="15" column="24" lean-forward="false" selection-start-line="15" selection-start-column="24" selection-end-line="15" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#51#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="32" column="0" lean-forward="true" selection-start-line="32" selection-start-column="0" selection-end-line="32" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>

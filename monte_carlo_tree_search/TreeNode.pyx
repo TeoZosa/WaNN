@@ -36,6 +36,8 @@ class TreeNode(object):
         self.white_pieces = white_pieces
         self.black_pieces = black_pieces
 
+        self.overwhelming_amount = 65536
+
 class NeuralNetInput(object):
     def __init__(self):
         self.samples = []

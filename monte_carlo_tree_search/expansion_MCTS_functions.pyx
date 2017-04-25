@@ -571,7 +571,7 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
     root = sim_info.root
     start_time = sim_info.start_time
     time_to_think = sim_info.time_to_think
-    overwhelming_amount = 65536
+    overwhelming_amount = root.overwhelming_amount
     print("Monte Carlo Game {iteration}\n"
           "Played at root   Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}    win = {win_status}\n".format(
         height = root.height, color=root.color, uct=0, wins=root.wins/overwhelming_amount, visits=root.visits/overwhelming_amount,

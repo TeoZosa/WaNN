@@ -141,10 +141,22 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
     num_children = len(node.children)
     if num_children == 1:
         best = node.children[0]
-    elif node is sim_info.root:
-        if num_children>1:
-            best = node.children[sim_info.root_thread_counter%num_children]
-            sim_info.root_thread_counter+=1
+    # elif node is sim_info.root:
+    #     if num_children>1:
+    #         best = node.children[sim_info.root_thread_counter%num_children]
+    #         sim_info.root_thread_counter+=1
+    # elif node.color == 'Black':
+    #     best = None
+    #     # if node.children is not None:
+    #     #     if node.children[0].win_status is None:
+    #     #         best = node.children[0]
+    #     for child in node.children:
+    #         if child.win_status is None:
+    #             best = child
+    #             break
+    #     if best is None:
+    #         best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
+
     else:
         if node.best_child is not None: #return best child if not already previously expanded
             if node.best_child.win_status is None and node.best_child.visited is False: # and not node.best_child.subtree_checked ...  node.best_child.visited is False and
@@ -156,28 +168,6 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
             best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
     return best  # because a win for me = a loss for child
 
-# def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
-#     best = None  # shouldn't ever return None
-#     for child in node.children:
-#         if child.win_status is None and child.threads_checking_node <= 0:
-#             best = child
-#             break
-#     # if node.height %2 == 0: #white's move, pick move with highest probability
-#     #     for child in node.children:
-#     #         if child.win_status is None and child.threads_checking_node <=0:
-#     #             best = child
-#     #             break
-#     # else: #black's move
-#     #     if best is None:
-#     #         if node.best_child is not None: #return best child if not already previously expanded
-#     #             if node.best_child.visited is False and node.best_child.win_status is None:
-#     #                 best = node.best_child
-#     #             else:
-#     #                 best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
-#     #             node.best_child.visited = True
-#     #         elif node.children is not None: #if this node has children to choose from: should always happen
-#     #             best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
-#     return best  # because a win for me = a loss_init for child
 
 def choose_best_true_winner(node_children):
     best_nodes = []
@@ -260,8 +250,8 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
     if node.visits == 0:
         UCT = 998 #necessary for MCTS without NN initialized values
     else:
-        overwhelming_amount = 65536
-        PUCT_exploration_constant = 1000
+        overwhelming_amount = node.overwhelming_amount
+
 
 
         # # 03/11/2017 games actually good with this and no division, but annealing seems right?
@@ -279,6 +269,10 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
 
             # exploration_constant = 0.1 + stochasticity_for_multithreading # 1.414 ~ √2
         exploration_constant =  stochasticity_for_multithreading # 1.414 ~ √2
+        # if node.parent.color ==sim_info.root.color:#make black's move explore more?
+        #     PUCT_exploration_constant = stochasticity_for_multithreading*1000#1000
+        # else:
+        PUCT_exploration_constant = stochasticity_for_multithreading
         #
         # if node.visits >= overwhelming_amount:
         #     norm_visits = floor(node.visits / overwhelming_amount)+ (node.visits % overwhelming_amount)
@@ -297,7 +291,7 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         norm_loss_rate = norm_losses/norm_visits
         NN_prob = (node.UCT_multiplier - 1)
 
-        PUCT_exploration = (PUCT_exploration_constant*NN_prob*sqrt(parent_visits-norm_visits))/(1+norm_visits)
+        PUCT_exploration = PUCT_exploration_constant*NN_prob*(sqrt(max(1, parent_visits-norm_visits))/(1+norm_visits))
         exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
 
         # exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
@@ -308,7 +302,7 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
 
 def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose among equally successful children
     best_nodes = []
-    overwhelming_amount = 65536
+    overwhelming_amount = node.overwhelming_amount
 
     if node.children is not None:
         win_can_be_forced, best_nodes = check_for_forced_win(node.children, game_num)
@@ -316,22 +310,22 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
             if node.win_status is False:
                 best_nodes.append(node.children[0])
 
-            # else:
-            #     # best_visits = 0
-            #     # best = None
-            #     # for child in node.children: #sorted by prob
-            #     #     if child.visits >= overwhelming_amount:
-            #     #         child_visits_norm = floor(child.visits / overwhelming_amount)+ (child.visits % overwhelming_amount)
-            #     #     else:
-            #     #         child_visits_norm = child.visits
-            #     #     if child_visits_norm > best_visits:
-            #     #         best = child
-            #     #         best_visits = child_visits_norm
-            #     # if best is not None:
-            #     #    best_nodes.append(best)
-            #         # if child.win_status is not True and child.wins/child.visits <=.50:
-            #         #     best_nodes.append(child)
-            #         #     break
+            else:
+                best_visits = 0
+                best = None
+                for child in node.children: #sorted by prob
+                    if child.visits >= overwhelming_amount:
+                        child_visits_norm = floor(child.visits / overwhelming_amount)+ (child.visits % overwhelming_amount)
+                    else:
+                        child_visits_norm = child.visits
+                    if child_visits_norm > best_visits and child.win_status is not True:
+                        best = child
+                        best_visits = child_visits_norm
+                if best is not None:
+                   best_nodes.append(best)
+                    # if child.win_status is not True and child.wins/child.visits <=.50:
+                    #     best_nodes.append(child)
+                    #     break
 
 
             # #to stay inside policy net's prediction?
@@ -374,8 +368,8 @@ def get_best_children(node_children, game_num):#TODO: make sure to not pick winn
     best, best_val = get_best_child(node_children)
     # best, best_val = get_best_most_visited_child(node_children)
     best_nodes = []
-    NN_scaling_factor = 4
-    overwhelming_amount = 65536
+    NN_scaling_factor = 0#1
+    overwhelming_amount = best.overwhelming_amount
 
     for child in node_children:  # find equally best children
        # NN_weighting = (NN_scaling_factor*(child.UCT_multiplier - 1))/(1+child.parent.visits)
@@ -405,8 +399,7 @@ def get_best_children(node_children, game_num):#TODO: make sure to not pick winn
     return best_nodes
 
 def get_best_child(node_children, non_doomed = True):
-    NN_scaling_factor = 4#+(game_num/100)
-    overwhelming_amount = 65536
+    NN_scaling_factor = 0#1#+(game_num/100)
     k = 0
     if non_doomed:
         while k < len(node_children) and (node_children[k].visits <= 0 or node_children[k].win_status is True) :
@@ -416,6 +409,8 @@ def get_best_child(node_children, non_doomed = True):
             k += 1
     if k < len(node_children):
         best = node_children[k]
+        overwhelming_amount = best.overwhelming_amount
+
         if best.visits >= overwhelming_amount:
             best_visits_norm = floor(best.visits / overwhelming_amount)+ (best.visits % overwhelming_amount)
         else:

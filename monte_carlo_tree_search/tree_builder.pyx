@@ -111,7 +111,7 @@ def expand_node(parent_node, rollout=False):
     children_win_statuses = []
     for child_as_move in children_as_moves:  # generate children
         move = child_as_move['From'] + r'-' + child_as_move['To']
-        child_node = init_child_node_and_board(move, parent_node)
+        child_node = init_unique_child_node_and_board(move, parent_node)
         check_for_winning_move(child_node, rollout) #1-step lookahead for gameover
         children_win_statuses.append(child_node.win_status)
         child_nodes.append(child_node)
@@ -156,8 +156,9 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
                 elif unexpanded_nodes[0].height > 40:
                     depth_limit = 800
                     without_enumerating = True
+
                 else:
-                    depth = 4
+                    depth = 20
                     without_enumerating = True
 
 
@@ -220,7 +221,7 @@ def offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, d
                 if child.gameover is True: #child color is a loser
                     if child.parent is not None:
                         if child.parent.parent is not None:
-                            overwhelming_amount = 65536
+                            overwhelming_amount = child.overwhelming_amount
                             update_tree_losses(child.parent.parent, overwhelming_amount) #if grandchild lost, parent won, grandparent lost
                 else:
                     eval_child(child)  # backprop eval
@@ -356,11 +357,11 @@ def update_and_prune(parent, NN_output,sim_info, lock):
     # comparing to child val should reduce this considerably,
     # yet still allows us to call parent function from a top-level asynchronous tree updater
     num_to_check_for_legality = get_num_children_to_consider(parent)
-    ranks_to_consider = num_to_check_for_legality + 10 #just in case some top choices are illegal moves or within 10%
+    ranks_to_consider = num_to_check_for_legality + 2 #just in case some top choices are illegal moves or within 10%
     top_children_indexes = get_top_children(NN_output, ranks_to_consider)
     best_child_val, best_rank = get_best_child_val(parent, NN_output, top_children_indexes)
-
-    if num_to_check_for_legality == 1: #since this happens more often than not, make it a dedicated block
+    ignore_rest_of_pruning_filter = False #the below block will not include within 10% of top move
+    if num_to_check_for_legality == 1 and ignore_rest_of_pruning_filter: #since this happens more often than not, make it a dedicated block
         move = move_lookup_by_index(top_children_indexes[best_rank], parent.color)
         pruned_child, child_win_status = get_cached_child(parent, move, NN_output, top_children_indexes,
                                                                   best_child_val, best_rank, sim_info, lock, num_to_check_for_legality, aggressive=None)
@@ -558,68 +559,74 @@ def get_best_child_val(parent, NN_output, top_children_indexes):
 def get_num_children_to_consider(parent):
     height = parent.height
 
-    if height < 80:
+    # if height < 80:
         # or if root, top3?
 
-        if height % 2 == 0:  # white moves
-            if height >= 70:
-                num_top_to_consider =  3
-            # 2?   65-69      #??
-            elif height < 70 and height >= 65:
-                num_top_to_consider =  1  # else play with child val threshold?
-            # # # 4?   60-64
-            elif height < 65 and height >= 60:
-                num_top_to_consider =   3  # else play with child val threshold
-            # 7 or 4?   50-59
-            elif height < 60 and height >= 50:
-                num_top_to_consider =   3 #else play with child val threshold?
-            # 5    40-49
-            elif height < 50 and height >= 40:
-                num_top_to_consider =   3 #else play with child val threshold?
-            # 2    30-39
-            elif height < 40 and height >= 30:
-                num_top_to_consider =   1  # else play with child val threshold?
-            # 2    20-29
-            elif height < 30 and height >= 20:
-                num_top_to_consider =   1 #else play with child val threshold?
-             # 2    0-19
-            elif height < 20 and height >= 0:
-                num_top_to_consider =   1 #else play with child val threshold?
-            else: #2?
-                num_top_to_consider =  1  # else play with child val threshold?
-        else:
-                # 3?   61-69
-            if height >= 70:
-                if parent.reexpanded:
-                    num_top_to_consider = 3
-                else:
-                    num_top_to_consider =  2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                # 52-60
-            elif height < 70 and height >= 61:#2?
-                if parent.reexpanded:
-                    num_top_to_consider = 3
-                else:
-                    num_top_to_consider =  2#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                # 52-60
-            elif height < 61 and height >= 52:
-                if parent.reexpanded:
-                    num_top_to_consider = 3
-                else:
-                    num_top_to_consider =  3#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-                # 3?   40-51
-            elif height < 52 and height >= 40:  # 40?
-                if parent.reexpanded:
-                    num_top_to_consider = 2
-                else:
-                    num_top_to_consider =  2#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
-            elif height < 20 and height >= 0:
-                num_top_to_consider =   1#2 #else play with child val threshold?
-            else:
-                num_top_to_consider =  1#1 # else play with child val threshold?
-    else:
+    if height % 2 == 0:  # white moves
+        if height>= 80:
+            num_top_to_consider = 999
 
-        num_top_to_consider = 999
-        # num_top_to_consider = 3
+        elif height < 80:
+            num_top_to_consider =  10#bug that I'm rolling with for now
+
+        elif height >= 70:
+            num_top_to_consider =  3
+        # 2?   65-69      #??
+        elif height < 70 and height >= 65:
+            num_top_to_consider =  1  # else play with child val threshold?
+        # # # 4?   60-64
+        elif height < 65 and height >= 60:
+            num_top_to_consider =   3  # else play with child val threshold
+        # 7 or 4?   50-59
+        elif height < 60 and height >= 50:
+            num_top_to_consider =   3 #else play with child val threshold?
+        # 5    40-49
+        elif height < 50 and height >= 40:
+            num_top_to_consider =   3 #else play with child val threshold?
+        # 2    30-39
+        elif height < 40 and height >= 30:
+            num_top_to_consider =   1  # else play with child val threshold?
+        # 2    20-29
+        elif height < 30 and height >= 20:
+            num_top_to_consider =   1 #else play with child val threshold?
+         # 2    0-19
+        elif height < 20 and height >= 0:
+            num_top_to_consider =   1 #else play with child val threshold?
+        else: #2?
+            num_top_to_consider =  1  # else play with child val threshold?
+    else:
+            # 3?   61-69
+        if height >= 70:
+            if parent.reexpanded:
+                num_top_to_consider = 3
+            else:
+                num_top_to_consider =  3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+            # 52-60
+        elif height < 70 and height >= 61:#2?
+            if parent.reexpanded:
+                num_top_to_consider = 4
+            else:
+                num_top_to_consider =  1#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+            # 52-60
+        elif height < 61 and height >= 52:
+            if parent.reexpanded:
+                num_top_to_consider = 3
+            else:
+                num_top_to_consider =  1#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+            # 3?   40-51
+        elif height < 52 and height >= 40:  # 40?
+            if parent.reexpanded:
+                num_top_to_consider = 2
+            else:
+                num_top_to_consider =  1#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
+        elif height < 20 and height >= 0:
+            num_top_to_consider =   1#2 #else play with child val threshold?
+        else:
+            num_top_to_consider =  1#1 # else play with child val threshold?
+    # else:
+    #
+    #     num_top_to_consider = 999
+    #     # num_top_to_consider = 3
     return num_top_to_consider
 
 def get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, child_val, best_child_val, best_rank,
@@ -637,7 +644,7 @@ def get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, chi
 def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank, sim_info, lock, num_legal_children, opening_move=False):
     pruned_child = None
     child_win_status = None
-    child = init_child_node_and_board(move, parent)
+    child = init_unique_child_node_and_board(move, parent)
     if child is not None:
         check_for_winning_move(child)  # 1-step lookahead for gameover
 
@@ -645,12 +652,10 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
 
         if child.gameover:
             sim_info.game_tree.append(child)
-        # opens up the tree to more lines of play if best child sucks to begin with.
-        # in the worst degenerate case where best_val == ~4.5%, will include all children which is actually pretty justified.
 
         predicate = get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, child_val, best_child_val, best_rank)
 
-        if predicate:  # absolute value not necessary ; if #1 or over threshold or within 10% of best child
+        if predicate:
             if child_val == best_child_val:  # rank 1 child
                 child.parent.best_child = child  # mark as node to expand first
 
@@ -678,17 +683,17 @@ def assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
                 set_win_status_from_children(parent, children_win_statuses)#the only place where we can use win status array to instead of iterating over kids (where it matters most since reexpansions are much rarer)
                 backpropagate_num_checked_children(parent)
                 get_sum_rollout_rewards_from_children(parent)
-
                 # prune_from_win_status(parent)
+
             else: #had children but we are now adding all children past a certain height
                 parent.children.extend(pruned_children) #since we moved the duplicate check to a previous function, pruned children should only have new children
                 update_win_status_from_children(parent)
                 backpropagate_num_checked_children(parent)
                 get_sum_rollout_rewards_from_children(parent)
-
                 # prune_from_win_status(parent)
                 pruned_children = parent.children
             parent.children.sort(key=lambda x: x.UCT_multiplier, reverse=True)#sort them by probability
+
         elif parent.children is not None: #in case we tried to reexpand but came back with no new pruned children
             update_win_status_from_children(parent)
             backpropagate_num_checked_children(parent)
@@ -768,26 +773,34 @@ def set_num_checked_children(node): #necessary for gameover kids: wouldn't have 
             count+= 1
     node.num_children_checked = count
 
-def init_child_node_and_board(child_as_move, parent):
+def init_unique_child_node_and_board(child_as_move, parent):
     child_index = index_lookup_by_move(child_as_move)
+    already_in_parent = check_for_twin(parent, child_index)
+    if not already_in_parent:
+        child_board, child_white_pieces, child_black_pieces, child_color = get_child_attributes(parent, child_as_move)
+        child = TreeNode(child_board, child_white_pieces, child_black_pieces, child_color, child_index, parent, parent.height + 1)
+    else:
+        child = None
+    return child
+
+def check_for_twin(parent, child_index):
     duplicate = False
     if parent.children is not None:
         for child in parent.children:
             if child.index == child_index:
                 duplicate = True
                 break
-    if not duplicate:
+    return duplicate
 
-        child_color = get_opponent_color(parent.color)
+def get_child_attributes(parent, child_as_move):
+    child_color = get_opponent_color(parent.color)
 
-        child_board, player_piece_to_add, player_piece_to_remove, remove_opponent_piece\
-            = move_piece_update_piece_arrays(parent.game_board, child_as_move, parent.color)
+    child_board, player_piece_to_add, player_piece_to_remove, remove_opponent_piece\
+        = move_piece_update_piece_arrays(parent.game_board, child_as_move, parent.color)
 
-        child_white_pieces, child_black_pieces \
-            = update_piece_arrays(parent, player_piece_to_add, player_piece_to_remove, remove_opponent_piece)
-        return TreeNode(child_board, child_white_pieces, child_black_pieces, child_color, child_index, parent, parent.height + 1)
-    else:
-        return None
+    child_white_pieces, child_black_pieces \
+        = update_piece_arrays(parent, player_piece_to_add, player_piece_to_remove, remove_opponent_piece)
+    return child_board, child_white_pieces, child_black_pieces, child_color
 
 def update_piece_arrays(parent, player_piece_to_add, player_piece_to_remove, remove_opponent_piece):
     # slicing is the fastest way to make a copy
@@ -824,7 +837,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
             # new_root = TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
             #                     new_root_parent.height + 1)
 
-            new_root = init_child_node_and_board(new_root_as_move, new_root_parent)
+            new_root = init_unique_child_node_and_board(new_root_as_move, new_root_parent)
             if new_root is None:
                 exit(10)
             NN_output = policy_net.evaluate([new_root_parent])[0]
@@ -856,7 +869,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
                 # new_root = TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
                 #                     new_root_parent.height + 1)
 
-                new_root = init_child_node_and_board(new_root_as_move, new_root_parent)
+                new_root = init_unique_child_node_and_board(new_root_as_move, new_root_parent)
                 if new_root is None:
                     exit(11)
                 NN_output = policy_net.evaluate([new_root_parent])[0]
@@ -879,7 +892,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
         # new_root = TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
         #                     new_root_parent.height + 1)
 
-        new_root = init_child_node_and_board(new_root_as_move, new_root_parent)
+        new_root = init_unique_child_node_and_board(new_root_as_move, new_root_parent)
         if new_root is None:
                 exit(12)
         NN_output = policy_net.evaluate([new_root_parent])[0]
@@ -949,7 +962,7 @@ def set_game_over_values(node, node_color, winner_color, rollout=False):
     node.visited = True
     #
     if rollout is False:
-        overwhelming_amount = 65536# is this value right? technically true and will draw parent towards siblings of winning moves
+        overwhelming_amount = node.overwhelming_amount# is this value right? technically true and will draw parent towards siblings of winning moves
         #but will make it too greedy when choosing a best move; maybe make best move be conservative? choose safest child?
     else:
         overwhelming_amount = 1

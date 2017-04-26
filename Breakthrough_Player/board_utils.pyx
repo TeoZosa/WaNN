@@ -303,7 +303,7 @@ def enumerate_legal_moves(game_board, player_color):
     if player_color == 'White':
         player = 'w'
     else: #player_color =='Black':
-        player = 'b'
+        player = 'b'#
     columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     legal_moves = []
     for row in range(1, 9):  # rows 1-8; if white is in row 8 or black is in row 1, game over should have been declared

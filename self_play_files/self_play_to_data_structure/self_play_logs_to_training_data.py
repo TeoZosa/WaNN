@@ -82,11 +82,12 @@ def AggregateSelfPlayDataStructures():
     outputList.close()
 
 def self_play_data_structures_to_numpy():
-    for color in ['White',
+    for color in [#'White',
 
-                  # 'Black'
+                  'Black'
                   ]:
-        for game_stage in ['All', '1st', '2nd', '3rd']:
+        for game_stage in ['All' #, '1st', '2nd', '3rd'
+                           ]:
               path = r'G:\TruncatedLogs\PythonDataSets\DataStructures'
               files = [
                        r'07xx-07yyselfPlayLogsMBP2011xxxxxxDataPython.p',
@@ -132,9 +133,12 @@ def self_play_data_structures_to_numpy():
                 # game_stage = '1st'
                 # game_stage = '2nd'
                 # game_stage = '3rd'
-              arg_lists = [[r'Self-Play', r'Policy', path, file, game_stage, color] for file in files_april]
+              #               arg_lists = [[r'Self-Play', r'Policy', path, file, game_stage, color] for file in files_april]
+
+              arg_lists = [[r'RNN', r'Policy', path, file, game_stage, color] for file in files_april]
               processes = Pool(processes=len(arg_lists))
               processes.starmap_async(numpy_array.self_player_driver, arg_lists)#map processes to arg lists
               processes.close()
               processes.join()
+              # numpy_array.self_player_driver(r'RNN', r'Policy', path, files[0], game_stage, color)
               # numpy_array.self_player_driver(r'Self-Play', r'Policy', path, files[0])

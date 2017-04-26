@@ -6,6 +6,7 @@ import h5py
 import os
 import random
 import math
+from tools.utils import index_lookup_by_move
 
 #TODO: redo logic and paths after directory restructuring
 def write_np_array_to_disk(path, X, y, filterType, NNType):
@@ -29,21 +30,32 @@ def write_np_array_to_disk(path, X, y, filterType, NNType):
         h5f.create_dataset(r'X', data=X)
         h5f.create_dataset(r'y', data=y)
         h5f.close()
+    elif filterType == r'RNN':
+        h5f = h5py.File(path + r'RNN40Inputs.hdf5', 'w', driver='core')
+        h5f.create_dataset(r'X', data=X)
+        h5f.create_dataset(r'y', data=y)
+        h5f.close()
     else:
         print ("Error: You must specify a valid Filter")
 
 def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_stage='All', color='Both'):
+    labels = None
     if filter == 'Win Ratio':
         training_data = filter_by_win_ratio(player_list)
     elif filter == 'Rank':
         training_data = filter_by_rank(player_list)
     elif filter == 'Self-Play':
         training_data = filter_for_self_play(player_list, NNType, game_stage, color)
+    elif filter =='RNN':
+        training_data, labels = filter_for_self_play_RNN(player_list, NNType, game_stage, color)
     else:
         training_data = None
         print('Invalid Filter Specified')
         exit(-2)
-    training_examples, labels = split_data_to_training_examples_and_labels_for_CNN(training_data, NNType)
+    if labels is None:
+        training_examples, labels = split_data_to_training_examples_and_labels_for_CNN(training_data, NNType)
+    else:
+        training_examples = training_data
     return np.array(training_examples, dtype=np.float32), np.array(labels, dtype=np.float32)
 
 def filter_by_rank(playerList):
@@ -128,6 +140,109 @@ def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both',
                 i+=1
     print('# of States for Self-Play {NNType} Net Game Stage {game_stage}: {states}'.format(states=len(training_data), NNType=NNType, game_stage=game_stage))
     return training_data
+
+def filter_for_self_play_RNN(self_play_data, NNType, game_stage='All', color='Both'):
+    training_data = []
+    labels_for_data = []
+
+    for self_play_log in self_play_data:
+        i = 0
+        for game in self_play_log['Games']: #each game is appended twice; White's game, then Black's game
+            if color == 'White': #train on all white games
+                color_to_filter = i % 2 == 0
+                # win_filter = True
+                win_filter = game['Win'] is True
+            elif color =='Black': #only train on winning black games
+                color_to_filter = i % 2 == 1
+                win_filter = game['Win'] is True
+            else:
+                color_to_filter = True
+                win_filter = True
+
+            if color_to_filter:
+                i+=1
+                if win_filter:
+                    move_list, processed_move_list, mirror_move_list, processed_mirror_move_list = get_formatted_move_lists(game)
+                    window_size = 40 #Don't forget to add 39 empty values for first move
+                    num_moves = 155
+                    k = 0
+                    training_examples = []
+                    labels = []
+                    while k + window_size <len(move_list):
+                        if k % 2 == 1:
+                            offset = 1
+                        else:
+                            offset = 0
+                        training_examples.append(processed_move_list[k:k+window_size])
+                        one_hot_label = np.zeros([155], dtype=np.float32)
+                        one_hot_label[move_list[k+window_size]-(offset*num_moves)] = 1.0
+                        labels.append(one_hot_label)
+
+                        training_examples.append(processed_mirror_move_list[k:k+window_size])
+                        one_hot_mirror_label = np.zeros([155], dtype=np.float32)
+                        one_hot_mirror_label[mirror_move_list[k+window_size]-(offset*num_moves)] = 1.0
+                        labels.append(one_hot_mirror_label)
+                        k+=1
+                    #TODO: UNSHUFFLED sorta
+                    training_data.extend(np.array(training_examples, dtype=np.float32))
+                    labels_for_data.extend(np.array(labels, dtype=np.float32))
+
+            else:
+                i+=1
+    print('# of States for Self-Play Recurrent {NNType} Net Game Stage {game_stage}: {states}'.format(states=len(training_data), NNType=NNType, game_stage=game_stage))
+    return np.array(training_data, dtype=np.float32), np.array(labels_for_data, dtype=np.float32)
+
+def get_formatted_move_lists(game):
+    raw_move_list = game['OriginalVisualizationURL'][len(
+        r'http://www.trmph.com/breakthrough/board#8,'):]  # put a 40(?) move moving window over this list.
+    raw_mirror_move_list = game['MirrorVisualizationURL'][len(r'http://www.trmph.com/breakthrough/board#8,'):]
+
+    move_list = parse_move_list_string(raw_move_list)
+    mirror_move_list = parse_move_list_string(raw_mirror_move_list)
+
+    moves_as_indexes_list = convert_formatted_move_list_to_indexes(move_list)
+    mirror_moves_as_indexes_list = convert_formatted_move_list_to_indexes(mirror_move_list)
+
+    formatted_move_list = preprocess_move_list(move_list)
+    formatted_mirror_move_list = preprocess_move_list(mirror_move_list)
+
+    converted_move_list = convert_formatted_move_list_to_indexes(formatted_move_list)
+    converted_mirror_move_list = convert_formatted_move_list_to_indexes(formatted_mirror_move_list)
+
+    return moves_as_indexes_list, converted_move_list, mirror_moves_as_indexes_list, converted_mirror_move_list
+
+def parse_move_list_string(move_list):
+    window_size = 4
+    parsed_move_list = []
+    i = 0
+    while (i+1)*window_size < len(move_list):
+        move = move_list[i*window_size:(i+1)*window_size]
+        move = move[0:2] + '-' + move[2:len(move)]
+        parsed_move_list.append(move)
+        i+=1
+    return parsed_move_list
+
+def convert_formatted_move_list_to_indexes(move_list):
+    converted_move_list = []
+    i = 0
+    num_moves = 155
+    for move in move_list:
+        if i % 2 == 1:#black move
+            offset = 1
+        else:
+            offset = 0
+        converted_move_list.append(index_lookup_by_move(move)+ (num_moves*offset))#keep moves unique by adding 154 to black's version. else map onto the same relative position.
+        i+=1
+    if converted_move_list[-1] <num_moves:
+        converted_move_list.append(index_lookup_by_move('no-move') + (num_moves*1))
+    else:
+        converted_move_list.append(index_lookup_by_move('no-move'))#append no move so it knows how to differentiate gameover moves.
+    return converted_move_list
+
+def preprocess_move_list(move_list):
+    formatted_move_list = ['no-move']*40
+    formatted_move_list.extend(move_list)
+    return formatted_move_list
 
 def split_data_to_training_examples_and_labels_for_CNN(array_to_split, NNType):
     training_examples = []

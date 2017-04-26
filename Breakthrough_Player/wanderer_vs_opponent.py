@@ -12,8 +12,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 501
   time_to_think = 10
   depth_limit = 5
-  date = r'04222017'
-  file_designator = '_65Nets_10PPFixed_mostVisited_20DepBatch_moreExpBlack_Top10White_BackGrSearch_PUCT'
+  date = r'04252017'
+  file_designator = '_065Nets_FracPP_WidenpruningTesting_mostVisited_100GameoverVal'
   #BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'

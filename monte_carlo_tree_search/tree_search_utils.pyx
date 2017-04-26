@@ -109,7 +109,7 @@ def _crement_threads_checking_node(node, amount):
 
             
 def increment_threads_checking_node(node):
-    _crement_threads_checking_node(node, 1)
+    _crement_threads_checking_node(node, 1)#
         
 def decrement_threads_checking_node(node):
     _crement_threads_checking_node(node, -1)
@@ -273,25 +273,14 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         #     PUCT_exploration_constant = stochasticity_for_multithreading*1000#1000
         # else:
         PUCT_exploration_constant = stochasticity_for_multithreading
-        #
-        # if node.visits >= overwhelming_amount:
-        #     norm_visits = floor(node.visits / overwhelming_amount)+ (node.visits % overwhelming_amount)
-        #     parent_visits = floor(parent_visits/overwhelming_amount) + (parent_visits % overwhelming_amount)
-        # else:
-        #     norm_visits = node.visits
-        # if node.wins >= overwhelming_amount:
-        #     norm_wins = floor(node.wins/overwhelming_amount) + (node.wins % overwhelming_amount)
-        # else:
-        #     norm_wins = node.wins
 
 
-        norm_wins = node.wins
-        norm_visits = node.visits
+        norm_wins, norm_visits = transform_wrt_overwhelming_amount(node, overwhelming_on=True)
         norm_losses = (norm_visits-norm_wins)
         norm_loss_rate = norm_losses/norm_visits
         NN_prob = (node.UCT_multiplier - 1)
 
-        PUCT_exploration = PUCT_exploration_constant*NN_prob*(sqrt(max(1, parent_visits-norm_visits))/(1+norm_visits))
+        PUCT_exploration = PUCT_exploration_constant*NN_prob*(sqrt(max(1, parent_visits-node.visits))/(1+node.visits)) #interchange norm visits with node visits
         exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
 
         # exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
@@ -314,10 +303,9 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
                 best_visits = 0
                 best = None
                 for child in node.children: #sorted by prob
-                    if child.visits >= overwhelming_amount:
-                        child_visits_norm = floor(child.visits / overwhelming_amount)+ (child.visits % overwhelming_amount)
-                    else:
-                        child_visits_norm = child.visits
+
+                    _, child_visits_norm = transform_wrt_overwhelming_amount(child, overwhelming_on=True)
+
                     if child_visits_norm > best_visits and child.win_status is not True:
                         best = child
                         best_visits = child_visits_norm
@@ -363,6 +351,19 @@ def check_for_forced_win(node_children, game_num):
         guaranteed_children = get_best_children(guaranteed_children, game_num)
     return forced_win, guaranteed_children
 
+def transform_wrt_overwhelming_amount(child, overwhelming_on=False):
+    overwhelming_amount = child.overwhelming_amount
+
+    if child.visits >= overwhelming_amount and overwhelming_on:
+        child_visits_norm = floor(child.visits / overwhelming_amount)+ (child.visits % overwhelming_amount)
+    else:
+        child_visits_norm = child.visits
+    if child.wins >= overwhelming_amount and overwhelming_on:
+        child_wins_norm = floor(child.visits / overwhelming_amount) + (child.visits % overwhelming_amount)
+    else:
+        child_wins_norm = child.visits
+    return child_wins_norm, child_visits_norm
+
 
 def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
     best, best_val = get_best_child(node_children)
@@ -374,14 +375,8 @@ def get_best_children(node_children, game_num):#TODO: make sure to not pick winn
     for child in node_children:  # find equally best children
        # NN_weighting = (NN_scaling_factor*(child.UCT_multiplier - 1))/(1+child.parent.visits)
         NN_weighting = (NN_scaling_factor*(child.UCT_multiplier - 1))+1
-        if child.visits >= overwhelming_amount:
-            child_visits_norm = floor(child.visits / overwhelming_amount)+ (child.visits % overwhelming_amount) 
-        else:
-            child_visits_norm = child.visits
-        if child.wins >= overwhelming_amount:
-            child_wins_norm = floor(child.visits / overwhelming_amount) + (child.visits % overwhelming_amount)
-        else:
-            child_wins_norm = child.visits
+
+        child_wins_norm, child_visits_norm = transform_wrt_overwhelming_amount(child, overwhelming_on=True)
             
         child_loss_rate = (child_visits_norm - child_wins_norm) / child_visits_norm
 
@@ -411,14 +406,8 @@ def get_best_child(node_children, non_doomed = True):
         best = node_children[k]
         overwhelming_amount = best.overwhelming_amount
 
-        if best.visits >= overwhelming_amount:
-            best_visits_norm = floor(best.visits / overwhelming_amount)+ (best.visits % overwhelming_amount)
-        else:
-            best_visits_norm = best.visits
-        if best.wins >= overwhelming_amount:
-            best_wins_norm = floor(best.visits / overwhelming_amount) + (best.visits % overwhelming_amount)
-        else:
-            best_wins_norm = best.visits
+
+        best_wins_norm, best_visits_norm = transform_wrt_overwhelming_amount(best, overwhelming_on=True)
 
         best_loss_rate = ((best_visits_norm - best_wins_norm) / best_visits_norm)
 
@@ -446,15 +435,7 @@ def get_best_child(node_children, non_doomed = True):
                 predicate = child.visits > 0
             if predicate: #only consider non-doomed moves
 
-                if child.visits >= overwhelming_amount:
-                    child_visits_norm = floor(child.visits / overwhelming_amount)+ (child.visits % overwhelming_amount) 
-                else:
-                    child_visits_norm = child.visits
-                if child.wins >= overwhelming_amount:
-                    child_wins_norm = floor(child.visits / overwhelming_amount) + (child.visits % overwhelming_amount)
-                else:
-                    child_wins_norm = child.visits
-                    
+                child_wins_norm, child_visits_norm = transform_wrt_overwhelming_amount(child, overwhelming_on=True)
                 child_loss_rate = (child_visits_norm - child_wins_norm) / child_visits_norm
 
                 child_NN_scaled_loss_rate = child_loss_rate * NN_weighting

@@ -156,9 +156,12 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
                 elif unexpanded_nodes[0].height > 40:
                     depth_limit = 800
                     without_enumerating = True
+                elif unexpanded_nodes[0].height > 20:
+                    depth_limit = 800
+                    without_enumerating = True
 
                 else:
-                    depth = 20
+                    depth = 800
                     without_enumerating = True
 
 
@@ -183,7 +186,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
                 reset_threads_checking_node(parent)
     if not entered_once:
         for parent in unexpanded_nodes:
-            decrement_threads_checking_node(parent)
+            decrement_threads_checking_node(parent)#
 
 def offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, depth, depth_limit, NN_output, sim_info, lock):
     grandparents = []
@@ -566,32 +569,32 @@ def get_num_children_to_consider(parent):
         if height>= 80:
             num_top_to_consider = 999
 
-        elif height < 80:
-            num_top_to_consider =  10#bug that I'm rolling with for now
+        # elif height < 80:
+        #     num_top_to_consider =  10#bug that I'm rolling with for now
 
         elif height >= 70:
             num_top_to_consider =  3
         # 2?   65-69      #??
         elif height < 70 and height >= 65:
-            num_top_to_consider =  1  # else play with child val threshold?
+            num_top_to_consider =  3  # else play with child val threshold?
         # # # 4?   60-64
         elif height < 65 and height >= 60:
-            num_top_to_consider =   3  # else play with child val threshold
+            num_top_to_consider =   4  # else play with child val threshold
         # 7 or 4?   50-59
         elif height < 60 and height >= 50:
-            num_top_to_consider =   3 #else play with child val threshold?
+            num_top_to_consider =   5 #else play with child val threshold?
         # 5    40-49
         elif height < 50 and height >= 40:
-            num_top_to_consider =   3 #else play with child val threshold?
+            num_top_to_consider =   7 #else play with child val threshold?
         # 2    30-39
         elif height < 40 and height >= 30:
-            num_top_to_consider =   1  # else play with child val threshold?
+            num_top_to_consider =  7  # else play with child val threshold?
         # 2    20-29
         elif height < 30 and height >= 20:
-            num_top_to_consider =   1 #else play with child val threshold?
+            num_top_to_consider =   4 #else play with child val threshold?
          # 2    0-19
         elif height < 20 and height >= 0:
-            num_top_to_consider =   1 #else play with child val threshold?
+            num_top_to_consider =   6 #else play with child val threshold?
         else: #2?
             num_top_to_consider =  1  # else play with child val threshold?
     else:
@@ -637,7 +640,7 @@ def get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, chi
         predicate = True
     else:
         top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-        predicate = child.gameover or child.index in top_n_children or best_child_val - child_val < .10 #or child_val > best_child_val/1.3
+        predicate = child.gameover or child.index in top_n_children or child_val > best_child_val/1.3#or best_child_val - child_val < .10 #
     return predicate
 
 

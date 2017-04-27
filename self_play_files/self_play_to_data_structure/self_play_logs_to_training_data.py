@@ -135,10 +135,10 @@ def self_play_data_structures_to_numpy():
                 # game_stage = '3rd'
               #               arg_lists = [[r'Self-Play', r'Policy', path, file, game_stage, color] for file in files_april]
 
-              arg_lists = [[r'RNN', r'Policy', path, file, game_stage, color] for file in files_april]
+              arg_lists = [[r'CNN RNN', r'Policy', path, file, game_stage, color] for file in files_april]
               processes = Pool(processes=len(arg_lists))
               processes.starmap_async(numpy_array.self_player_driver, arg_lists)#map processes to arg lists
               processes.close()
               processes.join()
-              # numpy_array.self_player_driver(r'RNN', r'Policy', path, files[0], game_stage, color)
+              # numpy_array.self_player_driver(r'CNN RNN', r'Policy', path, files[0], game_stage, color)
               # numpy_array.self_player_driver(r'Self-Play', r'Policy', path, files[0])

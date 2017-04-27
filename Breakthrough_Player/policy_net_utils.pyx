@@ -35,6 +35,24 @@ def instantiate_session_both():#todo: return the graph as well in case we want t
 
     return sess, y_pred_white, X_white, y_pred_black, X_black
 
+def instantiate_session_both_RNN():#todo: return the graph as well in case we want to run multiple NNs in the same session?
+    reset_default_graph()
+
+    with tf.variable_scope('black_net', reuse=False):
+        y_pred_black, X_black = build_policy_net_RNN()
+    with tf.variable_scope('white_net', reuse=False):
+        y_pred_white, X_white = build_policy_net_RNN()
+    NUM_CORES = multiprocessing.cpu_count()
+    sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
+                   intra_op_parallelism_threads=NUM_CORES))
+
+    saver = tf.train.Saver()
+    # path = os.path.join(r'..',r'policy_net_model',  r'combined_policy_nets', r'4')
+    path = os.path.join(r'..', r'policy_net_model', r'DualWinningNets065Accuracy', r'DualWinningNets065Accuracy')
+#
+    saver.restore(sess, path)
+
+    return sess, y_pred_white, X_white, y_pred_black, X_black
 
 def instantiate_session():  # todo: return the graph as well in case we want to run multiple NNs in the same session?
     reset_default_graph()
@@ -97,6 +115,26 @@ def build_policy_net():
 
     output, _ = output_layer_init(h_layers[-1], reuse=None)
     return output, input
+
+def build_policy_net_RNN():
+    input = tf.placeholder(tf.float32, [None, 8, 8, 4])
+    # y = tf.placeholder(tf.float32, [None, 155])
+    filter_size = 3
+    n_filters = 192
+    num_hidden = 4
+    n_filters_out = [n_filters] * num_hidden + [1]
+    n_layers = len(n_filters_out)
+
+    # input layer to first hidden layer
+    h_layers = [hidden_layer_init(input, input.get_shape()[-1],  # n_filters in == n_feature_planes
+                                  n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
+    # hidden layers
+    for i in range(0, n_layers - 1):
+        h_layers.append(hidden_layer_init(h_layers[i], n_filters_out[i], n_filters_out[i + 1], filter_size,
+                                          name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
+
+    # output, _ = output_layer_init(h_layers[-1], reuse=None)
+    return h_layers[-1], input
 
 def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name=None, activation=tf.nn.relu,
                       reuse=None):

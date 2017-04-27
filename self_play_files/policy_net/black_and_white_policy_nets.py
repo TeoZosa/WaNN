@@ -18,8 +18,11 @@ import os
 from PIL import Image
 import random
 from tensorflow.python.framework.ops import reset_default_graph
+from tensorflow.contrib import rnn
 import sys
 import multiprocessing
+
+# from Breakthrough_Player.policy_net_utils import instantiate_session_both_RNN
 
 sns.set(color_codes=True)
 
@@ -210,7 +213,38 @@ def output_layer_init(layer_in, name='output_layer', reuse=None):
         # tf.summary.histogram('unscaled_output', unscaled_output)
         return unscaled_output, kernel
 
+def RNN(layer_in, num_hidden_layers, num_hidden_units, num_inputs_in=155):
+    layer_in = tf.reshape(layer_in, [-1, 8 * 8])
 
+    n_features = layer_in.get_shape().as_list()[1]
+    num_inputs_in = 155
+    num_classes = 155
+    # reshape to [1, n_input]
+    X = tf.reshape(layer_in, [-1, n_features])
+
+    # Generate a n_input-element sequence of inputs
+    # (eg. [had] [a] [general] -> [20] [6] [33])
+    X = tf.split(X, n_features, 1)
+
+    # 1-layer LSTM with n_hidden units.
+
+    # rnn_cell = rnn.BasicLSTMCell(num_hidden)
+
+    rnn_cell = rnn.MultiRNNCell([rnn.BasicLSTMCell(num_hidden_units)] * num_hidden_layers)
+
+
+    # generate prediction
+    outputs, states = rnn.static_rnn(rnn_cell, X, dtype=tf.float32)
+
+    # there are n_input outputs but
+    # we only want the last output
+    weights = {
+        'out': tf.Variable(tf.random_normal([num_hidden_units, num_classes]))
+    }
+    biases = {
+        'out': tf.Variable(tf.random_normal([num_classes]))
+    }
+    return tf.matmul(outputs[-1], weights['out']) + biases['out']
 def loss_init(output_layer, labels):
     with tf.variable_scope("cross_entropy"):
         losses = tf.nn.softmax_cross_entropy_with_logits(logits=output_layer, labels=labels)
@@ -878,17 +912,17 @@ else:
 #             sess.close()
 #     file_WHITE.close()
 
-for num_hidden in [i for i in [4]
+for num_hidden in [i for i in [4, 9]
                    # range(1,10)
                    ]:
     file_WHITE = open(os.path.join(input_path_WHITE,
                                    r'ExperimentLogs',
-                                   game_stage + '065_0417WHITE192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)),
+                                   game_stage + '065RNN_0427WHITE192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)),
                       'a')
 
     file_BLACK = open(os.path.join(input_path_WHITE,
                                    r'ExperimentLogs',
-                                   game_stage + '065_0417BLACK192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(
+                                   game_stage + '065RNN_0427BLACK192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(
                                        num_hidden)), 'a')
 
     print("# of Testing Examples: {}".format(len(WHITE_testing_examples_partition_i)), end='\n', file=file_WHITE)
@@ -920,6 +954,7 @@ for num_hidden in [i for i in [4]
                 1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
             n_layers = len(n_filters_out)
 
+
             with tf.variable_scope('white_net', reuse=False):
 
                 # build graph
@@ -939,6 +974,8 @@ for num_hidden in [i for i in [4]
 
                 # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
                 outer_layer_WHITE, _ = output_layer_init(h_layers_WHITE[-1], reuse=None)
+                # outer_layer_WHITE = RNN(h_layers_WHITE[-1], 1)
+
                 # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
                 y_pred_WHITE = tf.nn.softmax(outer_layer_WHITE)
 
@@ -982,6 +1019,8 @@ for num_hidden in [i for i in [4]
 
                 # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
                 outer_layer_BLACK, _ = output_layer_init(h_layers_BLACK[-1], reuse=None)
+
+
                 # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
                 y_pred_BLACK = tf.nn.softmax(outer_layer_BLACK)
 
@@ -1012,6 +1051,70 @@ for num_hidden in [i for i in [4]
             NUM_CORES = multiprocessing.cpu_count()
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
                                                     intra_op_parallelism_threads=NUM_CORES))
+
+            path = os.path.join(r'..', r'..', r'policy_net_model', r'DualWinningNets065Accuracy',
+                                r'DualWinningNets065Accuracy')
+            #
+            saver.restore(sess, path)
+
+            num_layers_rnn = 3
+            num_hidden_rnn = 512
+            with tf.variable_scope('white_net_RNN', reuse=False):
+
+                outer_layer_WHITE = RNN(h_layers_WHITE[-1], num_layers_rnn, num_hidden_rnn)
+
+                # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
+                y_pred_WHITE = tf.nn.softmax(outer_layer_WHITE)
+
+                # tf's internal softmax; else, put softmax back in output layer
+                # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+                cost_WHITE = loss_init(outer_layer_WHITE, y_WHITE)
+
+                # # alternative implementation
+                # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
+
+                # kadenze cross_entropy cost function
+                # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+
+
+                # way better performance
+                optimizer_WHITE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_WHITE)
+
+                # SGD used in AlphaGO
+                # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+                with tf.name_scope('accuracy'):
+                    correct_prediction_WHITE = tf.equal(tf.argmax(y_pred_WHITE, 1), tf.argmax(y_WHITE, 1))
+                    accuracy_function_WHITE = tf.reduce_mean(tf.cast(correct_prediction_WHITE, 'float'))
+                    # tf.summary.scalar('accuracy', accuracy_function_WHITE)
+
+            with tf.variable_scope('black_net_RNN', reuse=False):
+                outer_layer_BLACK= RNN(h_layers_BLACK[-1], num_layers_rnn, num_hidden_rnn)
+
+                # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
+                y_pred_BLACK = tf.nn.softmax(outer_layer_BLACK)
+
+                # tf's internal softmax; else, put softmax back in output layer
+                # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+                cost_BLACK = loss_init(outer_layer_BLACK, y_BLACK)
+
+                # # alternative implementation
+                # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
+
+                # kadenze cross_entropy cost function
+                # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+
+
+                # way better performance
+                optimizer_BLACK = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_BLACK)
+
+                # SGD used in AlphaGO
+                # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+                with tf.name_scope('accuracy'):
+                    correct_prediction_BLACK = tf.equal(tf.argmax(y_pred_BLACK, 1), tf.argmax(y_BLACK, 1))
+                    accuracy_function_BLACK = tf.reduce_mean(tf.cast(correct_prediction_BLACK, 'float'))
+                    # tf.summary.scalar('accuracy', accuracy_function_BLACK)
+
+
 
             # tensorboard summaries
             # merged = tf.summary.merge_all()
@@ -1166,7 +1269,10 @@ for num_hidden in [i for i in [4]
                     exit(100)
 
                 epoch_i += 1
-                save_path = saver.save(sess, os.path.join(input_path_BLACK, r'065AccIteration ({})'.format(epoch_i), r'DualWinningNets065Accuracy'))
+
+                # save_path = saver.save(sess, os.path.join(input_path_BLACK, r'065AccIteration ({})'.format(epoch_i), r'DualWinningNets065Accuracy'))
+                # save_path = saver.save(sess, os.path.join(input_path_BLACK, r'065AccIteration ({})'.format(epoch_i),
+                #                                           r'1x1DualWinningNets070Accuracy_{}'.format(num_hidden)))     #  r'1x1DualWinningNets070Accuracy_{}'.format(num_hidden)
 
                 print_partition_statistics(test_examples_WHITE, test_labels_WHITE, X_WHITE, y_WHITE, net_type,
                                            accuracy_function_WHITE, file_WHITE)
@@ -1269,7 +1375,7 @@ for num_hidden in [i for i in [4]
                                             y_pred_BLACK, X_BLACK, file_BLACK)
 
             # save the model now
-            save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'DualWinningNets070Accuracy'))
+            # save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'1x1DualWinningNets070Accuracy_{}'.format(num_hidden)))
 
             sess.close()
     file_WHITE.close()

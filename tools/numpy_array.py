@@ -35,6 +35,15 @@ def write_np_array_to_disk(path, X, y, filterType, NNType):
         h5f.create_dataset(r'X', data=X)
         h5f.create_dataset(r'y', data=y)
         h5f.close()
+    elif filterType == r'CNN RNN':
+        XMatrix = open(path + r'X_CNNRNNSeparatedGames.p', 'wb')
+        pickle.dump(X, XMatrix)
+        yVector = open(path + r'yCNNRNNSeparatedGames.p', 'wb')
+        pickle.dump(y, yVector)
+        # h5f = h5py.File(path + r'CNNRNNSeparatedGames.hdf5', 'w', driver='core')
+        # h5f.create_dataset(r'X', data=X)
+        # h5f.create_dataset(r'y', data=y)
+        # h5f.close()
     else:
         print ("Error: You must specify a valid Filter")
 
@@ -48,6 +57,9 @@ def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_
         training_data = filter_for_self_play(player_list, NNType, game_stage, color)
     elif filter =='RNN':
         training_data, labels = filter_for_self_play_RNN(player_list, NNType, game_stage, color)
+    elif filter =='CNN RNN':
+        training_data = filter_for_self_play_CNN_RNN(player_list, NNType, game_stage, color)
+        training_examples, labels = split_data_to_training_examples_and_labels_for_CNN_RNN(training_data, NNType)
     else:
         training_data = None
         print('Invalid Filter Specified')
@@ -56,7 +68,9 @@ def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_
         training_examples, labels = split_data_to_training_examples_and_labels_for_CNN(training_data, NNType)
     else:
         training_examples = training_data
-    return np.array(training_examples, dtype=np.float32), np.array(labels, dtype=np.float32)
+    # return np.array(training_examples, dtype=np.float32), np.array(labels, dtype=np.float32)
+    return np.array(training_examples, dtype=object), np.array(labels, dtype=object)
+
 
 def filter_by_rank(playerList):
     X = []
@@ -86,6 +100,67 @@ def filter_by_win_ratio(playerList):
     print ('# of States If We Filter by Win Ratio: {states}'.format(states = len(X)))
     return X
 
+def filter_for_self_play_CNN_RNN(self_play_data, NNType, game_stage='All', color='Both', shuffle=False, percent=50):
+    training_data = []
+    training_labels = []
+
+    for self_play_log in self_play_data:
+        i = 0
+        for game in self_play_log['Games']: #each game is appended twice; White's game, then Black's game
+            if color == 'White': #train on all white games
+                color_to_filter = i % 2 == 0
+                # win_filter = True
+                win_filter = game['Win'] is True
+            elif color =='Black': #only train on winning black games
+                color_to_filter = i % 2 == 1
+                win_filter = game['Win'] is True
+            else:
+                color_to_filter = True
+                win_filter = True
+
+            if color_to_filter:
+                i+=1
+                if win_filter:
+                    game_length = len(game['BoardStates']['PlayerPOV'])
+                    if game_stage == 'All':
+                        start = 0
+                        end = game_length
+                    elif game_stage == '1st':
+                        # Start-Game Value Net
+                        start = 0
+                        end = math.floor(game_length / 3)
+                    elif game_stage == '2nd':
+                        # Mid-Game Value Net
+                        start = math.floor(game_length / 3)
+                        end = math.floor(game_length / 3) * 2
+                    elif game_stage == '3rd':
+                        # End-Game Value Net
+                        start = math.floor(game_length / 3) * 2
+                        end = game_length
+                    states = game['BoardStates']['PlayerPOV'][start:end]
+                    mirror_states = game['MirrorBoardStates']['PlayerPOV'][start:end]
+                    if NNType == 'Policy':#TODO: unshuffle these?
+                        num_random_states = len(states)
+                    elif NNType == 'Value':
+                        num_random_states = math.floor(len(states) * (percent/100))   #x% of moves
+                        #if num_random_states == len(states), mixes state order to decorrelate NN training examples
+                    else:
+                        print('Invalid NN for self-play')
+                        exit(-1)
+                    shuffle = False
+                    if shuffle:
+                        states_random_subset = random.sample(states, num_random_states)
+                        mirror_states_random_subset = random.sample(mirror_states, num_random_states)
+                    else:
+                        states_random_subset = states
+                        mirror_states_random_subset = mirror_states
+
+                    training_data.append(states_random_subset)
+                    training_data.append(mirror_states_random_subset)
+            else:
+                i+=1
+    print('# of Games for Self-Play {NNType} CNN LSTM Game Stage {game_stage}: {states}'.format(states=len(training_data), NNType=NNType, game_stage=game_stage))
+    return training_data
 def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both', percent=50):
     training_data = []
 
@@ -132,6 +207,8 @@ def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both',
                     else:
                         print('Invalid NN for self-play')
                         exit(-1)
+                    shuffle = False
+                    # if shuffle:
                     states_random_subset = random.sample(states, num_random_states)
                     mirror_states_random_subset = random.sample(mirror_states, num_random_states)
                     training_data.extend(states_random_subset)
@@ -167,25 +244,31 @@ def filter_for_self_play_RNN(self_play_data, NNType, game_stage='All', color='Bo
                     num_moves = 155
                     k = 0
                     training_examples = []
+                    mirror_training_examples = []
                     labels = []
-                    while k + window_size <len(move_list):
+                    mirror_labels = []
+                    while k  <len(move_list):
                         if k % 2 == 1:
                             offset = 1
                         else:
                             offset = 0
                         training_examples.append(processed_move_list[k:k+window_size])
                         one_hot_label = np.zeros([155], dtype=np.float32)
-                        one_hot_label[move_list[k+window_size]-(offset*num_moves)] = 1.0
+                        one_hot_label[move_list[k]-(offset*num_moves)] = 1.0
                         labels.append(one_hot_label)
 
-                        training_examples.append(processed_mirror_move_list[k:k+window_size])
+                        mirror_training_examples.append(processed_mirror_move_list[k:k+window_size])
                         one_hot_mirror_label = np.zeros([155], dtype=np.float32)
-                        one_hot_mirror_label[mirror_move_list[k+window_size]-(offset*num_moves)] = 1.0
-                        labels.append(one_hot_mirror_label)
+                        one_hot_mirror_label[mirror_move_list[k]-(offset*num_moves)] = 1.0
+                        mirror_labels.append(one_hot_mirror_label)
                         k+=1
                     #TODO: UNSHUFFLED sorta
                     training_data.extend(np.array(training_examples, dtype=np.float32))
+                    training_data.extend(np.array(mirror_training_examples, dtype=np.float32))
+
                     labels_for_data.extend(np.array(labels, dtype=np.float32))
+                    labels_for_data.extend(np.array(mirror_labels, dtype=np.float32))
+
 
             else:
                 i+=1
@@ -194,7 +277,7 @@ def filter_for_self_play_RNN(self_play_data, NNType, game_stage='All', color='Bo
 
 def get_formatted_move_lists(game):
     raw_move_list = game['OriginalVisualizationURL'][len(
-        r'http://www.trmph.com/breakthrough/board#8,'):]  # put a 40(?) move moving window over this list.
+        r'http://www.trmph.com/breakthrough/board#8,'):]
     raw_mirror_move_list = game['MirrorVisualizationURL'][len(r'http://www.trmph.com/breakthrough/board#8,'):]
 
     move_list = parse_move_list_string(raw_move_list)
@@ -233,10 +316,10 @@ def convert_formatted_move_list_to_indexes(move_list):
             offset = 0
         converted_move_list.append(index_lookup_by_move(move)+ (num_moves*offset))#keep moves unique by adding 154 to black's version. else map onto the same relative position.
         i+=1
-    if converted_move_list[-1] <num_moves:
-        converted_move_list.append(index_lookup_by_move('no-move') + (num_moves*1))
+    if converted_move_list[-1] <num_moves:#final move was a white move
+        converted_move_list.append(index_lookup_by_move('no-move') + (num_moves*1)) #black gameover
     else:
-        converted_move_list.append(index_lookup_by_move('no-move'))#append no move so it knows how to differentiate gameover moves.
+        converted_move_list.append(index_lookup_by_move('no-move'))#white gameover
     return converted_move_list
 
 def preprocess_move_list(move_list):
@@ -272,7 +355,28 @@ def format_training_example(training_example):
             i].transpose()  # transpose (row x col) to get feature_plane x col x row
     formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
     return formatted_example
-    
+
+def split_data_to_training_examples_and_labels_for_CNN_RNN(array_to_split, NNType):
+    training_examples = []
+    labels = []
+    for training_example in array_to_split:  # probability space for transitions
+        formatted_example, formatted_label = split_training_examples_and_labels_CNN_RNN(training_example, NNType)
+        training_examples.append(formatted_example)
+        labels.append(formatted_label)  # transition number
+    return training_examples, labels
+
+def split_training_examples_and_labels_CNN_RNN(training_example, NNType):
+    formatted_examples = []
+    formatted_labels = []
+
+    if NNType == 'Policy':
+        for state in training_example:
+            formatted_examples.append(format_training_example(state[0]))
+            formatted_labels.append(label_for_policy(transition_vector=state[2]))
+
+    return formatted_examples, formatted_labels
+
+
 def label_for_policy(transition_vector, one_hot_indexes=False):
     # if one_hot_indexes:
     #     # x still a 1d array; must stay one-hotted to be reshaped properly

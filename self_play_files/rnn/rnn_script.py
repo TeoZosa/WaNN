@@ -67,11 +67,11 @@ def build_dataset(words):
 def RNN(X, weights, biases, num_hidden_layers):
 
     # reshape to [1, n_input]
-    X = tf.reshape(X, [-1, n_input])
+    X = tf.reshape(X, [-1, sequence_length])
 
     # Generate a n_input-element sequence of inputs
     # (eg. [had] [a] [general] -> [20] [6] [33])
-    X = tf.split(X,n_input,1)
+    X = tf.split(X, sequence_length, 1)
 
     # 1-layer LSTM with n_hidden units.
 
@@ -97,12 +97,14 @@ validation_examples, validation_labels = load_examples_and_labels(
     os.path.join(input_path, r'ValidationData'))
 
 
-for num_layers in [i for i in range(1, 10)
+for num_layers in [i for i in range(5, 10)
                    ]:
 
     for num_hidden in [
+        # 128,
+        # 256,
          512,
-        #  1024,
+         1024,
         # 2048,
         # 4096,
 
@@ -122,8 +124,8 @@ for num_layers in [i for i in range(1, 10)
             reset_default_graph()
             batch_size = 128
 
-            input_size = 155
-            n_input = 40
+            num_classes = 155
+            sequence_length = 40
             # number of units in RNN cell
 
 
@@ -132,25 +134,25 @@ for num_layers in [i for i in range(1, 10)
             # debug_peek = tf.split(debug_peek1, n_input, 1)
 
             # build graph
-            X = tf.placeholder(tf.float32, [None, n_input])
-            y = tf.placeholder(tf.float32, [None, 155])
+            X = tf.placeholder(tf.float32, [None, sequence_length])
+            y = tf.placeholder(tf.float32, [None, num_classes])
 
 
 
 
             weights = {
-                'out': tf.Variable(tf.random_normal([num_hidden, input_size]))
+                'out': tf.Variable(tf.random_normal([num_hidden, num_classes]))
             }
             biases = {
-                'out': tf.Variable(tf.random_normal([input_size]))
+                'out': tf.Variable(tf.random_normal([num_classes]))
             }
-
-            y_pred = RNN(X, weights, biases, num_layers)
+            output_layer = RNN(X, weights, biases, num_layers)
+            y_pred = tf.nn.softmax(output_layer)
 
             # Loss and optimizer
             # cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=y))
 
-            cost = tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=y)
+            cost = tf.nn.softmax_cross_entropy_with_logits(logits=output_layer, labels=y)
 
 
             # # way better performance

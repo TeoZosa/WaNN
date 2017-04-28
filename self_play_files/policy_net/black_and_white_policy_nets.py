@@ -917,12 +917,12 @@ for num_hidden in [i for i in [4, 9]
                    ]:
     file_WHITE = open(os.path.join(input_path_WHITE,
                                    r'ExperimentLogs',
-                                   game_stage + '065RNN_0427WHITE192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)),
+                                   game_stage + '_0427WHITE192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)),
                       'a')
 
     file_BLACK = open(os.path.join(input_path_WHITE,
                                    r'ExperimentLogs',
-                                   game_stage + '065RNN_0427BLACK192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(
+                                   game_stage + '_0427BLACK192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(
                                        num_hidden)), 'a')
 
     print("# of Testing Examples: {}".format(len(WHITE_testing_examples_partition_i)), end='\n', file=file_WHITE)
@@ -942,7 +942,7 @@ for num_hidden in [i for i in [4, 9]
             reset_default_graph()
             batch_size = 128
 
-            filter_size = 3  # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
+            filter_size = 3 # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
 
             # TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
             # TODO: dropout? regularizers? different combinations of weight initialization, cost func, num_hidden, etc.
@@ -1052,67 +1052,67 @@ for num_hidden in [i for i in [4, 9]
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
                                                     intra_op_parallelism_threads=NUM_CORES))
 
-            path = os.path.join(r'..', r'..', r'policy_net_model', r'DualWinningNets065Accuracy',
-                                r'DualWinningNets065Accuracy')
+            # path = os.path.join(r'..', r'..', r'policy_net_model', r'DualWinningNets065Accuracy',
+            #                     r'DualWinningNets065Accuracy')
+            # #
+            # saver.restore(sess, path)
             #
-            saver.restore(sess, path)
-
-            num_layers_rnn = 3
-            num_hidden_rnn = 512
-            with tf.variable_scope('white_net_RNN', reuse=False):
-
-                outer_layer_WHITE = RNN(h_layers_WHITE[-1], num_layers_rnn, num_hidden_rnn)
-
-                # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-                y_pred_WHITE = tf.nn.softmax(outer_layer_WHITE)
-
-                # tf's internal softmax; else, put softmax back in output layer
-                # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-                cost_WHITE = loss_init(outer_layer_WHITE, y_WHITE)
-
-                # # alternative implementation
-                # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-
-                # kadenze cross_entropy cost function
-                # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-
-
-                # way better performance
-                optimizer_WHITE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_WHITE)
-
-                # SGD used in AlphaGO
-                # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-                with tf.name_scope('accuracy'):
-                    correct_prediction_WHITE = tf.equal(tf.argmax(y_pred_WHITE, 1), tf.argmax(y_WHITE, 1))
-                    accuracy_function_WHITE = tf.reduce_mean(tf.cast(correct_prediction_WHITE, 'float'))
-                    # tf.summary.scalar('accuracy', accuracy_function_WHITE)
-
-            with tf.variable_scope('black_net_RNN', reuse=False):
-                outer_layer_BLACK= RNN(h_layers_BLACK[-1], num_layers_rnn, num_hidden_rnn)
-
-                # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-                y_pred_BLACK = tf.nn.softmax(outer_layer_BLACK)
-
-                # tf's internal softmax; else, put softmax back in output layer
-                # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-                cost_BLACK = loss_init(outer_layer_BLACK, y_BLACK)
-
-                # # alternative implementation
-                # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-
-                # kadenze cross_entropy cost function
-                # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-
-
-                # way better performance
-                optimizer_BLACK = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_BLACK)
-
-                # SGD used in AlphaGO
-                # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-                with tf.name_scope('accuracy'):
-                    correct_prediction_BLACK = tf.equal(tf.argmax(y_pred_BLACK, 1), tf.argmax(y_BLACK, 1))
-                    accuracy_function_BLACK = tf.reduce_mean(tf.cast(correct_prediction_BLACK, 'float'))
-                    # tf.summary.scalar('accuracy', accuracy_function_BLACK)
+            # num_layers_rnn = 3
+            # num_hidden_rnn = 512
+            # with tf.variable_scope('white_net_RNN', reuse=False):
+            #
+            #     outer_layer_WHITE = RNN(h_layers_WHITE[-1], num_layers_rnn, num_hidden_rnn)
+            #
+            #     # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
+            #     y_pred_WHITE = tf.nn.softmax(outer_layer_WHITE)
+            #
+            #     # tf's internal softmax; else, put softmax back in output layer
+            #     # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+            #     cost_WHITE = loss_init(outer_layer_WHITE, y_WHITE)
+            #
+            #     # # alternative implementation
+            #     # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
+            #
+            #     # kadenze cross_entropy cost function
+            #     # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+            #
+            #
+            #     # way better performance
+            #     optimizer_WHITE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_WHITE)
+            #
+            #     # SGD used in AlphaGO
+            #     # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+            #     with tf.name_scope('accuracy'):
+            #         correct_prediction_WHITE = tf.equal(tf.argmax(y_pred_WHITE, 1), tf.argmax(y_WHITE, 1))
+            #         accuracy_function_WHITE = tf.reduce_mean(tf.cast(correct_prediction_WHITE, 'float'))
+            #         # tf.summary.scalar('accuracy', accuracy_function_WHITE)
+            #
+            # with tf.variable_scope('black_net_RNN', reuse=False):
+            #     outer_layer_BLACK= RNN(h_layers_BLACK[-1], num_layers_rnn, num_hidden_rnn)
+            #
+            #     # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
+            #     y_pred_BLACK = tf.nn.softmax(outer_layer_BLACK)
+            #
+            #     # tf's internal softmax; else, put softmax back in output layer
+            #     # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+            #     cost_BLACK = loss_init(outer_layer_BLACK, y_BLACK)
+            #
+            #     # # alternative implementation
+            #     # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
+            #
+            #     # kadenze cross_entropy cost function
+            #     # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+            #
+            #
+            #     # way better performance
+            #     optimizer_BLACK = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_BLACK)
+            #
+            #     # SGD used in AlphaGO
+            #     # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+            #     with tf.name_scope('accuracy'):
+            #         correct_prediction_BLACK = tf.equal(tf.argmax(y_pred_BLACK, 1), tf.argmax(y_BLACK, 1))
+            #         accuracy_function_BLACK = tf.reduce_mean(tf.cast(correct_prediction_BLACK, 'float'))
+            #         # tf.summary.scalar('accuracy', accuracy_function_BLACK)
 
 
 
@@ -1199,6 +1199,8 @@ for num_hidden in [i for i in [4, 9]
                         print('Interval {interval} of 10 Accuracy: {accuracy_score}'.format(
                             interval=(i + 1) // (len(training_example_batches_BLACK) // 10),
                             accuracy_score=accuracy_score), end="\n", file=file_BLACK)
+
+
 
 
                         # show accuracy at end of epoch

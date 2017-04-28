@@ -2,6 +2,8 @@ import os
 import  pickle
 import warnings
 from multiprocessing import Process, pool, Pool
+from multiprocessing.pool import ThreadPool
+from monte_carlo_tree_search.MCTS import NeuralNetsCombinedRNNInput
 
 from tools import numpy_array
 from self_play_files.self_play_to_data_structure import self_play_logs_to_data_structures as convertLog
@@ -82,7 +84,7 @@ def AggregateSelfPlayDataStructures():
     outputList.close()
 
 def self_play_data_structures_to_numpy():
-    for color in [#'White',
+    for color in ['White',
 
                   'Black'
                   ]:
@@ -134,11 +136,15 @@ def self_play_data_structures_to_numpy():
                 # game_stage = '2nd'
                 # game_stage = '3rd'
               #               arg_lists = [[r'Self-Play', r'Policy', path, file, game_stage, color] for file in files_april]
+              policy_net = NeuralNetsCombinedRNNInput()
+              arg_lists = [[r'CNN RNN', r'Policy', path, file, game_stage, color, policy_net] for file in files_april]
+              # processes = Pool(processes=len(arg_lists))
 
-              arg_lists = [[r'CNN RNN', r'Policy', path, file, game_stage, color] for file in files_april]
-              processes = Pool(processes=len(arg_lists))
+              processes = ThreadPool(processes=len(arg_lists))
+
               processes.starmap_async(numpy_array.self_player_driver, arg_lists)#map processes to arg lists
               processes.close()
               processes.join()
-              # numpy_array.self_player_driver(r'CNN RNN', r'Policy', path, files[0], game_stage, color)
-              # numpy_array.self_player_driver(r'Self-Play', r'Policy', path, files[0])
+              # for file in files_april:
+              #     numpy_array.self_player_driver(r'CNN RNN', r'Policy', path, file, game_stage, color, policy_net)
+              # # numpy_array.self_player_driver(r'Self-Play', r'Policy', path, files[0])

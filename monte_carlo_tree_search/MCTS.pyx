@@ -3,7 +3,7 @@
 from monte_carlo_tree_search.expansion_MCTS_functions import MCTS_with_expansions
 #from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit
 from Breakthrough_Player.board_utils import get_best_move
-from Breakthrough_Player.policy_net_utils import instantiate_session_both, instantiate_session
+from Breakthrough_Player.policy_net_utils import instantiate_session_both, instantiate_session, instantiate_session_both_RNN
 from tools.utils import convert_board_to_2d_matrix_POEB, batch_split_no_labels
 import re
 
@@ -87,6 +87,41 @@ class NeuralNetsCombined():
     #initialize the Neural Net (Only works with combined net for now)
     def __init__(self):
         self.sess, self.output_white, self.input_white, self.output_black, self.input_black= instantiate_session_both()
+
+    #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
+    def evaluate(self, game_nodes, player_color=None, already_converted=False):
+        if not already_converted:
+            if player_color is not None: #1 board + 1 color from direct policy net call
+                board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
+            else:
+                board_representations = [convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in
+                                     game_nodes]
+        else:
+            board_representations = game_nodes
+        if player_color is None and not already_converted:
+            player_color = game_nodes[0].color
+        batch_size = 16384
+        inference_batches = batch_split_no_labels(board_representations, batch_size)
+        output = []
+        if player_color == 'White':
+            y_pred = self.output_white
+            X = self.input_white
+        else:
+            y_pred = self.output_black
+            X = self.input_black
+        # self.sess.close()
+        # self.sess, self.output, self.input = get_NN(player_color)
+
+        for batch in inference_batches:
+            predicted_moves = self.sess.run(y_pred, feed_dict={X: batch})
+            output.extend(predicted_moves)
+        return output
+
+class NeuralNetsCombinedRNNInput():
+
+    #initialize the Neural Net (Only works with combined net for now)
+    def __init__(self):
+        self.sess, self.output_white, self.input_white, self.output_black, self.input_black= instantiate_session_both_RNN()
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):

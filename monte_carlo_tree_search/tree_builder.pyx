@@ -569,8 +569,8 @@ def get_num_children_to_consider(parent):
         if height>= 80:
             num_top_to_consider = 999
 
-        # elif height < 80:
-        #     num_top_to_consider =  10#bug that I'm rolling with for now
+        elif height < 80:
+            num_top_to_consider =  6#bug that I'm rolling with for now
 
         elif height >= 70:
             num_top_to_consider =  3
@@ -619,7 +619,7 @@ def get_num_children_to_consider(parent):
             # 3?   40-51
         elif height < 52 and height >= 40:  # 40?
             if parent.reexpanded:
-                num_top_to_consider = 2
+                num_top_to_consider = 1
             else:
                 num_top_to_consider =  1#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
         elif height < 20 and height >= 0:

@@ -64,10 +64,11 @@ def build_dataset(words):
     reverse_dictionary = dict(zip(dictionary.values(), dictionary.keys()))
     return dictionary, reverse_dictionary
 
-def RNN(X, weights, biases, num_hidden_layers):
+def RNN(X, num_hidden_layers):
 
     # reshape to [1, n_input]
-    X = tf.reshape(X, [-1, sequence_length])
+    X = tf.reshape(X, [-1, sequence_length* 8*8])
+
 
     # Generate a n_input-element sequence of inputs
     # (eg. [had] [a] [general] -> [20] [6] [33])
@@ -76,28 +77,46 @@ def RNN(X, weights, biases, num_hidden_layers):
     # 1-layer LSTM with n_hidden units.
 
     # rnn_cell = rnn.BasicLSTMCell(n_hidden)
-
-    rnn_cell = rnn.MultiRNNCell([rnn.BasicLSTMCell(num_hidden)] * num_hidden_layers)
-
-
-    # generate prediction
-    outputs, states = rnn.static_rnn(rnn_cell, X, dtype=tf.float32)
+    with tf.variable_scope('RNN', initializer=tf.contrib.layers.xavier_initializer()):
+        # weights = {
+        #     'out': tf.Variable(tf.random_normal([num_hidden, num_classes]))
+        # }
+        # biases = {
+        #     'out': tf.Variable(tf.random_normal([num_classes]))
+        # }
+        weights = tf.get_variable(
+            name='weights',
+            shape=[num_hidden, num_classes],  # 1 x 64 filter in, 1 class out
+            dtype=tf.float32,
+            initializer=tf.contrib.layers.xavier_initializer())
+        biases = tf.get_variable(
+            name='biases',
+            shape=[155],
+            dtype=tf.float32,
+            initializer=tf.constant_initializer(0.1))
+        GRU_cell_layer = [rnn.GRUCell(num_hidden)]
+        LSTM_cell_layer = [rnn.BasicLSTMCell(num_hidden, forget_bias=1)]
+        rnn_cell = rnn.MultiRNNCell(LSTM_cell_layer * num_hidden_layers)
+        # generate prediction
+        outputs, states = rnn.static_rnn(rnn_cell, X, dtype=tf.float32)
 
     # there are n_input outputs but
     # we only want the last output
-    return tf.matmul(outputs[-1], weights['out']) + biases['out']
+    # return tf.matmul(outputs[-1], weights['out']) + biases['out']
+    return tf.matmul(outputs[-1], weights) + biases
+
 
 input_path = assign_path()
 device = 'Workstation'
 game_stage = input_path[-13:-5]  # ex. 1stThird
 
 # for experiment with states from entire games, test data are totally separate games
-training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
+training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingDataCNN'))
 validation_examples, validation_labels = load_examples_and_labels(
-    os.path.join(input_path, r'ValidationData'))
+    os.path.join(input_path, r'ValidationDataCNN'))
 
 
-for num_layers in [i for i in range(5, 10)
+for num_layers in [i for i in range(1, 10)
                    ]:
 
     for num_hidden in [
@@ -111,7 +130,7 @@ for num_layers in [i for i in range(5, 10)
     ]:
         file = open(os.path.join(input_path,
                                  r'ExperimentLogs',
-                                 game_stage + '{n_filters}HiddenNeurons{num_hidden}LayersTF_CE__He_weightsPOE.txt'.format(
+                                 game_stage + 'CNN{n_filters}HiddenNeurons{num_hidden}LayersTF_CE__He_weightsPOE.txt'.format(
                                      n_filters=num_hidden, num_hidden=num_layers)),
                     'a')
         print("# of Testing Examples: {}".format(len(validation_examples)), end='\n', file=file)
@@ -134,19 +153,13 @@ for num_layers in [i for i in range(5, 10)
             # debug_peek = tf.split(debug_peek1, n_input, 1)
 
             # build graph
-            X = tf.placeholder(tf.float32, [None, sequence_length])
+            X = tf.placeholder(tf.float32, [None, sequence_length, 8, 8, 1])
             y = tf.placeholder(tf.float32, [None, num_classes])
 
 
 
 
-            weights = {
-                'out': tf.Variable(tf.random_normal([num_hidden, num_classes]))
-            }
-            biases = {
-                'out': tf.Variable(tf.random_normal([num_classes]))
-            }
-            output_layer = RNN(X, weights, biases, num_layers)
+            output_layer = RNN(X, num_layers)
             y_pred = tf.nn.softmax(output_layer)
 
             # Loss and optimizer
@@ -220,6 +233,13 @@ for num_layers in [i for i in range(5, 10)
 
                 # train model
                 for i in range(0, len(training_example_batches)):
+                    original = training_example_batches[0][1]
+                    npdebug = np.reshape(training_example_batches[0][1], [sequence_length* 8*8])
+                    npdebug_ = np.reshape(training_example_batches[0],[-1, sequence_length, 8*8])
+                    npdebug1 = np.split(npdebug_, sequence_length, 1)
+                    #
+                    # debug = tf.reshape(training_example_batches[0][0], [-1, sequence_length*8*8])
+                    # debug1 = tf.split(debug, sequence_length, 1)
                     _, acc, loss, onehot_pred = sess.run([optimizer, accuracy_function, cost, y_pred],
                                                         feed_dict={X: training_example_batches[i], y: training_label_batches[i]})
 

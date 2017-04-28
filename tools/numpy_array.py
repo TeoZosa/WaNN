@@ -7,6 +7,7 @@ import os
 import random
 import math
 from tools.utils import index_lookup_by_move
+# from Breakthrough_Player.policy_net_utils import instantiate_session_both_RNN
 
 #TODO: redo logic and paths after directory restructuring
 def write_np_array_to_disk(path, X, y, filterType, NNType):
@@ -36,18 +37,18 @@ def write_np_array_to_disk(path, X, y, filterType, NNType):
         h5f.create_dataset(r'y', data=y)
         h5f.close()
     elif filterType == r'CNN RNN':
-        XMatrix = open(path + r'X_CNNRNNSeparatedGames.p', 'wb')
-        pickle.dump(X, XMatrix)
-        yVector = open(path + r'yCNNRNNSeparatedGames.p', 'wb')
-        pickle.dump(y, yVector)
-        # h5f = h5py.File(path + r'CNNRNNSeparatedGames.hdf5', 'w', driver='core')
-        # h5f.create_dataset(r'X', data=X)
-        # h5f.create_dataset(r'y', data=y)
-        # h5f.close()
+        # XMatrix = open(path + r'X_CNNRNNSeparatedGames.p', 'wb')
+        # pickle.dump(X, XMatrix)
+        # yVector = open(path + r'y_CNNRNNSeparatedGames.p', 'wb')
+        # pickle.dump(y, yVector)
+        h5f = h5py.File(path + r'CNNRNNSeparatedGames.hdf5', 'w', driver='core')
+        h5f.create_dataset(r'X', data=X)
+        h5f.create_dataset(r'y', data=y)
+        h5f.close()
     else:
         print ("Error: You must specify a valid Filter")
 
-def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_stage='All', color='Both'):
+def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_stage='All', color='Both', policy_net=None):
     labels = None
     if filter == 'Win Ratio':
         training_data = filter_by_win_ratio(player_list)
@@ -59,7 +60,14 @@ def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_
         training_data, labels = filter_for_self_play_RNN(player_list, NNType, game_stage, color)
     elif filter =='CNN RNN':
         training_data = filter_for_self_play_CNN_RNN(player_list, NNType, game_stage, color)
-        training_examples, labels = split_data_to_training_examples_and_labels_for_CNN_RNN(training_data, NNType)
+        # sess, y_pred_white, X_white, y_pred_black, X_black = instantiate_session_both_RNN()
+        # if color == 'White':
+        #     output = y_pred_white
+        #     input = X_white
+        # elif color =='Black':
+        #     output = y_pred_black
+        #     input = X_black
+        training_data, labels = split_data_to_training_examples_and_labels_for_CNN_RNN(training_data, NNType, policy_net, color)
     else:
         training_data = None
         print('Invalid Filter Specified')
@@ -68,8 +76,8 @@ def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_
         training_examples, labels = split_data_to_training_examples_and_labels_for_CNN(training_data, NNType)
     else:
         training_examples = training_data
-    # return np.array(training_examples, dtype=np.float32), np.array(labels, dtype=np.float32)
-    return np.array(training_examples, dtype=object), np.array(labels, dtype=object)
+    return np.array(training_examples, dtype=np.float32), np.array(labels, dtype=np.float32)
+    # return np.array(training_examples, dtype=object), np.array(labels, dtype=object)
 
 
 def filter_by_rank(playerList):
@@ -121,7 +129,7 @@ def filter_for_self_play_CNN_RNN(self_play_data, NNType, game_stage='All', color
             if color_to_filter:
                 i+=1
                 if win_filter:
-                    game_length = len(game['BoardStates']['PlayerPOV'])
+                    game_length = len(game['BoardStates']['States'])
                     if game_stage == 'All':
                         start = 0
                         end = game_length
@@ -137,8 +145,10 @@ def filter_for_self_play_CNN_RNN(self_play_data, NNType, game_stage='All', color
                         # End-Game Value Net
                         start = math.floor(game_length / 3) * 2
                         end = game_length
-                    states = game['BoardStates']['PlayerPOV'][start:end]
-                    mirror_states = game['MirrorBoardStates']['PlayerPOV'][start:end]
+                    states = game['BoardStates']['States'][start:end]
+                    # POV_states = game['BoardStates']['PlayerPOV'][start:end]
+
+                    mirror_states = game['MirrorBoardStates']['States'][start:end]
                     if NNType == 'Policy':#TODO: unshuffle these?
                         num_random_states = len(states)
                     elif NNType == 'Value':
@@ -147,7 +157,6 @@ def filter_for_self_play_CNN_RNN(self_play_data, NNType, game_stage='All', color
                     else:
                         print('Invalid NN for self-play')
                         exit(-1)
-                    shuffle = False
                     if shuffle:
                         states_random_subset = random.sample(states, num_random_states)
                         mirror_states_random_subset = random.sample(mirror_states, num_random_states)
@@ -356,26 +365,70 @@ def format_training_example(training_example):
     formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
     return formatted_example
 
-def split_data_to_training_examples_and_labels_for_CNN_RNN(array_to_split, NNType):
+# def get_hidden_layer_transform(formatted_examples):
+#     sess, y_pred_white, X_white, y_pred_black, X_black = instantiate_session_both_RNN()
+#     formatted_example = sess.run(y_pred_black, feed_dict={X_black: formatted_examples})
+#     placeholder = np.append(np.zeros([40, 8, 8, 1], dtype=np.float32 ), formatted_example, axis=0)
+#     # placeholder.extend(formatted_example)
+#     formatted_example = placeholder
+#
+#     return formatted_example
+
+
+def split_data_to_training_examples_and_labels_for_CNN_RNN(array_to_split, NNType, policy_net, color):
     training_examples = []
     labels = []
     for training_example in array_to_split:  # probability space for transitions
-        formatted_example, formatted_label = split_training_examples_and_labels_CNN_RNN(training_example, NNType)
-        training_examples.append(formatted_example)
-        labels.append(formatted_label)  # transition number
+        formatted_example, formatted_label = split_training_examples_and_labels_CNN_RNN(training_example, NNType, policy_net, color)
+        training_examples.extend(formatted_example)
+        labels.extend(formatted_label)  # transition number
     return training_examples, labels
 
-def split_training_examples_and_labels_CNN_RNN(training_example, NNType):
+def split_training_examples_and_labels_CNN_RNN(training_example, NNType, policy_net, color):
     formatted_examples = []
     formatted_labels = []
 
     if NNType == 'Policy':
+        i = 0
         for state in training_example:
-            formatted_examples.append(format_training_example(state[0]))
+            if color == 'White':
+                if i %2 == 1:
+                    #black's state, switch Player and Opponent Planes and convert to POV Rep for NN Eval
+                    temp_player = state[0][1][:]#opponent (Black) copy
+                    state[0][1] = state[0][0][-1::-1]#opponent (Black) becames reversed player
+                    state[0][0] = temp_player[-1::-1]#player becomes reversed opponent (Black)
+                    state[0][2] = state[0][2][-1::-1]#empty reversed
+                    player_color = 'Black'
+
+                else:
+                    #white is default POV and already player, leave it alone
+                    player_color = 'White'
+            elif color == 'Black':
+                if i % 2 == 1:  # black's state,
+                    #already player, just need to flip for POV
+                    state[0][0] = state[0][0][-1::-1]
+                    state[0][1] = state[0][1][-1::-1]
+                    state[0][2] = state[0][2][-1::-1]
+                    player_color = 'Black'
+                else:
+                    #White is default POV, just switch player and opponent
+                    temp_player = state[0][1][:]
+                    state[0][1] = state[0][0][:]
+                    state[0][0] = temp_player
+                    player_color = 'White'
+            formatted_examples.append(policy_net.evaluate([format_training_example(state[0])], player_color=player_color, already_converted=True)[0])
             formatted_labels.append(label_for_policy(transition_vector=state[2]))
+            i +=1
 
-    return formatted_examples, formatted_labels
+    # formatted_examples = sess.run(output, feed_dict={input: formatted_examples})
 
+    formatted_examples = np.append(np.zeros([40, 8, 8, 1], dtype=np.float32 ), formatted_examples, axis=0)
+
+    window_size = 40
+    training_examples = []
+    for k in range(0, len(formatted_labels)):
+        training_examples.append(formatted_examples[k:k + window_size])
+    return np.array(training_examples, dtype=np.float32), np.array(formatted_labels, dtype=np.float32)
 
 def label_for_policy(transition_vector, one_hot_indexes=False):
     # if one_hot_indexes:
@@ -485,7 +538,7 @@ def assign_path(deviceName ='Workstation'):
         path = ''#todo:error checking
     return path
 
-def self_player_driver(filter, NNType, path, fileName, game_stage='All', color='Both'):
+def self_player_driver(filter, NNType, path, fileName, game_stage='All', color='Both', policy_net=None):
     file = open(os.path.join(path, fileName), 'r+b')
     player_list = pickle.load(file)
     file.close()
@@ -496,6 +549,6 @@ def self_player_driver(filter, NNType, path, fileName, game_stage='All', color='
     #            print(game['MirrorVisualizationURL'])
     # exit(-1)
 
-    training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType, game_stage, color)
+    training_examples, labels = filter_training_examples_and_labels(player_list, filter, NNType, game_stage, color, policy_net)
     write_path = os.path.join(path,"NumpyArrays",'PolicyNet','POE','4DArraysHDF5(RxCxF)POE{NNType}Net{game_stage}Third{color}'.format(NNType=NNType, game_stage=game_stage, color=color), fileName[0:-len(r'DataPython.p')])
     write_np_array_to_disk(write_path, training_examples, labels, filter, NNType)

@@ -2,7 +2,7 @@
 
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, \
-    SimulationInfo, increment_threads_checking_node, decrement_threads_checking_node
+    SimulationInfo, increment_threads_checking_node, decrement_threads_checking_node, transform_wrt_overwhelming_amount
 from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, expand_descendants_to_depth_wrt_NN, init_new_root
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board, initial_game_board, initial_piece_arrays
@@ -78,7 +78,7 @@ NN_input_queue = [] #for expanded nodes that need to be evaluated asynchronously
 def MCTS_with_expansions(game_board, player_color, time_to_think,
                          depth_limit, previous_move, last_opponent_move, move_number, log_file=stdout, MCTS_Type='Expansion MCTS Pruning', policy_net=None, game_num = -1):
     with SimulationInfo(log_file) as sim_info:
-        time_to_think = time_to_think*.80 #with threads, takes 1.125 times longer to finish up
+        time_to_think = time_to_think+1 #takes 1 second for first eval (io needs to warm up?)with threads, takes 1.125 times longer to finish up
         # sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
         sim_info.game_num = game_num
         sim_info.time_to_think = time_to_think
@@ -157,7 +157,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         #         if net_real_wins > 0:
         #             done = True
         # async_NN_update_threads = ThreadPool(processes=3)
-        num_processes = 25
+        num_processes = 3
         parallel_search_threads = ThreadPool(processes=num_processes)
 
         sim_info.start_time = start_time = time()
@@ -232,6 +232,10 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         if best_child.parent is not None:#separate for background search
             best_child.parent.children = [best_child]
         best_child.reexpanded_already = True
+        if best_child.children is not None and best_child.other_children is not None:
+            best_child.children.extend(best_child.other_children) # should never reappend a new root
+            best_child.other_children = None
+
 
     return best_child, best_move #save this root to use next time
 
@@ -261,10 +265,10 @@ def assign_root_reinforcement_learning(game_board, player_color, previous_move, 
         if previous_move is not None: #saved root
             root = previous_move
         else:#saving a new board
-            print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info.file)
-            answer = input("WARNING: INITIALIZING A NEW BOARD TO BE SAVED, ENTER \'yes\' TO CONTINUE")
-            if answer.lower() != 'yes':
-                exit(-10)
+            # print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info.file)
+            # answer = input("WARNING: INITIALIZING A NEW BOARD TO BE SAVED, ENTER \'yes\' TO CONTINUE")
+            # if answer.lower() != 'yes':
+            #     exit(-10)
             root = TreeNode(game_board, white_pieces, black_pieces, player_color, None, None, move_number)
     elif move_number == 1: #WaNN is black
         if previous_move is None: #saving new board
@@ -369,8 +373,9 @@ def run_MCTS_with_expansions_simulation( #args
     done = False
     this_thread_reexpands_root = False
     if not root.subtree_checked:
-        # if sim_info.counter > 10000 and len(sim_info.game_tree) == 0:
-        #     print("something going wrong in tree expansions")
+        if sim_info.counter > 1000 and len(sim_info.game_tree) == 0:
+            print("something going wrong in tree expansions")
+            time_to_think = 999
         play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info, 0, MCTS_Type, policy_net, start_time, time_to_think)
         with async_update_lock: #so prints aren't interleaved
             # if sim_info.counter  % 5 == 0:  # log every 5th simulation
@@ -571,14 +576,12 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
     root = sim_info.root
     start_time = sim_info.start_time
     time_to_think = sim_info.time_to_think
-    overwhelming_on = True
-    if overwhelming_on:
-        overwhelming_amount = root.overwhelming_amount
-    else:
-        overwhelming_amount = 1
+    overwhelming_on = False
+        
+    wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(root, overwhelming_on)
     print("Monte Carlo Game {iteration}\n"
-          "Played at root   Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}    win = {win_status}\n".format(
-        height = root.height, color=root.color, uct=0, wins=root.wins/overwhelming_amount, visits=root.visits/overwhelming_amount,
+          "Played at root   Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}     true_losses = {true_losses}    prob = %{prob}    win = {win_status}\n".format(
+        height = root.height, color=root.color, uct=0, wins=wins, visits=visits, true_wins=true_wins, true_losses=true_losses,
         iteration=sim_info.counter+1, prob=(root.UCT_multiplier-1)*100, win_status = root.win_status), file=sim_info.file)
     print_board(sim_info.root.game_board, sim_info.file)
     print("\n", file=sim_info.file)
@@ -586,36 +589,42 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
     if root.children is not None:
         best_child = randomly_choose_a_winning_move(root, sim_info.game_num)
         best_move =  move_lookup_by_index(best_child.index, root.color)
-        best_child_UCT = get_UCT(best_child, root.visits/overwhelming_amount, start_time, time_to_think, sim_info)
+        best_child_UCT = get_UCT(best_child, root.visits, start_time, time_to_think, sim_info)
+        wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(best_child, overwhelming_on)
+
         print("Current (Random) Best Move   {best_move}\n"
-              "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}   prob = %{prob}    win = {win_status}\n".format(
+              "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}     true_losses = {true_losses}   prob = %{prob}    win = {win_status}\n".format(
             best_move=best_move,
-            height=best_child.height, color=best_child.color, uct=best_child_UCT, wins=best_child.wins/overwhelming_amount,
-            visits=best_child.visits/overwhelming_amount, prob=(best_child.UCT_multiplier-1)*100, win_status = best_child.win_status), file=sim_info.file)
+            height=best_child.height, color=best_child.color, uct=best_child_UCT, wins=wins, true_wins=true_wins, true_losses=true_losses,
+            visits=visits, prob=(best_child.UCT_multiplier-1)*100, win_status = best_child.win_status), file=sim_info.file)
         print_board(best_child.game_board, sim_info.file)
 
         print("All Moves", file=sim_info.file)
         for child in root.children:
             move = move_lookup_by_index(child.index, root.color)
 
-            child_UCT = get_UCT(child, root.visits/overwhelming_amount, start_time, time_to_think, sim_info)
-            print(" Move   {move}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}    win = {win_status}\n".format(
+            child_UCT = get_UCT(child, root.visits, start_time, time_to_think, sim_info)
+            wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(child, overwhelming_on)
+
+            print(" Move   {move}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}     true_losses = {true_losses}    prob = %{prob}    win = {win_status}\n".format(
                 move=move,
                 uct=child_UCT,
-                wins=child.wins/overwhelming_amount,
-                visits=child.visits/overwhelming_amount, prob=(child.UCT_multiplier-1)*100, win_status = child.win_status), file=sim_info.file)
+                wins=wins, true_wins=true_wins, true_losses=true_losses,
+                visits=visits, prob=(child.UCT_multiplier-1)*100, win_status = child.win_status), file=sim_info.file)
             print_board(child.game_board, sim_info.file)
 
         #to see predicted best counter
         if best_child.children is not None:
             best_counter_child = randomly_choose_a_winning_move(best_child, sim_info.game_num)
             best_counter_move = move_lookup_by_index(best_counter_child.index, best_child.color)
-            best_counter_child_UCT = get_UCT(best_counter_child, best_child.visits/overwhelming_amount, start_time, time_to_think, sim_info)
+            best_counter_child_UCT = get_UCT(best_counter_child, best_child.visits, start_time, time_to_think, sim_info)
+            wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(best_counter_child, overwhelming_on)
+
             print("Current Best Move (Random) Best Counter Move   {best_counter_move}\n"
-                  "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}    win = {win_status}\n".format(
-                best_counter_move=best_counter_move,
-                height=best_counter_child.height, color=best_counter_child.color, uct=best_counter_child_UCT, wins=best_counter_child.wins/overwhelming_amount,
-                visits=best_counter_child.visits/overwhelming_amount, prob=(best_counter_child.UCT_multiplier-1)*100, win_status = best_counter_child.win_status), file=sim_info.file)
+                  "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}     true_losses = {true_losses}    prob = %{prob}    win = {win_status}\n".format(
+                best_counter_move=best_counter_move, true_wins=true_wins, true_losses=true_losses,
+                height=best_counter_child.height, color=best_counter_child.color, uct=best_counter_child_UCT, wins=wins,
+                visits=visits, prob=(best_counter_child.UCT_multiplier-1)*100, win_status = best_counter_child.win_status), file=sim_info.file)
             print_board(best_counter_child.game_board, sim_info.file)
 
 
@@ -623,12 +632,14 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
             for counter_child in best_child.children:
                 counter_move = move_lookup_by_index(counter_child.index, best_child.color)
 
-                counter_child_UCT = get_UCT(counter_child, best_child.visits/overwhelming_amount, start_time, time_to_think, sim_info)
-                print("Counter Move   {counter_move}    UCT = {uct}     wins = {wins:.2e}       visits = {visits:.2e}    prob = %{prob}    win = {win_status}\n".format(
+                counter_child_UCT = get_UCT(counter_child, best_child.visits, start_time, time_to_think, sim_info)
+                wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(counter_child, overwhelming_on)
+
+                print("Counter Move   {counter_move}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}     true_losses = {true_losses}    prob = %{prob}    win = {win_status}\n".format(
                     counter_move=counter_move,
-                    uct=counter_child_UCT,
-                    wins=counter_child.wins/overwhelming_amount,
-                    visits=counter_child.visits/overwhelming_amount, prob=(counter_child.UCT_multiplier-1)*100, win_status = counter_child.win_status), file=sim_info.file)
+                    uct=counter_child_UCT, true_wins=true_wins, true_losses=true_losses,
+                    wins=wins,
+                    visits=visits, prob=(counter_child.UCT_multiplier-1)*100, win_status = counter_child.win_status), file=sim_info.file)
                 print_board(counter_child.game_board, sim_info.file)
 
         else:
@@ -639,6 +650,23 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
 
 
     print("\n", file=sim_info.file)
+    k = 1
+    while len(sim_info.eval_times)>0:
+        total = 0
+        count = 0
+        new_eval_times = []
+        for eval_stat in sim_info.eval_times:
+            if eval_stat[0] == k:
+                total+= eval_stat[1]
+                count+=1
+            else:
+                new_eval_times.append(eval_stat)
+        if count > 0:
+            avg_time = total/count
+            print("approximately {time} ms to evaluate {num_nodes} node (out of {trials})".format(time=avg_time, num_nodes=k, trials=count), end='\n', file=sim_info.file)
+        sim_info.eval_times = new_eval_times
+        k+=1
+
 
     # for i in range(0, len(sim_info.game_tree)):
     #     node_parent = sim_info.game_tree[i].parent
@@ -646,7 +674,7 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
     #         UCT = 0
     #     else:
     #         UCT = get_UCT(sim_info.game_tree[i], node_parent.visits, start_time, time_to_think, sim_info)
-    #     print("Node {i} Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits} checked = {checked}".format(
+    #     print("Node {i} Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}       true_losses = {true_losses} checked = {checked}".format(
     #         i=i, height=sim_info.game_tree[i].height, color=sim_info.game_tree[i].color, uct=UCT, wins=sim_info.game_tree[i].wins, visits=sim_info.game_tree[i].visits, checked=sim_info.game_tree[i].subtree_checked),
     #         file=sim_info.file)
     #     print_board(sim_info.game_tree[i].game_board, sim_info.file)

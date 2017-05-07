@@ -3,7 +3,7 @@
 from monte_carlo_tree_search.expansion_MCTS_functions import MCTS_with_expansions
 #from monte_carlo_tree_search.BFS_MCTS_functions import MCTS_BFS_to_depth_limit
 from Breakthrough_Player.board_utils import get_best_move
-from Breakthrough_Player.policy_net_utils import instantiate_session_both, instantiate_session, instantiate_session_both_RNN
+from Breakthrough_Player.policy_net_utils import instantiate_session_both, instantiate_session,  instantiate_session_both_128
 from tools.utils import convert_board_to_2d_matrix_POEB, batch_split_no_labels
 import re
 
@@ -68,7 +68,8 @@ class MCTS(object):
 
                 move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
                 print(move, file=self.log_file)
-                move = move_regex.search(move).group(1)
+                if move is not None:
+                    move = move_regex.search(move).group(1)
             else:
                 move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",
                                         re.IGNORECASE)
@@ -76,7 +77,8 @@ class MCTS(object):
 
                 move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
                 print(move, file=self.log_file)
-                move = move_regex.search(move).group(1)
+                if move is not None:
+                    move = move_regex.search(move).group(1)
 
         return move
 
@@ -117,11 +119,11 @@ class NeuralNetsCombined():
             output.extend(predicted_moves)
         return output
 
-class NeuralNetsCombinedRNNInput():
+class NeuralNetsCombined_128():
 
     #initialize the Neural Net (Only works with combined net for now)
     def __init__(self):
-        self.sess, self.output_white, self.input_white, self.output_black, self.input_black= instantiate_session_both_RNN()
+        self.sess, self.output_white, self.input_white, self.output_black, self.input_black= instantiate_session_both_128()
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):
@@ -152,18 +154,11 @@ class NeuralNetsCombinedRNNInput():
             output.extend(predicted_moves)
         return output
 
-    def __enter__(self):
-        return self
-
-    #close the tensorflow session when we are done.
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.sess.close()
-
 class NeuralNet():
 
     #initialize the Neural Net (only 1 as of 03/10/2017)
     def __init__(self):
-        self.sess, self.output_white, self.input_black = instantiate_session()
+        self.sess, self.output, self.input = instantiate_session()
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):
@@ -179,7 +174,7 @@ class NeuralNet():
         inference_batches = batch_split_no_labels(board_representations, batch_size)
         output = []
         for batch in inference_batches:
-            predicted_moves = self.sess.run(self.output_white, feed_dict={self.input_black: batch})
+            predicted_moves = self.sess.run(self.output, feed_dict={self.input: batch})
             output.extend(predicted_moves)
         return output
 

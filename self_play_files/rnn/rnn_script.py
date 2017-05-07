@@ -21,6 +21,7 @@ import sys
 import multiprocessing
 def print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file_to_write):
     print("\nAdam Optimizer"
+          "\nHe std init"
           "\nNum Filters: {num_filters}"
           "\nNum Hidden Layers: {num_hidden}"
           "\nLearning Rate: {learning_rate}"
@@ -67,6 +68,7 @@ def build_dataset(words):
 def RNN(X, num_hidden_layers):
 
     # reshape to [1, n_input]
+    std_dev_He = np.sqrt(2 / np.prod(X.get_shape().as_list()[1:]))
     X = tf.reshape(X, [-1, sequence_length* 8*8])
 
 
@@ -77,7 +79,7 @@ def RNN(X, num_hidden_layers):
     # 1-layer LSTM with n_hidden units.
 
     # rnn_cell = rnn.BasicLSTMCell(n_hidden)
-    with tf.variable_scope('RNN', initializer=tf.contrib.layers.xavier_initializer()):
+    with tf.variable_scope('RNN', tf.random_normal_initializer(mean=0.0, stddev=std_dev_He)): #tf.random_normal_initializer(mean=0.0, stddev=std_dev_He) #initializer=tf.contrib.layers.xavier_initializer()
         # weights = {
         #     'out': tf.Variable(tf.random_normal([num_hidden, num_classes]))
         # }
@@ -91,12 +93,12 @@ def RNN(X, num_hidden_layers):
             initializer=tf.contrib.layers.xavier_initializer())
         biases = tf.get_variable(
             name='biases',
-            shape=[155],
+            shape=[num_classes],
             dtype=tf.float32,
-            initializer=tf.constant_initializer(0.1))
+            initializer=tf.constant_initializer(0.0))
         GRU_cell_layer = [rnn.GRUCell(num_hidden)]
-        LSTM_cell_layer = [rnn.BasicLSTMCell(num_hidden, forget_bias=1)]
-        rnn_cell = rnn.MultiRNNCell(LSTM_cell_layer * num_hidden_layers)
+        # LSTM_cell_layer = [rnn.BasicLSTMCell(num_hidden, forget_bias=1)]
+        rnn_cell = rnn.MultiRNNCell(GRU_cell_layer * num_hidden_layers)
         # generate prediction
         outputs, states = rnn.static_rnn(rnn_cell, X, dtype=tf.float32)
 
@@ -116,21 +118,21 @@ validation_examples, validation_labels = load_examples_and_labels(
     os.path.join(input_path, r'ValidationDataCNN'))
 
 
-for num_layers in [i for i in range(1, 10)
+for num_layers in [i for i in range(3, 4)
                    ]:
 
     for num_hidden in [
         # 128,
         # 256,
          512,
-         1024,
+         # 1024,
         # 2048,
         # 4096,
 
     ]:
         file = open(os.path.join(input_path,
                                  r'ExperimentLogs',
-                                 game_stage + 'CNN{n_filters}HiddenNeurons{num_hidden}LayersTF_CE__He_weightsPOE.txt'.format(
+                                 game_stage + '_CNNGRU_Stock{n_filters}HiddenNeurons{num_hidden}LayersTF_CE__He_weightsPOE.txt'.format(
                                      n_filters=num_hidden, num_hidden=num_layers)),
                     'a')
         print("# of Testing Examples: {}".format(len(validation_examples)), end='\n', file=file)
@@ -141,7 +143,8 @@ for num_layers in [i for i in range(1, 10)
             #                   0.0014, 0.0015
         ]:
             reset_default_graph()
-            batch_size = 128
+
+            batch_size = 2048 *(4-num_layers)
 
             num_classes = 155
             sequence_length = 40
@@ -163,7 +166,7 @@ for num_layers in [i for i in range(1, 10)
             y_pred = tf.nn.softmax(output_layer)
 
             # Loss and optimizer
-            # cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=y))
+            # cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=output_layer, labels=y))
 
             cost = tf.nn.softmax_cross_entropy_with_logits(logits=output_layer, labels=y)
 
@@ -204,7 +207,7 @@ for num_layers in [i for i in range(1, 10)
             # # And can inspect everything inside of it
             # pprint.pprint([op.name for op in g.get_operations()])
 
-            n_epochs = 100  # mess with this a bit
+            n_epochs = 10  # mess with this a bit
             done = False
 
             print_hyperparameters(learning_rate, batch_size, n_epochs, num_hidden, num_layers, file)
@@ -233,11 +236,11 @@ for num_layers in [i for i in range(1, 10)
 
                 # train model
                 for i in range(0, len(training_example_batches)):
-                    original = training_example_batches[0][1]
-                    npdebug = np.reshape(training_example_batches[0][1], [sequence_length* 8*8])
-                    npdebug_ = np.reshape(training_example_batches[0],[-1, sequence_length, 8*8])
-                    npdebug1 = np.split(npdebug_, sequence_length, 1)
-                    #
+                    # original = training_example_batches[0][1]
+                    # npdebug = np.reshape(training_example_batches[0][1], [sequence_length* 8*8])
+                    # npdebug_ = np.reshape(training_example_batches[0],[-1, sequence_length, 8*8])
+                    # npdebug1 = np.split(npdebug_, sequence_length, 1)
+                    # #
                     # debug = tf.reshape(training_example_batches[0][0], [-1, sequence_length*8*8])
                     # debug1 = tf.split(debug, sequence_length, 1)
                     _, acc, loss, onehot_pred = sess.run([optimizer, accuracy_function, cost, y_pred],
@@ -257,15 +260,22 @@ for num_layers in [i for i in range(1, 10)
                         print("Loss: {}".format(loss), end="\n", file=file)
                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file)
                         print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file)
-                        print('Interval {interval} of 10 Accuracy: {accuracy_score}'.format(
+                        print('Interval {interval} of 10 Test Accuracy: {accuracy_score}'.format(
                             interval=(i + 1) // (len(training_example_batches) // 10),
                             accuracy_score=accuracy_score), end="\n", file=file)
+                        print('Interval {interval} of 10 Train Accuracy: {accuracy_score}'.format(
+                            interval=(i + 1) // (len(training_example_batches) // 10),
+                            accuracy_score=acc), end="\n", file=file)
+
                         print("Loss: {}".format(loss))
                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))))
                         print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))))
-                        print('Interval {interval} of 10 Accuracy: {accuracy_score}'.format(
+                        print('Interval {interval} of 10 Test Accuracy: {accuracy_score}'.format(
                             interval=(i + 1) // (len(training_example_batches) // 10),
                             accuracy_score=accuracy_score))
+                        print('Interval {interval} of 10 Train Accuracy: {accuracy_score}'.format(
+                            interval=(i + 1) // (len(training_example_batches) // 10),
+                            accuracy_score=acc))
 
 
                         # show accuracy at end of epoch

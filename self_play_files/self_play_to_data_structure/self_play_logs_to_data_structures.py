@@ -164,7 +164,7 @@ def generate_board_states(move_list, player_color, win):
         if isinstance(move_list[i]['White'], dict):  # for self-play, this should always happen.
             if isinstance(move_list[i]['Black'], dict):  # if Black has a reply
                 black_transition_vector = utils.generate_transition_vector(move_list[i]['Black']['To'],
-                                                                     move_list[i]['Black']['From'], 'Black')
+                                                                           move_list[i]['Black']['From'], 'Black')
                 # can't put black move block in here as it would execute before white's move
             else:  # no black move => white won 
                 black_transition_vector = [0] * 154 + [1]
@@ -181,7 +181,7 @@ def generate_board_states(move_list, player_color, win):
                 white_transition_vector = [0] * 154 + [1]  # no white move from the next generated state
             else:
                 white_transition_vector = utils.generate_transition_vector(move_list[i + 1]['White']['To'],
-                                                                   move_list[i + 1]['White']['From'], 'White')
+                                                                           move_list[i + 1]['White']['From'], 'White')
             state = [
                 move_piece(state[0], move_list[i]['Black']['To'], move_list[i]['Black']['From'], whose_move='Black'),
                 win,
@@ -231,7 +231,7 @@ def convert_board_to_1d_array_WBPOEWmBm(board_state, player_color):
                      utils.generate_binary_vector(state, player_color, what_to_filter='Player'),  # [2] player
                      utils.generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [3] opponent
                      utils.generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [4] empty
-                     white_move_flag,# [5] flag indicating if the transition came from a white move
+                     white_move_flag,  # [5] flag indicating if the transition came from a white move
                      black_move_flag,
                      utils.generate_binary_vector(state, player_color, what_to_filter='Bias')]
     for i in range(0, 64):  # error checking block
@@ -304,7 +304,7 @@ def convert_board_to_1d_array_POEMfMtCfCtPnOnEnCmB(board_state, player_color, PO
     one_hot_board = [utils.generate_binary_vector(state, player_color, what_to_filter='Player'),  # [0] player
                      utils.generate_binary_vector(state, player_color, what_to_filter='Opponent'),  # [1] opponent
                      utils.generate_binary_vector(state, player_color, what_to_filter='Empty'),  # [2] empty
-                     utils.generate_binary_vector(board_with_moves, player_color,  what_to_filter='Moves From'),  # [3]
+                     utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Moves From'),  # [3]
                      utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Moves To'),  # [4]
                      utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures From'),  # [5]
                      utils.generate_binary_vector(board_with_moves, player_color, what_to_filter='Captures To'),  # [6]

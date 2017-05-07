@@ -12,8 +12,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 501
   time_to_think = 10
   depth_limit = 5
-  date = r'04272017'
-  file_designator = '_OldNets__FULLDEPTHFracPP_WidenpruningTesting_mostVisited_'
+  date = r'05072017'
+  file_designator = '__128Nets_EOG50__3xUCT_NNWR_threshold_2or10_reexpandCont_initTLPP_PruningEOG'
   #BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'
@@ -32,8 +32,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   Windows_path = r'G:\TruncatedLogs\PythonDatasets\10ttt'
   OSX_path = r'/Users/TeofiloZosa/BreakthroughData/03122017SelfPlay'
   path = Windows_path
-  white_player = wanderer
-  black_opponent = EBFS_MCTS
+  white_player = EBFS_MCTS
+  black_opponent = wanderer
   # root = None
 
   # # input_file = open(
@@ -77,14 +77,16 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
                                                                                                  time_to_think=time_to_think)),
                                        'a')
             winner_color =   breakthrough_player.play_game_vs_wanderer(white_player, black_opponent, depth_limit, time_to_think, gameplay_file, MCTS_logging_file, root, i)
-
-            if winner_color == 'White':
-              white_wins += 1
+            if winner_color is not None:
+                if winner_color == 'White':
+                  white_wins += 1
+                else:
+                  black_wins += 1
+                print("Game {game}  White Wins: {white_wins}    Black Wins: {black_wins}".format(
+                    game=i+1, white_wins=white_wins, black_wins=black_wins ), file=gameplay_file)
+                print("game ended")
             else:
-              black_wins += 1
-            print("Game {game}  White Wins: {white_wins}    Black Wins: {black_wins}".format(
-                game=i+1, white_wins=white_wins, black_wins=black_wins ), file=gameplay_file)
-            print("game ended")
+                print("Error: Wanderer didn't open properly", file=gameplay_file)
 
             gameplay_file.close()
             MCTS_logging_file.close()

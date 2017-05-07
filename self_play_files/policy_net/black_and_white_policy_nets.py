@@ -19,7 +19,7 @@ from PIL import Image
 import random
 from tensorflow.python.framework.ops import reset_default_graph
 from tensorflow.contrib import rnn
-import sys
+from sys import stdout
 import multiprocessing
 
 # from Breakthrough_Player.policy_net_utils import instantiate_session_both_RNN
@@ -154,9 +154,14 @@ def load_examples_and_labels(path):
 
 def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name=None, activation=tf.nn.relu,
                       reuse=None):
+
     # of filters in each layer ranged from 64-192
     std_dev_He = np.sqrt(2 / np.prod(prev_layer.get_shape().as_list()[1:]))
     with tf.variable_scope(name or 'hidden_layer', reuse=reuse):
+        if name == "hidden_layer/1":
+            # paddings = [[0, 0], [4, 4], [4, 4], [0, 0]]
+            # tf.pad(prev_layer, paddings, "CONSTANT")
+            filter_size = 5
         kernel = tf.get_variable(name='weights',
                                  shape=[filter_size, filter_size,  # h x w
                                         n_filters_in,
@@ -262,18 +267,19 @@ def compute_accuracy(examples, labels, X, y, accuracy_function, merged, test_wri
     return accuracy_score
 
 
-def train_model(examples, labels, X, y, optimizer, merged, train_writer, batch):
+def train_model(examples, labels, X, y, optimizer, accuracy_function, merged, train_writer, batch):
     if merged is not None:
-        summary, _ = sess.run([merged, optimizer], feed_dict={
+        summary, _, acc = sess.run([merged, optimizer, accuracy_function], feed_dict={
             X: examples,
             y: labels
         })
         train_writer.add_summary(summary, batch)
     else:
-        sess.run([optimizer], feed_dict={
+        _, acc = sess.run([optimizer, accuracy_function], feed_dict={
             X: examples,
             y: labels
         })
+    return acc
 
 
 def variable_summaries(var):
@@ -412,7 +418,53 @@ def print_partition_statistics(examples, labels, X, y, partition, accuracy_funct
     print_partition_accuracy_statistics(examples, labels, X, y, partition, accuracy_function, file)
     # print_prediction_statistics(examples, labels, file)
 
+def print_statistics_WHITE():
+    print_partition_statistics(test_examples_WHITE, test_labels_WHITE, X_WHITE, y_WHITE, net_type,
+                                           accuracy_function_WHITE, file_WHITE)
+    print_prediction_statistics(test_examples_WHITE, test_labels_WHITE, y_pred_WHITE, X_WHITE, file_WHITE)
 
+    # partition i
+    print_partition_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i, X_WHITE,
+                               y_WHITE, partition_i, accuracy_function_WHITE, file_WHITE)
+    print_prediction_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i,
+                                y_pred_WHITE, X_WHITE, file_WHITE)
+
+    # partition j
+    print_partition_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j, X_WHITE,
+                               y_WHITE, partition_j, accuracy_function_WHITE, file_WHITE)
+    print_prediction_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j,
+                                y_pred_WHITE, X_WHITE, file_WHITE)
+
+    # partition k (only for full policy net)
+    if (net_type == 'Full'):
+        print_partition_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
+                                   X_WHITE, y_WHITE, partition_k, accuracy_function_WHITE, file_WHITE)
+        print_prediction_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
+                                    y_pred_WHITE, X_WHITE, file_WHITE)
+
+def print_statistics_BLACK():
+    print_partition_statistics(test_examples_BLACK, test_labels_BLACK, X_BLACK, y_BLACK, net_type,
+                               accuracy_function_BLACK, file_BLACK)
+    print_prediction_statistics(test_examples_BLACK, test_labels_BLACK, y_pred_BLACK, X_BLACK, file_BLACK)
+
+    # partition i
+    print_partition_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i, X_BLACK,
+                               y_BLACK, partition_i, accuracy_function_BLACK, file_BLACK)
+    print_prediction_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i,
+                                y_pred_BLACK, X_BLACK, file_BLACK)
+
+    # partition j
+    print_partition_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j, X_BLACK,
+                               y_BLACK, partition_j, accuracy_function_BLACK, file_BLACK)
+    print_prediction_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j,
+                                y_pred_BLACK, X_BLACK, file_BLACK)
+
+    # partition k (only for full policy net)
+    if (net_type == 'Full'):
+        print_partition_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
+                                   X_BLACK, y_BLACK, partition_k, accuracy_function_BLACK, file_BLACK)
+        print_prediction_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
+                                    y_pred_BLACK, X_BLACK, file_BLACK)
 # TODO: excise code to be run in main script.
 
 # main script
@@ -435,6 +487,8 @@ validation_examples_BLACK, validation_labels_BLACK = load_examples_and_labels(os
 if (net_type == 'Start'):
     partition_i = 'Mid'
     partition_j = 'End'
+    partition_k = None
+
     WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i = load_examples_and_labels(
         os.path.join(input_path_WHITE, r'TestDataMid'))  # 210659 states
     WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j = load_examples_and_labels(
@@ -447,6 +501,8 @@ if (net_type == 'Start'):
 elif (net_type == 'Mid'):
     partition_i = 'Start'
     partition_j = 'End'
+    partition_k = None
+
     WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i = load_examples_and_labels(
         os.path.join(input_path_WHITE, r'TestDataStart'))  # 210659 states
     WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j = load_examples_and_labels(
@@ -459,6 +515,8 @@ elif (net_type == 'Mid'):
 elif (net_type == 'End'):
     partition_i = 'Start'
     partition_j = 'Mid'
+    partition_k = None
+
     WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i = load_examples_and_labels(
         os.path.join(input_path_WHITE, r'TestDataStart'))  # 210659 states
     WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j = load_examples_and_labels(
@@ -486,904 +544,382 @@ else:
     BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k = load_examples_and_labels(
         os.path.join(input_path_BLACK, r'TestDataEnd'))
 
-# file = open(os.path.join(input_path,
-#                          r'ExperimentLogs',
-#                          game_stage + '03222017192Filters4and7LayersTF_CE__He_weightsPOE.txt'), 'a')
-# file = sys.stdout
-# print ("# of Testing Examples: {}".format(len(testing_examples_partition_i)), end='\n', file=file)
 
-# for num_hidden in [i for i in [4]
-#                    # range(1,10)
-#                    ]:
-#
-#     file_BLACK = open(os.path.join(input_path_BLACK,
-#                                    r'ExperimentLogs',
-#                                    game_stage + 'BLACK192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(
-#                                        num_hidden)), 'a')
-#
-#     print("# of Testing Examples: {}".format(len(BLACK_testing_examples_partition_i)), end='\n', file=file_BLACK)
-#     for n_filters in [
-#         #  64,
-#         # 128,
-#         192,
-#         # 256,
-#         # 512
-#     ]:
-#         for learning_rate in [
-#             0.001,
-#             # 0.0011,
-#             # 0.0012, 0.0013,
-#             #                   0.0014, 0.0015
-#         ]:
-#             reset_default_graph()
-#             batch_size = 128
-#
-#             filter_size = 3  # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
-#
-#             # TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
-#             # TODO: dropout? regularizers? different combinations of weight initialization, cost func, num_hidden, etc.
-#             # Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
-#             # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
-#             # "...same size for all layers worked generally better or the same as..."
-#             # num_hidden = 11
-#             n_filters_out = [n_filters] * num_hidden + [
-#                 1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
-#             n_layers = len(n_filters_out)
-#
-#
-#             with tf.variable_scope('black_net', reuse=False):
-#
-#                 # build graph
-#                 X_BLACK = tf.placeholder(tf.float32, [None, 8, 8, 4])
-#                 # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
-#                 y_BLACK = tf.placeholder(tf.float32, [None, 155])
-#
-#                 # input layer
-#                 h_layers_BLACK = [
-#                     hidden_layer_init(X_BLACK, X_BLACK.get_shape()[-1],  # n_filters in == n_feature_planes
-#                                       n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
-#                 # hidden layers
-#                 for i in range(0, n_layers - 1):
-#                     h_layers_BLACK.append(
-#                         hidden_layer_init(h_layers_BLACK[i], n_filters_out[i], n_filters_out[i + 1], filter_size,
-#                                           name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
-#
-#                 # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
-#                 outer_layer_BLACK, _ = output_layer_init(h_layers_BLACK[-1], reuse=None)
-#                 # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-#                 y_pred_BLACK = tf.nn.softmax(outer_layer_BLACK)
-#
-#                 # tf's internal softmax; else, put softmax back in output layer
-#                 # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-#                 cost_BLACK = loss_init(outer_layer_BLACK, y_BLACK)
-#
-#                 # # alternative implementation
-#                 # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-#
-#                 # kadenze cross_entropy cost function
-#                 # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-#
-#
-#                 # way better performance
-#                 optimizer_BLACK = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_BLACK)
-#
-#                 # SGD used in AlphaGO
-#                 # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-#                 with tf.name_scope('accuracy'):
-#                     correct_prediction_BLACK = tf.equal(tf.argmax(y_pred_BLACK, 1), tf.argmax(y_BLACK, 1))
-#                     accuracy_function_BLACK = tf.reduce_mean(tf.cast(correct_prediction_BLACK, 'float'))
-#                     # tf.summary.scalar('accuracy', accuracy_function_BLACK)
-#
-#             # save the model
-#             saver = tf.train.Saver()
-#
-#             NUM_CORES = multiprocessing.cpu_count()
-#             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
-#                                                     intra_op_parallelism_threads=NUM_CORES))
-#
-#             # tensorboard summaries
-#             # merged = tf.summary.merge_all()
-#             merged = None
-#             train_writer = None
-#             test_writer = None
-#             # train_writer = tf.summary.FileWriter(os.path.join(input_path_WHITE,
-#             #                                                   r'ExperimentLogs', 'trainingSummaries',
-#             #                                                   str(num_hidden) + '_' + str(n_filters)),
-#             #                                      sess.graph)
-#             # test_writer = tf.summary.FileWriter(os.path.join(input_path_WHITE,
-#             #                                                  r'ExperimentLogs', 'testingSummaries',
-#             #                                                  str(num_hidden) + '_' + str(n_filters)))
-#
-#             sess.run(tf.global_variables_initializer())
-#
-#             # # We first get the graph that we used to compute the network
-#             # g = tf.get_default_graph()
-#             #
-#             # # And can inspect everything inside of it
-#             # pprint.pprint([op.name for op in g.get_operations()])
-#
-#             n_epochs = 5  # mess with this a bit
-#
-#             print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file_BLACK)
-#
-#             valid_examples_BLACK, test_examples_BLACK, valid_labels_BLACK, test_labels_BLACK = model_selection.train_test_split(
-#                 validation_examples_BLACK, validation_labels_BLACK, test_size=0.5, random_state=random.randint(1, 1024))
-#
-#             for epoch_i in range(n_epochs):
-#
-#
-#                 # BLACK
-#                 # reshuffle training set at each epoch
-#                 training_examples_BLACK, training_labels_BLACK = shuffle(training_examples_BLACK, training_labels_BLACK,
-#                                                                          random_state=random.randint(1, 1024))
-#
-#                 # split training examples into batches
-#                 training_example_batches_BLACK, training_label_batches_BLACK = utils.batch_split(
-#                     training_examples_BLACK, training_labels_BLACK,
-#                     batch_size)
-#
-#                 # BLACK
-#                 startTime = time.time()  # start timer
-#
-#                 for i in range(0, len(training_example_batches_BLACK)):
-#                     train_model(training_example_batches_BLACK[i], training_label_batches_BLACK[i], X_BLACK, y_BLACK,
-#                                 optimizer_BLACK, merged,
-#                                 train_writer,
-#                                 (epoch_i * len(training_example_batches_BLACK)) + i)
-#
-#                     # show stats at every 1/10th interval of epoch
-#                     if (i + 1) % (len(training_example_batches_BLACK) // 10) == 0:
-#                         loss = sess.run(cost_BLACK, feed_dict={
-#                             X_BLACK: training_example_batches_BLACK[i],
-#                             y_BLACK: training_label_batches_BLACK[i]
-#                         })
-#
-#                         accuracy_score = compute_accuracy(valid_examples_BLACK, valid_labels_BLACK, X_BLACK, y_BLACK,
-#                                                           accuracy_function_BLACK,
-#                                                           merged,
-#                                                           test_writer,
-#                                                           (epoch_i * len(training_example_batches_BLACK)) + i)
-#
-#                         print("Loss: {}".format(loss), end="\n", file=file_BLACK)
-#                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file_BLACK)
-#                         print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file_BLACK)
-#                         print('Interval {interval} of 10 Accuracy: {accuracy_score}'.format(
-#                             interval=(i + 1) // (len(training_example_batches_BLACK) // 10),
-#                             accuracy_score=accuracy_score), end="\n", file=file_BLACK)
-#
-#
-#                         # show accuracy at end of epoch
-#                 accuracy_score = compute_accuracy(valid_examples_BLACK, valid_labels_BLACK, X_BLACK, y_BLACK,
-#                                                   accuracy_function_BLACK, merged,
-#                                                   test_writer,
-#                                                   (epoch_i * len(training_example_batches_BLACK)) + len(
-#                                                       training_example_batches_BLACK) - 1)
-#                 print('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
-#                     epoch_num=epoch_i + 1,
-#                     accuracy_score=accuracy_score), end="\n", file=file_BLACK)
-#
-#                 # show example of what network is predicting vs the move oracle
-#                 # print_prediction_statistics(valid_examples_BLACK, valid_labels_BLACK, y_pred_BLACK, X_BLACK, file_BLACK)
-#                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n",
-#                       file=file_BLACK)
-#
-#                 # Print final test accuracy:
-#
-#
-#                 # BLACK
-#             # this partition
-#             print_partition_statistics(test_examples_BLACK, test_labels_BLACK, X_BLACK, y_BLACK, net_type,
-#                                        accuracy_function_BLACK, file_BLACK)
-#             print_prediction_statistics(test_examples_BLACK, test_labels_BLACK, y_pred_BLACK, X_BLACK, file_BLACK)
-#
-#             # partition i
-#             print_partition_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i, X_BLACK,
-#                                        y_BLACK, partition_i, accuracy_function_BLACK, file_BLACK)
-#             print_prediction_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i,
-#                                         y_pred_BLACK, X_BLACK, file_BLACK)
-#
-#             # partition j
-#             print_partition_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j, X_BLACK,
-#                                        y_BLACK, partition_j, accuracy_function_BLACK, file_BLACK)
-#             print_prediction_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j,
-#                                         y_pred_BLACK, X_BLACK, file_BLACK)
-#
-#             # partition k (only for full policy net)
-#             if (net_type == 'Full'):
-#                 print_partition_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
-#                                            X_BLACK, y_BLACK, partition_k, accuracy_function_BLACK, file_BLACK)
-#                 print_prediction_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
-#                                             y_pred_BLACK, X_BLACK, file_BLACK)
-#
-#             # save the model now
-#             save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', str(num_hidden), 'BLACK_Policy_Net'))
-#
-#             sess.close()
-#     file_BLACK.close()
-#
-# exit(1)
-# for num_hidden in [i for i in [4]
-#                    # range(1,10)
-#                    ]:
-#     file_WHITE = open(os.path.join(input_path_WHITE,
-#                                    r'ExperimentLogs',
-#                                    game_stage + 'WHITE192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)),
-#                       'a')
-#
-#
-#     print("# of Testing Examples: {}".format(len(WHITE_testing_examples_partition_i)), end='\n', file=file_WHITE)
-#     for n_filters in [
-#         #  64,
-#         # 128,
-#         192,
-#         # 256,
-#         # 512
-#     ]:
-#         for learning_rate in [
-#             0.001,
-#             # 0.0011,
-#             # 0.0012, 0.0013,
-#             #                   0.0014, 0.0015
-#         ]:
-#             reset_default_graph()
-#             batch_size = 128
-#
-#             filter_size = 3  # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
-#
-#             # TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
-#             # TODO: dropout? regularizers? different combinations of weight initialization, cost func, num_hidden, etc.
-#             # Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
-#             # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
-#             # "...same size for all layers worked generally better or the same as..."
-#             # num_hidden = 11
-#             n_filters_out = [n_filters] * num_hidden + [
-#                 1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
-#             n_layers = len(n_filters_out)
-#
-#             with tf.variable_scope('white_net', reuse=False):
-#
-#                 # build graph
-#                 X_WHITE = tf.placeholder(tf.float32, [None, 8, 8, 4])
-#                 # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
-#                 y_WHITE = tf.placeholder(tf.float32, [None, 155])
-#
-#                 # input layer
-#                 h_layers_WHITE = [
-#                     hidden_layer_init(X_WHITE, X_WHITE.get_shape()[-1],  # n_filters in == n_feature_planes
-#                                       n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
-#                 # hidden layers
-#                 for i in range(0, n_layers - 1):
-#                     h_layers_WHITE.append(
-#                         hidden_layer_init(h_layers_WHITE[i], n_filters_out[i], n_filters_out[i + 1], filter_size,
-#                                           name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
-#
-#                 # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
-#                 outer_layer_WHITE, _ = output_layer_init(h_layers_WHITE[-1], reuse=None)
-#                 # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-#                 y_pred_WHITE = tf.nn.softmax(outer_layer_WHITE)
-#
-#                 # tf's internal softmax; else, put softmax back in output layer
-#                 # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-#                 cost_WHITE = loss_init(outer_layer_WHITE, y_WHITE)
-#
-#                 # # alternative implementation
-#                 # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-#
-#                 # kadenze cross_entropy cost function
-#                 # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-#
-#
-#                 # way better performance
-#                 optimizer_WHITE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_WHITE)
-#
-#                 # SGD used in AlphaGO
-#                 # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-#                 with tf.name_scope('accuracy'):
-#                     correct_prediction_WHITE = tf.equal(tf.argmax(y_pred_WHITE, 1), tf.argmax(y_WHITE, 1))
-#                     accuracy_function_WHITE = tf.reduce_mean(tf.cast(correct_prediction_WHITE, 'float'))
-#                     # tf.summary.scalar('accuracy', accuracy_function_WHITE)
-#
-#
-#             # save the model
-#             saver = tf.train.Saver()
-#
-#             NUM_CORES = multiprocessing.cpu_count()
-#             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
-#                                                     intra_op_parallelism_threads=NUM_CORES))
-#
-#             # tensorboard summaries
-#             # merged = tf.summary.merge_all()
-#             merged = None
-#             train_writer = None
-#             test_writer = None
-#             # train_writer = tf.summary.FileWriter(os.path.join(input_path_WHITE,
-#             #                                                   r'ExperimentLogs', 'trainingSummaries',
-#             #                                                   str(num_hidden) + '_' + str(n_filters)),
-#             #                                      sess.graph)
-#             # test_writer = tf.summary.FileWriter(os.path.join(input_path_WHITE,
-#             #                                                  r'ExperimentLogs', 'testingSummaries',
-#             #                                                  str(num_hidden) + '_' + str(n_filters)))
-#
-#             sess.run(tf.global_variables_initializer())
-#
-#             # # We first get the graph that we used to compute the network
-#             # g = tf.get_default_graph()
-#             #
-#             # # And can inspect everything inside of it
-#             # pprint.pprint([op.name for op in g.get_operations()])
-#
-#             n_epochs = 5  # mess with this a bit
-#
-#             print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file_WHITE)
-#
-#             # split into testing and validation sets
-#             valid_examples_WHITE, test_examples_WHITE, valid_labels_WHITE, test_labels_WHITE = model_selection.train_test_split(
-#                 validation_examples_WHITE, validation_labels_WHITE, test_size=0.5, random_state=random.randint(1, 1024))
-#
-#
-#             for epoch_i in range(n_epochs):
-#                 # WHITE
-#                 # reshuffle training set at each epoch
-#                 training_examples_WHITE, training_labels_WHITE = shuffle(training_examples_WHITE, training_labels_WHITE,
-#                                                                          random_state=random.randint(1, 1024))
-#
-#                 # split training examples into batches
-#                 training_example_batches_WHITE, training_label_batches_WHITE = utils.batch_split(
-#                     training_examples_WHITE, training_labels_WHITE,
-#                     batch_size)
-#
-#
-#
-#                 # WHITE
-#
-#                 startTime = time.time()  # start timer
-#
-#                 # train model
-#                 for i in range(0, len(training_example_batches_WHITE)):
-#                     train_model(training_example_batches_WHITE[i], training_label_batches_WHITE[i], X_WHITE, y_WHITE,
-#                                 optimizer_WHITE, merged, train_writer,
-#                                 (epoch_i * len(training_example_batches_WHITE)) + i)
-#
-#                     # show stats at every 1/10th interval of epoch
-#                     if (i + 1) % (len(training_example_batches_WHITE) // 10) == 0:
-#                         loss = sess.run(cost_WHITE, feed_dict={
-#                             X_WHITE: training_example_batches_WHITE[i],
-#                             y_WHITE: training_label_batches_WHITE[i]
-#                         })
-#
-#                         accuracy_score = compute_accuracy(valid_examples_WHITE, valid_labels_WHITE, X_WHITE, y_WHITE,
-#                                                           accuracy_function_WHITE, merged,
-#                                                           test_writer,
-#                                                           (epoch_i * len(training_example_batches_WHITE)) + i)
-#
-#                         print("Loss: {}".format(loss), end="\n", file=file_WHITE)
-#                         print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss))), end="\n", file=file_WHITE)
-#                         print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss))), end="\n", file=file_WHITE)
-#                         print('Interval {interval} of 10 Accuracy: {accuracy_score}'.format(
-#                             interval=(i + 1) // (len(training_example_batches_WHITE) // 10),
-#                             accuracy_score=accuracy_score), end="\n", file=file_WHITE)
-#
-#
-#                         # show accuracy at end of epoch
-#                 accuracy_score = compute_accuracy(valid_examples_WHITE, valid_labels_WHITE, X_WHITE, y_WHITE,
-#                                                   accuracy_function_WHITE, merged, test_writer,
-#                                                   (epoch_i * len(training_example_batches_WHITE)) + len(
-#                                                       training_example_batches_WHITE) - 1)
-#                 print('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
-#                     epoch_num=epoch_i + 1,
-#                     accuracy_score=accuracy_score), end="\n", file=file_WHITE)
-#
-#                 # show example of what network is predicting vs the move oracle
-#                 # print_prediction_statistics(valid_examples_WHITE, valid_labels_WHITE,  y_pred_WHITE, X_WHITE, file_WHITE)
-#                 print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n",
-#                       file=file_WHITE)
-#
-#                 # Print final test accuracy:
-#                 # WHITE
-#             # this partition
-#             print_partition_statistics(test_examples_WHITE, test_labels_WHITE, X_WHITE, y_WHITE, net_type,
-#                                        accuracy_function_WHITE, file_WHITE)
-#             print_prediction_statistics(test_examples_WHITE, test_labels_WHITE, y_pred_WHITE, X_WHITE, file_WHITE)
-#
-#             # partition i
-#             print_partition_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i, X_WHITE,
-#                                        y_WHITE, partition_i, accuracy_function_WHITE, file_WHITE)
-#             print_prediction_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i,
-#                                         y_pred_WHITE, X_WHITE, file_WHITE)
-#
-#             # partition j
-#             print_partition_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j, X_WHITE,
-#                                        y_WHITE, partition_j, accuracy_function_WHITE, file_WHITE)
-#             print_prediction_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j,
-#                                         y_pred_WHITE, X_WHITE, file_WHITE)
-#
-#             # partition k (only for full policy net)
-#             if (net_type == 'Full'):
-#                 print_partition_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
-#                                            X_WHITE, y_WHITE, partition_k, accuracy_function_WHITE, file_WHITE)
-#                 print_prediction_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
-#                                             y_pred_WHITE, X_WHITE, file_WHITE)
-#
-#
-#
-#             # save the model now
-#             save_path = saver.save(sess, os.path.join(input_path_WHITE, r'model', str(num_hidden), 'WHITE_Policy_Net'))
-#
-#             sess.close()
-#     file_WHITE.close()
-
-for num_hidden in [i for i in [4, 9]
-                   # range(1,10)
+for num_hidden in [i for i in range(4,10)#[1, 9]
+                   #
                    ]:
-    file_WHITE = open(os.path.join(input_path_WHITE,
-                                   r'ExperimentLogs',
-                                   game_stage + '_0427WHITE192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(num_hidden)),
-                      'a')
 
-    file_BLACK = open(os.path.join(input_path_WHITE,
-                                   r'ExperimentLogs',
-                                   game_stage + '_0427BLACK192Filters{}LayersTF_CE__He_weightsPOE.txt'.format(
-                                       num_hidden)), 'a')
 
-    print("# of Testing Examples: {}".format(len(WHITE_testing_examples_partition_i)), end='\n', file=file_WHITE)
     for n_filters in [
         #  64,
-        # 128,
-        192,
+        128,
+        # 192,
         # 256,
         # 512
     ]:
+
+        file_WHITE = open(os.path.join(input_path_WHITE,
+                                       r'ExperimentLogs',
+                                       game_stage + '_0506WHITE_5then3_{num_filters}And1x1Filters{num_layers}LayersTF_CE__He_weightsPOE.txt'.format(num_filters=n_filters,num_layers=num_hidden)),
+                          'a')
+
+        file_BLACK = open(os.path.join(input_path_WHITE,
+                                       r'ExperimentLogs',
+                                       game_stage + '_0506BLACK_5then3_{num_filters}FiltersAnd1x1{num_layers}LayersTF_CE__He_weightsPOE.txt'.format(
+                                           num_filters=n_filters,num_layers=num_hidden)), 'a')
+        print("# of Training Examples: {}".format(len(training_examples_WHITE)), end='\n', file=file_WHITE)
+        print("# of Testing Examples: {}".format(len(validation_examples_WHITE)), end='\n', file=file_WHITE)
+        print("# of Training Examples: {}".format(len(training_examples_BLACK)), end='\n', file=file_BLACK)
+        print("# of Testing Examples: {}".format(len(validation_examples_BLACK)), end='\n', file=file_BLACK)
+
+
         for learning_rate in [
             0.001,
             # 0.0011,
             # 0.0012, 0.0013,
             #                   0.0014, 0.0015
         ]:
-            reset_default_graph()
-            batch_size = 128
+            
+            restart = True
+            while restart:
+                reset_default_graph()
+                batch_size = 128# 512 *(9-num_hidden)
+
+                filter_size = 3 # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
+
+                # TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
+                # TODO: dropout? regularizers? different combinations of weight initialization, cost func, num_hidden, etc.
+                # Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
+                # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
+                # "...same size for all layers worked generally better or the same as..."
+                # num_hidden = 11
+                n_filters_out = [n_filters] * num_hidden + [1]
+                # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
+                n_layers = len(n_filters_out)
+                filter_sizes = [filter_size]*num_hidden + [1]
+
+
+                with tf.variable_scope('white_net', reuse=False):
+
+                    # build graph
+                    X_WHITE = tf.placeholder(tf.float32, [None, 8, 8, 4])
+                    # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
+                    y_WHITE = tf.placeholder(tf.float32, [None, 155])
 
-            filter_size = 3 # AlphaGo used 5x5 followed by 3x3, but Go is 19x19 whereas breakthrough is 8x8 => 3x3 filters seems reasonable
+                    # paddings = [[0,0],[2, 2], [2, 2], [0, 0] ]
+                    # X_WHITE = tf.pad(X_WHITE, paddings, "CONSTANT")
+                    # input layer
+                    h_layers_WHITE = [
+                        hidden_layer_init(X_WHITE, X_WHITE.get_shape()[-1],  # n_filters in == n_feature_planes
+                                          n_filters_out[0], filter_sizes[0], name='hidden_layer/1', reuse=None)]
+                    # hidden layers
+                    for i in range(0, n_layers - 1):
+                        h_layers_WHITE.append(
+                            hidden_layer_init(h_layers_WHITE[i], n_filters_out[i], n_filters_out[i + 1], filter_sizes[i+1],
+                                              name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
 
-            # TODO: consider doing a grid search type experiment where n_filters = rand_val in [2**i for i in range(0,8)]
-            # TODO: dropout? regularizers? different combinations of weight initialization, cost func, num_hidden, etc.
-            # Yoshua Bengio: "Because of early stopping and possible regularizers, it is mostly important to choose n sub h large enough.
-            # Larger than optimal values typically do not hurt generalization performance much, but of course they require proportionally more computation..."
-            # "...same size for all layers worked generally better or the same as..."
-            # num_hidden = 11
-            n_filters_out = [n_filters] * num_hidden + [
-                1]  # " # of filters in each layer ranged from 64-192; layer prior to softmax was # filters = # num_softmaxes
-            n_layers = len(n_filters_out)
+                    # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
+                    outer_layer_WHITE, _ = output_layer_init(h_layers_WHITE[-1], reuse=None)
+                    # outer_layer_WHITE = RNN(h_layers_WHITE[-1], 1)
 
+                    # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
+                    y_pred_WHITE = tf.nn.softmax(outer_layer_WHITE)
+
+                    # tf's internal softmax; else, put softmax back in output layer
+                    # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+                    cost_WHITE = loss_init(outer_layer_WHITE, y_WHITE)
 
-            with tf.variable_scope('white_net', reuse=False):
-
-                # build graph
-                X_WHITE = tf.placeholder(tf.float32, [None, 8, 8, 4])
-                # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
-                y_WHITE = tf.placeholder(tf.float32, [None, 155])
-
-                # input layer
-                h_layers_WHITE = [
-                    hidden_layer_init(X_WHITE, X_WHITE.get_shape()[-1],  # n_filters in == n_feature_planes
-                                      n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
-                # hidden layers
-                for i in range(0, n_layers - 1):
-                    h_layers_WHITE.append(
-                        hidden_layer_init(h_layers_WHITE[i], n_filters_out[i], n_filters_out[i + 1], filter_size,
-                                          name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
-
-                # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
-                outer_layer_WHITE, _ = output_layer_init(h_layers_WHITE[-1], reuse=None)
-                # outer_layer_WHITE = RNN(h_layers_WHITE[-1], 1)
-
-                # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-                y_pred_WHITE = tf.nn.softmax(outer_layer_WHITE)
-
-                # tf's internal softmax; else, put softmax back in output layer
-                # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-                cost_WHITE = loss_init(outer_layer_WHITE, y_WHITE)
-
-                # # alternative implementation
-                # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-
-                # kadenze cross_entropy cost function
-                # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-
-
-                # way better performance
-                optimizer_WHITE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_WHITE)
-
-                # SGD used in AlphaGO
-                # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-                with tf.name_scope('accuracy'):
-                    correct_prediction_WHITE = tf.equal(tf.argmax(y_pred_WHITE, 1), tf.argmax(y_WHITE, 1))
-                    accuracy_function_WHITE = tf.reduce_mean(tf.cast(correct_prediction_WHITE, 'float'))
-                    # tf.summary.scalar('accuracy', accuracy_function_WHITE)
-
-            with tf.variable_scope('black_net', reuse=False):
-
-                # build graph
-                X_BLACK = tf.placeholder(tf.float32, [None, 8, 8, 4])
-                # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
-                y_BLACK = tf.placeholder(tf.float32, [None, 155])
-
-                # input layer
-                h_layers_BLACK = [
-                    hidden_layer_init(X_BLACK, X_BLACK.get_shape()[-1],  # n_filters in == n_feature_planes
-                                      n_filters_out[0], filter_size, name='hidden_layer/1', reuse=None)]
-                # hidden layers
-                for i in range(0, n_layers - 1):
-                    h_layers_BLACK.append(
-                        hidden_layer_init(h_layers_BLACK[i], n_filters_out[i], n_filters_out[i + 1], filter_size,
-                                          name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
-
-                # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
-                outer_layer_BLACK, _ = output_layer_init(h_layers_BLACK[-1], reuse=None)
-
-
-                # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-                y_pred_BLACK = tf.nn.softmax(outer_layer_BLACK)
-
-                # tf's internal softmax; else, put softmax back in output layer
-                # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-                cost_BLACK = loss_init(outer_layer_BLACK, y_BLACK)
-
-                # # alternative implementation
-                # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-
-                # kadenze cross_entropy cost function
-                # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-
-
-                # way better performance
-                optimizer_BLACK = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_BLACK)
-
-                # SGD used in AlphaGO
-                # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-                with tf.name_scope('accuracy'):
-                    correct_prediction_BLACK = tf.equal(tf.argmax(y_pred_BLACK, 1), tf.argmax(y_BLACK, 1))
-                    accuracy_function_BLACK = tf.reduce_mean(tf.cast(correct_prediction_BLACK, 'float'))
-                    # tf.summary.scalar('accuracy', accuracy_function_BLACK)
-
-            # save the model
-            saver = tf.train.Saver()
-
-            NUM_CORES = multiprocessing.cpu_count()
-            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
-                                                    intra_op_parallelism_threads=NUM_CORES))
-
-            # path = os.path.join(r'..', r'..', r'policy_net_model', r'DualWinningNets065Accuracy',
-            #                     r'DualWinningNets065Accuracy')
-            # #
-            # saver.restore(sess, path)
-            #
-            # num_layers_rnn = 3
-            # num_hidden_rnn = 512
-            # with tf.variable_scope('white_net_RNN', reuse=False):
-            #
-            #     outer_layer_WHITE = RNN(h_layers_WHITE[-1], num_layers_rnn, num_hidden_rnn)
-            #
-            #     # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-            #     y_pred_WHITE = tf.nn.softmax(outer_layer_WHITE)
-            #
-            #     # tf's internal softmax; else, put softmax back in output layer
-            #     # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-            #     cost_WHITE = loss_init(outer_layer_WHITE, y_WHITE)
-            #
-            #     # # alternative implementation
-            #     # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-            #
-            #     # kadenze cross_entropy cost function
-            #     # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-            #
-            #
-            #     # way better performance
-            #     optimizer_WHITE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_WHITE)
-            #
-            #     # SGD used in AlphaGO
-            #     # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-            #     with tf.name_scope('accuracy'):
-            #         correct_prediction_WHITE = tf.equal(tf.argmax(y_pred_WHITE, 1), tf.argmax(y_WHITE, 1))
-            #         accuracy_function_WHITE = tf.reduce_mean(tf.cast(correct_prediction_WHITE, 'float'))
-            #         # tf.summary.scalar('accuracy', accuracy_function_WHITE)
-            #
-            # with tf.variable_scope('black_net_RNN', reuse=False):
-            #     outer_layer_BLACK= RNN(h_layers_BLACK[-1], num_layers_rnn, num_hidden_rnn)
-            #
-            #     # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
-            #     y_pred_BLACK = tf.nn.softmax(outer_layer_BLACK)
-            #
-            #     # tf's internal softmax; else, put softmax back in output layer
-            #     # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
-            #     cost_BLACK = loss_init(outer_layer_BLACK, y_BLACK)
-            #
-            #     # # alternative implementation
-            #     # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
-            #
-            #     # kadenze cross_entropy cost function
-            #     # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
-            #
-            #
-            #     # way better performance
-            #     optimizer_BLACK = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_BLACK)
-            #
-            #     # SGD used in AlphaGO
-            #     # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
-            #     with tf.name_scope('accuracy'):
-            #         correct_prediction_BLACK = tf.equal(tf.argmax(y_pred_BLACK, 1), tf.argmax(y_BLACK, 1))
-            #         accuracy_function_BLACK = tf.reduce_mean(tf.cast(correct_prediction_BLACK, 'float'))
-            #         # tf.summary.scalar('accuracy', accuracy_function_BLACK)
-
-
-
-            # tensorboard summaries
-            # merged = tf.summary.merge_all()
-            merged = None
-            train_writer = None
-            test_writer = None
-            # train_writer = tf.summary.FileWriter(os.path.join(input_path_WHITE,
-            #                                                   r'ExperimentLogs', 'trainingSummaries',
-            #                                                   str(num_hidden) + '_' + str(n_filters)),
-            #                                      sess.graph)
-            # test_writer = tf.summary.FileWriter(os.path.join(input_path_WHITE,
-            #                                                  r'ExperimentLogs', 'testingSummaries',
-            #                                                  str(num_hidden) + '_' + str(n_filters)))
-
-            sess.run(tf.global_variables_initializer())
-
-            # # We first get the graph that we used to compute the network
-            # g = tf.get_default_graph()
-            #
-            # # And can inspect everything inside of it
-            # pprint.pprint([op.name for op in g.get_operations()])
-
-            n_epochs = 5  # mess with this a bit
-
-            print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file_WHITE)
-
-            # split into testing and validation sets
-            valid_examples_WHITE, test_examples_WHITE, valid_labels_WHITE, test_labels_WHITE = model_selection.train_test_split(
-                validation_examples_WHITE, validation_labels_WHITE, test_size=0.5, random_state=random.randint(1, 1024))
-
-            valid_examples_BLACK, test_examples_BLACK, valid_labels_BLACK, test_labels_BLACK = model_selection.train_test_split(
-                validation_examples_BLACK, validation_labels_BLACK, test_size=0.5, random_state=random.randint(1, 1024))
-            epoch_i = 0
-            while compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,  X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] < 0.65 and \
-                    compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k, X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] < 0.65 :
-            # for epoch_i in range(n_epochs):
-                # WHITE
-                # reshuffle training set at each epoch
-                training_examples_WHITE, training_labels_WHITE = shuffle(training_examples_WHITE, training_labels_WHITE,
-                                                                         random_state=random.randint(1, 1024))
-
-                # split training examples into batches
-                training_example_batches_WHITE, training_label_batches_WHITE = utils.batch_split(
-                    training_examples_WHITE, training_labels_WHITE,
-                    batch_size)
-
-                # BLACK
-                # reshuffle training set at each epoch
-                training_examples_BLACK, training_labels_BLACK = shuffle(training_examples_BLACK, training_labels_BLACK,
-                                                                         random_state=random.randint(1, 1024))
-
-                # split training examples into batches
-                training_example_batches_BLACK, training_label_batches_BLACK = utils.batch_split(
-                    training_examples_BLACK, training_labels_BLACK,
-                    batch_size)
-
-                # BLACK
-                startTime = time.time()  # start timer
-
-                for i in range(0, len(training_example_batches_BLACK)):
-                    train_model(training_example_batches_BLACK[i], training_label_batches_BLACK[i], X_BLACK, y_BLACK,
-                                optimizer_BLACK, merged,
-                                train_writer,
-                                (epoch_i * len(training_example_batches_BLACK)) + i)
-
-                    # show stats at every 1/10th interval of epoch
-                    if (i + 1) % (len(training_example_batches_BLACK) // 10) == 0:
-                        loss_init = sess.run(cost_BLACK, feed_dict={
-                            X_BLACK: training_example_batches_BLACK[i],
-                            y_BLACK: training_label_batches_BLACK[i]
-                        })
-
-                        accuracy_score = compute_accuracy(valid_examples_BLACK, valid_labels_BLACK, X_BLACK, y_BLACK,
-                                                          accuracy_function_BLACK,
-                                                          merged,
-                                                          test_writer,
-                                                          (epoch_i * len(training_example_batches_BLACK)) + i)
-
-                        print("Loss: {}".format(loss_init), end="\n", file=file_BLACK)
-                        print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss_init))), end="\n", file=file_BLACK)
-                        print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss_init))), end="\n", file=file_BLACK)
-                        print('Interval {interval} of 10 Accuracy: {accuracy_score}'.format(
-                            interval=(i + 1) // (len(training_example_batches_BLACK) // 10),
-                            accuracy_score=accuracy_score), end="\n", file=file_BLACK)
-
-
-
-
-                        # show accuracy at end of epoch
-                accuracy_score = compute_accuracy(valid_examples_BLACK, valid_labels_BLACK, X_BLACK, y_BLACK,
-                                                  accuracy_function_BLACK, merged,
-                                                  test_writer,
-                                                  (epoch_i * len(training_example_batches_BLACK)) + len(
-                                                      training_example_batches_BLACK) - 1)
-                print('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
-                    epoch_num=epoch_i + 1,
-                    accuracy_score=accuracy_score), end="\n", file=file_BLACK)
-
-                # show example of what network is predicting vs the move oracle
-                # print_prediction_statistics(valid_examples_BLACK, valid_labels_BLACK, y_pred_BLACK, X_BLACK, file_BLACK)
-                print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n",
-                      file=file_BLACK)
-
-                # WHITE
-
-                startTime = time.time()  # start timer
-
-                # train model
-                for i in range(0, len(training_example_batches_WHITE)):
-                    train_model(training_example_batches_WHITE[i], training_label_batches_WHITE[i], X_WHITE, y_WHITE,
-                                optimizer_WHITE, merged, train_writer,
-                                (epoch_i * len(training_example_batches_WHITE)) + i)
-
-                    # show stats at every 1/10th interval of epoch
-                    if (i + 1) % (len(training_example_batches_WHITE) // 10) == 0:
-                        loss_init = sess.run(cost_WHITE, feed_dict={
-                            X_WHITE: training_example_batches_WHITE[i],
-                            y_WHITE: training_label_batches_WHITE[i]
-                        })
-
-                        accuracy_score = compute_accuracy(valid_examples_WHITE, valid_labels_WHITE, X_WHITE, y_WHITE,
-                                                          accuracy_function_WHITE, merged,
-                                                          test_writer,
-                                                          (epoch_i * len(training_example_batches_WHITE)) + i)
-
-                        print("Loss: {}".format(loss_init), end="\n", file=file_WHITE)
-                        print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss_init))), end="\n", file=file_WHITE)
-                        print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss_init))), end="\n", file=file_WHITE)
-                        print('Interval {interval} of 10 Accuracy: {accuracy_score}'.format(
-                            interval=(i + 1) // (len(training_example_batches_WHITE) // 10),
-                            accuracy_score=accuracy_score), end="\n", file=file_WHITE)
-
-
-                        # show accuracy at end of epoch
-                accuracy_score = compute_accuracy(valid_examples_WHITE, valid_labels_WHITE, X_WHITE, y_WHITE,
-                                                  accuracy_function_WHITE, merged, test_writer,
-                                                  (epoch_i * len(training_example_batches_WHITE)) + len(
-                                                      training_example_batches_WHITE) - 1)
-                print('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
-                    epoch_num=epoch_i + 1,
-                    accuracy_score=accuracy_score), end="\n", file=file_WHITE)
-
-
-                # show example of what network is predicting vs the move oracle
-                # print_prediction_statistics(valid_examples_WHITE, valid_labels_WHITE,  y_pred_WHITE, X_WHITE, file_WHITE)
-                print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n",
-                      file=file_WHITE)
-
-
-                if compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
-                                    X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] < 0.10 or \
-                        compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
-                                         X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] < 0.10:
-                    exit(100)
-
-                epoch_i += 1
-
-                # save_path = saver.save(sess, os.path.join(input_path_BLACK, r'065AccIteration ({})'.format(epoch_i), r'DualWinningNets065Accuracy'))
-                # save_path = saver.save(sess, os.path.join(input_path_BLACK, r'065AccIteration ({})'.format(epoch_i),
-                #                                           r'1x1DualWinningNets070Accuracy_{}'.format(num_hidden)))     #  r'1x1DualWinningNets070Accuracy_{}'.format(num_hidden)
-
-                print_partition_statistics(test_examples_WHITE, test_labels_WHITE, X_WHITE, y_WHITE, net_type,
-                                           accuracy_function_WHITE, file_WHITE)
-                print_prediction_statistics(test_examples_WHITE, test_labels_WHITE, y_pred_WHITE, X_WHITE, file_WHITE)
-
-                # partition i
-                print_partition_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i, X_WHITE,
-                                           y_WHITE, partition_i, accuracy_function_WHITE, file_WHITE)
-                print_prediction_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i,
-                                            y_pred_WHITE, X_WHITE, file_WHITE)
-
-                # partition j
-                print_partition_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j, X_WHITE,
-                                           y_WHITE, partition_j, accuracy_function_WHITE, file_WHITE)
-                print_prediction_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j,
-                                            y_pred_WHITE, X_WHITE, file_WHITE)
-
-                # partition k (only for full policy net)
-                if (net_type == 'Full'):
-                    print_partition_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
-                                               X_WHITE, y_WHITE, partition_k, accuracy_function_WHITE, file_WHITE)
-                    print_prediction_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
-                                                y_pred_WHITE, X_WHITE, file_WHITE)
+                    # # alternative implementation
+                    # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
+
+                    # kadenze cross_entropy cost function
+                    # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+
+
+                    # way better performance
+                    optimizer_WHITE = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_WHITE)
+
+                    # SGD used in AlphaGO
+                    # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+                    with tf.name_scope('accuracy'):
+                        correct_prediction_WHITE = tf.equal(tf.argmax(y_pred_WHITE, 1), tf.argmax(y_WHITE, 1))
+                        accuracy_function_WHITE = tf.reduce_mean(tf.cast(correct_prediction_WHITE, 'float'))
+                        # tf.summary.scalar('accuracy', accuracy_function_WHITE)
+
+                with tf.variable_scope('black_net', reuse=False):
+
+                    # build graph
+                    X_BLACK = tf.placeholder(tf.float32, [None, 8, 8, 4])
+                    # TODO: consider reshaping for C++ input; could also put it into 3d matrix on the fly, ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
+                    y_BLACK = tf.placeholder(tf.float32, [None, 155])
+
+                    # X_BLACK = tf.pad(X_BLACK, paddings, "CONSTANT")
+                    # input layer
+                    h_layers_BLACK = [
+                        hidden_layer_init(X_BLACK, X_BLACK.get_shape()[-1],  # n_filters in == n_feature_planes
+                                          n_filters_out[0], filter_sizes[0], name='hidden_layer/1', reuse=None)]
+                    # hidden layers
+                    for i in range(0, n_layers - 1):
+                        h_layers_BLACK.append(
+                            hidden_layer_init(h_layers_BLACK[i], n_filters_out[i], n_filters_out[i + 1], filter_sizes[i+1],
+                                              name='hidden_layer/{num}'.format(num=i + 2), reuse=None))
+
+                    # output layer = softmax. in paper, also convolutional, but 19x19 softmax for player move.
+                    outer_layer_BLACK, _ = output_layer_init(h_layers_BLACK[-1], reuse=None)
+
+
+                    # TODO: if making 2 filters, 1 for each player color softmax, have a check that dynamically makes y_pred correspond to the right filter
+                    y_pred_BLACK = tf.nn.softmax(outer_layer_BLACK)
+
+                    # tf's internal softmax; else, put softmax back in output layer
+                    # cost = tf.nn.softmax_cross_entropy_with_logits(logits=outer_layer, labels=y)
+                    cost_BLACK = loss_init(outer_layer_BLACK, y_BLACK)
+
+                    # # alternative implementation
+                    # cost = tf.reduce_mean(cost) #used in MNIST tensorflow
+
+                    # kadenze cross_entropy cost function
+                    # cost = -tf.reduce_sum(y * tf.log(y_pred + 1e-12))
+
+
+                    # way better performance
+                    optimizer_BLACK = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost_BLACK)
+
+                    # SGD used in AlphaGO
+                    # optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+                    with tf.name_scope('accuracy'):
+                        correct_prediction_BLACK = tf.equal(tf.argmax(y_pred_BLACK, 1), tf.argmax(y_BLACK, 1))
+                        accuracy_function_BLACK = tf.reduce_mean(tf.cast(correct_prediction_BLACK, 'float'))
+                        # tf.summary.scalar('accuracy', accuracy_function_BLACK)
+
+                # save the model
+                saver = tf.train.Saver()
+
+                NUM_CORES = multiprocessing.cpu_count()
+                sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=NUM_CORES,
+                                                        intra_op_parallelism_threads=NUM_CORES))
+
+
+
+
+
+
+                # tensorboard summaries
+                # merged = tf.summary.merge_all()
+                merged = None
+                train_writer = None
+                test_writer = None
+                # train_writer = tf.summary.FileWriter(os.path.join(input_path_WHITE,
+                #                                                   r'ExperimentLogs', 'trainingSummaries',
+                #                                                   str(num_hidden) + '_' + str(n_filters)),
+                #                                      sess.graph)
+                # test_writer = tf.summary.FileWriter(os.path.join(input_path_WHITE,
+                #                                                  r'ExperimentLogs', 'testingSummaries',
+                #                                                  str(num_hidden) + '_' + str(n_filters)))
+
+                sess.run(tf.global_variables_initializer())
+
+                # # We first get the graph that we used to compute the network
+                # g = tf.get_default_graph()
+                #
+                # # And can inspect everything inside of it
+                # pprint.pprint([op.name for op in g.get_operations()])
+
+                n_epochs = 5  # mess with this a bit
+
+                print_hyperparameters(learning_rate, batch_size, n_epochs, n_filters, num_hidden, file_WHITE)
+
+                # split into testing and validation sets
+                valid_examples_WHITE, test_examples_WHITE, valid_labels_WHITE, test_labels_WHITE = model_selection.train_test_split(
+                    validation_examples_WHITE, validation_labels_WHITE, test_size=0.5, random_state=random.randint(1, 1024))
+
+                valid_examples_BLACK, test_examples_BLACK, valid_labels_BLACK, test_labels_BLACK = model_selection.train_test_split(
+                    validation_examples_BLACK, validation_labels_BLACK, test_size=0.5, random_state=random.randint(1, 1024))
+                epoch_i = 0
+                restart = False
+                while compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,  X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] < 0.61 and \
+                        compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k, X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] < 0.61 and not restart:
+                # for epoch_i in range(n_epochs):
+                    # WHITE
+                    # reshuffle training set at each epoch
+                    training_examples_WHITE, training_labels_WHITE = shuffle(training_examples_WHITE, training_labels_WHITE,
+                                                                             random_state=random.randint(1, 1024))
+
+                    # split training examples into batches
+                    training_example_batches_WHITE, training_label_batches_WHITE = utils.batch_split(
+                        training_examples_WHITE, training_labels_WHITE,
+                        batch_size)
 
                     # BLACK
-                # this partition
-                print_partition_statistics(test_examples_BLACK, test_labels_BLACK, X_BLACK, y_BLACK, net_type,
-                                           accuracy_function_BLACK, file_BLACK)
-                print_prediction_statistics(test_examples_BLACK, test_labels_BLACK, y_pred_BLACK, X_BLACK, file_BLACK)
+                    # reshuffle training set at each epoch
+                    training_examples_BLACK, training_labels_BLACK = shuffle(training_examples_BLACK, training_labels_BLACK,
+                                                                             random_state=random.randint(1, 1024))
 
-                # partition i
-                print_partition_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i, X_BLACK,
-                                           y_BLACK, partition_i, accuracy_function_BLACK, file_BLACK)
-                print_prediction_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i,
-                                            y_pred_BLACK, X_BLACK, file_BLACK)
+                    # split training examples into batches
+                    training_example_batches_BLACK, training_label_batches_BLACK = utils.batch_split(
+                        training_examples_BLACK, training_labels_BLACK,
+                        batch_size)
 
-                # partition j
-                print_partition_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j, X_BLACK,
-                                           y_BLACK, partition_j, accuracy_function_BLACK, file_BLACK)
-                print_prediction_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j,
-                                            y_pred_BLACK, X_BLACK, file_BLACK)
+                    # BLACK
+                    startTime = time.time()  # start timer
 
-                # partition k (only for full policy net)
-                if (net_type == 'Full'):
-                    print_partition_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
-                                               X_BLACK, y_BLACK, partition_k, accuracy_function_BLACK, file_BLACK)
-                    print_prediction_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
-                                                y_pred_BLACK, X_BLACK, file_BLACK)
+                    for i in range(0, len(training_example_batches_BLACK)):
+
+                        train_acc = train_model(training_example_batches_BLACK[i], training_label_batches_BLACK[i], X_BLACK, y_BLACK,
+                                    optimizer_BLACK,accuracy_function_BLACK,  merged,
+                                    train_writer,
+                                    (epoch_i * len(training_example_batches_BLACK)) + i)
+
+                        # show stats at every 1/10th interval of epoch
+                        if (i + 1) % (len(training_example_batches_BLACK) // 10) == 0:
+                            loss_score = sess.run(cost_BLACK, feed_dict={
+                                X_BLACK: training_example_batches_BLACK[i],
+                                y_BLACK: training_label_batches_BLACK[i]
+                            })
+
+                            accuracy_score = compute_accuracy(valid_examples_BLACK, valid_labels_BLACK, X_BLACK, y_BLACK,
+                                                              accuracy_function_BLACK,
+                                                              merged,
+                                                              test_writer,
+                                                              (epoch_i * len(training_example_batches_BLACK)) + i)
+
+                            print("Loss: {}".format(loss_score), end="\n", file=file_BLACK)
+                            print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss_score))), end="\n", file=file_BLACK)
+                            print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss_score))), end="\n", file=file_BLACK)
+                            print('Interval {interval} of 10 Test Accuracy: {accuracy_score}'.format(
+                                interval=(i + 1) // (len(training_example_batches_BLACK) // 10),
+                                accuracy_score=accuracy_score), end="\n", file=file_BLACK)
+                            print('Interval {interval} of 10 Train Accuracy: {accuracy_score}'.format(
+                                interval=(i + 1) // (len(training_example_batches_BLACK) // 10),
+                                accuracy_score=train_acc), end="\n", file=file_BLACK)
+
+                            print("Loss: {}".format(loss_score), end="\n", file=stdout)
+                            print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss_score))), end="\n",
+                                  file=stdout)
+                            print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss_score))), end="\n",
+                                  file=stdout)
+                            print('Interval {interval} of 10 Test Accuracy: {accuracy_score}'.format(
+                                interval=(i + 1) // (len(training_example_batches_BLACK) // 10),
+                                accuracy_score=accuracy_score), end="\n", file=stdout)
+                            print('Interval {interval} of 10 Train Accuracy: {accuracy_score}'.format(
+                                interval=(i + 1) // (len(training_example_batches_BLACK) // 10),
+                                accuracy_score=train_acc), end="\n", file=stdout)
+
+
+
+
+                            # show accuracy at end of epoch
+                    accuracy_score = compute_accuracy(valid_examples_BLACK, valid_labels_BLACK, X_BLACK, y_BLACK,
+                                                      accuracy_function_BLACK, merged,
+                                                      test_writer,
+                                                      (epoch_i * len(training_example_batches_BLACK)) + len(
+                                                          training_example_batches_BLACK) - 1)
+                    print('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
+                        epoch_num=epoch_i + 1,
+                        accuracy_score=accuracy_score), end="\n", file=file_BLACK)
+
+                    # show example of what network is predicting vs the move oracle
+                    # print_prediction_statistics(valid_examples_BLACK, valid_labels_BLACK, y_pred_BLACK, X_BLACK, file_BLACK)
+                    print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n",
+                          file=file_BLACK)
+
+                    # WHITE
+
+                    startTime = time.time()  # start timer
+
+                    # train model
+                    for i in range(0, len(training_example_batches_WHITE)):
+                        train_acc =  train_model(training_example_batches_WHITE[i], training_label_batches_WHITE[i], X_WHITE, y_WHITE,
+                                    optimizer_WHITE,accuracy_function_WHITE, merged, train_writer,
+                                    (epoch_i * len(training_example_batches_WHITE)) + i)
+
+                        # show stats at every 1/10th interval of epoch
+                        if (i + 1) % (len(training_example_batches_WHITE) // 10) == 0:
+                            loss_score = sess.run(cost_WHITE, feed_dict={
+                                X_WHITE: training_example_batches_WHITE[i],
+                                y_WHITE: training_label_batches_WHITE[i]
+                            })
+
+                            accuracy_score = compute_accuracy(valid_examples_WHITE, valid_labels_WHITE, X_WHITE, y_WHITE,
+                                                              accuracy_function_WHITE, merged,
+                                                              test_writer,
+                                                              (epoch_i * len(training_example_batches_WHITE)) + i)
+
+                            print("Loss: {}".format(loss_score), end="\n", file=file_WHITE)
+                            print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss_score))), end="\n", file=file_WHITE)
+                            print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss_score))), end="\n", file=file_WHITE)
+                            print('Interval {interval} of 10 Test Accuracy: {accuracy_score}'.format(
+                                interval=(i + 1) // (len(training_example_batches_WHITE) // 10),
+                                accuracy_score=accuracy_score), end="\n", file=file_WHITE)
+                            print('Interval {interval} of 10 Train Accuracy: {accuracy_score}'.format(
+                                interval=(i + 1) // (len(training_example_batches_WHITE) // 10),
+                                accuracy_score=train_acc), end="\n", file=file_WHITE)
+
+                            print("Loss: {}".format(loss_score), end="\n", file=stdout)
+                            print("Loss Reduced Mean: {}".format(sess.run(tf.reduce_mean(loss_score))), end="\n",
+                                  file=stdout)
+                            print("Loss Reduced Sum: {}".format(sess.run(tf.reduce_sum(loss_score))), end="\n",
+                                  file=stdout)
+                            print('Interval {interval} of 10 Test Accuracy: {accuracy_score}'.format(
+                                interval=(i + 1) // (len(training_example_batches_WHITE) // 10),
+                                accuracy_score=accuracy_score), end="\n", file=stdout)
+                            print('Interval {interval} of 10 Train Accuracy: {accuracy_score}'.format(
+                                interval=(i + 1) // (len(training_example_batches_WHITE) // 10),
+                                accuracy_score=train_acc), end="\n", file=stdout)
+
+
+                            # show accuracy at end of epoch
+                    accuracy_score = compute_accuracy(valid_examples_WHITE, valid_labels_WHITE, X_WHITE, y_WHITE,
+                                                      accuracy_function_WHITE, merged, test_writer,
+                                                      (epoch_i * len(training_example_batches_WHITE)) + len(
+                                                          training_example_batches_WHITE) - 1)
+                    print('Epoch {epoch_num} Accuracy: {accuracy_score}'.format(
+                        epoch_num=epoch_i + 1,
+                        accuracy_score=accuracy_score), end="\n", file=file_WHITE)
+
+
+                    # show example of what network is predicting vs the move oracle
+                    # print_prediction_statistics(valid_examples_WHITE, valid_labels_WHITE,  y_pred_WHITE, X_WHITE, file_WHITE)
+                    print("\nMinutes between epochs: {time}".format(time=(time.time() - startTime) / 60), end="\n",
+                          file=file_WHITE)
+
+
+
+
+                    epoch_i += 1
+
+
+                    # save_path = saver.save(sess, os.path.join(input_path_BLACK, r'065AccIteration ({})'.format(epoch_i), r'DualWinningNets065Accuracy'))
+                    # save_path = saver.save(sess, os.path.join(input_path_BLACK, r'065AccIteration ({})'.format(epoch_i),
+                    #                                           r'0505DualWinningNets070Accuracy_{}'.format(num_hidden)))     #  r'1x1DualWinningNets070Accuracy_{}'.format(num_hidden)
+
+                    print_statistics_WHITE()
+
+                        # BLACK
+                    # this partition
+                    print_statistics_BLACK()
+                    if compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
+                                        X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] < 0.10 or \
+                            compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
+                                             X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] < 0.10:
+                        restart = True
+                    else:
+                        restart = False
 
 
                 # Print final test accuracy:
                 # WHITE
             # this partition
-            print_partition_statistics(test_examples_WHITE, test_labels_WHITE, X_WHITE, y_WHITE, net_type,
-                                       accuracy_function_WHITE, file_WHITE)
-            print_prediction_statistics(test_examples_WHITE, test_labels_WHITE, y_pred_WHITE, X_WHITE, file_WHITE)
-
-            # partition i
-            print_partition_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i, X_WHITE,
-                                       y_WHITE, partition_i, accuracy_function_WHITE, file_WHITE)
-            print_prediction_statistics(WHITE_testing_examples_partition_i, WHITE_testing_labels_partition_i,
-                                        y_pred_WHITE, X_WHITE, file_WHITE)
-
-            # partition j
-            print_partition_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j, X_WHITE,
-                                       y_WHITE, partition_j, accuracy_function_WHITE, file_WHITE)
-            print_prediction_statistics(WHITE_testing_examples_partition_j, WHITE_testing_labels_partition_j,
-                                        y_pred_WHITE, X_WHITE, file_WHITE)
-
-            # partition k (only for full policy net)
-            if (net_type == 'Full'):
-                print_partition_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
-                                           X_WHITE, y_WHITE, partition_k, accuracy_function_WHITE, file_WHITE)
-                print_prediction_statistics(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
-                                            y_pred_WHITE, X_WHITE, file_WHITE)
+            print_statistics_WHITE()
 
                 # BLACK
             # this partition
-            print_partition_statistics(test_examples_BLACK, test_labels_BLACK, X_BLACK, y_BLACK, net_type,
-                                       accuracy_function_BLACK, file_BLACK)
-            print_prediction_statistics(test_examples_BLACK, test_labels_BLACK, y_pred_BLACK, X_BLACK, file_BLACK)
-
-            # partition i
-            print_partition_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i, X_BLACK,
-                                       y_BLACK, partition_i, accuracy_function_BLACK, file_BLACK)
-            print_prediction_statistics(BLACK_testing_examples_partition_i, BLACK_testing_labels_partition_i,
-                                        y_pred_BLACK, X_BLACK, file_BLACK)
-
-            # partition j
-            print_partition_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j, X_BLACK,
-                                       y_BLACK, partition_j, accuracy_function_BLACK, file_BLACK)
-            print_prediction_statistics(BLACK_testing_examples_partition_j, BLACK_testing_labels_partition_j,
-                                        y_pred_BLACK, X_BLACK, file_BLACK)
-
-            # partition k (only for full policy net)
-            if (net_type == 'Full'):
-                print_partition_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
-                                           X_BLACK, y_BLACK, partition_k, accuracy_function_BLACK, file_BLACK)
-                print_prediction_statistics(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
-                                            y_pred_BLACK, X_BLACK, file_BLACK)
+            print_statistics_BLACK()
 
             # save the model now
-            # save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'1x1DualWinningNets070Accuracy_{}'.format(num_hidden)))
+            save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'0505DualWinningNets061Accuracy_{num_filters}_{num_layers}_'.format(num_filters=n_filters, num_layers=num_hidden)))
 
             sess.close()
     file_WHITE.close()
     file_BLACK.close()
-
-
-
-
 

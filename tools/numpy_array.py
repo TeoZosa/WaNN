@@ -77,7 +77,6 @@ def filter_training_examples_and_labels(player_list, filter, NNType='ANN', game_
     else:
         training_examples = training_data
     return np.array(training_examples, dtype=np.float32), np.array(labels, dtype=np.float32)
-    # return np.array(training_examples, dtype=object), np.array(labels, dtype=object)
 
 
 def filter_by_rank(playerList):
@@ -178,11 +177,13 @@ def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both',
         for game in self_play_log['Games']: #each game is appended twice; White's game, then Black's game
             if color == 'White': #train on all white games
                 color_to_filter = i % 2 == 0
-                # win_filter = True
-                win_filter = game['Win'] is True
+                win_filter = True
+                # win_filter = game['Win'] is True
             elif color =='Black': #only train on winning black games
                 color_to_filter = i % 2 == 1
-                win_filter = game['Win'] is True
+                # win_filter = game['Win'] is True
+                win_filter = True
+
             else:
                 color_to_filter = True
                 win_filter = True

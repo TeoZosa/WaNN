@@ -9,8 +9,12 @@ class TreeNode(object):
         self.children = None # all kids
         self.other_children = None #separate non_pruned tree
         self.gameover = False
+
         self.visits = 0 #should be equal to sum of all children + num_times it was rolled out
         self.wins = 0 # 0 <= wins <= visits
+
+        self.gameover_visits = 0
+        self.gameover_wins = 0
 
         self.height = height #if root is first state in game MCTS saw
         self.best_child = None #to expand best child first
@@ -27,6 +31,7 @@ class TreeNode(object):
         self.reexpanded = False
         self.reexpanded_already = False
 
+        #TODO off limits flag for keeping children but only exploring them when we are reexpanded?
         self.eval_result = 0
         self.sum_rollout_rewards = 0
 
@@ -36,7 +41,11 @@ class TreeNode(object):
         self.white_pieces = white_pieces
         self.black_pieces = black_pieces
 
-        self.overwhelming_amount = 65536
+        self.overwhelming_amount = 1#65536
+
+        self.num_to_consider = 1
+        self.times_reexpanded = 0
+        self.other_children = None
 
 class NeuralNetInput(object):
     def __init__(self):

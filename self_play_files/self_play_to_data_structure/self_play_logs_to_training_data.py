@@ -41,13 +41,13 @@ def SelfPlayLogsToDataStructures():
     r'G:\TruncatedLogs\1024-1129\selfPlayLogsBreakthrough4'
   ]
   paths_april = [
-    r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough0',
+    # r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough0',
     r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough2',
     r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough3',
     r'G:\TruncatedLogs\03xx17-040717\selfPlayLogsBreakthrough4',
   ]
   processes = MyPool(processes=len(paths))
-  processes.map_async(convertLog.driver, paths)#map processes to arg lists
+  processes.map_async(convertLog.driver, paths_april)#map processes to arg lists
   processes.close()
   processes.join()
   # convertLog.driver(paths_april[0])
@@ -84,11 +84,11 @@ def AggregateSelfPlayDataStructures():
     outputList.close()
 
 def self_play_data_structures_to_numpy():
-    for color in ['White',
+    for color in [#'White',
 
                   'Black'
                   ]:
-        for game_stage in ['All' #, '1st', '2nd', '3rd'
+        for game_stage in ['All' , '1st', '2nd', '3rd'
                            ]:
               path = r'G:\TruncatedLogs\PythonDataSets\DataStructures'
               files = [
@@ -136,11 +136,12 @@ def self_play_data_structures_to_numpy():
                 # game_stage = '2nd'
                 # game_stage = '3rd'
               #               arg_lists = [[r'Self-Play', r'Policy', path, file, game_stage, color] for file in files_april]
-              policy_net = NeuralNetsCombinedRNNInput()
-              arg_lists = [[r'CNN RNN', r'Policy', path, file, game_stage, color, policy_net] for file in files_april]
-              # processes = Pool(processes=len(arg_lists))
+              # policy_net = NeuralNetsCombinedRNNInput()
+              policy_net = None
+              arg_lists = [[r'Self-Play', r'Policy', path, file, game_stage, color, policy_net] for file in files_april]
+              processes = Pool(processes=len(arg_lists))
 
-              processes = ThreadPool(processes=len(arg_lists))
+              # processes = ThreadPool(processes=len(arg_lists))
 
               processes.starmap_async(numpy_array.self_player_driver, arg_lists)#map processes to arg lists
               processes.close()

@@ -552,20 +552,20 @@ for num_hidden in [i for i in range(4,10)#[1, 9]
 
     for n_filters in [
         #  64,
-        128,
-        # 192,
+        # 128,
+        192,
         # 256,
         # 512
     ]:
 
         file_WHITE = open(os.path.join(input_path_WHITE,
                                        r'ExperimentLogs',
-                                       game_stage + '_0506WHITE_5then3_{num_filters}And1x1Filters{num_layers}LayersTF_CE__He_weightsPOE.txt'.format(num_filters=n_filters,num_layers=num_hidden)),
+                                       game_stage + '_0507WHITE_5then3_{num_filters}And1x1Filters{num_layers}Layers_1st2AndLastExcl.txt'.format(num_filters=n_filters,num_layers=num_hidden)),
                           'a')
 
         file_BLACK = open(os.path.join(input_path_WHITE,
                                        r'ExperimentLogs',
-                                       game_stage + '_0506BLACK_5then3_{num_filters}FiltersAnd1x1{num_layers}LayersTF_CE__He_weightsPOE.txt'.format(
+                                       game_stage + '_0507BLACK_5then3_{num_filters}FiltersAnd1x1{num_layers}Layers_1st2AndLastExcl.txt'.format(
                                            num_filters=n_filters,num_layers=num_hidden)), 'a')
         print("# of Training Examples: {}".format(len(training_examples_WHITE)), end='\n', file=file_WHITE)
         print("# of Testing Examples: {}".format(len(validation_examples_WHITE)), end='\n', file=file_WHITE)
@@ -737,8 +737,8 @@ for num_hidden in [i for i in range(4,10)#[1, 9]
                     validation_examples_BLACK, validation_labels_BLACK, test_size=0.5, random_state=random.randint(1, 1024))
                 epoch_i = 0
                 restart = False
-                while compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,  X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] < 0.61 and \
-                        compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k, X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] < 0.61 and not restart:
+                while compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,  X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] < 0.60 and \
+                        compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k, X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] < 0.70 and not restart:
                 # for epoch_i in range(n_epochs):
                     # WHITE
                     # reshuffle training set at each epoch
@@ -905,9 +905,16 @@ for num_hidden in [i for i in range(4,10)#[1, 9]
                         restart = True
                     else:
                         restart = False
+                    if compute_accuracy(BLACK_testing_examples_partition_k, BLACK_testing_labels_partition_k,
+                                            X_BLACK, y_BLACK, accuracy_function_BLACK, None, None, 0)[0] > 0.61 or \
+                                compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
+                                                 X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] >0.65:
+                        save_path = saver.save(sess, os.path.join(input_path_BLACK,  r'065AccIteration ({})'.format(1),
+                                                                  r'0507WinningWhiteNet065Accuracy_{num_filters}_{num_layers}_'.format(
+                                                                      num_filters=n_filters, num_layers=num_hidden)))
 
 
-                # Print final test accuracy:
+                        # Print final test accuracy:
                 # WHITE
             # this partition
             print_statistics_WHITE()
@@ -917,7 +924,7 @@ for num_hidden in [i for i in range(4,10)#[1, 9]
             print_statistics_BLACK()
 
             # save the model now
-            save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'0505DualWinningNets061Accuracy_{num_filters}_{num_layers}_'.format(num_filters=n_filters, num_layers=num_hidden)))
+            save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'0507WinningWhiteNet070Accuracy_{num_filters}_{num_layers}_'.format(num_filters=n_filters, num_layers=num_hidden)))
 
             sess.close()
     file_WHITE.close()

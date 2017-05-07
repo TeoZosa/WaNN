@@ -3,7 +3,6 @@ import  pickle
 import warnings
 from multiprocessing import Process, pool, Pool
 from multiprocessing.pool import ThreadPool
-from monte_carlo_tree_search.MCTS import NeuralNetsCombinedRNNInput
 
 from tools import numpy_array
 from self_play_files.self_play_to_data_structure import self_play_logs_to_data_structures as convertLog
@@ -84,11 +83,13 @@ def AggregateSelfPlayDataStructures():
     outputList.close()
 
 def self_play_data_structures_to_numpy():
-    for color in [#'White',
+    for color in ['White',
 
                   'Black'
                   ]:
-        for game_stage in ['All' , '1st', '2nd', '3rd'
+        for game_stage in [#'All' ,
+                           # '1st', '2nd',
+                            '3rd'
                            ]:
               path = r'G:\TruncatedLogs\PythonDataSets\DataStructures'
               files = [

@@ -177,8 +177,8 @@ def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both',
         for game in self_play_log['Games']: #each game is appended twice; White's game, then Black's game
             if color == 'White': #train on all white games
                 color_to_filter = i % 2 == 0
-                win_filter = True
-                # win_filter = game['Win'] is True
+                # win_filter = True
+                win_filter = game['Win'] is True
             elif color =='Black': #only train on winning black games
                 color_to_filter = i % 2 == 1
                 # win_filter = game['Win'] is True
@@ -193,20 +193,28 @@ def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both',
                 if win_filter:
                     game_length = len(game['BoardStates']['PlayerPOV'])
                     if game_stage == 'All':
-                        start = 0
+                        start = 2
                         end = game_length
+                        if game['BoardStates']['PlayerPOV'][end-1][2][154] == 1:
+                            end -=1
                     elif game_stage == '1st':
                         # Start-Game Value Net
-                        start = 0
-                        end = math.floor(game_length / 3)
+                        start = 2
+                        # end = math.floor(game_length / 3)
+                        end = 10
                     elif game_stage == '2nd':
                         # Mid-Game Value Net
-                        start = math.floor(game_length / 3)
-                        end = math.floor(game_length / 3) * 2
+                        # start = math.floor(game_length / 3)
+                        # end = math.floor(game_length / 3) * 2
+                        start = 10
+                        end = 30
                     elif game_stage == '3rd':
                         # End-Game Value Net
-                        start = math.floor(game_length / 3) * 2
+                        # start = math.floor(game_length / 3) * 2
+                        start = 30
                         end = game_length
+                        if game['BoardStates']['PlayerPOV'][end - 1][2][154] == 1:
+                            end -= 1
                     states = game['BoardStates']['PlayerPOV'][start:end]
                     mirror_states = game['MirrorBoardStates']['PlayerPOV'][start:end]
                     if NNType == 'Policy':#TODO: unshuffle these?

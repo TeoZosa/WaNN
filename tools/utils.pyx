@@ -5,6 +5,7 @@ import fnmatch
 import sys
 import copy
 import numpy as np
+from Breakthrough_Player.board_utils import initial_game_board
 
 def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
     for root, dirs, files in os.walk(path):
@@ -489,7 +490,7 @@ def convert_board_to_2d_matrix_POEB(game_board, player_color):
     def reflect_board_state(state):  # since black needs to have a POV representation
         # Note: not the same as mirror_board_state in self_play_logs_to_datastructures;
         def mirror_board_state(state):  # helper method for reflect_board_state
-            mirror_state = copy.deepcopy(state)  # edit copy of board_state
+            mirror_state = initial_game_board() #copy.deepcopy(state)  # edit copy of board_state
             # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
             is_white_index = 9
             white_move_index = 10
@@ -513,16 +514,25 @@ def convert_board_to_2d_matrix_POEB(game_board, player_color):
                         elif column == 'h':
                             mirror_state[row]['a'] = state[row][column]
             return mirror_state
+
         semi_reflected_state = mirror_board_state(state)
-        reflected_state = copy.deepcopy(semi_reflected_state)
+        reflected_state = semi_reflected_state #copy.deepcopy(semi_reflected_state)
+
+        #copies
+        row1 = reflected_state[1].copy()
+        row2 = reflected_state[2].copy()
+        row3 = reflected_state[3].copy()
+        row4 = reflected_state[4].copy()
+
+
         reflected_state[1] = semi_reflected_state[8]
         reflected_state[2] = semi_reflected_state[7]
         reflected_state[3] = semi_reflected_state[6]
         reflected_state[4] = semi_reflected_state[5]
-        reflected_state[5] = semi_reflected_state[4]
-        reflected_state[6] = semi_reflected_state[3]
-        reflected_state[7] = semi_reflected_state[2]
-        reflected_state[8] = semi_reflected_state[1]
+        reflected_state[5] = row4
+        reflected_state[6] = row3
+        reflected_state[7] = row2
+        reflected_state[8] = row1
         return reflected_state
 
     if player_color == 'Black':
@@ -540,6 +550,9 @@ def convert_board_to_2d_matrix_POEB(game_board, player_color):
         formatted_example[i] = formatted_example[
             i].transpose()  # transpose (row x col) to get feature_plane x col x row
     formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
+
+    fast_example = generate_binary_plane_POEB(game_board, player_color)
+    assert (np.array_equal(formatted_example, fast_example))
 
     return np.array(formatted_example, dtype=np.float32)
 
@@ -749,3 +762,40 @@ def generate_binary_vector(state, player_color, what_to_filter):
             for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
                 binary_vector.append(what_to_filter_dict[player_color][state[row][column]])
     return binary_vector
+
+def generate_binary_plane_POEB(state, player_color):
+    #TODO consider reshaping for C++ input; could also put it into 3d matrix on the fly,
+    # ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
+    bias = 1
+    binary_plane = np.array([[[0,0,0,bias]]*8]*8, dtype=np.float32)
+
+    is_white_index = 9
+    white_move_index = 10
+    #feature plane index
+    player_index = 0
+    opponent_index = 1
+    empty_index = 2
+
+    if player_color == 'White':
+        player = 'w'
+        opponent = 'b'
+    else:
+        player = 'b'
+        opponent = 'w'
+    empty = 'e'
+    plane_row = 0
+    for row in sorted(state):
+        if row != is_white_index and row != white_move_index:  # don't touch these indexes
+            plane_column = 0
+            for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+
+                board_square = state[row][column]
+                if board_square ==player:
+                    binary_plane[plane_row][plane_column][player_index] = 1
+                elif board_square == opponent:
+                    binary_plane[plane_row][plane_column][opponent_index] = 1
+                elif board_square == empty:
+                    binary_plane[plane_row][plane_column][empty_index] = 1
+                plane_column +=1
+            plane_row +=1
+    return binary_plane

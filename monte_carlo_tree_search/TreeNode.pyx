@@ -44,6 +44,7 @@ class TreeNode(object):
         self.overwhelming_amount = 1#65536
 
         self.num_to_consider = 1
+        self.num_to_keep = 1
         self.times_reexpanded = 0
         self.other_children = None
 

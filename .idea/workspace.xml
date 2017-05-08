@@ -3,9 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py" afterPath="$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" afterPath="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tools/numpy_array.py" afterPath="$PROJECT_DIR$/tools/numpy_array.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tools/utils.pyx" afterPath="$PROJECT_DIR$/tools/utils.pyx" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
@@ -82,24 +81,14 @@
       <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3230">
-              <caret line="196" column="41" lean-forward="false" selection-start-line="196" selection-start-column="41" selection-end-line="196" selection-end-column="41" />
+            <state relative-caret-position="104">
+              <caret line="874" column="35" lean-forward="false" selection-start-line="874" selection-start-column="35" selection-end-line="874" selection-end-column="56" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tree_search_utils.c" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="420121">
-              <caret line="24713" column="72" lean-forward="false" selection-start-line="24713" selection-start-column="72" selection-end-line="24713" selection-end-column="72" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="black_and_white_policy_nets.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="black_and_white_policy_nets.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="538">
@@ -136,8 +125,8 @@
       <file leaf-file-name="utils.pyx" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="900">
-              <caret line="799" column="12" lean-forward="false" selection-start-line="799" selection-start-column="12" selection-end-line="799" selection-end-column="12" />
+            <state relative-caret-position="164">
+              <caret line="523" column="40" lean-forward="true" selection-start-line="523" selection-start-column="40" selection-end-line="523" selection-end-column="40" />
               <folding>
                 <element signature="e#46#55#0" expanded="true" />
               </folding>
@@ -155,30 +144,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="numpy_array.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tools/numpy_array.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3536">
-              <caret line="216" column="36" lean-forward="false" selection-start-line="216" selection-start-column="36" selection-end-line="216" selection-end-column="36" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="__main__.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/__main__.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="408">
-              <caret line="27" column="55" lean-forward="false" selection-start-line="27" selection-start-column="55" selection-end-line="27" selection-end-column="55" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="self_play_logs_to_training_data.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1921">
+            <state relative-caret-position="895">
               <caret line="120" column="68" lean-forward="false" selection-start-line="120" selection-start-column="68" selection-end-line="120" selection-end-column="68" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
@@ -187,11 +156,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tree_builder.pyx" pinned="false" current-in-tab="false">
+      <file leaf-file-name="tree_builder.pyx" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="10047">
-              <caret line="604" column="73" lean-forward="false" selection-start-line="604" selection-start-column="73" selection-end-line="604" selection-end-column="73" />
+            <state relative-caret-position="2679">
+              <caret line="309" column="19" lean-forward="false" selection-start-line="309" selection-start-column="19" selection-end-line="309" selection-end-column="19" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TreeNode.pyx" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="782">
+              <caret line="46" column="28" lean-forward="false" selection-start-line="46" selection-start-column="28" selection-end-line="46" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -223,7 +202,6 @@
       <find>game_over</find>
       <find>overwhelming</find>
       <find>overwhelming_on=True</find>
-      <find>get_pruned_child</find>
       <find>pruned_child, child_win_status,</find>
       <find>pruned_child, child_win_status</find>
       <find>reexpanded</find>
@@ -238,6 +216,7 @@
       <find>WHITE</find>
       <find>initi</find>
       <find>offset</find>
+      <find>get_pruned_child</find>
     </findStrings>
     <replaceStrings>
       <replace>or child_val &gt; best_child_val/1.1</replace>
@@ -317,7 +296,6 @@
         <option value="$PROJECT_DIR$/self_play_files/policy_net/policy_net_metrics.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.py" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.c" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
         <option value="$PROJECT_DIR$/self_play_files/rnn/rnn_script.py" />
@@ -325,15 +303,16 @@
         <option value="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.c" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c" />
         <option value="$PROJECT_DIR$/tools/numpy_array.py" />
         <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" />
-        <option value="$PROJECT_DIR$/tools/utils.pyx" />
         <option value="$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py" />
+        <option value="$PROJECT_DIR$/tools/utils.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
       </list>
     </option>
   </component>
@@ -344,9 +323,9 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="888" />
-    <option name="y" value="180" />
-    <option name="width" value="2065" />
+    <option name="x" value="1023" />
+    <option name="y" value="128" />
+    <option name="width" value="2356" />
     <option name="height" value="1439" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
@@ -1063,13 +1042,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00175" summary="broke up/merged some functions. made the pruning cutoff based on the probability from the NN.">
-      <created>1489197494049</created>
-      <option name="number" value="00175" />
-      <option name="presentableId" value="LOCAL-00175" />
-      <option name="project" value="LOCAL" />
-      <updated>1489197494049</updated>
-    </task>
     <task id="LOCAL-00176" summary="fixed bugs from refactoring">
       <created>1489199426757</created>
       <option name="number" value="00176" />
@@ -1406,7 +1378,14 @@
       <option name="project" value="LOCAL" />
       <updated>1494168447483</updated>
     </task>
-    <option name="localTasksCounter" value="224" />
+    <task id="LOCAL-00224" summary="tried to make conversion to NN input more efficient">
+      <created>1494199412278</created>
+      <option name="number" value="00224" />
+      <option name="presentableId" value="LOCAL-00224" />
+      <option name="project" value="LOCAL" />
+      <updated>1494199412279</updated>
+    </task>
+    <option name="localTasksCounter" value="225" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1419,10 +1398,10 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="888" y="180" width="2065" height="1439" extended-state="0" />
+    <frame x="1023" y="128" width="2356" height="1439" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2969944" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2586513" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24451174" sideWeight="0.13868251" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922536" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1483,7 +1462,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="changed eval to return a percentage too, moved print statement outside to give search more time" />
     <MESSAGE value="Many things added. Main thing: RL. Warning: The code is so ugly now from doing so many modifications for the paper." />
     <MESSAGE value="logging and appending new roots for tree and DAgger" />
     <MESSAGE value="merging code from mac branch. changed wanderer to play white" />
@@ -1508,7 +1486,8 @@
     <MESSAGE value="CNN RNN&#10;" />
     <MESSAGE value="Fixed CNN conversion to RNN data. better initalization to rnn." />
     <MESSAGE value="new net and tweaking search parameters" />
-    <option name="LAST_COMMIT_MESSAGE" value="new net and tweaking search parameters" />
+    <MESSAGE value="tried to make conversion to NN input more efficient" />
+    <option name="LAST_COMMIT_MESSAGE" value="tried to make conversion to NN input more efficient" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1854,13 +1833,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="765">
-          <caret line="45" column="32" lean-forward="false" selection-start-line="45" selection-start-column="32" selection-end-line="45" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/self_play_files/rnn/rnn_script.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2017">
@@ -1907,22 +1879,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="10047">
-          <caret line="604" column="73" lean-forward="false" selection-start-line="604" selection-start-column="73" selection-end-line="604" selection-end-column="73" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3230">
-          <caret line="196" column="41" lean-forward="false" selection-start-line="196" selection-start-column="41" selection-end-line="196" selection-end-column="41" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="420121">
@@ -1936,16 +1892,6 @@
         <state relative-caret-position="408">
           <caret line="27" column="55" lean-forward="false" selection-start-line="27" selection-start-column="55" selection-end-line="27" selection-end-column="55" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1921">
-          <caret line="120" column="68" lean-forward="false" selection-start-line="120" selection-start-column="68" selection-end-line="120" selection-end-column="68" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1987,11 +1933,37 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="900">
-          <caret line="799" column="12" lean-forward="false" selection-start-line="799" selection-start-column="12" selection-end-line="799" selection-end-column="12" />
+        <state relative-caret-position="164">
+          <caret line="523" column="40" lean-forward="true" selection-start-line="523" selection-start-column="40" selection-end-line="523" selection-end-column="40" />
           <folding>
             <element signature="e#46#55#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="895">
+          <caret line="120" column="68" lean-forward="false" selection-start-line="120" selection-start-column="68" selection-end-line="120" selection-end-column="68" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="782">
+          <caret line="46" column="28" lean-forward="false" selection-start-line="46" selection-start-column="28" selection-end-line="46" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="104">
+          <caret line="874" column="35" lean-forward="false" selection-start-line="874" selection-start-column="35" selection-end-line="874" selection-end-column="56" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -2002,6 +1974,14 @@
           <folding>
             <element signature="e#1#39#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2679">
+          <caret line="309" column="19" lean-forward="false" selection-start-line="309" selection-start-column="19" selection-end-line="309" selection-end-column="19" />
+          <folding />
         </state>
       </provider>
     </entry>

@@ -537,25 +537,25 @@ def convert_board_to_2d_matrix_POEB(game_board, player_color):
 
     if player_color == 'Black':
         game_board = reflect_board_state(game_board)
-    one_hot_board = np.array([generate_binary_vector(game_board, player_color, 'Player'),  # [0] player
-                     generate_binary_vector(game_board, player_color, 'Opponent'),  # [1] opponent
-                     generate_binary_vector(game_board, player_color, 'Empty'),  #[2] empty
-                     generate_binary_vector(game_board, player_color, 'Bias')], dtype=np.float32)  # [3] bias
-    one_hot_board = one_hot_board.ravel() #1d board
+    # one_hot_board = np.array([generate_binary_vector(game_board, player_color, 'Player'),  # [0] player
+    #                  generate_binary_vector(game_board, player_color, 'Opponent'),  # [1] opponent
+    #                  generate_binary_vector(game_board, player_color, 'Empty'),  #[2] empty
+    #                  generate_binary_vector(game_board, player_color, 'Bias')], dtype=np.float32)  # [3] bias
+    # one_hot_board = one_hot_board.ravel() #1d board
+    #
+    # formatted_example = np.reshape(np.array(one_hot_board, dtype=np.float32),
+    #                                (len(one_hot_board) // 64, 8, 8))  # feature_plane x row x col
+    #
+    # for i in range(0, len(formatted_example)):
+    #     formatted_example[i] = formatted_example[
+    #         i].transpose()  # transpose (row x col) to get feature_plane x col x row
+    # formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
+    #
+    # fast_example = generate_binary_plane_POEB(game_board, player_color)
+    # assert (np.array_equal(formatted_example, fast_example))
 
-    formatted_example = np.reshape(np.array(one_hot_board, dtype=np.float32),
-                                   (len(one_hot_board) // 64, 8, 8))  # feature_plane x row x col
-
-    for i in range(0, len(formatted_example)):
-        formatted_example[i] = formatted_example[
-            i].transpose()  # transpose (row x col) to get feature_plane x col x row
-    formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
-
-    fast_example = generate_binary_plane_POEB(game_board, player_color)
-    assert (np.array_equal(formatted_example, fast_example))
-
-    return np.array(formatted_example, dtype=np.float32)
-
+    # return np.array(formatted_example, dtype=np.float32)
+    return generate_binary_plane_POEB(game_board, player_color)
 def generate_transition_vector(to, _from, player_color):
     # probability distribution over the 155 possible (vs legal) moves from the POV of the player.
     # Reasoning: six center columns where, if a piece was present, it could move one of three ways.

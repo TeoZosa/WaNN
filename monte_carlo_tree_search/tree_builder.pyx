@@ -308,6 +308,7 @@ def update_parent(without_enumerating_children, parent, NN_output, sim_info, loc
     return pruned_children
 
 def get_pruned_children(without_enumerating_children, parent, NN_output, sim_info,lock):
+    without_enumerating_children = False# update_and_prune deprecated
     if without_enumerating_children:
         pruned_children = update_and_prune(parent, NN_output, sim_info,lock)
     else:
@@ -401,7 +402,7 @@ def update_and_prune(parent, NN_output,sim_info, lock):
     pruned_children = assign_pruned_children(parent, pruned_children, other_children, children_win_statuses, lock)
     return pruned_children
 
-def enumerate_update_and_prune(parent, NN_output,sim_info, lock):
+def enumerate_update_and_prune_old(parent, NN_output,sim_info, lock):
     #Less efficient since we enumerate all children first.
     pruned_children = []
     other_children = []
@@ -430,6 +431,21 @@ def enumerate_update_and_prune(parent, NN_output,sim_info, lock):
     #else: parent already has all of its legal children
     return pruned_children
 
+def enumerate_update_and_prune(parent, NN_output, sim_info, lock):
+    #Less efficient since we enumerate all children first.
+    children = []
+    children_as_moves = enumerate_legal_moves_using_piece_arrays(parent)
+    num_legal_moves = len(children_as_moves)
+
+    for child_as_move in children_as_moves:
+        move = child_as_move['From'] + r'-' + child_as_move['To']
+        child = get_cached_child_new(parent, move, NN_output, sim_info, lock, num_legal_moves, aggressive=None)
+        if child is not None:
+            children.append(child)
+
+    children = assign_children(parent, children, lock)
+    return children
+
 def get_cached_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,  sim_info, lock, num_legal_moves, aggressive=None, on = False):
     if on:
         opening_move = True
@@ -446,25 +462,56 @@ def get_cached_child(parent, move, NN_output, top_children_indexes, best_child_v
              # : #opening moves
             if parent.height %2 == 0: #white's move
                 if move.lower() == opening_moves[move_number]:
-                    pruned_child, child_win_status, other_child = get_pruned_child(parent, move, NN_output, top_children_indexes,
+                    pruned_child, child_win_status, other_child = get_child(parent, move, NN_output, top_children_indexes,
                                                                       best_child_val, best_rank,sim_info, lock, num_legal_moves,
                                                                       opening_move)
                 else:#don't check moves we know we aren't going to make
                     pruned_child = child_win_status = None
             else: #black's move
-                pruned_child, child_win_status, other_child= get_pruned_child(parent, move, NN_output, top_children_indexes,
+                pruned_child, child_win_status, other_child= get_child(parent, move, NN_output, top_children_indexes,
                                                                   best_child_val, best_rank,
                                                                   sim_info, lock, num_legal_moves, opening_move)
         else: #non-opening move
             opening_move = False
-            pruned_child, child_win_status, other_child= get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,
+            pruned_child, child_win_status, other_child= get_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,
                                                                sim_info, lock, num_legal_moves, opening_move)
     else:
         opening_move = False
-        pruned_child, child_win_status, other_child= get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,
+        pruned_child, child_win_status, other_child= get_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,
                                                           sim_info, lock, num_legal_moves, opening_move)
 
     return pruned_child, child_win_status, other_child
+
+def get_cached_child_new(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,  sim_info, lock, num_legal_moves, aggressive=None, on = False):
+    if on:
+        opening_move = True
+        opening_moves = ['g2-f3', 'b2-c3', 'a2-b3', 'h2-g3']
+
+        if aggressive is not None: #not agnostic
+            if aggressive:
+                opening_moves.extend(['d2-d3', 'e2-e3'])
+
+            else: #defensive
+                opening_moves.extend(['a1-b2', 'h1-g2'])
+        move_number = ceil(parent.height/2)
+        if move_number < len(opening_moves): #or parent.height <20
+             # : #opening moves
+            if parent.height %2 == 0: #white's move
+                if move.lower() == opening_moves[move_number]:
+                    child = get_child(parent, move, NN_output,sim_info, lock, num_legal_moves,
+                                                                      opening_move)
+                else:#don't check moves we know we aren't going to make
+                    child = None
+            else: #black's move
+                child= get_child(parent, move, NN_output, sim_info, lock, num_legal_moves, opening_move)
+        else: #non-opening move
+            opening_move = False
+            child = get_child(parent, move, NN_output, sim_info, lock, num_legal_moves, opening_move)
+    else:
+        opening_move = False
+        child= get_child(parent, move, NN_output, sim_info, lock, num_legal_moves, opening_move)
+
+    return child
 
 def get_best_child_val(parent, NN_output, top_children_indexes):
     best_child_val = 0
@@ -587,65 +634,65 @@ def get_num_children_to_consider(parent):
     if parent.color == 'Black':  # opponent moves
         if height>= 80:
             parent.num_to_consider = 5#8
-            num_top_to_consider =  3 # else play with child val threshold
+            parent.num_to_keep =  3 # else play with child val threshold
 
         # elif height < 80:
         #     num_top_to_consider =  5#bug that I'm rolling with for now
 
         elif height >= 70:
             parent.num_to_consider = 3#6
-            num_top_to_consider =  3
+            parent.num_to_keep = 3
         # 2?   65-69      #??
         elif height < 70 and height >= 65:
             parent.num_to_consider = 3#6
-            num_top_to_consider =  2 # else play with child val threshold?
+            parent.num_to_keep = 2 # else play with child val threshold?
         # # # 4?   60-64
         elif height < 65 and height >= 60:
             parent.num_to_consider = 3#8
-            num_top_to_consider =  3 # else play with child val threshold
+            parent.num_to_keep =  3 # else play with child val threshold
         # 7 or 4?   50-59
         elif height < 60 and height >= 50:
             parent.num_to_consider = 3#8
-            num_top_to_consider =  3 # else play with child val threshold
+            parent.num_to_keep = 3 # else play with child val threshold
         # 5    40-49
         elif height < 50 and height >= 40:
-            num_top_to_consider =   3#7 #else play with child val threshold?
+            parent.num_to_keep =  3#7 #else play with child val threshold?
         # 2    30-39
         elif height < 40 and height >= 30:
-            num_top_to_consider =  4#7 # else play with child val threshold?
+            parent.num_to_keep = 4#7 # else play with child val threshold?
         # 2    20-29
         elif height < 30 and height >= 20:
-            num_top_to_consider =   1 #else play with child val threshold?
+            parent.num_to_keep =  1 #else play with child val threshold?
          # 2    0-19
         elif height < 20 and height >= 0:
-            num_top_to_consider =   1 #else play with child val threshold?
+            parent.num_to_keep =  1 #else play with child val threshold?
         else: #2?
-            num_top_to_consider =  1  # else play with child val threshold?
+            parent.num_to_keep = 1  # else play with child val threshold?
     else:
             # 3?   61-69
         if height >= 70:
             parent.num_to_consider = 3
-            num_top_to_consider =  1 # else play with child val threshold # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+            parent.num_to_keep = 1 # else play with child val threshold # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
             # 52-60
         elif height < 70 and height >= 61:#2?
             parent.num_to_consider = 3
-            num_top_to_consider =  3 # else play with child val threshold2#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+            parent.num_to_keep = 3 # else play with child val threshold2#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
             # 52-60
         elif height < 61 and height >= 52:
            parent.num_to_consider = 3
-           num_top_to_consider =  3 # else play with child val threshold#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
+           parent.num_to_keep = 3 # else play with child val threshold#3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
             # 3?   40-51
         elif height < 52 and height >= 40:  # 40?
            parent.num_to_consider = 3
-           num_top_to_consider =  2 # else play with child val threshold#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
+           parent.num_to_keep = 2 # else play with child val threshold#2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
         elif height < 20 and height >= 0:
-            num_top_to_consider =   1#2 #else play with child val threshold?
+            parent.num_to_keep =  1#2 #else play with child val threshold?
         else:
-            num_top_to_consider =  1#1 # else play with child val threshold?
+            parent.num_to_keep = 1#1 # else play with child val threshold?
     # else:
     #     num_top_to_consider = 999
     #     # num_top_to_consider = 3
-    return num_top_to_consider
+    return parent.num_to_keep
 
 def get_pruning_filter_by_height_ttt120(parent, child, top_children_indexes, child_val, best_child_val, best_rank,
                                  opening_move=False):
@@ -692,6 +739,52 @@ def get_pruned_child(parent, move, NN_output, top_children_indexes, best_child_v
         child_win_status = child.win_status
     return pruned_child, child_win_status, other_child
 
+def get_child(parent, move, NN_output, sim_info, lock, num_legal_children, opening_move=False):
+    pruned_child = None
+    other_child = None
+    child_win_status = None
+    child = init_unique_child_node_and_board(move, parent)
+    if child is not None:
+        check_for_winning_move(child)  # 1-step lookahead for gameover
+
+        child_val = NN_output[child.index]
+
+        if child.gameover:
+            sim_info.game_tree.append(child)
+
+
+        update_child(child, NN_output, None, num_legal_children, sim_info, do_eval=False)
+            
+    return child
+
+def assign_children(parent, children, children_win_statuses, lock):
+    with lock:
+        parent.being_checked = False
+        decrement_threads_checking_node(parent)
+        if parent.reexpanded:
+            reset_reexpansion_flag(parent)
+
+        if len(children) > 0:
+            if parent.children is None:
+                children.sort(key=lambda x: x.UCT_multiplier, reverse=True)#sort them by probability
+                if children[0].UCT_multiplier >1.9: # > 90%
+                    parent.num_to_keep = 1
+                for i in range(0, len(children)):
+                    if i < parent.num_to_keep or children[i].gameover:
+                        parent.children.append(children[i])
+                        eval_child(children[i])
+                    else:
+                        parent.other_children.append(children[i])
+                
+                if parent.num_to_consider == 0: # len (parent.children) >=  Virtually reexpanded;  else may try to reexpand and thrash around in tree search
+                    parent.reexpanded_already = True
+                update_win_status_from_children(parent)
+                backpropagate_num_checked_children(parent)
+                get_sum_rollout_rewards_from_children(parent)
+                # prune_from_win_status(parent)
+
+
+    return parent.children
 def assign_pruned_children(parent, pruned_children, other_children, children_win_statuses, lock):
     with lock:
         parent.being_checked = False

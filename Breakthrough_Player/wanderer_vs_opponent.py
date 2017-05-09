@@ -12,8 +12,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 501
   time_to_think = 10
   depth_limit = 5
-  date = r'05072017'
-  file_designator = '__128Nets_EOG50__3xUCT_NNWR_threshold_2or10_reexpandCont_initTLPP_PruningEOG'
+  date = r'05082017'
+  file_designator = '_066Nets___3xUCT_1or25_PruningExpandEOG__noSlowCopy'
   #BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'

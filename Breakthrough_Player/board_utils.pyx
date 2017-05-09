@@ -1,6 +1,6 @@
 #cython: language_level=3, boundscheck=False
 
-import copy
+# import copy
 from tools import utils
 import sys
 import random
@@ -45,6 +45,21 @@ def initial_game_board():
         1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
     }
 
+def new_game_board(board_state):
+    return {
+        10: board_state[10],  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+        # equivalent to 0 if white's move, 1 if black's move
+        9: board_state[9],  # is player_color white
+        8: {'a': board_state[8]['a'], 'b': board_state[8]['b'], 'c': board_state[8]['c'], 'd':board_state[8]['d'], 'e': board_state[8]['e'], 'f':board_state[8]['f'], 'g': board_state[8]['g'], 'h': board_state[8]['h']},
+        7: {'a': board_state[7]['a'], 'b': board_state[7]['b'], 'c': board_state[7]['c'], 'd':board_state[7]['d'], 'e': board_state[7]['e'], 'f':board_state[7]['f'], 'g': board_state[7]['g'], 'h': board_state[7]['h']},
+        6: {'a': board_state[6]['a'], 'b': board_state[6]['b'], 'c': board_state[6]['c'], 'd':board_state[6]['d'], 'e': board_state[6]['e'], 'f':board_state[6]['f'], 'g': board_state[6]['g'], 'h': board_state[6]['h']},
+        5: {'a': board_state[5]['a'], 'b': board_state[5]['b'], 'c': board_state[5]['c'], 'd':board_state[5]['d'], 'e': board_state[5]['e'], 'f':board_state[5]['f'], 'g': board_state[5]['g'], 'h': board_state[5]['h']},
+        4: {'a': board_state[4]['a'], 'b': board_state[4]['b'], 'c': board_state[4]['c'], 'd':board_state[4]['d'], 'e': board_state[4]['e'], 'f':board_state[4]['f'], 'g': board_state[4]['g'], 'h': board_state[4]['h']},
+        3: {'a': board_state[3]['a'], 'b': board_state[3]['b'], 'c': board_state[3]['c'], 'd':board_state[3]['d'], 'e': board_state[3]['e'], 'f':board_state[3]['f'], 'g': board_state[3]['g'], 'h': board_state[3]['h']},
+        2: {'a': board_state[2]['a'], 'b': board_state[2]['b'], 'c': board_state[2]['c'], 'd':board_state[2]['d'], 'e': board_state[2]['e'], 'f':board_state[2]['f'], 'g': board_state[2]['g'], 'h': board_state[2]['h']},
+        1: {'a': board_state[1]['a'], 'b': board_state[1]['b'], 'c': board_state[1]['c'], 'd':board_state[1]['d'], 'e': board_state[1]['e'], 'f':board_state[1]['f'], 'g': board_state[1]['g'], 'h': board_state[1]['h']},
+    }
+
 def initial_piece_arrays():
     white_pieces = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2',
                          'h2', ]
@@ -63,7 +78,7 @@ def move_piece(board_state, move, whose_move):
         move = move.split('x')#x for wanderer captures.
     _from = move[0].lower()
     to = move[1].lower()
-    next_board_state = copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
+    next_board_state = new_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
     next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
     next_board_state[int(_from[1])][_from[0]] = empty
     if whose_move == 'White':
@@ -72,6 +87,8 @@ def move_piece(board_state, move, whose_move):
     else:
         next_board_state[white_move_index] = 0
         next_board_state[is_white_index] = 1 #since black made this move, white makes next move
+    assert (board_state != next_board_state)
+
     return next_board_state
 
 def move_piece_update_piece_arrays(board_state, move, whose_move):
@@ -85,7 +102,7 @@ def move_piece_update_piece_arrays(board_state, move, whose_move):
         move = move.split('x')#x for wanderer captures.
     _from = move[0].lower()
     to = move[1].lower()
-    next_board_state = copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
+    next_board_state = new_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
     to_position =  next_board_state[int(to[1])][to[0]]
     player_piece_to_remove = _from #this will always become empty
     player_piece_to_add = to
@@ -101,6 +118,7 @@ def move_piece_update_piece_arrays(board_state, move, whose_move):
         next_board_state[is_white_index] = 1 #since black made this move, white makes next move
         if to_position == 'w':
             remove_opponent_piece = True
+    # assert (board_state != next_board_state)
     return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
 
 def move_piece_update_piece_arrays_in_place(board_state, move, whose_move):
@@ -357,11 +375,11 @@ def get_possible_moves(game_board, row, column, player_color):
 def check_left_diagonal_move(game_board, row, column, player_color):
     white = 'w'
     black = 'b'
-    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    farthest_left_column = columns[0]
+    left_columns = {'b':'a', 'c':'b', 'd':'c', 'e':'d', 'f':'e', 'g':'f', 'h':'g'}
+    farthest_left_column = 'a'
     move = None
     if column != farthest_left_column:  # check for left diagonal move only if not already at far left
-        left_diagonal_column = columns[columns.index(column) - 1]
+        left_diagonal_column = left_columns[column]
         _from = column + str(row)
         if player_color == 'White':
             row_ahead = row + 1
@@ -400,11 +418,11 @@ def check_forward_move(game_board, row, column, player_color):
 def check_right_diagonal_move(game_board, row, column, player_color):
     white = 'w'
     black = 'b'
-    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    farthest_right_column = columns[len(columns) - 1]
+    right_columns= {'a':'b', 'b':'c', 'c':'d', 'd':'e', 'e':'f', 'f':'g', 'g':'h'}
+    farthest_right_column = 'h'
     move = None
     if column != farthest_right_column:  # check for right diagonal move only if not already at far right
-        right_diagonal_column = columns[columns.index(column) + 1]
+        right_diagonal_column = right_columns[column]
         _from = column + str(row)
         if player_color == 'White':
             row_ahead = row + 1

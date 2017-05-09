@@ -2,7 +2,7 @@
 
 from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, \
-    SimulationInfo, increment_threads_checking_node, decrement_threads_checking_node, transform_wrt_overwhelming_amount
+    SimulationInfo, increment_threads_checking_node, decrement_threads_checking_node, transform_wrt_overwhelming_amount, backpropagate_num_checked_children, update_win_status_from_children
 from monte_carlo_tree_search.tree_builder import visit_single_node_and_expand, expand_descendants_to_depth_wrt_NN, init_new_root
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import print_board, initial_game_board, initial_piece_arrays
@@ -157,7 +157,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         #         if net_real_wins > 0:
         #             done = True
         # async_NN_update_threads = ThreadPool(processes=3)
-        num_processes = 3
+        num_processes = 10
         parallel_search_threads = ThreadPool(processes=num_processes)
 
         sim_info.start_time = start_time = time()
@@ -230,10 +230,30 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         print(best_move)
 
         if best_child.parent is not None:#separate for background search
-            best_child.parent.children = [best_child]
+            parent = best_child.parent
+            parent.children = [best_child]
+            best_child.parent.other_children = None
+            best_child.parent.reexpanded_already=True
+
+
         best_child.reexpanded_already = True
         if best_child.children is not None and best_child.other_children is not None:
             best_child.children.extend(best_child.other_children) # should never reappend a new root
+
+            #refresh win status since we unpruned the children
+            parent = best_child.parent
+            if parent is not None:
+                parent.win_status = None
+                parent.subtree_checked = False
+            best_child.win_status = None
+
+            update_win_status_from_children(best_child)
+
+
+            #refresh sub tree checked since we unpruned children
+            best_child.subtree_checked = False
+            backpropagate_num_checked_children(best_child)
+
             best_child.other_children = None
 
 

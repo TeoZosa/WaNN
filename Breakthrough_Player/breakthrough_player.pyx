@@ -98,7 +98,7 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
             move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
             prev_game_board = game_board
         if move is None:
-            return -10
+            return move
         print_move(move, color_to_move, file_to_write)
         game_board = move_piece(game_board, move, color_to_move)
         if move[2] == r'-':

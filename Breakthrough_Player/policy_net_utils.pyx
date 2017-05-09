@@ -50,7 +50,7 @@ def instantiate_session_both_128():#todo: return the graph as well in case we wa
 
     saver = tf.train.Saver()
     # path = os.path.join(r'..',r'policy_net_model',  r'combined_policy_nets', r'4')
-    path = os.path.join(r'..', r'policy_net_model', r'128Filters', r'0505DualWinningNets061Accuracy_128_4_')
+    path = os.path.join(r'..', r'policy_net_model', r'685AccWhite1', r'0507WinningWhiteNet065Accuracy_192_4_')
     # path = os.path.join(r'C:\Users\damon\PycharmProjects\BreakthroughANN\policy_net_model',  r'combined_policy_nets', r'4')
     # path = os.path.join(r'C:\Users\damon\PycharmProjects\BreakthroughANN\policy_net_model\DualWinningNets065Accuracy', r'DualWinningNets065Accuracy')
 
@@ -128,7 +128,7 @@ def build_policy_net_128():
     input = tf.placeholder(tf.float32, [None, 8, 8, 4])
     # y = tf.placeholder(tf.float32, [None, 155])
     filter_size = 3
-    n_filters = 128
+    n_filters = 192
     num_hidden = 4
     n_filters_out = [n_filters] * num_hidden + [1]
     n_layers = len(n_filters_out)

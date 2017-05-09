@@ -68,8 +68,9 @@ class MCTS(object):
 
                 move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
                 print(move, file=self.log_file)
+                move = move_regex.search(move)
                 if move is not None:
-                    move = move_regex.search(move).group(1)
+                    move = move.group(1)
             else:
                 move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",
                                         re.IGNORECASE)
@@ -77,8 +78,9 @@ class MCTS(object):
 
                 move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
                 print(move, file=self.log_file)
+                move = move_regex.search(move)
                 if move is not None:
-                    move = move_regex.search(move).group(1)
+                    move = move.group(1)
 
         return move
 

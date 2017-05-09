@@ -1,11 +1,11 @@
 #cython: language_level=3, boundscheck=False
 
-from math import log, sqrt, floor
+from math import sqrt, floor
 import random
 from bottleneck import argpartition
-from copy import deepcopy
-from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place
-from numpy import argsort
+# from copy import deepcopy
+from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, new_game_board
+# from numpy import argsort
 from time import time
 
 class SimulationInfo():
@@ -58,14 +58,19 @@ def update_tree_losses(node, amount=1, gameover=False): # visit and no win = los
 #backpropagate guaranteed win status
 def update_win_statuses(node, win_status, new_subtree=False):
     # #TODO: Remember to change this color for reverse tests!
+    continue_propagating = True
+
     if win_status is False and not node.gameover and not node.reexpanded_already:
         if node.color == 'White':
-            reexpansion_limit = 999 #don't ever get doomed unless you know you are doomed
+            reexpansion_limit = 1 #don't ever get doomed unless you know you are doomed
         else:
             reexpansion_limit = 1
-        if node.num_to_consider<=0 or node.other_children is None or (len(node.other_children) <= 0 and node.times_reexpanded >= reexpansion_limit):
+
+        if node.num_to_consider<=0 or node.other_children is None or len(node.other_children) <= 0 or node.times_reexpanded >= reexpansion_limit:
             node.reexpanded_already = True
+            continue_propagating = True#redundant
         else:
+            continue_propagating = False
             node.times_reexpanded +=1
             if node.num_to_consider < len(node.other_children):
                 node.children.extend(node.other_children[:node.num_to_consider])#TODO do eval on these children?
@@ -74,7 +79,10 @@ def update_win_statuses(node, win_status, new_subtree=False):
                 node.children.extend(node.other_children)#TODO do eval on these children?
                 node.other_children = None
                 node.reexpanded_already = True
-    else:
+            backpropagate_num_checked_children(node)
+
+
+    if continue_propagating:
         node.win_status = win_status
         parent = node.parent
         if parent is not None:#parent may now know if it is a win or loss_init.
@@ -99,6 +107,27 @@ def set_win_status_from_children(node, children_win_statuses, new_subtree=False)
     elif new_subtree: #appended from opponent move not already in tree
         update_win_statuses(node, None, new_subtree) #maybe this subtree had an inaccurate win_status before, ensure tree is correct. since this is done upon root assignment, won't take time in the middle of search.
        # some kids are winners, some kids are unknown => can't say anything with certainty
+
+
+def backpropagate_num_checked_children(node):
+    while node is not None:
+        set_num_checked_children(node)
+        if node.num_children_checked == len(node.children):
+           node.subtree_checked = True #may have to reupdate parent trees
+           node = node.parent
+        else:
+           node.subtree_checked = False
+           node=None
+
+
+
+
+def set_num_checked_children(node): #necessary for gameover kids: wouldn't have reported that they are expanded since another node may also be
+    count = 0
+    for child in node.children:
+        if child.subtree_checked:
+            count+= 1
+    node.num_children_checked = count
 
 def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS using async updates
     parent = node
@@ -201,7 +230,7 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         if best is None:
             if node.best_child is not None: #return best child if not already previously expanded
                 best_child = node.best_child
-                if best_child.win_status is None and best_child.visited is False: #best_child.gameover_visits<100 and not best_child.subtree_being_checked and best_child.threads_checking_node <=0
+                if best_child.win_status is None and best_child.visited is False and not best_child.subtree_being_checked and best_child.threads_checking_node <=0: #best_child.gameover_visits<100
                     best = node.best_child
                 else:
                     best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
@@ -244,15 +273,11 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
     best = None
     #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss_init
     if node.win_status is not None:#search subtrees that need to be reexpanded (probably won't happen anymore)
-        viable_children = list(filter(lambda x:  x.reexpanded and x.threads_checking_node <=0, node.children))
-        if len(viable_children) == 0:#search subtrees until they have a win status
-            viable_children = list(filter(lambda x:  (x.win_status is None and not x.subtree_being_checked) and (x.threads_checking_node <=0 or x.children is not None), node.children))
+        viable_children = list(filter(lambda x:  (x.win_status is None and not x.subtree_being_checked) and (x.threads_checking_node <=0 or x.children is not None), node.children))
         if len(viable_children) == 0:#search until all subtrees are checked
             viable_children = list(filter(lambda x:  not x.subtree_checked and not x.subtree_being_checked and (x.threads_checking_node <=0 or x.children is not None), node.children))
     else:#search subtrees that need to be reexpanded
-        viable_children = list(filter(lambda x:  x.reexpanded and x.threads_checking_node <=0, node.children))
-        if len(viable_children) == 0:#search subtrees until they have a win status
-          viable_children = list(filter(lambda x:  (x.win_status is None and not x.subtree_being_checked ) and (x.threads_checking_node <=0 or x.children is not None), node.children))
+        viable_children = list(filter(lambda x:  (x.win_status is None and not x.subtree_being_checked ) and (x.threads_checking_node <=0 or x.children is not None), node.children))
     if len(viable_children)>0:
         best = viable_children[0]
         best_val = get_UCT(best, parent_visits, start_time, time_to_think, sim_info)
@@ -616,7 +641,7 @@ def random_rollout(node):
     return result
 
 def real_random_rollout(node, end_of_game=True):
-    local_board = deepcopy(node.game_board)
+    local_board = new_game_board(node.game_board)
     current_color = player_color = node.color
     local_white_pieces = node.white_pieces[:]
     local_black_pieces = node.black_pieces[:]

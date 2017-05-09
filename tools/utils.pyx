@@ -3,9 +3,8 @@
 import os
 import fnmatch
 import sys
-import copy
+# import copy
 import numpy as np
-from Breakthrough_Player.board_utils import initial_game_board
 
 def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
     for root, dirs, files in os.walk(path):
@@ -485,6 +484,24 @@ def generate_move_lookup():
     # return dict([(key[1], key[0]) for key in enumerate(white_transitions)]), dict([(key[1], key[0]) for key in enumerate(black_transitions)]) # for index lookup by move
     return white_transitions, black_transitions
 
+def initial_game_board():
+    empty = 'e'
+    white = 'w'
+    black = 'b'
+    return {
+        10: -1,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+        # equivalent to 0 if white's move, 1 if black's move
+        9: 1,  # is player_color white
+        8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
+        7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
+        6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
+        1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
+    }
+
 def convert_board_to_2d_matrix_POEB(game_board, player_color):
     # Note: not the same as reflect_board_state in self_play_logs_to_datastructures;
     def reflect_board_state(state):  # since black needs to have a POV representation
@@ -519,10 +536,15 @@ def convert_board_to_2d_matrix_POEB(game_board, player_color):
         reflected_state = semi_reflected_state #copy.deepcopy(semi_reflected_state)
 
         #copies
-        row1 = reflected_state[1].copy()
-        row2 = reflected_state[2].copy()
-        row3 = reflected_state[3].copy()
-        row4 = reflected_state[4].copy()
+        row1 = {'a': semi_reflected_state[1]['a'], 'b': semi_reflected_state[1]['b'], 'c': semi_reflected_state[1]['c'], 'd':semi_reflected_state[1]['d'], 'e': semi_reflected_state[1]['e'], 'f':semi_reflected_state[1]['f'], 'g': semi_reflected_state[1]['g'], 'h': semi_reflected_state[1]['h']}# reflected_state[1].copy()
+        row2 = {'a': semi_reflected_state[2]['a'], 'b': semi_reflected_state[2]['b'], 'c': semi_reflected_state[2]['c'], 'd':semi_reflected_state[2]['d'], 'e': semi_reflected_state[2]['e'], 'f':semi_reflected_state[2]['f'], 'g': semi_reflected_state[2]['g'], 'h': semi_reflected_state[2]['h']}# reflected_state[2].copy()
+        row3 = {'a': semi_reflected_state[3]['a'], 'b': semi_reflected_state[3]['b'], 'c': semi_reflected_state[3]['c'], 'd':semi_reflected_state[3]['d'], 'e': semi_reflected_state[3]['e'], 'f':semi_reflected_state[3]['f'], 'g': semi_reflected_state[3]['g'], 'h': semi_reflected_state[3]['h']}#reflected_state[3].copy()
+        row4 = {'a': semi_reflected_state[4]['a'], 'b': semi_reflected_state[4]['b'], 'c': semi_reflected_state[4]['c'], 'd':semi_reflected_state[4]['d'], 'e': semi_reflected_state[4]['e'], 'f':semi_reflected_state[4]['f'], 'g': semi_reflected_state[4]['g'], 'h': semi_reflected_state[4]['h']}#reflected_state[4].copy()
+        # 
+        # 4: 
+        # 3: 
+        # 2: 
+        # 1: 
 
 
         reflected_state[1] = semi_reflected_state[8]

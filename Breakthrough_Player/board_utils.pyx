@@ -180,7 +180,11 @@ def check_legality(game_board, move):
         player_color = 'Black'
     legal_moves = enumerate_legal_moves(game_board, player_color)
     for legal_move in legal_moves:
-        if move_from == legal_move['From'].lower() and move_to == legal_move['To'].lower():
+        if legal_move[2] == '-':
+            legal_move = legal_move.split('-')
+        else:
+            legal_move = legal_move.split('x')
+        if move_from == legal_move[0].lower() and move_to == legal_move[1].lower():
             return True#return True after finding the move in the list of legal moves
     return False# if move not in list of legal moves, return False
 
@@ -327,113 +331,110 @@ def enumerate_legal_moves(game_board, player_color):
     for row in range(1, 9):  # rows 1-8; if white is in row 8 or black is in row 1, game over should have been declared
         for column in columns:
             if game_board[row][column] == player:
-                legal_moves.extend(get_possible_moves(game_board, row, column, player_color))
+                for possible_move in get_possible_moves(game_board, row, column, player_color):
+                    if possible_move is not None:
+                        legal_moves.append(possible_move)
     return legal_moves
 
 def enumerate_legal_moves_using_piece_arrays(node):
     player_color = node.color
     game_board = node.game_board
     if player_color == 'White':
-        player = 'w'
         pieces = node.white_pieces
     else: #player_color =='Black':
-        player = 'b'
         pieces = node.black_pieces
     columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     legal_moves = []
     for piece in pieces:
         row = int(piece[1])
         column = piece[0]
-        legal_moves.extend(get_possible_moves(game_board, row, column, player_color))
+        for possible_move in get_possible_moves(game_board, row, column, player_color):
+            if possible_move is not None:
+                legal_moves.append(possible_move)
     return legal_moves
 
 def enumerate_legal_moves_using_piece_arrays_nodeless(player_color, game_board, player_pieces):
     legal_moves = []
+    num_legal_moves = 0
     for piece in player_pieces:
         row = int(piece[1])
         column = piece[0]
-        legal_moves.extend(get_possible_moves(game_board, row, column, player_color))
+        for possible_move in get_possible_moves(game_board, row, column, player_color):
+            if possible_move is not None:
+                legal_moves.append(possible_move)
     return legal_moves
 
 def get_possible_moves(game_board, row, column, player_color):
-    possible_moves = []
+    possible_moves = [None]*3
 
     left_diagonal_move = check_left_diagonal_move(game_board, row, column, player_color)
-    if left_diagonal_move is not None:
-        possible_moves.append(left_diagonal_move)
+    possible_moves[0]=left_diagonal_move
 
     forward_move = check_forward_move(game_board, row, column, player_color)
-    if forward_move is not None:
-        possible_moves.append(forward_move)
+    possible_moves[1] = forward_move
 
     right_diagonal_move = check_right_diagonal_move(game_board, row, column, player_color)
-    if right_diagonal_move is not None:
-        possible_moves.append(right_diagonal_move)
+    possible_moves[2] = right_diagonal_move
 
     return possible_moves
 
 def check_left_diagonal_move(game_board, row, column, player_color):
-    white = 'w'
-    black = 'b'
     left_columns = {'b':'a', 'c':'b', 'd':'c', 'e':'d', 'f':'e', 'g':'f', 'h':'g'}
-    farthest_left_column = 'a'
     move = None
-    if column != farthest_left_column:  # check for left diagonal move only if not already at far left
+    if column != 'a':  # check for left diagonal move only if not already at far left
         left_diagonal_column = left_columns[column]
-        _from = column + str(row)
+        _from = ''.join((column, str(row)))
         if player_color == 'White':
             row_ahead = row + 1
             # if isinstance(game_board, int) or isinstance(game_board[row_ahead], int):
             #     True
-            if game_board[row_ahead][left_diagonal_column] != white:  # can move left diagonally if black or empty there
-                to = left_diagonal_column + str(row_ahead)
-                move = {'From': _from, 'To': to}
+            if game_board[row_ahead][left_diagonal_column] != 'w':  # can move left diagonally if black or empty there
+                to = ''.join((left_diagonal_column, str(row_ahead)))
+                move = '-'.join((_from, to))
         else: #player_color == 'Black'
             row_ahead = row - 1
-            if game_board[row_ahead][left_diagonal_column] != black:  # can move left diagonally if white or empty there
-                to = left_diagonal_column + str(row_ahead)
-                move = {'From': _from, 'To': to}
+            if game_board[row_ahead][left_diagonal_column] != 'b':  # can move left diagonally if white or empty there
+                to = ''.join((left_diagonal_column, str(row_ahead)))
+                move = '-'.join((_from, to))
     return move
 
 def check_forward_move(game_board, row, column, player_color):
-    empty = 'e'
     move = None
-    _from = column + str(row)
+    _from = ''.join((column, str(row)))
     if player_color == 'White':
         farthest_row = 8
         if row != farthest_row: #shouldn't happen anyways
             row_ahead = row + 1
-            if game_board[row_ahead][column] == empty:
-                to = column + str(row_ahead)
-                move = {'From': _from, 'To': to}
+            if game_board[row_ahead][column] == 'e':
+                to = ''.join((column,str(row_ahead)))
+                move = '-'.join((_from, to))
+
     else: # player_color == 'Black'
         farthest_row = 1
         if row != farthest_row: #shouldn't happen
             row_ahead = row - 1
-            if game_board[row_ahead][column] == empty:
-                to = column + str(row_ahead)
-                move = {'From': _from, 'To': to}
+            if game_board[row_ahead][column] == 'e':
+                to = ''.join((column,str(row_ahead)))
+                move = '-'.join((_from, to))
+
     return move
 
 def check_right_diagonal_move(game_board, row, column, player_color):
-    white = 'w'
-    black = 'b'
     right_columns= {'a':'b', 'b':'c', 'c':'d', 'd':'e', 'e':'f', 'f':'g', 'g':'h'}
-    farthest_right_column = 'h'
     move = None
-    if column != farthest_right_column:  # check for right diagonal move only if not already at far right
+    if column != 'h':  # check for right diagonal move only if not already at far right
         right_diagonal_column = right_columns[column]
-        _from = column + str(row)
+        _from = ''.join((column, str(row)))
         if player_color == 'White':
             row_ahead = row + 1
-            if game_board[row_ahead][right_diagonal_column] != white:  # can move right diagonally if black or empty there
-                to = right_diagonal_column + str(row_ahead)
-                move = {'From': _from, 'To': to}
+            if game_board[row_ahead][right_diagonal_column] != 'w':  # can move right diagonally if black or empty there
+                to = ''.join((right_diagonal_column,str(row_ahead)))
+                move = '-'.join((_from, to))
         else: #player_color == 'Black'
             row_ahead = row - 1
-            if game_board[row_ahead][right_diagonal_column] != black:  # can move right diagonally if white or empty there
-                to = right_diagonal_column + str(row_ahead)
-                move = {'From': _from, 'To': to}
+            if game_board[row_ahead][right_diagonal_column] != 'b':  # can move right diagonally if white or empty there
+                to = ''.join((right_diagonal_column,str(row_ahead)))
+                move = '-'.join((_from, to))
     return move
 
 def convert_legal_moves_into_policy_net_indexes(legal_moves, player_color):

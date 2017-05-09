@@ -50,7 +50,7 @@ def instantiate_session_both_128():#todo: return the graph as well in case we wa
 
     saver = tf.train.Saver()
     # path = os.path.join(r'..',r'policy_net_model',  r'combined_policy_nets', r'4')
-    path = os.path.join(r'..', r'policy_net_model', r'685AccWhite1', r'0507WinningWhiteNet065Accuracy_192_4_')
+    path = os.path.join(r'..', r'policy_net_model', r'685AccWhite', r'0507WinningWhiteNet065Accuracy_192_4_')
     # path = os.path.join(r'C:\Users\damon\PycharmProjects\BreakthroughANN\policy_net_model',  r'combined_policy_nets', r'4')
     # path = os.path.join(r'C:\Users\damon\PycharmProjects\BreakthroughANN\policy_net_model\DualWinningNets065Accuracy', r'DualWinningNets065Accuracy')
 

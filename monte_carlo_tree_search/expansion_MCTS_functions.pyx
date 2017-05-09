@@ -403,30 +403,11 @@ def run_MCTS_with_expansions_simulation( #args
             game_tree_size = len(sim_info.game_tree)
             sim_info.prev_game_tree_size = game_tree_size
             sim_info.counter += 1
-        # print_forced_win(root.win_status, sim_info)
         if root.subtree_checked or game_tree_size>10000:
             done = True
         else:
             done = False
-        # with async_update_lock:
-        #     if root.win_status is True or root.subtree_checked:
-        #         done = True
-        #     elif root.win_status is False:
-        #         if not root.reexpanded:
-        #             if root.height >=60:
-        #                 if root.threads_checking_node <= 0:
-        #                     root.reexpanded = True
-        #                     this_thread_reexpands_root = True
-        #                     root.threads_checking_node = 1
-        #                     done = False
-        #             else:
-        #                 # done = True
-        #                 done = False
-        #         else:
-        #             # done = True
-        #             done = False
-        #     else:
-        #         done = False
+
 
         if this_thread_reexpands_root:
             expand_descendants_to_depth_wrt_NN([root], False, 0, depth_limit, sim_info, async_update_lock,
@@ -449,7 +430,7 @@ def run_MCTS_with_expansions_simulation( #args
 def play_MCTS_game_with_expansions(root, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
 
     if root.gameover is False: #terminates at end-of-game moves
-        if root.children is None or root.reexpanded: #reached non-game ending leaf node
+        if root.children is None : #reached non-game ending leaf node
             with async_update_lock:
                 if root.threads_checking_node <=0:
                     increment_threads_checking_node(root)
@@ -558,7 +539,7 @@ def select_UCT_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type,
     with async_update_lock: #make sure it's not being updated asynchronously
         # if node.height >= 60:
         #     node.subtree_checked = False
-        while node is not None and (node.children is not None) and not node.reexpanded and not node.gameover:
+        while node is not None and (node.children is not None) and not node.gameover:
             node.threads_checking_node = 0 #clean this up on the way down
             if node.parent is not None:
                 node.parent.subtree_being_checked = False

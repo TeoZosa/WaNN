@@ -28,7 +28,6 @@ class TreeNode(object):
         self.num_children_being_checked = 0
         self.subtree_being_checked = False
         self.rolled_out_from = False
-        self.reexpanded = False
         self.reexpanded_already = False
 
         #TODO off limits flag for keeping children but only exploring them when we are reexpanded?

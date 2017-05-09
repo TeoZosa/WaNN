@@ -1,12 +1,13 @@
 #cython: language_level=3, boundscheck=False
 
-from math import sqrt, floor
-import random
+from math import  floor #, sqrt
+from libc.math cimport sqrt
+from random import sample, randint
 from bottleneck import argpartition
 # from copy import deepcopy
 from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, new_game_board
 # from numpy import argsort
-from time import time
+# from time import time
 
 class SimulationInfo():
     def __init__(self, file):
@@ -285,16 +286,6 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
 
         for i in range(1, len(viable_children)):
             #TODO: play with search after a height (ex. if keeping all children and we know win_status, we don't need to search those subtrees anymore)
-
-            # if (node.win_status is True and node.height <60) or node.win_status is None:
-            #     predicate = viable_children[i].win_status is None  # only consider subtrees where we don't already know what's going to happen
-            # else:  # all children are True (winners)
-            #     predicate = True  # the node is a loser (all children are winners); keep checking in case opponent makes a move into a subtree we wouldn't have expected
-
-            #for RL, just constrain the search space and assume wanderer has a win status if we do as well.
-            # predicate = viable_children[i].win_status is None  # only consider subtrees where we don't already know what's going to happen
-            #
-            # if predicate:
                 child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think, sim_info)
                 if child_value > best_val:
                     best = viable_children[i]
@@ -325,8 +316,8 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         # stoch_for_NN_weighting = 1- (stochasticity_for_multithreading/4)#since this can get so huge in the beginning,
         # maybe bouncing it around will be good so threads don't knock into each other?
         # # #TODO test this. SEEMS like a good idea since it will explore early and exploit later
-        annealed_factor = 1 - (
-            (start_time - time()) / time_to_think)  # starts at 1 and trends towards 0 as search proceeds
+        # annealed_factor = 1 - (
+        #     (start_time - time()) / time_to_think)  # starts at 1 and trends towards 0 as search proceeds
         # # with stochasticity multiplier between .5 and 1 so multithreading sees different values
         # stochasticity_for_multithreading = (1 - random.random() / 2) * max(0.25,
         #                                                                    annealed_factor)  # in printed stats games, probably never got to a low value
@@ -338,34 +329,30 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         # if node.parent.color ==sim_info.root.color:#make black's move explore more?
         #     PUCT_exploration_constant = stochasticity_for_multithreading*1000#1000
         # else:
-        PUCT_exploration_constant = 3*annealed_factor# stochasticity_for_multithreading
+        PUCT_exploration_constant = 1#3*annealed_factor# stochasticity_for_multithreading
 
 
-        norm_wins, norm_visits,true_wins, true_losses = transform_wrt_overwhelming_amount(node, overwhelming_on=False)
+        # norm_wins, norm_visits,true_wins, true_losses = transform_wrt_overwhelming_amount(node, overwhelming_on=False)
+        norm_wins = node.wins
+        norm_visits = node.visits
+        true_wins = node.gameover_wins
 
+        total_gameovers = node.gameover_visits
+        true_losses = total_gameovers-true_wins
 
-        total_gameovers = true_losses + true_wins
         #TODO: problem: exploring lower ranked children when their gameover ratio is favorable. Stops exploring higher ranked children even though their long term ratios may improve and get higher UCT vals
+        NN_prob = (node.UCT_multiplier - 1)
 
         if total_gameovers > 10: #true_loss_rate > 0.2 and  or total_gameovers > 100OR keep exploring best child until it hits 100 gameovers? or node.parent.color != sim_info.root.color  or (node is not node.parent.best_child)
-            prior_prob_weighting = (node.UCT_multiplier-1)/10#.80 => .08 TODO should I? this may defeat the search a bit.
+            prior_prob_weighting = NN_prob/10#.80 => .08 TODO should I? this may defeat the search a bit.
             norm_loss_rate = (true_losses/ max(1,total_gameovers))+ prior_prob_weighting
         else:
             norm_losses = (norm_visits-norm_wins)
             norm_loss_rate = norm_losses/norm_visits
-        # loss_rate = (node.visits-node.wins)/node.visits
-        # norm_loss_rate=loss_rate
-        NN_prob = (node.UCT_multiplier - 1)
-        # if node.parent is not None:
-        #     _, parent_visits,true_wins, true_losses = transform_wrt_overwhelming_amount(node.parent, overwhelming_on=False)
-        # else:
-        #     if parent_visits >= overwhelming_amount:
-        #         parent_visits = floor((parent_visits/overwhelming_amount) + (parent_visits%overwhelming_amount))
-        #     else:
-        #         parent_visits = parent_visits
 
-        norm_visits = node.visits
-        PUCT_exploration = PUCT_exploration_constant*NN_prob*(sqrt(max(1, parent_visits-norm_visits))/(1+norm_visits)) #interchange norm visits with node visits
+        # PUCT_exploration = PUCT_exploration_constant*NN_prob*(sqrt(max(1, parent_visits-norm_visits))/(1+norm_visits)) #interchange norm visits with node visits
+        PUCT_exploration = calculate_PUCT(PUCT_exploration_constant, NN_prob, max(1, parent_visits-norm_visits), norm_visits)
+
         exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
 
         # exploitation_factor = (node.visits - node.wins) / node.visits  # losses / visits of child = wins / visits for parent
@@ -373,6 +360,9 @@ def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         # UCT = (exploitation_factor + exploration_factor)
         PUCT = (exploitation_factor + PUCT_exploration)
     return PUCT # UCT + PUCT_exploration #* (node.UCT_multiplier ) #UCT from parent's POV
+
+cpdef double calculate_PUCT(int c, float NN_prob, int sibling_visits, int visits):
+    return c*NN_prob*(sqrt(sibling_visits)/(1+visits))
 
 def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose among equally successful children
     best_nodes = []
@@ -391,7 +381,7 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
                 best_nodes = get_best_children(node.children, game_num)
     if len(best_nodes) == 0:
         breakpoint = True
-    return random.sample(best_nodes, 1)[0]  # because a win for me = a loss for child
+    return sample(best_nodes, 1)[0]  # because a win for me = a loss for child
 
 def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
     best_losses = 0
@@ -584,7 +574,7 @@ def get_best_child(node_children, non_doomed = True):
             best, best_val_NN_scaled = get_best_child(node_children, non_doomed=False)
         else:
             # no children with value? happens if search is too slow
-            best = random.sample(node_children, 1)[0]
+            best = sample(node_children, 1)[0]
             best_val_NN_scaled = 0
     return best, best_val_NN_scaled
 
@@ -616,14 +606,14 @@ def get_best_most_visited_child(node_children):
                 best_val = child_win_rate
             best_visits = child.visits
     if best is None:
-        best = random.sample(node_children, 1)[0]
+        best = sample(node_children, 1)[0]
         best_val = 0
     return best, best_val
 
 
 def random_eval(node):
     amount = 1  # increase to pretend to outweigh NN?
-    win = random.randint(0, 1)
+    win = randint(0, 1)
     if win == 1:
         update_tree_wins(node, amount)
     else:
@@ -632,7 +622,7 @@ def random_eval(node):
 def random_rollout(node):
     move = node
     while move.children is not None:
-        move = random.sample(move.children, 1)[0]
+        move = sample(move.children, 1)[0]
     outcome, result = evaluation_function(move)
     if outcome == 0:
         update_tree_losses(move, 1)
@@ -661,7 +651,7 @@ def real_random_rollout(node, end_of_game=True):
             opponent_pieces = local_white_pieces
 
         moves = enumerate_legal_moves_using_piece_arrays_nodeless(current_color, local_board, player_pieces)
-        random_move = random.sample(moves, 1)[0]
+        random_move = sample(moves, 1)[0]
         random_move =  random_move['From'] + r'-' + random_move['To']
 
         local_board, player_piece_to_add, player_piece_to_remove, remove_opponent_piece = move_piece_update_piece_arrays_in_place(local_board, random_move, current_color)
@@ -1005,7 +995,7 @@ def random_to_depth_rollout(parent_to_update, depth=0): #bad because will not fi
     while depth > 0 and descendant_exists:
         if descendant_to_eval.children is not None:
             candidates = list(filter(lambda x: x.depth == depth, descendant_to_eval.children))
-            descendant_to_eval = random.sample(candidates, 1)[0]  # more MCTS-y.
+            descendant_to_eval = sample(candidates, 1)[0]  # more MCTS-y.
             depth -=1
         else:
             descendant_exists = False

@@ -6,14 +6,14 @@ from monte_carlo_tree_search.TreeNode import TreeNode
 from Breakthrough_Player.board_utils import  check_legality_MCTS
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, \
     get_top_children, update_child, set_win_status_from_children, random_rollout, \
-    update_win_status_from_children, eval_child, SimulationInfo, rollout_and_eval_if_parent_at_depth, \
+    update_win_status_from_children, eval_child, SimulationInfo, backpropagate_num_checked_children, \
     increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node, get_opponent_color, get_sum_rollout_rewards_from_children
 from multiprocessing import Pool, Process, pool
 from math import ceil
 from threading import Lock, current_thread
 from sys import stdout
 from time import time
-import random
+from random import sample
 
 
 class NoDaemonProcess(Process):
@@ -136,7 +136,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
         #         True
         unfiltered_unexpanded_nodes = unexpanded_nodes
 
-        unexpanded_nodes = list(filter(lambda x: ((x.children is None or x.reexpanded) and not x.gameover ), unexpanded_nodes)) #redundant
+        unexpanded_nodes = list(filter(lambda x: ((x.children is None) and not x.gameover ), unexpanded_nodes)) #redundant
         if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<=1024: #if any nodes to expand;
             if sim_info.root is not None: #aren't coming from reinitializing a root
                 if sim_info.main_pid == current_thread().name:
@@ -164,7 +164,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, without_enumerating, de
                 else:
                     depth_limit = 4
                     without_enumerating = False
-                depth_limit=800
+                # depth_limit=800
 
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
@@ -202,7 +202,7 @@ def offload_updates_to_separate_process(unexpanded_nodes, without_enumerating, d
     with lock:
         unchecked_nodes = []
         for parent in unexpanded_nodes:
-             if parent.threads_checking_node <= 1 and (parent.children is None or parent.reexpanded):
+             if parent.threads_checking_node <= 1 and (parent.children is None):
                  unchecked_nodes.append(parent)
                  grandparents.append(parent.parent)
                  parent.parent = None
@@ -248,7 +248,7 @@ def do_updates_in_the_same_process(unexpanded_nodes, without_enumerating, depth,
         parent = unexpanded_nodes[i]
         if time() - sim_info.start_time < sim_info.time_to_think:# and len(sim_info.game_tree)<10000  # stop updating parents as soon as we go over our time to think
             with lock:
-                if parent.threads_checking_node <= 1 and (parent.children is None or parent.reexpanded):
+                if parent.threads_checking_node <= 1 and (parent.children is None):
                     if parent.threads_checking_node <= 0:
                         increment_threads_checking_node(parent)
                     abort = False
@@ -271,10 +271,12 @@ def do_updates_in_the_same_process(unexpanded_nodes, without_enumerating, depth,
                             if best_child is not None:
                                 children_to_consider = [best_child]
                         else:  # white move
-                            if len(children)<3:
-                                children_to_consider = children
-                            else:
-                                children_to_consider = [children[0], children[1]]
+                            children_to_consider = children
+                            #
+                            # if len(children)<3:
+                            #     children_to_consider = children
+                            # else:
+                            #     children_to_consider = [children[0], children[1]]#TODO 1x1 expansions EOG
 
                 unexpanded_children.extend(children_to_consider)
         else:
@@ -298,7 +300,7 @@ def reattach_parent_to_grandparent(grandparent, parent):
 def update_parent(without_enumerating_children, parent, NN_output, sim_info, lock):
     pruned_children = []
     with lock:  # Lock after the NN update and check if we still need to update the parent
-        if parent.children is None or parent.reexpanded:
+        if parent.children is None:
             abort = False
             sim_info.game_tree.append(parent)
         else:
@@ -335,7 +337,7 @@ def update_parents_for_process(args):#when more than n parents, have a separate 
         parent = unexpanded_nodes[i]
         if time() - start_time < time_to_think:  # stop updating parents as soon as we go over our time to think
             with lock:
-                if parent.threads_checking_node <= 1 and (parent.children is None or parent.reexpanded):
+                if parent.threads_checking_node <= 1 and (parent.children is None):
                     if parent.threads_checking_node <= 0:
                         increment_threads_checking_node(parent)
                     abort = False
@@ -414,13 +416,12 @@ def enumerate_update_and_prune_old(parent, NN_output,sim_info, lock):
     top_children_indexes = get_top_children(NN_output, ranks_to_consider)
 
     best_child_val, best_rank = get_best_child_val(parent, NN_output, top_children_indexes)
-    if parent.children is None or parent.reexpanded:
+    if parent.children is None:
         predicate = True
     else:
         predicate = num_legal_moves != len(parent.children)
     if predicate:#if we don't already have all legal children
-        for child_as_move in children_as_moves:
-            move = child_as_move['From'] + r'-' + child_as_move['To']
+        for move in children_as_moves:
             pruned_child, child_win_status, other_child= get_cached_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank, sim_info, lock, num_legal_moves, aggressive=None)
             if pruned_child is not None:
                 pruned_children.append(pruned_child)
@@ -438,8 +439,7 @@ def enumerate_update_and_prune(parent, NN_output, sim_info, lock):
     children_as_moves = enumerate_legal_moves_using_piece_arrays(parent)
     num_legal_moves = len(children_as_moves)
 
-    for child_as_move in children_as_moves:
-        move = child_as_move['From'] + r'-' + child_as_move['To']
+    for move in children_as_moves:
         child = get_cached_child_new(parent, move, NN_output, sim_info, lock, num_legal_moves, aggressive=None)
         if child is not None:
             children.append(child)
@@ -447,41 +447,6 @@ def enumerate_update_and_prune(parent, NN_output, sim_info, lock):
     pruned_children = assign_children(parent, children, lock)
     return pruned_children
 
-def get_cached_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,  sim_info, lock, num_legal_moves, aggressive=None, on = False):
-    if on:
-        opening_move = True
-        opening_moves = ['g2-f3', 'b2-c3', 'a2-b3', 'h2-g3']
-
-        if aggressive is not None: #not agnostic
-            if aggressive:
-                opening_moves.extend(['d2-d3', 'e2-e3'])
-
-            else: #defensive
-                opening_moves.extend(['a1-b2', 'h1-g2'])
-        move_number = ceil(parent.height/2)
-        if move_number < len(opening_moves): #or parent.height <20
-             # : #opening moves
-            if parent.height %2 == 0: #white's move
-                if move.lower() == opening_moves[move_number]:
-                    pruned_child, child_win_status, other_child = get_child(parent, move, NN_output, top_children_indexes,
-                                                                      best_child_val, best_rank,sim_info, lock, num_legal_moves,
-                                                                      opening_move)
-                else:#don't check moves we know we aren't going to make
-                    pruned_child = child_win_status = None
-            else: #black's move
-                pruned_child, child_win_status, other_child= get_child(parent, move, NN_output, top_children_indexes,
-                                                                  best_child_val, best_rank,
-                                                                  sim_info, lock, num_legal_moves, opening_move)
-        else: #non-opening move
-            opening_move = False
-            pruned_child, child_win_status, other_child= get_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,
-                                                               sim_info, lock, num_legal_moves, opening_move)
-    else:
-        opening_move = False
-        pruned_child, child_win_status, other_child= get_child(parent, move, NN_output, top_children_indexes, best_child_val, best_rank,
-                                                          sim_info, lock, num_legal_moves, opening_move)
-
-    return pruned_child, child_win_status, other_child
 
 def get_cached_child_new(parent, move, NN_output, sim_info, lock, num_legal_moves, aggressive=None, on = False):
     if on:
@@ -526,106 +491,6 @@ def get_best_child_val(parent, NN_output, top_children_indexes):
             rank += 1
     return best_child_val, rank
 
-# def get_pruning_filter_by_height(parent, child, top_children_indexes, child_val, best_child_val, best_rank, opening_move=False):
-#     if parent.height < 80 and not opening_move and not parent.reexpanded:
-#         # or if root, top3?
-#
-#         if parent.height % 2 == 0:  # white moves
-#
-#             if False:
-#                 num_top_to_consider = best_rank +  1
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#             # elif parent.height in num_to_consider_dict.keys():
-#             #     num_top_to_consider = best_rank +  num_to_consider_dict[parent.height]
-#             #     top_n_children = top_children_indexes[:num_top_to_consider]
-#             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#             # 70-79
-#             elif parent.height >= 70:
-#                 num_top_to_consider = best_rank +  3
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#             # 2?   65-69      #??
-#             elif parent.height < 70 and parent.height >= 65:
-#                 num_top_to_consider = best_rank +  2  # else play with child val threshold?
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#             # 4?   60-64
-#             # elif parent.height < 65 and parent.height >= 60:
-#             #     num_top_to_consider = best_rank +  4  # else play with child val threshold?
-#             #     top_n_children = top_children_indexes[:num_top_to_consider]
-#             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#             # 7 or 4?   50-59
-#             # elif parent.height < 60 and parent.height >= 55:
-#             #     num_top_to_consider = best_rank +  4 #else play with child val threshold?
-#             #     top_n_children = top_children_indexes[:num_top_to_consider]
-#             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#             # 4?   40-64
-#             elif parent.height < 65 and parent.height >= 40:
-#                 num_top_to_consider = best_rank +  3  # else play with child val threshold?
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#             # 5    40-49
-#             # elif parent.height < 50 and parent.height >= 40:
-#             #     num_top_to_consider = best_rank +  5 #else play with child val threshold?
-#             #     top_n_children = top_children_indexes[:num_top_to_consider]
-#             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#             # 2    30-39 #TODO: put this in at next test: at log 85 doomed itself when it thought it found a forced win because it didn't see the rank 2 reply
-#             # elif parent.height < 40 and parent.height >= 30:
-#             #     num_top_to_consider = best_rank +  2  # else play with child val threshold?
-#             #     top_n_children = top_children_indexes[:num_top_to_consider]
-#             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#             # 2    20-29
-#             # elif parent.height < 30 and parent.height >= 20 and not parent.height < 20 :
-#             #     num_top_to_consider = best_rank +  2 #else play with child val threshold?
-#             #     top_n_children = top_children_indexes[:num_top_to_consider]
-#             #     predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#             else:
-#                 num_top_to_consider = best_rank +  1  # else play with child val threshold?
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#                 # predicate = True
-#         else:  # black's move
-#             if False:
-#                 num_top_to_consider = best_rank +  1
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#                 # 3? 2?  61-69
-#             elif parent.height < 70 and parent.height >= 61:
-#                 num_top_to_consider = best_rank +  2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#                 # 52-60 #3?
-#             elif parent.height < 61 and parent.height >= 52:
-#                 num_top_to_consider = best_rank +  3  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#
-#                 # 3?   40-51 #2?
-#             elif parent.height < 52 and parent.height >= 40:  # 40?
-#                 num_top_to_consider = best_rank +  2  # else play with child val threshold? missed an easy win and thought it was doomed at 2 height 53
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#             else:
-#                 num_top_to_consider = best_rank +  1  # else play with child val threshold?
-#                 top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#                 predicate = child.index in top_n_children or child_val > .30 or best_child_val - child_val < .10
-#     else:
-#         if parent.reexpanded:
-#             num_top_to_consider = best_rank + 5  # else play with child val threshold?
-#             top_n_children = top_children_indexes[best_rank:num_top_to_consider]
-#             predicate = child.index in top_n_children or best_child_val - child_val < .10
-#         else:
-#             predicate = True
-#     return predicate
 def get_num_children_to_consider(parent):
     height = parent.height
 
@@ -646,18 +511,18 @@ def get_num_children_to_consider(parent):
             parent.num_to_keep = 2 # else play with child val threshold?
         # # # 4?   60-64
         elif height < 65 and height >= 60:
-            parent.num_to_consider = 1#8
-            parent.num_to_keep = 2 #3?  else play with child val threshold
+            parent.num_to_consider = 0#8
+            parent.num_to_keep = 4 #3?  else play with child val threshold
         # 7 or 4?   50-59
         elif height < 60 and height >= 50:
-            parent.num_to_consider = 1#8
-            parent.num_to_keep = 2 #3?   else play with child val threshold
+            parent.num_to_consider = 0#8
+            parent.num_to_keep = 4 #3?   else play with child val threshold
         # 5    40-49
         elif height < 50 and height >= 40:
-            parent.num_to_keep =  2#7 #else play with child val threshold?
+            parent.num_to_keep =  4#7 #else play with child val threshold?
         # 2    30-39
         elif height < 40 and height >= 30:
-            parent.num_to_keep =3#7 # else play with child val threshold?
+            parent.num_to_keep = 4 #7 # else play with child val threshold?
         # 2    20-29
         elif height < 30 and height >= 20:
             parent.num_to_keep =  3 #else play with child val threshold?
@@ -754,8 +619,7 @@ def assign_children(parent, children, lock):
     with lock:
         parent.being_checked = False
         decrement_threads_checking_node(parent)
-        if parent.reexpanded:
-            reset_reexpansion_flag(parent)
+
 
         if len(children) > 0:
             if parent.children is None:
@@ -790,8 +654,7 @@ def assign_pruned_children(parent, pruned_children, other_children, children_win
     with lock:
         parent.being_checked = False
         decrement_threads_checking_node(parent)
-        if parent.reexpanded:
-            reset_reexpansion_flag(parent)
+
 
         if len(other_children) > 0:
             if parent.other_children is None:
@@ -833,15 +696,7 @@ def assign_pruned_children(parent, pruned_children, other_children, children_win
 
     return pruned_children
 
-def get_reexpanded_amount(node):
-    node.reexpanded = True
-    reexpanded_amount = get_num_children_to_consider(node)
-    node.reexpanded = False
-    return reexpanded_amount
 
-def reset_reexpansion_flag(parent):
-    parent.reexpanded = False
-    parent.reexpanded_already = True
 
 
 
@@ -873,34 +728,34 @@ def prune_from_win_status(node, height_cutoff = 0):
 
 
 
-def backpropagate_num_checked_children(node, reexpansion=False, reexpanding_grandparent=False):
-    while node is not None:
-        if not node.reexpanded: #this will change after reexpansion
-            set_num_checked_children(node)
-            if reexpansion:
-                if node.num_children_checked != len(node.children):
-                   node.subtree_checked = False #may have to reupdate parent trees
-                else:
-                   node.subtree_checked = True
-                node = node.parent
-            else:
-                if node.num_children_checked ==  len(node.children): #all children have been searched; since this is going backwards, will only return true if recursively true
-                    node.subtree_checked = True
-                    if reexpanding_grandparent:
-                        node = None
-                    else:
-                        node = node.parent
-                else:
-                    node = None
-        else:
-            node = None
-
-def set_num_checked_children(node): #necessary for gameover kids: wouldn't have reported that they are expanded since another node may also be
-    count = 0
-    for child in node.children:
-        if child.subtree_checked:
-            count+= 1
-    node.num_children_checked = count
+# def backpropagate_num_checked_children(node, reexpansion=False, reexpanding_grandparent=False):
+#     while node is not None:
+#         if not node.reexpanded: #this will change after reexpansion
+#             set_num_checked_children(node)
+#             if reexpansion:
+#                 if node.num_children_checked != len(node.children):
+#                    node.subtree_checked = False #may have to reupdate parent trees
+#                 else:
+#                    node.subtree_checked = True
+#                 node = node.parent
+#             else:
+#                 if node.num_children_checked ==  len(node.children): #all children have been searched; since this is going backwards, will only return true if recursively true
+#                     node.subtree_checked = True
+#                     if reexpanding_grandparent:
+#                         node = None
+#                     else:
+#                         node = node.parent
+#                 else:
+#                     node = None
+#         else:
+#             node = None
+#
+# def set_num_checked_children(node): #necessary for gameover kids: wouldn't have reported that they are expanded since another node may also be
+#     count = 0
+#     for child in node.children:
+#         if child.subtree_checked:
+#             count+= 1
+#     node.num_children_checked = count
 
 def init_unique_child_node_and_board(child_as_move, parent):
     child_index = index_lookup_by_move(child_as_move)
@@ -1038,45 +893,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
     update_win_status_from_children(new_root_parent, new_subtree=True)
     return new_root
 
-# def reexpand_doomed_root():
-#     def enumerate_update_and_prune(parent, NN_output, sim_info, lock):
-#         # Less efficient since we enumerate all children first.
-#         pruned_children = []
-#         children_win_statuses = []
-#         top_children_indexes = get_top_children(NN_output)
 #
-#         best_child_val, best_rank = get_best_child_val(parent, NN_output, top_children_indexes)
-#
-#         children_as_moves = enumerate_legal_moves_using_piece_arrays(parent.game_board, parent.color)
-#         num_legal_moves = len(children_as_moves)
-#         if parent.children is None:
-#             predicate = True
-#         else:
-#             predicate = num_legal_moves != len(parent.children)
-#             child_indexes = list(map(lambda x: x.index, parent.children))
-#         if predicate:  # if we don't already have all legal children
-#             for child_as_move in children_as_moves:
-#                 move = child_as_move['From'] + r'-' + child_as_move['To']
-#                 move_as_index = index_lookup_by_move(move)
-#                 if move_as_index in child_indexes:
-#
-#
-#                 pruned_child, child_win_status, other_child= get_cached_child(parent, move, NN_output, top_children_indexes,
-#                                                                   best_child_val, best_rank, sim_info, lock,
-#                                                                   num_legal_moves, aggressive=None)
-#
-#                 if pruned_child is not None:
-#                     if parent.children is not None:
-#                         for child in parent.children:
-#                             if child.game_board == pruned_child.game_board:
-#                                 pruned_child = child
-#                                 child_win_status = child.win_status
-#                                 break
-#                     pruned_children.append(pruned_child)
-#                     children_win_statuses.append(child_win_status)
-#             assign_pruned_children(parent, pruned_children, children_win_statuses, lock)
-#         # else: parent already has all of its legal children
-#         return pruned_children
 
 
 def check_for_winning_move(child_node, rollout=False):
@@ -1126,7 +943,7 @@ def true_random_rollout_EOG_thread_func(node):
             expand_node(node, rollout=True)
             node.expanded = False  # not a true expansion
         while node.children is not None:
-            node = random.sample(node.children, 1)[0]  #
+            node = sample(node.children, 1)[0]  #
             depth += 1
     random_rollout(node)
     return node

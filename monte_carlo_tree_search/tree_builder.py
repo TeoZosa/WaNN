@@ -136,32 +136,36 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
         unfiltered_unexpanded_nodes = unexpanded_nodes
 
         unexpanded_nodes = list(filter(lambda x: ((x['children'] is None) and not x['gameover'] ), unexpanded_nodes)) #redundant
-        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<=4096: #if any nodes to expand;
-            if sim_info.root is not None: #aren't coming from reinitializing a root
-                if sim_info.main_pid == current_thread().name:
-                    depth_limit = 1 #main thread expands once and exits to call other threads
-                # elif unexpanded_nodes[0]['height'] > 80:
-                #     # if len(unexpanded_nodes) == 1:
-                #     #     print("1 element to expand\n"
-                #     #           "move = {move} at height {height}\n"
-                #     #           "threads checking this node = {threads}\n".format(threads=unexpanded_nodes[0]['threads_checking_node'],height=unexpanded_nodes[0]['height'],move=move_lookup_by_index(unexpanded_nodes[0]['index'], get_opponent_color(unexpanded_nodes[0]['color']))))
-                #     # else:
-                #     #     print(len(unexpanded_nodes))
-                #     depth_limit = 128
-                # elif unexpanded_nodes[0]['height'] > 70:
-                #     depth_limit = 16
+        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<=256: #if any nodes to expand;
+            # if sim_info.root is not None: #aren't coming from reinitializing a root
+            #     if sim_info.main_pid == current_thread().name:
+            #         depth_limit = 1 #main thread expands once and exits to call other threads
+            #     # elif unexpanded_nodes[0]['height'] > 80:
+            #     #     # if len(unexpanded_nodes) == 1:
+            #     #     #     print("1 element to expand\n"
+            #     #     #           "move = {move} at height {height}\n"
+            #     #     #           "threads checking this node = {threads}\n".format(threads=unexpanded_nodes[0]['threads_checking_node'],height=unexpanded_nodes[0]['height'],move=move_lookup_by_index(unexpanded_nodes[0]['index'], get_opponent_color(unexpanded_nodes[0]['color']))))
+            #     #     # else:
+            #     #     #     print(len(unexpanded_nodes))
+            #     #     depth_limit = 128
+            #     # elif unexpanded_nodes[0]['height'] > 70:
+            #     #     depth_limit = 16
+            #     else:
+            #         depth_limit = 800
+
+                #
+                # elif unexpanded_nodes[0]['height'] > 50:
+                #     depth_limit = 800
+                # elif unexpanded_nodes[0]['height'] > 40:
+                #     depth_limit = 800
+                # elif unexpanded_nodes[0]['height'] > 20:
+                #     depth_limit = 800
+                #
                 # else:
-                elif unexpanded_nodes[0]['height'] > 50:
-                    depth_limit = 800
-                elif unexpanded_nodes[0]['height'] > 40:
-                    depth_limit = 800
-                elif unexpanded_nodes[0]['height'] > 20:
-                    depth_limit = 800
+                #     depth_limit = 4
+                #
 
-                else:
-                    depth_limit = 4
-            # depth_limit=800
-
+            depth_limit = 800
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
             # start = time()
@@ -256,23 +260,29 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
                 children_to_consider = []
                 if depth+1 < depth_limit:  # if we are allowed to enter the outermost while loop again
                     with lock:
-                        if parent['color'] == sim_info.root['color']:  # playermove
+
+                        # game_tree_root = sim_info.root
+                        if parent['color'] == 'White':  # sim_info.root['color'] playermove
                             best_child = None
                             for child in children: #walk down children sorted by NN probability
                                 if child['win_status'] is None and child['threads_checking_node']<=0:
                                     best_child = child
                                     break
                             if best_child is not None:
-                                children_to_consider = [best_child]
+                                unexpanded_children.append(best_child)
                         else:  # white move
-                            children_to_consider = children
-                            #
-                            # if len(children)<3:
-                            #     children_to_consider = children
-                            # else:
-                            #     children_to_consider = [children[0], children[1]]#TODO 1x1 expansions EOG
+                            # best_child = children[0]
+                            # children_to_consider = [children[0]]
+                            # children_to_consider = children
 
-                unexpanded_children.extend(children_to_consider)
+                            num_children = len(children)
+                            if num_children>=2:
+                                unexpanded_children.extend([children[0], children[1]])
+                            elif num_children==1:
+                                unexpanded_children.append(children[0])#TODO 1x1 expansions EOG
+
+                # unexpanded_children.extend(children_to_consider)
+
         else:
             reset_threads_checking_node(parent)  # have to iterate over all parents to set this
             over_time = True

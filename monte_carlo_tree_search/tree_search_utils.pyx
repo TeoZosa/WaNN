@@ -244,21 +244,20 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
     #         best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
 
     else:
-        # if node['color'] ==sim_info.root['color']:
+        # if node['color'] == sim_info.root['color']:
         #     for child in node['children']:
-        #         if child['gameover_visits'] < 50 and child['win_status'] is None and not child['subtree_being_checked'] and child['threads_checking_node'] <=0:
+        #         if child['win_status'] is None and not child['subtree_being_checked'] and child['threads_checking_node'] <=0:
         #             best = child
         #             break
-        if best is None:
-            # if node['best_child'] is not None: #return best child if not already previouslyexpanded
-            #     best_child = node['best_child']
-            #     if best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
-            #         best = node['best_child']
-            #     else:
-            #         best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
-
-            if node['children'] is not None: #if this node has children to choose from: should alwayshappen
+        if node['best_child'] is not None: #return best child if not already previouslyexpanded
+            best_child = node['best_child']
+            if best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
+                best = node['best_child']
+            else:
                 best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
+
+        elif node['children'] is not None: #if this node has children to choose from: should alwayshappen
+            best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
     return best  # because a win for me = a loss for child
 
 
@@ -272,7 +271,9 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
         if len(viable_children) == 0:#search until all subtrees are checked
             viable_children = list(filter(lambda x:  not x['subtree_checked'] and not x['subtree_being_checked'] and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
     else:#search subtrees that need to be reexpanded
-        viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
+        viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] and x['UCT_multiplier'] > 1.01 ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
+        if len(viable_children) == 0:
+            viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
     if len(viable_children)>0:
         best = viable_children[0]
         best_val = get_UCT(best, parent_visits, start_time, time_to_think, sim_info)
@@ -435,7 +436,7 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
                 best_nodes = get_best_children(node['children'],game_num)
     if len(best_nodes) == 0:
         breakpoint = True
-    return sample(best_nodes, 1)[0]  # because a win for me = a loss for child
+    return best_nodes[0]  # because a win for me = a loss for child
 
 def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
     best_losses = 0
@@ -628,7 +629,7 @@ def get_best_child(node_children, non_doomed = True):
             best, best_val_NN_scaled = get_best_child(node_children, non_doomed=False)
         else:
             # no children with value? happens if search is too slow
-            best = sample(node_children, 1)[0]
+            best = node_children[0]
             best_val_NN_scaled = 0
     return best, best_val_NN_scaled
 
@@ -660,7 +661,7 @@ def get_best_most_visited_child(node_children):
                 best_val = child_win_rate
             best_visits = child['visits']
     if best is None:
-        best = sample(node_children, 1)[0]
+        best = node_children[0]
         best_val = 0
     return best, best_val
 
@@ -941,107 +942,71 @@ def evaluation_function_nodeless(white_pieces, black_pieces, player_color):
 #         thread['parent']_index += 1
 
 def update_child(child, NN_output, sim_info, do_eval=True):
-    child_val = NN_output[child['index']]
+    child_index = child['index']
+    do_update = True
+    if child_index <= 19:
+        #              2: 'b1-a2',
+        #              3: 'b1-b2',
+        #              4: 'b1-c2',
+        #              5: 'c1-b2',
+        #              6: 'c1-c2',
+        #              7: 'c1-d2',
 
-    # if top_children_indexes[0] == child['index']:  # rank 1child
-    #     child['parent']['best_child'] = child  # mark as node to expandfirst
-    # child_val *= 2
-    #     if child_val >= .90:
-    #         child_val =1.5
-    #     else:
-    #         if child_val > .20:
-    #             child_val = max(child_val, .491780905081678)  # sometimes it gets under confident
-    # elif top_children_indexes[1] == child['index']:
-    #     child_val = max(child_val, .18969851788510255)
-    # elif top_children_indexes[2] == child['index']:
-    #     child_val = max(child_val, .10004993248995586)
-    # elif top_children_indexes[3] == child['index']:
-    #     child_val = max(child_val, .05907234751883528)
-    # elif top_children_indexes[4] == child['index']:
-    #     child_val = max(child_val, .036425774953655967)
-    # elif top_children_indexes[5] == child['index']:
-    #     child_val = max(child_val, .024950243991511947)
-    # elif top_children_indexes[6] == child['index']:
-    #     child_val = max(child_val, .017902280093502234)
-    # elif top_children_indexes[7] == child['index']:
-    #     child_val = max(child_val, .013378707110885424)
-    # elif top_children_indexes[8] == child['index']:
-    #     child_val = max(child_val, .010220394763159517)
-    # elif top_children_indexes[9] == child['index']:
-    #     child_val = max(child_val, .008041201598780913)
+        #              14: 'f1-e2',
+        #              15: 'f1-f2',
+        #              16: 'f1-g2',
+        #              17: 'g1-f2',
+        #              18: 'g1-g2',
+        #              19: 'g1-h2',
+        if (2 <= child_index <= 7 or 14<= child_index <=19) and child['height'] < 70:
+            child['gameover_visits'] = 9000
+            child['gameover_wins'] = 9000
+            child['visits'] = 65536
+            child['wins'] = 65536
+            do_update = False
 
-    child['UCT_multiplier'] = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selectionof
-    # NN's top picks as a function of probability returned by NN
-    if not child['gameover']:
-        normalized_value = int(child_val * 100)
-
-        # TODO: 03/15/2017 removed based on prof Lorentz input
-        # if child['color'] =='Black':
-        #     child['UCT_multiplier']  = 1 + (child_val*2)# stay close to policy (net) trajectory by biasing UCT selectionof
-        #                                      # NN's top picks as a function of probability returned by NN
-        # else:
-        #     child['UCT_multiplier'] = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selectionof
-        #     # NN's top picks as a function of probability returned by NN
+            #some large but not impossibly large value to discourage moving pieces from the home row
+    if do_update:
+        child_val = NN_output[child_index]
 
 
+        child['UCT_multiplier'] = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selection of
+        # NN's top picks as a function of probability returned by NN
 
-        # TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
-        # i.e. if policy chooses child with 30% probability => 30/100 games
-        # => randomly decide which of those 30 games are wins and which are losses
+        if not child['gameover']:
+            normalized_value = int(child_val * 100)
 
-        # TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
-        prior_value_multiplier = 1
-        weighted_losses = normalized_value * prior_value_multiplier
-        child['visits'] = 100 *prior_value_multiplier
-        # weighted_wins = (child['visits']-weighted_losses)
-        weighted_wins = ((
-                         child['visits'] - weighted_losses) ) #/ child['visits']  # may be a negative number if we are increasing probability **2
-        child['wins'] =  min(weighted_wins, child['visits']*.75)#to prevent it from initializing it with a 0 win rate for really low probabilitynodes
-        if weighted_wins < child['visits']*.90:
-            child['gameover_visits'] =child['visits']
-            child['gameover_wins'] =weighted_wins
-        # update_tree_wins(child, weighted_wins)
-        # update_tree_losses(child, weighted_losses)
+            # TODO: 03/15/2017 removed based on prof Lorentz input
+            # if child['color'] =='Black':
+            #     child['UCT_multiplier']  = 1 + (child_val*2)# stay close to policy (net) trajectory by biasing UCT selection of
+            #                                      # NN's top picks as a function of probability returned by NN
+            # else:
+            #     child['UCT_multiplier'] = 1 + (child_val)  # stay close to policy (net) trajectory by biasing UCT selection of
+            #     # NN's top picks as a function of probability returned by NN
 
-        #  num_top_to_consider = max(1, int(num_legal_children/2.5))
-        #  top_n_to_consider = top_children_indexes[:num_top_to_consider]
-        #  num_winners = max(1, int(num_top_to_consider/2))
-        #  num_losers = min (num_winners, num_top_to_consider)
-        #  top_n_winners = top_children_indexes[:num_winners]
-        #  top_n_losers = top_children_indexes[num_winners:num_losers]
-        #
-        #  #TODO: 03232017 based on prof lorentz input, only backprop a single win/loss_init value
-        # #01_03242017move_EBFS MCTSvsWandererdepth1_ttt10Annealing_Multiplier_BackpropOnlyTopKids_singleDL is using this + predicate!
-        #  if child['index'] intop_n_winners:
-        #      update_tree_wins(child['parent'],1)
-        #  elif child['index'] intop_n_losers:
-        #      update_tree_losses(child['parent'],1)
 
-        # if child['index'] intop_n_to_consider:
-        # outcome, _ = evaluation_function(child)
-        # if outcome == 1:
-        #     update_tree_losses(child['parent'])
-        # else:
-        #     if child_val> .90:
-        #         amount = 1
-        #     else:
-        #         amount = 1
-        #     update_tree_wins(child['parent'],amount)
 
-        # if child_val > .30:
-        #     update_tree_wins(child['parent'])
-        # else:
-        #     update_tree_losses(child['parent'])
-        # if child['height'] >=60:
-        # random_prob = random.random()
-        random_prob = 1
-        if sim_info.do_eval and do_eval:
-            # rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
-            eval_child(child)
+            # TODO: 03/11/2017 7:45 AM added this to do simulated random rollouts instead of assuming all losses
+            # i.e. if policy chooses child with 30% probability => 30/100 games
+            # => randomly decide which of those 30 games are wins and which are losses
 
-        # child['visits'] =normalized_value
-        # child['wins'] = normalized_value *random_rollout(child)
-        # assert (child['visits'] >=child['wins'])
+            # TODO: 03/15/2017 based on Prof Lorentz input, wins/visits = NNprob/100
+            prior_value_multiplier = 1
+            weighted_losses = normalized_value * prior_value_multiplier
+            child['visits'] = 100 *prior_value_multiplier
+            # weighted_wins = (child['visits']-weighted_losses)
+            weighted_wins = ((
+                             child['visits'] - weighted_losses) ) #/ child['visits']  # may be a negative number if we are increasing probability **2
+            child['wins'] =  min(weighted_wins, child['visits']*.75)#to prevent it from initializing it with a 0 win rate for really low probabilitynodes
+            if weighted_wins < child['visits']*.90:
+                child['gameover_visits'] =child['visits']
+                child['gameover_wins'] =weighted_wins
+
+            random_prob = 1
+            if sim_info.do_eval and do_eval:
+                # rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
+                eval_child(child)
+
 def random_to_depth_rollout(parent_to_update, depth=0): #bad because will not find every depth d child
     descendant_to_eval = parent_to_update #this turns into child to rollout
     descendant_exists = True

@@ -53,7 +53,7 @@ class MCTS(object):
         #     or self.MCTS_type ==  'MCTS Asynchronous'\
         #     or self.MCTS_type == 'Expansion MCTS Post-Pruning': #pruning with no depth expansions       #NOTE: seemed to be good initially
         #
-        #     self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.last_opponent_move, self.height, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
+        #     self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.last_opponent_move, self['height'], self.log_file, self.MCTS_type, self.policy_net, self.game_num)
         # # elif self.MCTS_type == 'BFS MCTS':
         # #     self.selected_child, move = MCTS_BFS_to_depth_limit(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file, self.policy_net)
         elif self.MCTS_type == 'Policy':
@@ -98,12 +98,12 @@ class NeuralNetsCombined():
             if player_color is not None: #1 board + 1 color from direct policy net call
                 board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
             else:
-                board_representations = [convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in
+                board_representations = [convert_board_to_2d_matrix_POEB(node['game_board'], node['color']) for node in
                                      game_nodes]
         else:
             board_representations = game_nodes
         if player_color is None and not already_converted:
-            player_color = game_nodes[0].color
+            player_color = game_nodes[0]['color']
         batch_size = 16384
         inference_batches = batch_split_no_labels(board_representations, batch_size)
         output = []
@@ -133,12 +133,12 @@ class NeuralNetsCombined_128():
             if player_color is not None: #1 board + 1 color from direct policy net call
                 board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
             else:
-                board_representations = [convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in
+                board_representations = [convert_board_to_2d_matrix_POEB(node['game_board'], node['color']) for node in
                                      game_nodes]
         else:
             board_representations = game_nodes
         if player_color is None and not already_converted:
-            player_color = game_nodes[0].color
+            player_color = game_nodes[0]['color']
         batch_size = 16384
         inference_batches = batch_split_no_labels(board_representations, batch_size)
         output = []
@@ -168,7 +168,7 @@ class NeuralNet():
             if player_color is not None: #1 board + 1 color from direct policy net call
                 board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
             else:
-                board_representations = [convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in
+                board_representations = [convert_board_to_2d_matrix_POEB(node['game_board'], node['color']) for node in
                                      game_nodes]
         else:
             board_representations = game_nodes

@@ -2,16 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
-      <change type="MOVED" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" afterPath="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" afterPath="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tools/utils.pyx" afterPath="$PROJECT_DIR$/tools/utils.pyx" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -43,7 +45,7 @@
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes.coverage" NAME="PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes Coverage Results" MODIFIED="1466110437671" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PlayersToDataStructure" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$SortPlayerListByRank.coverage" NAME="SortPlayerListByRank Coverage Results" MODIFIED="1465934883390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughANN$black_and_white_policy_nets.coverage" NAME="black_and_white_policy_nets Coverage Results" MODIFIED="1494190669168" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/policy_net" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$wander_vs_opponent.coverage" NAME="wander_vs_opponent Coverage Results" MODIFIED="1494358954548" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Breakthrough_Player" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$wander_vs_opponent.coverage" NAME="wander_vs_opponent Coverage Results" MODIFIED="1494396109235" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Breakthrough_Player" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$SortPlayerListByRank__1_.coverage" NAME="SortPlayerListByRank (1) Coverage Results" MODIFIED="1466111527074" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Tools" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$ValueNetByRankBinaryFeaturePlanes.coverage" NAME="ValueNetByRankBinaryFeaturePlanes Coverage Results" MODIFIED="1466031440108" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$NumpyArray.coverage" NAME="NumpyArray Coverage Results" MODIFIED="1465991406057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -85,11 +87,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="525">
-      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="true">
+      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="10" column="0" lean-forward="true" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+            <state relative-caret-position="209">
+              <caret line="374" column="63" lean-forward="false" selection-start-line="374" selection-start-column="63" selection-end-line="374" selection-end-column="63" />
               <folding>
                 <element signature="e#46#77#0" expanded="true" />
               </folding>
@@ -97,14 +99,29 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="utils.pyx" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
+      <file leaf-file-name="BreakthroughANN7.pstat" pinned="false" current-in-tab="false">
+        <entry file="mock://C:\Users\damon\.PyCharm2017.1\system\snapshots\BreakthroughANN7.pstat">
+          <provider selected="true" editor-type-id="profiler-session-editor">
+            <state />
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="tree_search_utils.c" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="286">
-              <caret line="461" column="70" lean-forward="false" selection-start-line="461" selection-start-column="67" selection-end-line="461" selection-end-column="70" />
-              <folding>
-                <element signature="e#46#55#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="-20048">
+              <caret line="22328" column="72" lean-forward="false" selection-start-line="22328" selection-start-column="72" selection-end-line="22328" selection-end-column="72" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TreeNode.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="391">
+              <caret line="100" column="12" lean-forward="true" selection-start-line="100" selection-start-column="12" selection-end-line="100" selection-end-column="12" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -112,30 +129,8 @@
       <file leaf-file-name="board_utils.pyx" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="592">
-              <caret line="184" column="13" lean-forward="true" selection-start-line="184" selection-start-column="13" selection-end-line="184" selection-end-column="13" />
-              <folding>
-                <element signature="e#60#83#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="tree_search_utils.c" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-23751">
-              <caret line="24746" column="72" lean-forward="false" selection-start-line="24746" selection-start-column="72" selection-end-line="24746" selection-end-column="72" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="expansion_MCTS_functions.c" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.c">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1232">
-              <caret line="17554" column="72" lean-forward="false" selection-start-line="17554" selection-start-column="72" selection-end-line="17554" selection-end-column="72" />
+            <state relative-caret-position="-705">
+              <caret line="373" column="28" lean-forward="false" selection-start-line="373" selection-start-column="28" selection-end-line="373" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -144,19 +139,37 @@
       <file leaf-file-name="wanderer_vs_opponent.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="307">
-              <caret line="78" column="0" lean-forward="false" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
+            <state relative-caret-position="136">
+              <caret line="15" column="75" lean-forward="false" selection-start-line="15" selection-start-column="75" selection-end-line="15" selection-end-column="75" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="policy_net_utils.pyx" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx">
+      <file leaf-file-name="expansion_MCTS_functions.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="347">
-              <caret line="52" column="65" lean-forward="false" selection-start-line="52" selection-start-column="65" selection-end-line="52" selection-end-column="65" />
-              <folding />
+            <state relative-caret-position="-8203">
+              <caret line="159" column="26" lean-forward="false" selection-start-line="159" selection-start-column="26" selection-end-line="159" selection-end-column="26" />
+              <folding>
+                <element signature="e#46#104#0" expanded="true" />
+                <marker date="1494395802229" expanded="true" signature="4318:5112" ph="..." />
+                <marker date="1494395802229" expanded="true" signature="36071:36090" ph="..." />
+                <marker date="1494395802229" expanded="true" signature="36146:36281" ph="..." />
+                <marker date="1494395802229" expanded="true" signature="36332:36508" ph="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="BFS_MCTS_functions.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="527">
+              <caret line="31" column="77" lean-forward="false" selection-start-line="31" selection-start-column="77" selection-end-line="31" selection-end-column="77" />
+              <folding>
+                <element signature="e#0#63#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -164,8 +177,8 @@
       <file leaf-file-name="tree_builder.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="15" column="25" lean-forward="false" selection-start-line="15" selection-start-column="25" selection-end-line="15" selection-end-column="25" />
+            <state relative-caret-position="237">
+              <caret line="553" column="4" lean-forward="false" selection-start-line="553" selection-start-column="4" selection-end-line="553" selection-end-column="4" />
               <folding>
                 <element signature="e#46#173#0" expanded="true" />
               </folding>
@@ -173,26 +186,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TreeNode.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py">
+      <file leaf-file-name="MCTS.pyx" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
-              <caret line="30" column="0" lean-forward="false" selection-start-line="30" selection-start-column="0" selection-end-line="30" selection-end-column="0" />
-              <folding>
-                <marker date="1494304933910" expanded="true" signature="69:1919" ph="..." />
-                <marker date="1494304933910" expanded="true" signature="170:1919" ph="..." />
-                <marker date="1494304933910" expanded="true" signature="1950:2026" ph="..." />
-                <marker date="1494304933910" expanded="true" signature="1974:2026" ph="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="setup.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/setup.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="51">
-              <caret line="5" column="2" lean-forward="false" selection-start-line="5" selection-start-column="2" selection-end-line="6" selection-end-column="41" />
+            <state relative-caret-position="237">
+              <caret line="64" column="67" lean-forward="false" selection-start-line="64" selection-start-column="54" selection-end-line="64" selection-end-column="67" />
               <folding />
             </state>
           </provider>
@@ -209,71 +207,73 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>batch</find>
-      <find>update_tree</find>
-      <find>Interval 10</find>
-      <find>file_BLACK</find>
-      <find>loss_init</find>
-      <find>other_children</find>
-      <find>WHITE</find>
-      <find>initi</find>
-      <find>get_pruned_child</find>
-      <find>offset</find>
-      <find>get_cached</find>
-      <find>deep</find>
-      <find>asse</find>
-      <find>board_state</find>
-      <find>asser</find>
+      <find>root.=</find>
+      <find>node</find>
+      <find>.color</find>
+      <find>root</find>
+      <find>roo</find>
+      <find>ro</find>
+      <find>child.</find>
+      <find>child</find>
+      <find>chil</find>
+      <find>chi</find>
+      <find>ch</find>
+      <find>.game</find>
+      <find>.game_</find>
+      <find>.game_boar</find>
+      <find>.game_board</find>
+      <find>.</find>
+      <find>.white</find>
+      <find>.white_</find>
+      <find>.white_piece</find>
+      <find>.white_pieces</find>
+      <find>nodein</find>
+      <find>\[.*\]</find>
+      <find>being_</find>
+      <find>node.</find>
+      <find>cdef double</find>
       <find>subtree_checked</find>
-      <find>copy</find>
-      <find>and len(sim_info.game_tree)&lt;10000</find>
-      <find>1L&lt;&lt;</find>
-      <find>enumerate_leg</find>
-      <find>reexpanded</find>
-      <find>' +</find>
-      <find>&quot; +</find>
+      <find>root.</find>
+      <find>subtree_being_checked</find>
+      <find>['index']</find>
       <find>1L &lt;&lt;</find>
-      <find>(column, str(row))</find>
-      <find>enumerate_legal</find>
-      <find>check_legal</find>
-      <find>transform_wrt_overwhelming_amount</find>
-      <find>random</find>
-      <find>random.sample</find>
     </findStrings>
     <replaceStrings>
-      <replace>best.</replace>
-      <replace>NN_scaling_factor = 4</replace>
-      <replace>NN_scaling_factor = 1</replace>
-      <replace>NN_scaling_factor = 0#1</replace>
-      <replace>parent</replace>
-      <replace>overwhelming_amount = 1#65536</replace>
-      <replace>overwhelming_amount = node.overwhelming_amount</replace>
-      <replace>overwhelming_amount = toot.overwhelming_amount</replace>
-      <replace>overwhelming_amount = best.overwhelming_amount</replace>
-      <replace>overwhelming_amount = child.overwhelming_amount</replace>
-      <replace>(1LL&lt;&lt;53)</replace>
-      <replace>instantiate_session_both_RNN</replace>
-      <replace>overwhelming_on=True</replace>
-      <replace>10p</replace>
-      <replace>center_cum</replace>
-      <replace>_within_10_p</replace>
-      <replace>percent_incorrect_in_top_10</replace>
-      <replace>1LL&lt;&lt;</replace>
-      <replace>,true_wins, true_losses = transform</replace>
-      <replace>wins = {wins}       visits = {visits}      true_wins = {true_wins}       true_losses = {true_losses}</replace>
-      <replace>overwhelming_on=False</replace>
-      <replace>stdout</replace>
-      <replace>pruned_child, child_win_status, other_child</replace>
-      <replace>BLACK</replace>
-      <replace>index</replace>
-      <replace>1</replace>
+      <replace>['num_children_being_checked']</replace>
+      <replace>['subtree_being_checked']</replace>
+      <replace>['threads_checking_node']</replace>
+      <replace>['visits']</replace>
+      <replace>['wins']</replace>
+      <replace>['gameover_wins']</replace>
+      <replace>is False</replace>
+      <replace>is None</replace>
+      <replace>is True</replace>
+      <replace>and overwhelming_on</replace>
+      <replace>['overwhelming_amount']</replace>
+      <replace>child['$1']$2</replace>
+      <replace>dict_TreeNode</replace>
+      <replace>not None</replace>
+      <replace>['height']</replace>
+      <replace>['gameover']</replace>
+      <replace>['subtree_checked']</replace>
+      <replace>['win_status']</replace>
+      <replace>['black_pieces']</replace>
+      <replace>['index']</replace>
+      <replace>['UCT_multiplier']</replace>
+      <replace>['num_to_keep']</replace>
+      <replace>['times_reexpanded']</replace>
+      <replace>['color']</replace>
+      <replace>['game_board']</replace>
+      <replace>['white_pieces']</replace>
+      <replace>node in</replace>
+      <replace>not True</replace>
+      <replace>.index</replace>
       <replace>1LL &lt;&lt;</replace>
-      <replace>((column, str(row)))</replace>
-      <replace>semi_reflected_state</replace>
-      <replace>sample</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\damon\PycharmProjects\BreakthroughANN</dir>
+      <dir>C:\Users\damon\PycharmProjects\BreakthroughANN\monte_carlo_tree_search</dir>
+      <dir>C:\Users\damon\PycharmProjects\BreakthroughANN\Breakthrough_Player</dir>
     </dirStrings>
   </component>
   <component name="Git.Settings">
@@ -284,8 +284,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/test.py" />
-        <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/deprecated_functions_self_play_logs_to_data_structures.py" />
         <option value="$PROJECT_DIR$/little_golem_players_files/tools/HumanReadableBoardPrinting.py" />
         <option value="$PROJECT_DIR$/little_golem_players_files/players_to_data_structures/directory_to_binary_features_to_numpy.py" />
         <option value="$PROJECT_DIR$/little_golem_players_files/tools/CheckSortedList.py" />
@@ -303,11 +301,9 @@
         <option value="$PROJECT_DIR$/Breakthrough_Player/self_play_game.py" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/wexpect.py" />
         <option value="$PROJECT_DIR$/policy_net_model/PolicyNet.py" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py" />
         <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_data_structures.py" />
         <option value="$PROJECT_DIR$/self_play_files/policy_net/policy_net_subgame_script.py" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.py" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.py" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.py" />
@@ -318,23 +314,27 @@
         <option value="$PROJECT_DIR$/tools/numpy_array.py" />
         <option value="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" />
         <option value="$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.pyx" />
-        <option value="$PROJECT_DIR$/tools/utils.pyx" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.py" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx" />
         <option value="$PROJECT_DIR$/setup.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.c" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.c" />
-        <option value="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
-        <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py" />
+        <option value="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" />
+        <option value="$PROJECT_DIR$/tools/utils.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.c" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.c" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.c" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c" />
+        <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
       </list>
     </option>
   </component>
@@ -345,10 +345,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="795" />
-    <option name="y" value="370" />
-    <option name="width" value="2285" />
-    <option name="height" value="1493" />
+    <option name="x" value="-11" />
+    <option name="y" value="6" />
+    <option name="width" value="1806" />
+    <option name="height" value="1237" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -1064,13 +1064,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00178" summary="removed huge UCTS for win/loss nodes. reduced UCT_multiplier from NN output, playing with exact weight. filter not on top children, but strictly on over 30% or within 10% of best child probability">
-      <created>1489213158960</created>
-      <option name="number" value="00178" />
-      <option name="presentableId" value="LOCAL-00178" />
-      <option name="project" value="LOCAL" />
-      <updated>1489213158960</updated>
-    </task>
     <task id="LOCAL-00179" summary="made best_child_val the best legal child's val (forgot the policy net is model free, so a top choice may be an illegal move)">
       <created>1489250461446</created>
       <option name="number" value="00179" />
@@ -1407,7 +1400,14 @@
       <option name="project" value="LOCAL" />
       <updated>1494304599047</updated>
     </task>
-    <option name="localTasksCounter" value="227" />
+    <task id="LOCAL-00227" summary="further optimizing (C-ified UCT calculation)">
+      <created>1494359554616</created>
+      <option name="number" value="00227" />
+      <option name="presentableId" value="LOCAL-00227" />
+      <option name="project" value="LOCAL" />
+      <updated>1494359554616</updated>
+    </task>
+    <option name="localTasksCounter" value="228" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1420,22 +1420,22 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="795" y="370" width="2285" height="1493" extended-state="0" />
+    <frame x="-11" y="6" width="1806" height="1237" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24451174" sideWeight="0.13868251" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19701493" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.70975417" sideWeight="0.42654794" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21570182" sideWeight="0.86131746" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.7094595" sideWeight="0.42654794" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.28159204" sideWeight="0.86131746" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11530287" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26706368" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.34213614" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922536" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46766168" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4670608" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2498671" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3274648" sideWeight="0.8696774" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47581285" sideWeight="0.9203463" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47550675" sideWeight="0.9203463" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32982618" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -1454,18 +1454,18 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24451174" sideWeight="0.13868251" order="8" side_tool="true" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19701493" sideWeight="0.44813278" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.71002483" sideWeight="0.42654794" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20842911" sideWeight="0.86131746" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.7094595" sideWeight="0.42654794" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2347973" sideWeight="0.86131746" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11530287" sideWeight="0.5135257" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26669717" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26706368" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922536" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46819922" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46708962" sideWeight="0.3005335" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2498671" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3274648" sideWeight="0.8696774" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47586206" sideWeight="0.9203463" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47581285" sideWeight="0.9203463" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32982618" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
@@ -1485,7 +1485,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="merging code from mac branch. changed wanderer to play white" />
     <MESSAGE value="true win/loss field + separate policy nets (white: all moves; black: winning moves)" />
     <MESSAGE value="Different NeuralNet Classes, choosing moves based on net true wins" />
     <MESSAGE value="added new tiers for filtering, filtering based on color, put back batch expansions (EOG after height 40)" />
@@ -1510,7 +1509,8 @@
     <MESSAGE value="tried to make conversion to NN input more efficient" />
     <MESSAGE value="Since we now keep all children, changed flow so we don't have to sort the entire 155 element transition vector" />
     <MESSAGE value="doing all copies and deepcopies by hand" />
-    <option name="LAST_COMMIT_MESSAGE" value="doing all copies and deepcopies by hand" />
+    <MESSAGE value="further optimizing (C-ified UCT calculation)" />
+    <option name="LAST_COMMIT_MESSAGE" value="further optimizing (C-ified UCT calculation)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1586,11 +1586,6 @@
           <option name="timeStamp" value="604" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx</url>
-          <line>396</line>
-          <option name="timeStamp" value="630" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py</url>
           <line>195</line>
           <option name="timeStamp" value="631" />
@@ -1600,15 +1595,10 @@
           <line>198</line>
           <option name="timeStamp" value="634" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx</url>
-          <line>397</line>
-          <option name="timeStamp" value="629" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py</url>
-          <line>442</line>
-          <option name="timeStamp" value="643" />
+          <url>file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py</url>
+          <line>514</line>
+          <option name="timeStamp" value="648" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/tools/utils.pyx</url>
@@ -1631,25 +1621,11 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="644" />
+      <option name="time" value="651" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/pexpect/expect.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="453">
-          <caret line="69" column="0" lean-forward="false" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://C:/Program Files/Anaconda3/Lib/multiprocessing/popen_spawn_win32.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="680">
-          <caret line="49" column="0" lean-forward="false" selection-start-line="49" selection-start-column="0" selection-end-line="49" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tools/utils.pyx" />
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/lastGame">
       <provider selected="true" editor-type-id="text-editor">
@@ -1676,118 +1652,16 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py" />
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx">
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
           <folding>
-            <marker date="1494304933894" expanded="true" signature="46:858" ph="import ..." />
-            <marker date="1494304933894" expanded="true" signature="861:3793" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="4313:13305" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="4360:13237" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="5014:6282" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6350:8023" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6530:8023" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6634:7889" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6682:7159" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6805:6925" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="7180:7654" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="7680:7889" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="7911:8023" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="8032:8097" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="8351:8660" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="9076:9642" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="9126:9273" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="9291:9642" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="9872:10330" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="10419:11425" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="12241:12460" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="12593:13237" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="12832:12920" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13335:13777" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13400:13777" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13700:13777" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13915:17797" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13920:14196" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14277:14764" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14374:14764" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14406:14657" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14791:16235" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14840:15537" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14871:15122" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15551:16235" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15626:15900" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15679:15900" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15764:15900" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15929:16235" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16247:16902" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16365:16617" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16414:16617" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16493:16617" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16643:16902" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17216:17447" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17479:17780" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17546:17780" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17633:17780" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17883:18686" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17894:18582" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17990:18179" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="18278:18487" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="18720:18954" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="18788:18930" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19086:20960" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19116:19295" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19384:20354" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19453:19547" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19703:20027" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19746:19882" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="20188:20354" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="20407:20960" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21098:21788" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21130:21788" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21198:21625" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21269:21467" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21320:21412" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21911:22220" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22074:22220" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22152:22220" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22344:22427" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22579:23683" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22661:23683" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22851:22944" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23049:23569" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23146:23346" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23364:23569" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23381:23533" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23684:25530" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="25648:26026" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26056:26190" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26252:26870" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26309:26870" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26416:26615" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26993:27735" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="27021:27572" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="27079:27145" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="27231:27572" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="27737:29111" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="29161:29291" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="29335:36140" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="29667:29925" ph="&quot;...&quot;" />
-            <marker date="1494304933894" expanded="true" signature="30333:34567" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="30703:30959" ph="&quot;...&quot;" />
-            <marker date="1494304933894" expanded="true" signature="31405:32179" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="32263:34486" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="32718:33005" ph="&quot;...&quot;" />
-            <marker date="1494304933894" expanded="true" signature="33561:34486" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="34719:36140" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="34829:34992" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="34863:34925" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="35014:35220" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="35285:36140" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="36195:36957" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="36301:36509" ph="&quot;...&quot;" />
-            <marker date="1494304933894" expanded="true" signature="37013:37148" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="37199:37375" ph="..." />
+            <element signature="e#46#104#0" expanded="true" />
+            <marker date="1494395802229" expanded="true" signature="4318:5112" ph="..." />
+            <marker date="1494395802229" expanded="true" signature="36071:36090" ph="..." />
+            <marker date="1494395802229" expanded="true" signature="36146:36281" ph="..." />
+            <marker date="1494395802229" expanded="true" signature="36332:36508" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1795,13 +1669,6 @@
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" />
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Anaconda3/Lib/site-packages/tensorflow/contrib/rnn/python/ops/core_rnn.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="380">
@@ -1907,13 +1774,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="340">
-          <caret line="20" column="34" lean-forward="true" selection-start-line="20" selection-start-column="34" selection-end-line="20" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Program Files/Anaconda3/Lib/multiprocessing/util.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="183">
@@ -1991,143 +1851,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="135" column="0" lean-forward="false" selection-start-line="135" selection-start-column="0" selection-end-line="135" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="301">
-          <caret line="186" column="103" lean-forward="false" selection-start-line="186" selection-start-column="93" selection-end-line="186" selection-end-column="103" />
-          <folding>
-            <marker date="1494304933894" expanded="true" signature="46:858" ph="import ..." />
-            <marker date="1494304933894" expanded="true" signature="861:3793" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="4313:13305" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="4360:13237" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="5014:6282" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6350:8023" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6530:8023" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6634:7889" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6682:7159" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="6805:6925" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="7180:7654" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="7680:7889" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="7911:8023" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="8032:8097" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="8351:8660" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="9076:9642" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="9126:9273" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="9291:9642" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="9872:10330" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="10419:11425" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="12241:12460" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="12593:13237" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="12832:12920" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13335:13777" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13400:13777" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13700:13777" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13915:17797" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="13920:14196" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14277:14764" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14374:14764" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14406:14657" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14791:16235" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14840:15537" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="14871:15122" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15551:16235" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15626:15900" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15679:15900" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15764:15900" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="15929:16235" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16247:16902" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16365:16617" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16414:16617" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16493:16617" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="16643:16902" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17216:17447" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17479:17780" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17546:17780" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17633:17780" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17883:18686" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17894:18582" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="17990:18179" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="18278:18487" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="18720:18954" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="18788:18930" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19086:20960" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19116:19295" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19384:20354" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19453:19547" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19703:20027" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="19746:19882" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="20188:20354" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="20407:20960" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21098:21788" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21130:21788" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21198:21625" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21269:21467" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21320:21412" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="21911:22220" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22074:22220" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22152:22220" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22344:22427" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22579:23683" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22661:23683" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="22851:22944" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23049:23569" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23146:23346" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23364:23569" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23381:23533" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="23684:25530" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="25648:26026" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26056:26190" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26252:26870" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26309:26870" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26416:26615" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="26993:27735" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="27021:27572" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="27079:27145" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="27231:27572" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="27737:29111" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="29161:29291" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="29335:36140" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="29667:29925" ph="&quot;...&quot;" />
-            <marker date="1494304933894" expanded="true" signature="30333:34567" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="30703:30959" ph="&quot;...&quot;" />
-            <marker date="1494304933894" expanded="true" signature="31405:32179" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="32263:34486" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="32718:33005" ph="&quot;...&quot;" />
-            <marker date="1494304933894" expanded="true" signature="33561:34486" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="34719:36140" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="34829:34992" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="34863:34925" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="35014:35220" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="35285:36140" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="36195:36957" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="36301:36509" ph="&quot;...&quot;" />
-            <marker date="1494304933894" expanded="true" signature="37013:37148" ph="..." />
-            <marker date="1494304933894" expanded="true" signature="37199:37375" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
-          <caret line="30" column="0" lean-forward="false" selection-start-line="30" selection-start-column="0" selection-end-line="30" selection-end-column="0" />
-          <folding>
-            <marker date="1494304933910" expanded="true" signature="69:1919" ph="..." />
-            <marker date="1494304933910" expanded="true" signature="170:1919" ph="..." />
-            <marker date="1494304933910" expanded="true" signature="1950:2026" ph="..." />
-            <marker date="1494304933910" expanded="true" signature="1974:2026" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/setup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="51">
@@ -2144,74 +1867,136 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1232">
-          <caret line="17554" column="72" lean-forward="false" selection-start-line="17554" selection-start-column="72" selection-end-line="17554" selection-end-column="72" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="347">
-          <caret line="52" column="65" lean-forward="false" selection-start-line="52" selection-start-column="65" selection-end-line="52" selection-end-column="65" />
+        <state relative-caret-position="-197">
+          <caret line="71" column="84" lean-forward="true" selection-start-line="71" selection-start-column="84" selection-end-line="71" selection-end-column="84" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="461" column="70" lean-forward="false" selection-start-line="461" selection-start-column="67" selection-end-line="461" selection-end-column="70" />
+        <state relative-caret-position="-256">
+          <caret line="506" column="3" lean-forward="true" selection-start-line="506" selection-start-column="3" selection-end-line="557" selection-end-column="32" />
           <folding>
             <element signature="e#46#55#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/MCTS.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-23751">
-          <caret line="24746" column="72" lean-forward="false" selection-start-line="24746" selection-start-column="72" selection-end-line="24746" selection-end-column="72" />
+        <state relative-caret-position="197">
+          <caret line="3340" column="96" lean-forward="false" selection-start-line="3340" selection-start-column="96" selection-end-line="3340" selection-end-column="96" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py">
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="307">
-          <caret line="78" column="0" lean-forward="false" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
+        <state relative-caret-position="197">
+          <caret line="1090" column="15" lean-forward="false" selection-start-line="1090" selection-start-column="15" selection-end-line="1090" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="197">
+          <caret line="3779" column="34" lean-forward="false" selection-start-line="3779" selection-start-column="34" selection-end-line="3779" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="382">
+          <caret line="9586" column="22" lean-forward="false" selection-start-line="9586" selection-start-column="22" selection-end-line="9586" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="237">
+          <caret line="64" column="67" lean-forward="false" selection-start-line="64" selection-start-column="54" selection-end-line="64" selection-end-column="67" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="100" column="12" lean-forward="true" selection-start-line="100" selection-start-column="12" selection-end-line="100" selection-end-column="12" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="592">
-          <caret line="184" column="13" lean-forward="true" selection-start-line="184" selection-start-column="13" selection-end-line="184" selection-end-column="13" />
-          <folding>
-            <element signature="e#60#83#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="-705">
+          <caret line="373" column="28" lean-forward="false" selection-start-line="373" selection-start-column="28" selection-end-line="373" selection-end-column="28" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py">
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/BFS_MCTS_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="25" lean-forward="false" selection-start-line="15" selection-start-column="25" selection-end-line="15" selection-end-column="25" />
+        <state relative-caret-position="527">
+          <caret line="31" column="77" lean-forward="false" selection-start-line="31" selection-start-column="77" selection-end-line="31" selection-end-column="77" />
           <folding>
-            <element signature="e#46#173#0" expanded="true" />
+            <element signature="e#0#63#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="0" lean-forward="true" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+        <state relative-caret-position="209">
+          <caret line="374" column="63" lean-forward="false" selection-start-line="374" selection-start-column="63" selection-end-line="374" selection-end-column="63" />
           <folding>
             <element signature="e#46#77#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="237">
+          <caret line="553" column="4" lean-forward="false" selection-start-line="553" selection-start-column="4" selection-end-line="553" selection-end-column="4" />
+          <folding>
+            <element signature="e#46#173#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-20048">
+          <caret line="22328" column="72" lean-forward="false" selection-start-line="22328" selection-start-column="72" selection-end-line="22328" selection-end-column="72" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="15" column="75" lean-forward="false" selection-start-line="15" selection-start-column="75" selection-end-line="15" selection-end-column="75" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-8203">
+          <caret line="159" column="26" lean-forward="false" selection-start-line="159" selection-start-column="26" selection-end-line="159" selection-end-column="26" />
+          <folding>
+            <element signature="e#46#104#0" expanded="true" />
+            <marker date="1494395802229" expanded="true" signature="4318:5112" ph="..." />
+            <marker date="1494395802229" expanded="true" signature="36071:36090" ph="..." />
+            <marker date="1494395802229" expanded="true" signature="36146:36281" ph="..." />
+            <marker date="1494395802229" expanded="true" signature="36332:36508" ph="..." />
           </folding>
         </state>
       </provider>

@@ -19,7 +19,7 @@ import pandas as pd
 
 # def generate_policy_net_moves_batch(game_nodes, batch_size=16384):
 #
-#     board_representations = [utils.convert_board_to_2d_matrix_POEB(node.game_board, node.color) for node in game_nodes]
+#     board_representations = [utils.convert_board_to_2d_matrix_POEB(node['game_board'], node['color']) for node in game_nodes]
 #     inference_batches = utils.batch_split_no_labels(board_representations, batch_size)
 #     output = []
 #     for batch in inference_batches:
@@ -337,12 +337,12 @@ def enumerate_legal_moves(game_board, player_color):
     return legal_moves
 
 def enumerate_legal_moves_using_piece_arrays(node):
-    player_color = node.color
-    game_board = node.game_board
+    player_color = node['color']
+    game_board = node['game_board']
     if player_color == 'White':
-        pieces = node.white_pieces
+        pieces = node['white_pieces']
     else: #player_color =='Black':
-        pieces = node.black_pieces
+        pieces = node['black_pieces']
     columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     legal_moves = []
     for piece in pieces:

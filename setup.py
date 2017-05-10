@@ -25,7 +25,7 @@ setup(
 #     ext_modules = cythonize(r"C:\Users\damon\PycharmProjects\BreakthroughANN\Breakthrough_Player\policy_net_utils.pyx" )
 # )
 # setup(
-#     ext_modules = cythonize(r"C:\Users\damon\PycharmProjects\BreakthroughANN\monte_carlo_tree_search\expansion_MCTS_functions.pyx" )
+#     ext_modules = cythonize(r"C:\Users\damon\PycharmProjects\BreakthroughANN\monte_carlo_tree_search\expansion_MCTS_functions.py" )
 # )
 # setup(
 #     ext_modules = cythonize(r"C:\Users\damon\PycharmProjects\BreakthroughANN\monte_carlo_tree_search\MCTS.pyx" )

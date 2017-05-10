@@ -504,79 +504,99 @@ def initial_game_board():
 
 def convert_board_to_2d_matrix_POEB(game_board, player_color):
     # Note: not the same as reflect_board_state in self_play_logs_to_datastructures;
-    def reflect_board_state(state):  # since black needs to have a POV representation
-        # Note: not the same as mirror_board_state in self_play_logs_to_datastructures;
-        def mirror_board_state(state):  # helper method for reflect_board_state
-            mirror_state = initial_game_board() #copy.deepcopy(state)  # edit copy of board_state
-            # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
-            is_white_index = 9
-            white_move_index = 10
-            for row in sorted(state):
-                if row != is_white_index and row != white_move_index:  # these indexes don't change
-                    for column in sorted(state[row]):
-                        if column == 'a':
-                            mirror_state[row]['h'] = state[row][column]
-                        elif column == 'b':
-                            mirror_state[row]['g'] = state[row][column]
-                        elif column == 'c':
-                            mirror_state[row]['f'] = state[row][column]
-                        elif column == 'd':
-                            mirror_state[row]['e'] = state[row][column]
-                        elif column == 'e':
-                            mirror_state[row]['d'] = state[row][column]
-                        elif column == 'f':
-                            mirror_state[row]['c'] = state[row][column]
-                        elif column == 'g':
-                            mirror_state[row]['b'] = state[row][column]
-                        elif column == 'h':
-                            mirror_state[row]['a'] = state[row][column]
-            return mirror_state
-
-        semi_reflected_state = mirror_board_state(state)
-        reflected_state = semi_reflected_state #copy.deepcopy(semi_reflected_state)
-
-        #copies
-        row1 = {'a': semi_reflected_state[1]['a'], 'b': semi_reflected_state[1]['b'], 'c': semi_reflected_state[1]['c'], 'd':semi_reflected_state[1]['d'], 'e': semi_reflected_state[1]['e'], 'f':semi_reflected_state[1]['f'], 'g': semi_reflected_state[1]['g'], 'h': semi_reflected_state[1]['h']}# reflected_state[1].copy()
-        row2 = {'a': semi_reflected_state[2]['a'], 'b': semi_reflected_state[2]['b'], 'c': semi_reflected_state[2]['c'], 'd':semi_reflected_state[2]['d'], 'e': semi_reflected_state[2]['e'], 'f':semi_reflected_state[2]['f'], 'g': semi_reflected_state[2]['g'], 'h': semi_reflected_state[2]['h']}# reflected_state[2].copy()
-        row3 = {'a': semi_reflected_state[3]['a'], 'b': semi_reflected_state[3]['b'], 'c': semi_reflected_state[3]['c'], 'd':semi_reflected_state[3]['d'], 'e': semi_reflected_state[3]['e'], 'f':semi_reflected_state[3]['f'], 'g': semi_reflected_state[3]['g'], 'h': semi_reflected_state[3]['h']}#reflected_state[3].copy()
-        row4 = {'a': semi_reflected_state[4]['a'], 'b': semi_reflected_state[4]['b'], 'c': semi_reflected_state[4]['c'], 'd':semi_reflected_state[4]['d'], 'e': semi_reflected_state[4]['e'], 'f':semi_reflected_state[4]['f'], 'g': semi_reflected_state[4]['g'], 'h': semi_reflected_state[4]['h']}#reflected_state[4].copy()
-        # 
-        # 4: 
-        # 3: 
-        # 2: 
-        # 1: 
-
-
-        reflected_state[1] = semi_reflected_state[8]
-        reflected_state[2] = semi_reflected_state[7]
-        reflected_state[3] = semi_reflected_state[6]
-        reflected_state[4] = semi_reflected_state[5]
-        reflected_state[5] = row4
-        reflected_state[6] = row3
-        reflected_state[7] = row2
-        reflected_state[8] = row1
-        return reflected_state
+    # def reflect_board_state(state):  # since black needs to have a POV representation
+    #     # Note: not the same as mirror_board_state in self_play_logs_to_datastructures;
+    #     def mirror_board_state(state):  # helper method for reflect_board_state
+    #         mirror_state = initial_game_board() #copy.deepcopy(state)  # edit copy of board_state
+    #         # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
+    #         is_white_index = 9
+    #         white_move_index = 10
+    #         for row in sorted(state):
+    #             if row != is_white_index and row != white_move_index:  # these indexes don't change
+    #                 for column in sorted(state[row]):
+    #                     if column == 'a':
+    #                         mirror_state[row]['h'] = state[row][column]
+    #                     elif column == 'b':
+    #                         mirror_state[row]['g'] = state[row][column]
+    #                     elif column == 'c':
+    #                         mirror_state[row]['f'] = state[row][column]
+    #                     elif column == 'd':
+    #                         mirror_state[row]['e'] = state[row][column]
+    #                     elif column == 'e':
+    #                         mirror_state[row]['d'] = state[row][column]
+    #                     elif column == 'f':
+    #                         mirror_state[row]['c'] = state[row][column]
+    #                     elif column == 'g':
+    #                         mirror_state[row]['b'] = state[row][column]
+    #                     elif column == 'h':
+    #                         mirror_state[row]['a'] = state[row][column]
+    #         return mirror_state
+    #
+    #     semi_reflected_state = mirror_board_state(state)
+    #     reflected_state = semi_reflected_state #copy.deepcopy(semi_reflected_state)
+    #
+    #     #copies
+    #     row1 = {'a': semi_reflected_state[1]['a'], 'b': semi_reflected_state[1]['b'], 'c': semi_reflected_state[1]['c'], 'd':semi_reflected_state[1]['d'], 'e': semi_reflected_state[1]['e'], 'f':semi_reflected_state[1]['f'], 'g': semi_reflected_state[1]['g'], 'h': semi_reflected_state[1]['h']}# reflected_state[1].copy()
+    #     row2 = {'a': semi_reflected_state[2]['a'], 'b': semi_reflected_state[2]['b'], 'c': semi_reflected_state[2]['c'], 'd':semi_reflected_state[2]['d'], 'e': semi_reflected_state[2]['e'], 'f':semi_reflected_state[2]['f'], 'g': semi_reflected_state[2]['g'], 'h': semi_reflected_state[2]['h']}# reflected_state[2].copy()
+    #     row3 = {'a': semi_reflected_state[3]['a'], 'b': semi_reflected_state[3]['b'], 'c': semi_reflected_state[3]['c'], 'd':semi_reflected_state[3]['d'], 'e': semi_reflected_state[3]['e'], 'f':semi_reflected_state[3]['f'], 'g': semi_reflected_state[3]['g'], 'h': semi_reflected_state[3]['h']}#reflected_state[3].copy()
+    #     row4 = {'a': semi_reflected_state[4]['a'], 'b': semi_reflected_state[4]['b'], 'c': semi_reflected_state[4]['c'], 'd':semi_reflected_state[4]['d'], 'e': semi_reflected_state[4]['e'], 'f':semi_reflected_state[4]['f'], 'g': semi_reflected_state[4]['g'], 'h': semi_reflected_state[4]['h']}#reflected_state[4].copy()
+    #     #
+    #     # 4:
+    #     # 3:
+    #     # 2:
+    #     # 1:
+    #
+    #
+    #     reflected_state[1] = semi_reflected_state[8]
+    #     reflected_state[2] = semi_reflected_state[7]
+    #     reflected_state[3] = semi_reflected_state[6]
+    #     reflected_state[4] = semi_reflected_state[5]
+    #     reflected_state[5] = row4
+    #     reflected_state[6] = row3
+    #     reflected_state[7] = row2
+    #     reflected_state[8] = row1
+    #     return reflected_state
 
     if player_color == 'Black':
-        game_board = reflect_board_state(game_board)
-    # one_hot_board = np.array([generate_binary_vector(game_board, player_color, 'Player'),  # [0] player
-    #                  generate_binary_vector(game_board, player_color, 'Opponent'),  # [1] opponent
-    #                  generate_binary_vector(game_board, player_color, 'Empty'),  #[2] empty
-    #                  generate_binary_vector(game_board, player_color, 'Bias')], dtype=np.float32)  # [3] bias
-    # one_hot_board = one_hot_board.ravel() #1d board
-    #
-    # formatted_example = np.reshape(np.array(one_hot_board, dtype=np.float32),
-    #                                (len(one_hot_board) // 64, 8, 8))  # feature_plane x row x col
-    #
-    # for i in range(0, len(formatted_example)):
-    #     formatted_example[i] = formatted_example[
-    #         i].transpose()  # transpose (row x col) to get feature_plane x col x row
-    # formatted_example = formatted_example.transpose()  # transpose to get proper dimensions: row x col  x feature plane
-    #
-    # fast_example = generate_binary_plane_POEB(game_board, player_color)
-    # assert (np.array_equal(formatted_example, fast_example))
+        mirror_state = initial_game_board() #copy.deepcopy(state)  # edit copy of board_state
+        # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
+        is_white_index = 9
+        white_move_index = 10
+        for row in sorted(game_board):
+            if row != is_white_index and row != white_move_index:  # these indexes don't change
+                for column in sorted(game_board[row]):
+                    if column == 'a':
+                        mirror_state[row]['h'] = game_board[row][column]
+                    elif column == 'b':
+                        mirror_state[row]['g'] = game_board[row][column]
+                    elif column == 'c':
+                        mirror_state[row]['f'] = game_board[row][column]
+                    elif column == 'd':
+                        mirror_state[row]['e'] = game_board[row][column]
+                    elif column == 'e':
+                        mirror_state[row]['d'] = game_board[row][column]
+                    elif column == 'f':
+                        mirror_state[row]['c'] = game_board[row][column]
+                    elif column == 'g':
+                        mirror_state[row]['b'] = game_board[row][column]
+                    elif column == 'h':
+                        mirror_state[row]['a'] = game_board[row][column]
+        row1 = {'a': mirror_state[1]['a'], 'b': mirror_state[1]['b'], 'c': mirror_state[1]['c'], 'd':mirror_state[1]['d'], 'e': mirror_state[1]['e'], 'f':mirror_state[1]['f'], 'g': mirror_state[1]['g'], 'h': mirror_state[1]['h']}# mirror_state[1].copy()
+        row2 = {'a': mirror_state[2]['a'], 'b': mirror_state[2]['b'], 'c': mirror_state[2]['c'], 'd':mirror_state[2]['d'], 'e': mirror_state[2]['e'], 'f':mirror_state[2]['f'], 'g': mirror_state[2]['g'], 'h': mirror_state[2]['h']}# mirror_state[2].copy()
+        row3 = {'a': mirror_state[3]['a'], 'b': mirror_state[3]['b'], 'c': mirror_state[3]['c'], 'd':mirror_state[3]['d'], 'e': mirror_state[3]['e'], 'f':mirror_state[3]['f'], 'g': mirror_state[3]['g'], 'h': mirror_state[3]['h']}#mirror_state[3].copy()
+        row4 = {'a': mirror_state[4]['a'], 'b': mirror_state[4]['b'], 'c': mirror_state[4]['c'], 'd':mirror_state[4]['d'], 'e': mirror_state[4]['e'], 'f':mirror_state[4]['f'], 'g': mirror_state[4]['g'], 'h': mirror_state[4]['h']}#mirror_state[4].copy()
 
-    # return np.array(formatted_example, dtype=np.float32)
+
+        mirror_state[1] = mirror_state[8]
+        mirror_state[2] = mirror_state[7]
+        mirror_state[3] = mirror_state[6]
+        mirror_state[4] = mirror_state[5]
+        mirror_state[5] = row4
+        mirror_state[6] = row3
+        mirror_state[7] = row2
+        mirror_state[8] = row1
+        game_board =  mirror_state#reflect_board_state(game_board)
+
     return generate_binary_plane_POEB(game_board, player_color)
 def generate_transition_vector(to, _from, player_color):
     # probability distribution over the 155 possible (vs legal) moves from the POV of the player.

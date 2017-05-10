@@ -136,7 +136,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
         unfiltered_unexpanded_nodes = unexpanded_nodes
 
         unexpanded_nodes = list(filter(lambda x: ((x['children'] is None) and not x['gameover'] ), unexpanded_nodes)) #redundant
-        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<=1024: #if any nodes to expand;
+        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<=4096: #if any nodes to expand;
             if sim_info.root is not None: #aren't coming from reinitializing a root
                 if sim_info.main_pid == current_thread().name:
                     depth_limit = 1 #main thread expands once and exits to call other threads
@@ -150,6 +150,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
                 #     depth_limit = 128
                 # elif unexpanded_nodes[0]['height'] > 70:
                 #     depth_limit = 16
+                # else:
                 elif unexpanded_nodes[0]['height'] > 50:
                     depth_limit = 800
                 elif unexpanded_nodes[0]['height'] > 40:
@@ -159,7 +160,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
 
                 else:
                     depth_limit = 4
-                depth_limit=800
+            # depth_limit=800
 
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls

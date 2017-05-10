@@ -2,7 +2,7 @@
 
 from math import  floor #, sqrt
 from libc.math cimport sqrt
-from libc.stdlib cimport rand
+# from libc.stdlib cimport rand
 from random import sample, randint
 from bottleneck import argpartition
 # from copy import deepcopy
@@ -148,19 +148,32 @@ def _crement_threads_checking_node(node, amount):
         node['threads_checking_node']+=amount
     parent = node['parent']
     if parent is not None:
+        previous_status = parent['subtree_being_checked']
+
+        #if no threads checking node (purportedly)
         if node['threads_checking_node']<=0:
             parent['subtree_being_checked'] = False
             if parent['num_children_being_checked'] > 0:
                 parent['num_children_being_checked'] -= 1
+        #if exactly one thread checking node (purportedly)
         elif node['threads_checking_node'] ==1:
-            if amount > 0:#if it was incremented
+
+
+            if amount > 0:#if it was previously not being checked
                 parent['num_children_being_checked'] += 1
             num_children = len(parent['children'])
+
+            #should at most be equal to num children being checked
             if num_children <= parent['num_children_being_checked']:
                 parent['num_children_being_checked'] = num_children
                 parent['subtree_being_checked'] = True
-            else:
+            else:#some child(ren) not being checked
                 parent['subtree_being_checked'] = False
+
+
+        #if the flag changed, may have to update the parent
+        if previous_status != parent['subtree_being_checked'] and parent['parent'] is not None:
+            update_num_children_being_checked(parent['parent'])
 
             
 def increment_threads_checking_node(node):
@@ -176,13 +189,18 @@ def update_num_children_being_checked(node):
     children_being_checked=0
     if node['children'] is not None:
         for child in node['children']:
-            if child['threads_checking_node'] >0:
+            if child['threads_checking_node'] > 0 or child['subtree_being_checked']:
                 children_being_checked+=1
     node['num_children_being_checked'] = children_being_checked
+    previous_status = node['subtree_being_checked']
     if children_being_checked ==len(node['children']):
         node['subtree_being_checked'] =True
     else:
         node['subtree_being_checked'] =False
+
+    #if the flag changed, may have to update the parent
+    if previous_status != node['subtree_being_checked'] and node['parent'] is not None:
+        update_num_children_being_checked(node['parent'])
 
 
 def choose_UCT_move(node, start_time, time_to_think, sim_info):
@@ -232,14 +250,14 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             best = child
         #             break
         if best is None:
-            if node['best_child'] is not None: #return best child if not already previouslyexpanded
-                best_child = node['best_child']
-                if best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
-                    best = node['best_child']
-                else:
-                    best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
+            # if node['best_child'] is not None: #return best child if not already previouslyexpanded
+            #     best_child = node['best_child']
+            #     if best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
+            #         best = node['best_child']
+            #     else:
+            #         best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
 
-            elif node['children'] is not None: #if this node has children to choose from: should alwayshappen
+            if node['children'] is not None: #if this node has children to choose from: should alwayshappen
                 best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
     return best  # because a win for me = a loss for child
 
@@ -359,8 +377,8 @@ cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
     # if node['parent']['color'] ==sim_info.root['color']:#make black's moveexploremore?
     #     PUCT_exploration_constant = stochasticity_for_multithreading*1000#1000
     # else:
-    cdef double random_number = rand()/INT_MAX
-    cdef double PUCT_exploration_constant = 10*random_number#3*annealed_factor# stochasticity_for_multithreading
+    # cdef double random_number = rand()/INT_MAX
+    cdef double PUCT_exploration_constant = 3#*random_number#3*annealed_factor# stochasticity_for_multithreading
 
 
     # norm_wins, norm_visits,true_wins, true_losses = transform_wrt_overwhelming_amount(node, overwhelming_on=False)

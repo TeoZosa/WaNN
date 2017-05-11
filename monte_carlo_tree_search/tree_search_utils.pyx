@@ -962,7 +962,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
         #              18: 'g1-g2',
         #              19: 'g1-h2',
 
-        if (2 <= child_index <= 7 or 14<= child_index <=19) and child['height'] < 70 :
+        if (2 <= child_index <= 7 or 14<= child_index <=19)  :
 
             if child_color =='White':
                 game_over_row = 7
@@ -983,14 +983,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
             gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
             maybe_in_danger = enemy_piece in parent['game_board'][caution_row].values()
             # kinda_sorta_maybe_in_danger = enemy_piece in child['game_board'][maybe_caution_row].values()
-            if not gameover_next_move and not maybe_in_danger and child_color == 'Black':
-                child['gameover_visits'] = 9000
-                child['gameover_wins'] = 9000
-                child['visits'] = 65536
-                child['wins'] = 65536
-                child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
-                do_update = False
-            elif game_saving_move: #Probably isn't necessary
+            if game_saving_move: #Probably isn't necessary
                 child['gameover_visits'] = 1000
                 child['gameover_wins'] = 0
                 child['visits'] = 65536
@@ -998,6 +991,14 @@ def update_child(child, NN_output, sim_info, do_eval=True):
                 child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
                 child['game_saving_move'] = True
                 do_update = False
+            elif not gameover_next_move and not maybe_in_danger and child_color == 'Black' and child['height'] < 70:
+                child['gameover_visits'] = 9000
+                child['gameover_wins'] = 9000
+                child['visits'] = 65536
+                child['wins'] = 65536
+                child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
+                do_update = False
+
 
             #some large but not impossibly large value to discourage moving pieces from the home row
     if do_update:

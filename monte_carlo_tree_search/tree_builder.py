@@ -258,7 +258,7 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
             if not abort:
                 children = update_parent(parent, NN_output[i], sim_info, lock)
                 children_to_consider = []
-                if depth+1 < depth_limit:  # if we are allowed to enter the outermost while loop again
+                if depth+1 < depth_limit and children is not None:  # if we are allowed to enter the outermost while loop again
                     with lock:
 
                         # game_tree_root = sim_info.root

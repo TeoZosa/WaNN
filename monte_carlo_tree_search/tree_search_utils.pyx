@@ -944,7 +944,7 @@ def evaluation_function_nodeless(white_pieces, black_pieces, player_color):
 def update_child(child, NN_output, sim_info, do_eval=True):
     child_index = child['index']
     do_update = True
-    if child_index <= 19:
+    if child_index <= 19 and child['color'] == 'Black':
         #              2: 'b1-a2',
         #              3: 'b1-b2',
         #              4: 'b1-c2',
@@ -959,7 +959,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
         #              18: 'g1-g2',
         #              19: 'g1-h2',
 
-        if (2 <= child_index <= 7 or 14<= child_index <=19) and child['height'] < 60 :
+        if (2 <= child_index <= 7 or 14<= child_index <=19) and child['height'] < 70 :
             if child['color'] =='White':
                 game_over_row = 7
                 caution_row = 6
@@ -976,7 +976,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
                 child['visits'] = 65536
                 child['wins'] = 65536
                 do_update = False
-                child['UCT_multiplier'] = 1.01 #might mess up search if I don't do this?
+                child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
 
             #some large but not impossibly large value to discourage moving pieces from the home row
     if do_update:

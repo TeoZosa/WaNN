@@ -6,7 +6,7 @@ from monte_carlo_tree_search.TreeNode import dict_TreeNode
 from Breakthrough_Player.board_utils import  check_legality_MCTS
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, \
     get_top_children, update_child, set_win_status_from_children, random_rollout, \
-    update_win_status_from_children, eval_child, SimulationInfo, backpropagate_num_checked_children, \
+    update_win_status_from_children, eval_child, eval_children, SimulationInfo, backpropagate_num_checked_children, \
     increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node, get_opponent_color
 from multiprocessing import Pool, Process, pool
 # from math import ceil
@@ -429,7 +429,10 @@ def get_best_child_val(parent, NN_output, top_children_indexes):
     return best_child_val, rank
 
 def get_num_children_to_consider(parent):
-    height = parent['height']
+    parent['num_to_consider'] = 0  # 8
+    parent['num_to_keep'] = 999
+    return parent['num_to_keep']
+    height = parent[ 'height']
 
     # if height < 80:
         # or if root, top3?
@@ -523,55 +526,48 @@ def assign_children(parent, children, lock):
                 best_val = children[0]['UCT_multiplier']
                 parent['best_child'] = children[0]
 
+                if parent['color'] == 'Black':
+                    game_over_row = 7
+                    enemy_piece = 'w'
+                else:
+                    game_over_row = 2
+                    enemy_piece = 'b'
+                gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
+                if gameover_next_move:
+                    for i in range(0, len(children)):
+                        #game_winning or game_saving moves only (if not game_saving, it'll be a loss)
+                        if children[i]['game_saving_move'] or children[i]['gameover']:  # or best_val - children[i]['UCT_multiplier'] < .20
+                            parent_children.append(children[i])
+                        else:  # when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
+                            set_game_over_values_1_step_lookahead(children[i])
+                            parent_children.append(children[i])
+                    parent['children'] = parent_children
 
 
 
-                if parent['num_to_keep']  != 999:
+
+
+                elif parent['num_to_keep']  != 999:
                     if best_val >1.9: # > 90%
                         parent['num_to_keep'] = 1
                     min_val_threshold = (best_val-1)/2.5
                     threshold_val = 0.10
-
-
-                    if parent['color'] == 'Black':
-                        game_over_row = 7
-                        enemy_piece = 'w'
-                    else:
-                        game_over_row = 2
-                        enemy_piece = 'b'
-                    gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
-                    if gameover_next_move:
-                        for i in range(0, len(children)):
-                            #game_winning or game_saving moves only (if not game_saving, it'll be a loss)
-                            if children[i]['game_saving_move'] or children[i]['gameover']:  # or best_val - children[i]['UCT_multiplier'] < .20
-                                parent_children.append(children[i])
-                            else:  # when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
-                                set_game_over_values_1_step_lookahead(children[i])
-                                parent_children.append(children[i])
-                        # if len(parent_children) <= 0: #no game winning or saving moves.
-                        #     parent['children'] = children
-                        #     parent['other_children'] = []
+                    for i in range(0, len(children)):
+                        # if len(parent_children) < 2:# and parent['color'] == 'White'
+                        #     threshold_val = 0.25
                         # else:
-                        #     parent['children'] = parent_children
-                        #     parent['other_children'] = other_children
-                        parent['children'] = parent_children
-
-                    else:
-                        for i in range(0, len(children)):
-                            # if len(parent_children) < 2:# and parent['color'] == 'White'
-                            #     threshold_val = 0.25
-                            # else:
-                            #     threshold_val = 0.10
-                            if i < parent['num_to_keep'] or (best_val - children[i]['UCT_multiplier'] < threshold_val and children[i]['UCT_multiplier'] -1 > min_val_threshold) or children[i]['gameover']:#or best_val - children[i]['UCT_multiplier'] < .20
-                                parent_children.append(children[i])
-                                eval_child(children[i])
-                            else: #when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
-                                other_children.append(children[i])
-                        parent['children'] = parent_children
-                        parent['other_children'] = other_children
+                        #     threshold_val = 0.10
+                        if i < parent['num_to_keep'] or (best_val - children[i]['UCT_multiplier'] < threshold_val and children[i]['UCT_multiplier'] -1 > min_val_threshold) or children[i]['gameover']:#or best_val - children[i]['UCT_multiplier'] < .20
+                            parent_children.append(children[i])
+                        else: #when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
+                            other_children.append(children[i])
+                    parent['children'] = parent_children
+                    eval_children(parent_children)
+                    parent['other_children'] = other_children
                 else:
                     parent['children'] = children
-                
+                    eval_children(children)#slightly more efficient to do them as a batch
+
                 if parent['num_to_consider'] == 0 or (parent['other_children'] is None or len (parent['other_children']) == 0): # len (parent['children']) >=  Virtually reexpanded;  else may try to reexpand and thrash around in tree search
                     parent['reexpanded_already'] = True
                 update_win_status_from_children(parent)

@@ -242,7 +242,7 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             break
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
-            if best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
+            if best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['gameover_wins'] <1000 and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
                 best = node['best_child']
             else:
                 best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
@@ -269,14 +269,29 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
                     viable_children.append(child)
             # viable_children = list(filter(lambda x:  not x['subtree_checked'] and not x['subtree_being_checked'] and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
     else:#search subtrees that need to be reexpanded
+
+        if node['color'] == 'White':
+            threshold = 1.2
+            second_threshold = 1.1
+        else:
+            threshold = 1.1
+            second_threshold_= 1.01
+
         for child in node['children']:
-            if  (child['win_status'] is None and not child['subtree_being_checked']and child['UCT_multiplier'] > 1.01 ) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+            if  (child['win_status'] is None and not child['subtree_being_checked']and child['UCT_multiplier'] > threshold and child['gameover_wins'] <1000) and (child['threads_checking_node'] <=0 or child['children'] is not None):
                 viable_children.append(child)
         # viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] and x['UCT_multiplier'] > 1.01 ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
         if len(viable_children) == 0:
             for child in node['children']:
-                if  (child['win_status'] is None and not child['subtree_being_checked'] ) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+                if  (child['win_status'] is None and not child['subtree_being_checked'] and child['UCT_multiplier'] > second_threshold and child['gameover_wins'] <1000) and (child['threads_checking_node'] <=0 or child['children'] is not None):
                     viable_children.append(child)
+        if len(viable_children) == 0:
+            for child in node['children']:
+                if  (child['win_status'] is None and not child['subtree_being_checked']) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+                    viable_children.append(child)
+
+
+
             # viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
     if len(viable_children)>0:
         best = viable_children[0]
@@ -425,11 +440,11 @@ cdef double calculate_PUCT(double c, double NN_prob, int sibling_visits, int vis
 
 def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose among equally successful children
     best_nodes = []
-    overwhelming_amount = node['overwhelming_amount']
-
+    win_can_be_forced = False
     if node['children'] is not None:
         win_can_be_forced, best_nodes = check_for_forced_win(node['children'],game_num)
         if not win_can_be_forced:
+
             best = choose_best_true_loser(node['children'])
 
             if best is not None:
@@ -438,8 +453,8 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
 
             if len(best_nodes) == 0:
                 best_nodes = get_best_children(node['children'],game_num)
-    if len(best_nodes) == 0:
-        breakpoint = True
+    # if len(best_nodes) == 0:
+    #     breakpoint = True
     return best_nodes[0]  # because a win for me = a loss for child
 
 def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
@@ -448,39 +463,82 @@ def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
     best_rate = 0
     best_total = 0
     best = None
+    filtered_children  = []
 
-    for i in range(0,2):
-        for child in node_children: #sorted by prob
-            _, child_visits_norm,true_wins, true_losses = transform_wrt_overwhelming_amount(child, overwhelming_on=False)
-            prior_prob_weighting = (child['UCT_multiplier']-1)/1#.80 =>.80
-            total = true_losses + true_wins
-            loss_rate = (true_losses/max(1, total)) + prior_prob_weighting
-            if highest_losses >0: #find best rate within some threshold error (to prevent low visits and slightly higher WR) and magnitude
-                predicate = loss_rate> best_rate and loss_rate-best_rate > 0.05 and true_losses/highest_losses>.30
-            else: #find absolute best loser
-                predicate = true_losses> best_losses and (loss_rate > 0.5 or total < 20)
+    for child in node_children:
+        if child['UCT_multiplier'] > 1.15 and child['win_status'] is not True:
+            filtered_children.append(child)
 
-            if predicate and child['win_status'] is not True:
-                best = child
-                best_losses = true_losses
-                best_wins = true_wins
-                best_rate = loss_rate
-                best_total = total
-        highest_losses = best_losses
-    # if highest_total > 0 and not second_time:
-    #     best = choose_best_true_loser(node, highest_total, second_time=True)
+    if len(filtered_children) ==0:
+        for child in node_children:
+            if child['UCT_multiplier'] > 1.02 and child['win_status'] is not True:
+                filtered_children.append(child)
+    if len(filtered_children) ==0:
+        for child in node_children:
+            if child['win_status'] is not True:
+                filtered_children.append(child)
+
+    if len(filtered_children) > 0:
+        highest_rank_child = filtered_children[0]
+
+        if highest_rank_child['height'] <3:
+            best = None
+            best_val = 0
+
+            for child in filtered_children:
+                losses = child['gameover_visits'] - child['gameover_wins']
+                if losses >= best_val:
+                    best = child
+                    best_val = losses
+            # best = max(filtered_children, key=lambda x: x['gameover_visits'] - x['gameover_wins'])
+            if best['gameover_visits'] == 0:
+                best = None
+                best_val = 0
+                for child in filtered_children:
+                    losses = child['visits'] - child['wins']
+                    if losses > best_val:
+                        best = child
+                        best_val = losses
+
+        else:
+            for i in range(0,2):
+                for child in node_children: #sorted by prob
+                    _, child_visits_norm,true_wins, true_losses = transform_wrt_overwhelming_amount(child, overwhelming_on=False)
+                    prior_prob_weighting = (child['UCT_multiplier']-1)/1#.80 =>.80
+                    total = true_losses + true_wins
+                    loss_rate = (true_losses/max(1, total)) + prior_prob_weighting
+                    if highest_losses >0: #find best rate within some threshold error (to prevent low visits and slightly higher WR) and magnitude
+                        predicate = loss_rate> best_rate and loss_rate-best_rate > 0.05 and true_losses/highest_losses>.30
+                    else: #find absolute best loser
+                        predicate = true_losses> best_losses # and (loss_rate > 0.5 or total < 20)
+
+                    if predicate and child['win_status'] is not True:
+                        best = child
+                        best_losses = true_losses
+                        best_wins = true_wins
+                        best_rate = loss_rate
+                        best_total = total
+                highest_losses = best_losses
+    else:
+        best = node_children[0]
     return best
 
 def check_for_forced_win(node_children, game_num):
     forced_win = False
-    guaranteed_children = list(filter(lambda x: x['gameover'], node_children))
+    guaranteed_children = []
+    best_guaranteed_child = None
 
-    if len (guaranteed_children) <=0:
+    for child in node_children:
+        if child['gameover']:
+            guaranteed_children.append(child)
+
+    if len(guaranteed_children) ==0:
 
         for child in node_children:
             if child['win_status'] is False:
                 guaranteed_children.append(child)
                 forced_win = True
+
         if len(guaranteed_children) > 0: #TODO: does it really matter which losing child is the best if all are losers?
             # guaranteed_children = get_best_children(guaranteed_children, game_num)
             best_guaranteed_child = choose_best_true_loser(guaranteed_children)
@@ -1086,6 +1144,19 @@ def eval_child(child):
         update_tree_losses(child['parent'])
     else:
         update_tree_wins(child['parent'])
+
+def eval_children(children):
+    parent_wins = 0
+    parent_losses = 0
+    parent = children[0]['parent']
+    for child in children:
+        outcome, _= evaluation_function(child)
+        if outcome == 1:
+            parent_losses +=1
+        else:
+            parent_wins +=1
+    update_tree_losses(parent, parent_losses)
+    update_tree_wins(parent, parent_wins)
 
 # def update_sum_for_normalization(parent, NN_output, child_indexes):
 #     #if we want to normalize over legal/top children vs relying on NN's softmax

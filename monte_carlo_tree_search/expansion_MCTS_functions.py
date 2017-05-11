@@ -392,39 +392,42 @@ def run_MCTS_with_expansions_simulation(root,depth_limit, time_to_think, sim_inf
             game_tree_size = len(sim_info['game_tree'])
             sim_info['prev_game_tree_size'] = game_tree_size
             sim_info['counter'] += 1
-        win_status = root['win_status']
-        if win_status is not None:
-            #probably doesn't matter since WaNN only does this by the time wanderer knows for sure if it has a win/loss
-            with async_update_lock:
-                if win_status is False: #if we are doomed, reexpand and consider all other children
-                    roots_other_children = root['other_children']
-                    if roots_other_children is not None:
-                        root['children'].extend(roots_other_children)
-                        root['other_children'] = None
 
-                        root['win_status'] = None
-                        update_win_status_from_children(root)
-                        backpropagate_num_checked_children(root)
 
-                elif win_status is True: #if we forced a win, check other children to make sure
-                    roots_best_child = None
-                    for child in root['children']:
-                        if child['win_status'] is False:
-                            roots_best_child = child
-                            break
-                    if roots_best_child is not None:
-                        best_child_other_children = roots_best_child['other_children']
-                        if best_child_other_children is not None:
-                            roots_best_child['children'].extend(best_child_other_children)
-                            roots_best_child['other_children'] = None
+        # win_status = root['win_status']
 
-                            roots_best_child['win_status'] = None
-                            update_win_status_from_children(roots_best_child)
-                            backpropagate_num_checked_children(roots_best_child)
-
-                            root['win_status'] = None
-                            update_win_status_from_children(root)
-                            backpropagate_num_checked_children(root)
+        # if win_status is not None:
+        #     #probably doesn't matter since WaNN only does this by the time wanderer knows for sure if it has a win/loss
+        #     with async_update_lock:
+        #         if win_status is False: #if we are doomed, reexpand and consider all other children
+        #             roots_other_children = root['other_children']
+        #             if roots_other_children is not None:
+        #                 root['children'].extend(roots_other_children)
+        #                 root['other_children'] = None
+        #
+        #                 root['win_status'] = None
+        #                 update_win_status_from_children(root)
+        #                 backpropagate_num_checked_children(root)
+        #
+        #         elif win_status is True: #if we forced a win, check other children to make sure
+        #             roots_best_child = None
+        #             for child in root['children']:
+        #                 if child['win_status'] is False:
+        #                     roots_best_child = child
+        #                     break
+        #             if roots_best_child is not None:
+        #                 best_child_other_children = roots_best_child['other_children']
+        #                 if best_child_other_children is not None:
+        #                     roots_best_child['children'].extend(best_child_other_children)
+        #                     roots_best_child['other_children'] = None
+        #
+        #                     roots_best_child['win_status'] = None
+        #                     update_win_status_from_children(roots_best_child)
+        #                     backpropagate_num_checked_children(roots_best_child)
+        #
+        #                     root['win_status'] = None
+        #                     update_win_status_from_children(root)
+        #                     backpropagate_num_checked_children(root)
 
         if root['subtree_checked']:
             done = True

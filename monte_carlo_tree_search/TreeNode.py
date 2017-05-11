@@ -107,6 +107,7 @@ def dict_TreeNode(game_board, white_pieces, black_pieces, player_color, index, p
         'subtree_being_checked': False,
         'reexpanded_already': False,
         'gameover': False,
+        'game_saving_move': False,
         'visits': 0,
         'wins': 0,
         'gameover_visits': 0,

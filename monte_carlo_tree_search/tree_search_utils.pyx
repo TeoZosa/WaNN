@@ -6,6 +6,7 @@ from libc.math cimport sqrt
 from random import sample, randint
 from bottleneck import argpartition
 # from copy import deepcopy
+from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, new_game_board
 # from numpy import argsort
 # from time import time
@@ -943,8 +944,10 @@ def evaluation_function_nodeless(white_pieces, black_pieces, player_color):
 
 def update_child(child, NN_output, sim_info, do_eval=True):
     child_index = child['index']
+    child_color = child['color']
+    parent = child['parent']
     do_update = True
-    if child_index <= 19 and child['color'] == 'Black':
+    if child_index <= 19 and parent is not None:
         #              2: 'b1-a2',
         #              3: 'b1-b2',
         #              4: 'b1-c2',
@@ -960,23 +963,41 @@ def update_child(child, NN_output, sim_info, do_eval=True):
         #              19: 'g1-h2',
 
         if (2 <= child_index <= 7 or 14<= child_index <=19) and child['height'] < 70 :
-            if child['color'] =='White':
+
+            if child_color =='White':
                 game_over_row = 7
                 caution_row = 6
+                maybe_caution_row = 5
                 enemy_piece = 'w'
             else:
                 game_over_row = 2
                 caution_row = 3
+                maybe_caution_row = 4
                 enemy_piece = 'b'
+            move = move_lookup_by_index(child_index, get_opponent_color(child_color))
+            # left_columns = {'b':'a', 'c':'b', 'd':'c', 'e':'d', 'f':'e', 'g':'f', 'h':'g'}
+            # right_columns= {'a':'b', 'b':'c', 'c':'d', 'd':'e', 'e':'f', 'f':'g', 'g':'h'}
+
         #only allowable if it was to save from gameovers
-            in_danger = enemy_piece in child['game_board'][game_over_row].values() or enemy_piece in child['game_board'][caution_row].values()
-            if not in_danger:
+            game_saving_move = enemy_piece == parent['game_board'][int(move[4])][move[3]]
+            gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
+            maybe_in_danger = enemy_piece in parent['game_board'][caution_row].values()
+            # kinda_sorta_maybe_in_danger = enemy_piece in child['game_board'][maybe_caution_row].values()
+            if not gameover_next_move and not maybe_in_danger and child_color == 'Black':
                 child['gameover_visits'] = 9000
                 child['gameover_wins'] = 9000
                 child['visits'] = 65536
                 child['wins'] = 65536
-                do_update = False
                 child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
+                do_update = False
+            elif game_saving_move: #Probably isn't necessary
+                child['gameover_visits'] = 1000
+                child['gameover_wins'] = 0
+                child['visits'] = 65536
+                child['wins'] = 0
+                child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
+                child['game_saving_move'] = True
+                do_update = False
 
             #some large but not impossibly large value to discourage moving pieces from the home row
     if do_update:

@@ -4,6 +4,7 @@ import os
 import fnmatch
 import sys
 # import copy
+from cpython cimport array
 import numpy as np
 
 def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
@@ -93,7 +94,7 @@ def move_lookup_by_index(index, player_color):
     Enumerated the moves for lookup speed/visual reference (see commented out dictionary).
     Code can be prettified by calling generate_move_lookup instead
     ''"""
-    if player_color.lower() == 'White'.lower():
+    if player_color == 'White':
         transitions = ['a1-a2', 'a1-b2', 'b1-a2', 'b1-b2', 'b1-c2', 'c1-b2', 'c1-c2', 'c1-d2', 'd1-c2', 'd1-d2',
                        'd1-e2', 'e1-d2', 'e1-e2', 'e1-f2', 'f1-e2', 'f1-f2', 'f1-g2', 'g1-f2', 'g1-g2', 'g1-h2',
                        'h1-g2', 'h1-h2', 'a2-a3', 'a2-b3', 'b2-a3', 'b2-b3', 'b2-c3', 'c2-b3', 'c2-c3', 'c2-d3',

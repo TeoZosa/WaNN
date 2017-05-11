@@ -100,7 +100,7 @@ def visit_single_node_and_expand_no_lookahead(node_and_color):
     game_board = node['game_board']
     is_game_over, winner_color = game_over(game_board)
     if is_game_over:  # only useful at end of game
-        set_game_over_values(node, node_color, winner_color)
+        set_game_over_values(node)
     else:  # expand node, adding children to parent
         unvisited_children = expand_node(node)
     return unvisited_children
@@ -515,27 +515,56 @@ def assign_children(parent, children, lock):
                 children.sort(key=lambda x: x['UCT_multiplier'], reverse=True)#sort them by probability
                 best_val = children[0]['UCT_multiplier']
                 parent['best_child'] = children[0]
+
+
+
+
                 if parent['num_to_keep']  != 999:
                     if best_val >1.9: # > 90%
                         parent['num_to_keep'] = 1
                     min_val_threshold = (best_val-1)/2.5
                     threshold_val = 0.10
-                    for i in range(0, len(children)):
-                        # if len(parent_children) < 2:# and parent['color'] == 'White'
-                        #     threshold_val = 0.25
-                        # else:
-                        #     threshold_val = 0.10
-                        if i < parent['num_to_keep'] or (best_val - children[i]['UCT_multiplier'] < threshold_val and children[i]['UCT_multiplier'] -1 > min_val_threshold) or children[i]['gameover']:#or best_val - children[i]['UCT_multiplier'] < .20
-                            parent_children.append(children[i])
-                            eval_child(children[i])
-                        else: #when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
-                            other_children.append(children[i])
-                    parent['children'] = parent_children
-                    parent['other_children'] = other_children
+
+
+                    if parent['color'] == 'Black':
+                        game_over_row = 7
+                        enemy_piece = 'w'
+                    else:
+                        game_over_row = 2
+                        enemy_piece = 'b'
+                    gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
+                    if gameover_next_move:
+                        for i in range(0, len(children)):
+                            #game_winning or game_saving moves only (if not game_saving, it'll be a loss)
+                            if children[i]['game_saving_move'] or children[i]['gameover']:  # or best_val - children[i]['UCT_multiplier'] < .20
+                                parent_children.append(children[i])
+                            else:  # when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
+                                set_game_over_values_1_step_lookahead(children[i])
+                                other_children.append(children[i])
+                        if len(parent_children) <= 0: #no game winning or saving moves.
+                            parent['children'] = children
+                            parent['other_children'] = []
+                        else:
+                            parent['children'] = parent_children
+                            parent['other_children'] = other_children
+
+                    else:
+                        for i in range(0, len(children)):
+                            # if len(parent_children) < 2:# and parent['color'] == 'White'
+                            #     threshold_val = 0.25
+                            # else:
+                            #     threshold_val = 0.10
+                            if i < parent['num_to_keep'] or (best_val - children[i]['UCT_multiplier'] < threshold_val and children[i]['UCT_multiplier'] -1 > min_val_threshold) or children[i]['gameover']:#or best_val - children[i]['UCT_multiplier'] < .20
+                                parent_children.append(children[i])
+                                eval_child(children[i])
+                            else: #when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
+                                other_children.append(children[i])
+                        parent['children'] = parent_children
+                        parent['other_children'] = other_children
                 else:
                     parent['children'] = children
                 
-                if parent['num_to_consider'] == 0 or (parent['other_children'] is not None and len (parent['other_children']) == 0): # len (parent['children']) >=  Virtually reexpanded;  else may try to reexpand and thrash around in tree search
+                if parent['num_to_consider'] == 0 or (parent['other_children'] is None or len (parent['other_children']) == 0): # len (parent['children']) >=  Virtually reexpanded;  else may try to reexpand and thrash around in tree search
                     parent['reexpanded_already'] = True
                 update_win_status_from_children(parent)
                 backpropagate_num_checked_children(parent)
@@ -686,9 +715,9 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
 def check_for_winning_move(child_node, rollout=False):
     index = child_node['index']
     if index > 131 and index !=154:
-        set_game_over_values(child_node, child_node['color'], child_node['parent']['color'],rollout)
+        set_game_over_values(child_node)
 
-def set_game_over_values(node, node_color, winner_color, rollout=False):
+def set_game_over_values(node):
     node['gameover'] =True
     node['subtree_checked'] =True
     #
@@ -708,8 +737,17 @@ def set_game_over_values(node, node_color, winner_color, rollout=False):
     #     else:
     node['wins'] = 0 # this node will neverwin;
     node['gameover_visits'] = 65536
+    node['visits'] = 65536
     update_tree_losses(node, gameover=True) #keep agent away from subtree and towards subtrees of the same level
     node['win_status'] = False
+
+def set_game_over_values_1_step_lookahead(node):
+    node['visits'] = 65536
+    node['wins'] = 65536 # this node will neverwin;
+    node['gameover_wins'] = 65536
+    node['gameover_visits'] = 65536
+    update_tree_wins(node, gameover=True) #keep agent away from subtree and towards subtrees of the same level
+    node['win_status'] = True
 
 def reset_game_over_values(node):
     if node['gameover'] is True:

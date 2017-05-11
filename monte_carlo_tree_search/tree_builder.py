@@ -127,8 +127,8 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
     # This step takes time away from MCTS in the beginning, but builds the tree that the MCTS will use later on in the game.
     # original_unexpanded_node.
     entered_once = False
-    over_time = not( time() - sim_info.start_time < sim_info.time_to_think)
-    while depth < depth_limit and not over_time :# and len(sim_info.game_tree)<10000
+    over_time = not( time() - sim_info['start_time'] < sim_info['time_to_think'])
+    while depth < depth_limit and not over_time :# and len(sim_info['game_tree'])<10000
         entered_once = True
         # if len (unexpanded_nodes) > 0:
         #     if unexpanded_nodes[0] is None:
@@ -137,8 +137,8 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
 
         unexpanded_nodes = list(filter(lambda x: ((x['children'] is None) and not x['gameover'] ), unexpanded_nodes)) #redundant
         if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<=256: #if any nodes to expand;
-            # if sim_info.root is not None: #aren't coming from reinitializing a root
-            #     if sim_info.main_pid == current_thread().name:
+            # if sim_info['root'] is not None: #aren't coming from reinitializing a root
+            #     if sim_info['main_pid'] == current_thread().name:
             #         depth_limit = 1 #main thread expands once and exits to call other threads
             #     # elif unexpanded_nodes[0]['height'] > 80:
             #     #     # if len(unexpanded_nodes) == 1:
@@ -171,11 +171,11 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
             # start = time()
             NN_output = policy_net.evaluate(unexpanded_nodes)
             # total_time = (time()-start)*1000 # in ms
-            # sim_info.eval_times.append([len(unexpanded_nodes),total_time])
+            # sim_info['eval_times'].append([len(unexpanded_nodes),total_time])
 
 
             multiprocess = False
-            if multiprocess and ((len(unexpanded_nodes) >= 25 and (unexpanded_nodes[0]['color'] != sim_info.root['color'])) or len(unexpanded_nodes) >=100):#lots of children toappend
+            if multiprocess and ((len(unexpanded_nodes) >= 25 and (unexpanded_nodes[0]['color'] != sim_info['root']['color'])) or len(unexpanded_nodes) >=100):#lots of children toappend
                 unexpanded_children, over_time = offload_updates_to_separate_process(unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock)
             else:
                 unexpanded_children, over_time = do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock)
@@ -183,7 +183,7 @@ def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim
             unexpanded_nodes = unexpanded_children
 
             depth += 1
-            if not over_time and depth<depth_limit:# and len(sim_info.game_tree)<10000
+            if not over_time and depth<depth_limit:# and len(sim_info['game_tree'])<10000
                 for child in unexpanded_nodes: #set flag for children we were planning to check
                     increment_threads_checking_node(child)
 
@@ -217,8 +217,8 @@ def offload_updates_to_separate_process(unexpanded_nodes,  depth, depth_limit, N
         #     parent['parent'] = None
         process = Pool(processes=1)
         expanded_parents, unexpanded_children, over_time = process.map(update_parents_for_process, [
-            [unexpanded_nodes, NN_output, depth, depth_limit, sim_info.start_time,
-             sim_info.time_to_think, sim_info.root['color']]])[0]
+            [unexpanded_nodes, NN_output, depth, depth_limit, sim_info['start_time'],
+             sim_info['time_to_think'], sim_info['root']['color']]])[0]
         process.close()  # sleeps here so other threads can work
         process.join()
         with lock:
@@ -238,7 +238,7 @@ def offload_updates_to_separate_process(unexpanded_nodes,  depth, depth_limit, N
             for grandparent in grandparents:
                 update_win_status_from_children(grandparent)  # since parents may have been updated, grandparent must check these copies; maybe less duplication to do it here than in expanded parents loop?
                 backpropagate_num_checked_children(grandparent)
-            sim_info.game_tree.extend(expanded_parents)
+            sim_info['game_tree'].extend(expanded_parents)
     return unexpanded_children, over_time
 
 def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock):
@@ -246,7 +246,7 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
     over_time = False
     for i in range(0, len(unexpanded_nodes)):
         parent = unexpanded_nodes[i]
-        if time() - sim_info.start_time < sim_info.time_to_think:# and len(sim_info.game_tree)<10000  # stop updating parents as soon as we go over our time to think
+        if time() - sim_info['start_time'] < sim_info['time_to_think']:# and len(sim_info['game_tree'])<10000  # stop updating parents as soon as we go over our time to think
             with lock:
                 if parent['threads_checking_node'] <= 1 and (parent['children'] is None):
                     if parent['threads_checking_node'] <= 0:
@@ -261,11 +261,11 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
                 if depth+1 < depth_limit and children is not None:  # if we are allowed to enter the outermost while loop again
                     with lock:
 
-                        # game_tree_root = sim_info.root
-                        if parent['color'] == 'White':  # sim_info.root['color'] playermove
+                        # game_tree_root = sim_info['root']
+                        if parent['color'] == 'White':  # sim_info['root']['color'] playermove
                             best_child = None
                             for child in children: #walk down children sorted by NN probability
-                                if child['win_status'] is None and child['threads_checking_node']<=0:
+                                if child['win_status'] is None and child['threads_checking_node']<=0 and not child['subtree_being_checked']:
                                     best_child = child
                                     break
                             if best_child is not None:
@@ -277,9 +277,16 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
 
                             num_children = len(children)
                             if num_children>=2:
-                                unexpanded_children.extend([children[0], children[1]])
+                                child_0 =children [0]
+                                child_1 = children [1]
+                                if child_0['win_status'] is None and child_0['threads_checking_node']<=0 and not child_0['subtree_being_checked']:
+                                    unexpanded_children.append(children[0])
+                                if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked']:
+                                    unexpanded_children.append(children[1])
                             elif num_children==1:
-                                unexpanded_children.append(children[0])#TODO 1x1 expansions EOG
+                                child_0 = children[0]
+                                if child_0['win_status'] is None and child_0['threads_checking_node'] <= 0 and not child_0['subtree_being_checked']:
+                                    unexpanded_children.append(children[0])
 
                 # unexpanded_children.extend(children_to_consider)
 
@@ -307,7 +314,7 @@ def update_parent(parent, NN_output, sim_info, lock):
     with lock:  # Lock after the NN update and check if we still need to update the parent
         if parent['children'] is None:
             abort = False
-            sim_info.game_tree.append(parent)
+            sim_info['game_tree'].append(parent)
         else:
             abort = True
             decrement_threads_checking_node(parent)
@@ -324,7 +331,7 @@ def update_parents_for_process(args):#when more than n parents, have a separate 
     time_to_think = args[5]
     root_color = args[6]
     sim_info = SimulationInfo(stdout)
-    sim_info.do_eval = False
+    sim_info['do_eval'] = False
     lock = Lock()
 
     unexpanded_children = []
@@ -429,15 +436,15 @@ def get_num_children_to_consider(parent):
 
     if parent['color'] == 'Black':  # opponent moves
         if height>= 80:
-            parent['num_to_consider'] =0#8
+            parent['num_to_consider'] =2#8
             parent['num_to_keep'] =  2 # else play with child val threshold
 
         elif height >= 70:
-            parent['num_to_consider'] = 0#6
+            parent['num_to_consider'] = 2#6
             parent['num_to_keep'] = 2
         # 2?   65-69      #??
         elif height < 70 and height >= 65:
-            parent['num_to_consider'] = 1#6
+            parent['num_to_consider'] = 2#6
             parent['num_to_keep'] = 2 # else play with child val threshold?
         # # # 4?   60-64
         elif height < 65 and height >= 60:
@@ -464,11 +471,11 @@ def get_num_children_to_consider(parent):
     else:
             # 3?   61-69
         if height >= 70:
-            parent['num_to_consider'] = 0
+            parent['num_to_consider'] = 1
             parent['num_to_keep'] = 1 # else play with child val threshold # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
             # 52-60
         elif height < 70 and height >= 61:#2?
-            parent['num_to_consider'] = 1
+            parent['num_to_consider'] = 2
             parent['num_to_keep'] = 1 # else play with child val threshold2#2  # else play with child val threshold? WaNN missed an easy win and thought it was doomed at height 53
             # 52-60
         elif height < 61 and height >= 52:
@@ -498,7 +505,7 @@ def get_child(parent, move, NN_output, sim_info, lock):
     if child is not None:
         check_for_winning_move(child)  # 1-step lookahead for gameover
         if child['gameover']:
-            sim_info.game_tree.append(child)
+            sim_info['game_tree'].append(child)
         update_child(child, NN_output, sim_info, do_eval=False)
     return child
 
@@ -540,13 +547,14 @@ def assign_children(parent, children, lock):
                                 parent_children.append(children[i])
                             else:  # when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
                                 set_game_over_values_1_step_lookahead(children[i])
-                                other_children.append(children[i])
-                        if len(parent_children) <= 0: #no game winning or saving moves.
-                            parent['children'] = children
-                            parent['other_children'] = []
-                        else:
-                            parent['children'] = parent_children
-                            parent['other_children'] = other_children
+                                parent_children.append(children[i])
+                        # if len(parent_children) <= 0: #no game winning or saving moves.
+                        #     parent['children'] = children
+                        #     parent['other_children'] = []
+                        # else:
+                        #     parent['children'] = parent_children
+                        #     parent['other_children'] = other_children
+                        parent['children'] = parent_children
 
                     else:
                         for i in range(0, len(children)):
@@ -624,14 +632,14 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
 
 
     if new_root_parent['children'] is None:# in case parent was never expanded
-        print("New root's parent had no children", file=sim_info.file)
+        print("New root's parent had no children", file=sim_info['file'])
 
         new_root_parent['threads_checking_node'] = 1
         expand_descendants_to_depth_wrt_NN([new_root_parent], 0, 1, sim_info, lock,
                                            policy_net)
 
         if new_root_parent['children'] is None: #still none means the pruning was too aggressive; still append this child.
-            print("Pruning too aggressive: New root's parent still has no children after expansion", file=sim_info.file)
+            print("Pruning too aggressive: New root's parent still has no children after expansion", file=sim_info['file'])
 
             # new_root_index = index_lookup_by_move(new_root_as_move)
             # new_root = dict_TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
@@ -647,7 +655,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
             rank = list(top_children_indexes).index(new_root['index'])
             print("PRUNING INVESTIGATION: new root's probability = %{prob} Rank = {rank}".format(
                 prob=((new_root['UCT_multiplier'] - 1) * 100), rank=rank +1),
-                file=sim_info.file)
+                file=sim_info['file'])
             new_root_parent['children'] = [new_root]
 
         else: #now expanded with some children; check if new root is one of them
@@ -656,14 +664,14 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
             for child in new_root_parent['children']:
                 if child['game_board'] ==new_root_game_board:
                     print("Pruning Fine: New root is now in parent's children after expansion",
-                          file=sim_info.file)
+                          file=sim_info['file'])
 
                     duplicate_child = child
                     now_in_parent  = True
 
             if not now_in_parent:
                 print("Pruning too aggressive: New root's parent still did not have the actual new root after expansion",
-                      file=sim_info.file)
+                      file=sim_info['file'])
 
                 # new_root_index = index_lookup_by_move(new_root_as_move)
                 # new_root = dict_TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
@@ -679,14 +687,14 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
                 rank = list(top_children_indexes).index(new_root['index'])
                 print("PRUNING INVESTIGATION: new root's probability = %{prob} Rank = {rank}".format(
                     prob=((new_root['UCT_multiplier'] - 1) * 100), rank=rank +1),
-                    file=sim_info.file)
+                    file=sim_info['file'])
                 new_root_parent['children'].append(new_root) #attach new root to parent
             else:
                 new_root = duplicate_child
 
     else:#has kids but new_root wasn't in them.
         print("Pruning investigation: New root's parent did not have new root after initial expansion",
-              file=sim_info.file)
+              file=sim_info['file'])
         # new_root_index = index_lookup_by_move(new_root_as_move)
         #
         # new_root = dict_TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
@@ -702,7 +710,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
         rank = list(top_children_indexes).index(new_root['index'])
         print("PRUNING INVESTIGATION: new root's probability = %{prob} Rank = {rank}".format(
             prob=((new_root['UCT_multiplier'] - 1) * 100), rank=rank +1),
-            file=sim_info.file)
+            file=sim_info['file'])
         new_root_parent['children'].append(new_root)  # attach new root to parent
 
     backpropagate_num_checked_children(new_root_parent)

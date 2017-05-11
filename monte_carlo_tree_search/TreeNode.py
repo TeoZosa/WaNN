@@ -116,7 +116,7 @@ def dict_TreeNode(game_board, white_pieces, black_pieces, player_color, index, p
         'UCT_multiplier': 1,
         'num_children_being_checked': 0,
         'overwhelming_amount': 1,
-        'num_to_consider': 1,
+        'num_to_consider': 0,
         'num_to_keep': 1,
         'times_reexpanded': 0
     }

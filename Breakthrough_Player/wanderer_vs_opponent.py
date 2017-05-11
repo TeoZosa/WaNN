@@ -12,8 +12,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   num_games_to_play = 501
   time_to_think = 10
   depth_limit = 5
-  date = r'05102017'
-  file_designator = '__068Nets_PenalizeReward_GO_LA_ALL_UCT'
+  date = r'05112017'
+  file_designator = '__068Nets_RewardPenal60_GO_LA_AllUCT_40_FixedReexp_simInfoDict'
   #BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'

@@ -77,184 +77,185 @@ NN_input_queue = [] #for expanded nodes that need to be evaluated asynchronously
 #for production, remove simulation info logging code
 def MCTS_with_expansions(game_board, player_color, time_to_think,
                          depth_limit, previous_move, last_opponent_move, move_number, log_file=stdout, MCTS_Type='Expansion MCTS Pruning', policy_net=None, game_num = -1):
-    with SimulationInfo(log_file) as sim_info:
-        time_to_think = time_to_think+1 #takes 1 second for first eval (io needs to warm up?)with threads, takes 1.125 times longer to finish up
-        # sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
-        sim_info.game_num = game_num
-        sim_info.time_to_think = time_to_think
-        sim_info.start_time = time()
 
-        sim_info.root = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
-        sim_info.main_pid = current_thread().name
-        # if move_number == 0 or move_number == 1:
-        #     time_to_think = 60
-        # if root['height']>= 60: #still missing forced wins
-        #     time_to_think = 6000
+    sim_info = SimulationInfo(log_file)
+    time_to_think = time_to_think+1 #takes 1 second for first eval (io needs to warm up?)with threads, takes 1.125 times longer to finish up
+    # sim_info['root'] = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
+    sim_info['game_num'] = game_num
+    sim_info['time_to_think'] = time_to_think
+    sim_info['start_time'] = time()
+
+    sim_info['root'] = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
+    sim_info['main_pid'] = current_thread().name
+    # if move_number == 0 or move_number == 1:
+    #     time_to_think = 60
+    # if root['height']>= 60: #still missing forced wins
+    #     time_to_think = 6000
 
 
 
-        #TODO: prune the tree later once it gets too big? Does this matter since current search will only check a subtree without a win status?
-        # i.e. from height 60 (where all children are enumerated), if a node is a guaranteed loss_init for parent, remove?
-        # ex if True, remove all but one loser child (since we only need one route to win)
-        #if False
+    #TODO: prune the tree later once it gets too big? Does this matter since current search will only check a subtree without a win status?
+    # i.e. from height 60 (where all children are enumerated), if a node is a guaranteed loss_init for parent, remove?
+    # ex if True, remove all but one loser child (since we only need one route to win)
+    #if False
 
-        # #TODO: reinitialize gameover values to be a 0 or 1? DFS from the root and backpropagate the value.
-        # def reinit_gameover_values(root):
-        #     unvisited_queue = [root]
-        #     visited_queue = []
-        #     while len (unvisited_queue)>0:
-        #         node = unvisited_queue.pop()
-        #         if node['gameover']:
-        #             update_tree_wins(node, 9999999) #cancel out all the old huge values
-        #             update_tree_losses(node, 10000) #update with new values; keep at 10,000 so we don't lose NN values
-        #         if node['children']is not None:
-        #             unvisited_queue.extend(node['children'])
-        #         # visited_queue.append(node)
+    # #TODO: reinitialize gameover values to be a 0 or 1? DFS from the root and backpropagate the value.
+    # def reinit_gameover_values(root):
+    #     unvisited_queue = [root]
+    #     visited_queue = []
+    #     while len (unvisited_queue)>0:
+    #         node = unvisited_queue.pop()
+    #         if node['gameover']:
+    #             update_tree_wins(node, 9999999) #cancel out all the old huge values
+    #             update_tree_losses(node, 10000) #update with new values; keep at 10,000 so we don't lose NN values
+    #         if node['children']is not None:
+    #             unvisited_queue.extend(node['children'])
+    #         # visited_queue.append(node)
 
-        def prune_red_herrings_from_parents_with_win_status(root): #if calling this, stop reexpanding nodes at height 60 with less than their number of legal children
-            unvisited_queue = [root]
-            while len (unvisited_queue)>0:
-                node = unvisited_queue.pop()
-                if node['height']>=60 and not node['gameover']:
-                    if node['win_status']is True: #pick all losing children
-                        losing_children = []
-                        for child in node['children']:
-                            if child['win_status'] is False:
-                                losing_children.append(child)
-                        node['children']= losing_children#some forced win
-                        unvisited_queue.extend(losing_children)
-                        #note: this may be bad if path to loss_init is so long and you don't kkno
-                    # elif node['win_status']is False: #pick one out of all of your losing children.
-                    #     winning_child = None
-                    #     for child in node['children']:
-                    #         if child['win_status'] is True:
-                    #             winning_child = child
-                    #             break
-                    #     node['children']= [winning_child] #some doomed move
-                    #     unvisited_queue.append(winning_child)
-                    else: #win_status is False or None => some kids may be True, some may be None; check them all.
-                        if node['children']is not None:
-                            unvisited_queue.extend(node['children'])
-                else:
+    def prune_red_herrings_from_parents_with_win_status(root): #if calling this, stop reexpanding nodes at height 60 with less than their number of legal children
+        unvisited_queue = [root]
+        while len (unvisited_queue)>0:
+            node = unvisited_queue.pop()
+            if node['height']>=60 and not node['gameover']:
+                if node['win_status']is True: #pick all losing children
+                    losing_children = []
+                    for child in node['children']:
+                        if child['win_status'] is False:
+                            losing_children.append(child)
+                    node['children']= losing_children#some forced win
+                    unvisited_queue.extend(losing_children)
+                    #note: this may be bad if path to loss_init is so long and you don't kkno
+                # elif node['win_status']is False: #pick one out of all of your losing children.
+                #     winning_child = None
+                #     for child in node['children']:
+                #         if child['win_status'] is True:
+                #             winning_child = child
+                #             break
+                #     node['children']= [winning_child] #some doomed move
+                #     unvisited_queue.append(winning_child)
+                else: #win_status is False or None => some kids may be True, some may be None; check them all.
                     if node['children']is not None:
                         unvisited_queue.extend(node['children'])
-        # if move_number == 0:
-        #     reinit_gameover_values(root)
-
-        if root['subtree_checked']:# or root['win_status']is True
-            done = True
-        else:
-            done = False
-        if MCTS_Type == 'Expansion MCTS Pruning':
-            pruning = True
-        else:
-            pruning = False
-
-        #
-        # if root['children']is not None:
-        #     for child in root['children']:
-        #         net_real_wins = child['wins_down_this_tree'] # -child.losses_down_this_tree
-        #         if net_real_wins > 0:
-        #             done = True
-        # async_NN_update_threads = ThreadPool(processes=3)
-        num_processes = 10
-        parallel_search_threads = ThreadPool(processes=num_processes)
-
-        sim_info.start_time = start_time = time()
-        MCTS_args = [[root, depth_limit, time_to_think, sim_info, MCTS_Type, policy_net, start_time]] * int(num_processes)
-        #BFS tree to reset node check semaphore
-        reset_thread_flag(root)
-
-        while time() - start_time < time_to_think and not done:
-            if MCTS_Type ==  'MCTS Asynchronous':
-                NN_args = [done, pruning, sim_info, policy_net]
-                # async_NN_update_threads.apply_async(async_node_updates, NN_args)
             else:
+                if node['children']is not None:
+                    unvisited_queue.extend(node['children'])
+    # if move_number == 0:
+    #     reinit_gameover_values(root)
 
-                parallel_search_threads.starmap_async(run_MCTS_with_expansions_simulation, MCTS_args)
+    if root['subtree_checked']:# or root['win_status']is True
+        done = True
+    else:
+        done = False
+    if MCTS_Type == 'Expansion MCTS Pruning':
+        pruning = True
+    else:
+        pruning = False
 
-                done = run_MCTS_with_expansions_simulation(root,depth_limit, time_to_think,
-                                                           sim_info, MCTS_Type, policy_net, start_time
-                ) #have the main thread return done
-        search_time = time() - start_time
-        parallel_search_threads.terminate()
-        # parallel_search_threads.close()
-        parallel_search_threads.join()
-        true_search_time = time() - start_time
+    #
+    # if root['children']is not None:
+    #     for child in root['children']:
+    #         net_real_wins = child['wins_down_this_tree'] # -child.losses_down_this_tree
+    #         if net_real_wins > 0:
+    #             done = True
+    # async_NN_update_threads = ThreadPool(processes=3)
+    num_processes = 10
+    parallel_search_threads = ThreadPool(processes=num_processes)
 
+    sim_info['start_time'] = start_time = time()
+    MCTS_args = [[root, depth_limit, time_to_think, sim_info, MCTS_Type, policy_net, start_time]] * int(num_processes)
+    #BFS tree to reset node check semaphore
+    reset_thread_flag(root)
 
+    while time() - start_time < time_to_think and not done:
+        if MCTS_Type ==  'MCTS Asynchronous':
+            NN_args = [done, pruning, sim_info, policy_net]
+            # async_NN_update_threads.apply_async(async_node_updates, NN_args)
+        else:
 
-            #TODO: something symmetric for if it thinks it has a forced win? i.e. best_child reexpanded = true?
-                # if it has time to think, might as well make sure? may ruin final move choice.
-                #  maybe need to save previous best move and only switch if there is another guaranteed win (this one we can be sure of) or if it flipped to being a doomed move.
+            parallel_search_threads.starmap_async(run_MCTS_with_expansions_simulation, MCTS_args)
 
-
-        # async_NN_update_threads.close()
-        # async_NN_update_threads.join()
-
-
-
-        best_child = randomly_choose_a_winning_move(root, max(0, game_num))
-
-        # if (move_number == 0 or move_number == 1) and game_num > -1: #save each iteration. If training makes it worse, we can revert back to a better version and change search parameters.
-        #     top_root = root
-        #     while top_root['parent']is not None:
-        #         top_root = top_root['parent']
-        #
-        #     output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\04102017DualNets10secsDepth80_TrueWinLossFieldBlack{}.p'.format(str(game_num)), 'wb')
-        #     #online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
-        #     pickle.dump(top_root, output_file, protocol=pickle.HIGHEST_PROTOCOL)
-        #     output_file.close()
-        #     print("done saving root in seconds = ")
-        #     print(search_time)
-
-        # if done: #subtree checked or has a win status: prune off unnecessary subtrees after height 60
-        #     prune_red_herrings_from_parents_with_win_status(root)# note:
-
-        print_forced_win(root['win_status'],sim_info)
-        print("Time spent searching tree = {}".format(search_time), file=log_file)
-        print("Time spent searching tree = {}".format(search_time))
-
-
-        print("Time waiting for threads to close = {}".format(true_search_time - search_time), file=log_file)
-        print("Total Time = {}".format(true_search_time), file=log_file)
-
-        print("Time waiting for threads to close = {}".format(true_search_time - search_time))
-        print("Total Time = {}".format(true_search_time))
+            done = run_MCTS_with_expansions_simulation(root,depth_limit, time_to_think,
+                                                       sim_info, MCTS_Type, policy_net, start_time
+            ) #have the main thread return done
+    search_time = time() - start_time
+    parallel_search_threads.terminate()
+    # parallel_search_threads.close()
+    parallel_search_threads.join()
+    true_search_time = time() - start_time
 
 
-        best_move = get_best_move(best_child, player_color, move_number, aggressive=None)
-        print_expansion_statistics(sim_info, time())
 
-        print_best_move(player_color, best_move, sim_info)
-        print(best_move)
-
-        if best_child['parent'] is not None:#separate for backgroundsearch
-            parent = best_child['parent']
-            parent['children'] = [best_child]
-            best_child['parent']['other_children'] =None
-            best_child['parent']['reexpanded_already']=True
+        #TODO: something symmetric for if it thinks it has a forced win? i.e. best_child reexpanded = true?
+            # if it has time to think, might as well make sure? may ruin final move choice.
+            #  maybe need to save previous best move and only switch if there is another guaranteed win (this one we can be sure of) or if it flipped to being a doomed move.
 
 
-        best_child['reexpanded_already'] =True
-        if best_child['children'] is not None and best_child['other_children'] is not None:
-            best_child['children'].extend(best_child['other_children']) # should never reappend anewroot
-
-            #refresh win status since we unpruned the children
-            parent = best_child['parent']
-            if parent is not None:
-                parent['win_status'] = None
-                parent['subtree_checked'] = False
-            best_child['win_status'] =None
-
-            update_win_status_from_children(best_child)
+    # async_NN_update_threads.close()
+    # async_NN_update_threads.join()
 
 
-            #refresh sub tree checked since we unpruned children
-            best_child['subtree_checked'] =False
-            backpropagate_num_checked_children(best_child)
 
-            best_child['other_children'] =None
+    best_child = randomly_choose_a_winning_move(root, max(0, game_num))
+
+    # if (move_number == 0 or move_number == 1) and game_num > -1: #save each iteration. If training makes it worse, we can revert back to a better version and change search parameters.
+    #     top_root = root
+    #     while top_root['parent']is not None:
+    #         top_root = top_root['parent']
+    #
+    #     output_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\04102017DualNets10secsDepth80_TrueWinLossFieldBlack{}.p'.format(str(game_num)), 'wb')
+    #     #online reinforcement learning: resave the root at each new game (if it was kept, values would have backpropagated)
+    #     pickle.dump(top_root, output_file, protocol=pickle.HIGHEST_PROTOCOL)
+    #     output_file.close()
+    #     print("done saving root in seconds = ")
+    #     print(search_time)
+
+    # if done: #subtree checked or has a win status: prune off unnecessary subtrees after height 60
+    #     prune_red_herrings_from_parents_with_win_status(root)# note:
+
+    print_forced_win(root['win_status'],sim_info)
+    print("Time spent searching tree = {}".format(search_time), file=log_file)
+    print("Time spent searching tree = {}".format(search_time))
+
+
+    print("Time waiting for threads to close = {}".format(true_search_time - search_time), file=log_file)
+    print("Total Time = {}".format(true_search_time), file=log_file)
+
+    print("Time waiting for threads to close = {}".format(true_search_time - search_time))
+    print("Total Time = {}".format(true_search_time))
+
+
+    best_move = get_best_move(best_child, player_color, move_number, aggressive=None)
+    print_expansion_statistics(sim_info, time())
+
+    print_best_move(player_color, best_move, sim_info)
+    print(best_move)
+
+    if best_child['parent'] is not None:#separate for backgroundsearch
+        parent = best_child['parent']
+        parent['children'] = [best_child]
+        best_child['parent']['other_children'] =None
+        best_child['parent']['reexpanded_already']=True
+
+
+    best_child['reexpanded_already'] =True
+    if best_child['children'] is not None and best_child['other_children'] is not None:
+        best_child['children'].extend(best_child['other_children']) # should never reappend anewroot
+
+        #refresh win status since we unpruned the children
+        parent = best_child['parent']
+        if parent is not None:
+            parent['win_status'] = None
+            parent['subtree_checked'] = False
+        best_child['win_status'] =None
+
+        update_win_status_from_children(best_child)
+
+
+        #refresh sub tree checked since we unpruned children
+        best_child['subtree_checked'] =False
+        backpropagate_num_checked_children(best_child)
+
+        best_child['other_children'] =None
 
 
     return best_child, best_move #save this root to use next time
@@ -282,33 +283,33 @@ def assign_root_reinforcement_learning(game_board, player_color, previous_move, 
         if previous_move is not None: #saved root
             root = previous_move
         else:#saving a new board
-            # print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info.file)
+            # print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info['file'])
             # answer = input("WARNING: INITIALIZING A NEW BOARD TO BE SAVED, ENTER \'yes\' TO CONTINUE")
             # if answer.lower() != 'yes':
             #     exit(-10)
             root = dict_TreeNode(game_board, white_pieces, black_pieces, player_color, 0, None, move_number)
     elif move_number == 1: #WaNN is black
         if previous_move is None: #saving new board
-            # print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info.file)
+            # print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info['file'])
             # answer = input("WARNING: INITIALIZING A NEW BOARD TO BE SAVED, ENTER \'yes\' TO CONTINUE")
             # if answer.lower() != 'yes':
             #     exit(-10)
             previous_move = dict_TreeNode(initial_game_board(), white_pieces, black_pieces, 'White', 0, None, 0) #initialize a dummy start board state to get white's info
             root = init_new_root(last_opponent_move, game_board, player_color, previous_move, policy_net, sim_info,
                                  async_update_lock)
-            print("Initialized and appended new subtree", file=sim_info.file)
+            print("Initialized and appended new subtree", file=sim_info['file'])
         else:
             root = None
             if previous_move['children'] is not None:
                 for child in previous_move['children']:  # check if we can reuse tree
                     if child['game_board'] ==game_board:
                         root = child
-                        print("Reused old tree", file=sim_info.file)
+                        print("Reused old tree", file=sim_info['file'])
                         break
             if root is None:  # no subtree; append new subtree to old parent
                 root = init_new_root(last_opponent_move, game_board, player_color, previous_move, policy_net, sim_info,
                                      async_update_lock)
-                print("Initialized and appended new subtree", file=sim_info.file)
+                print("Initialized and appended new subtree", file=sim_info['file'])
 
 
     else:#should have some tree to reuse or append a new one
@@ -317,11 +318,11 @@ def assign_root_reinforcement_learning(game_board, player_color, previous_move, 
             for child in previous_move['children']: #check if we can reuse tree
                 if child['game_board'] ==game_board:
                     root = child
-                    print("Reused old tree", file=sim_info.file)
+                    print("Reused old tree", file=sim_info['file'])
                     break
         if root  is None: #no subtree; append new subtree to old parent
             root = init_new_root(last_opponent_move, game_board, player_color, previous_move, policy_net, sim_info, async_update_lock)
-            print("Initialized and appended new subtree", file=sim_info.file)
+            print("Initialized and appended new subtree", file=sim_info['file'])
 
     #if terminating threads didn't end correctly, clean this up on the way down.
     root['being_checked']= False
@@ -380,17 +381,17 @@ def run_MCTS_with_expansions_simulation(root,depth_limit, time_to_think, sim_inf
     done = False
     this_thread_reexpands_root = False
     if not root['subtree_checked']:
-        # if sim_info.counter > 1000:# and len(sim_info.game_tree) <1000:
+        # if sim_info['counter'] > 1000:# and len(sim_info['game_tree']) <1000:
         #     print("something going wrong in tree expansions")
         #     time_to_think = 999
         play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info, 0, MCTS_Type, policy_net, start_time, time_to_think)
         with async_update_lock: #so prints aren't interleaved
-            # if sim_info.counter  % 5 == 0:  # log every 5th simulation
-            #     print_expansion_statistics(sim_info, sim_info.start_time)
+            # if sim_info['counter']  % 5 == 0:  # log every 5th simulation
+            #     print_expansion_statistics(sim_info, sim_info['start_time'])
             # if len(root['children']) == 1 and root['children']['gameover_wins']>
-            game_tree_size = len(sim_info.game_tree)
-            sim_info.prev_game_tree_size = game_tree_size
-            sim_info.counter += 1
+            game_tree_size = len(sim_info['game_tree'])
+            sim_info['prev_game_tree_size'] = game_tree_size
+            sim_info['counter'] += 1
         win_status = root['win_status']
         if win_status is not None:
             #probably doesn't matter since WaNN only does this by the time wanderer knows for sure if it has a win/loss
@@ -405,30 +406,28 @@ def run_MCTS_with_expansions_simulation(root,depth_limit, time_to_think, sim_inf
                         update_win_status_from_children(root)
                         backpropagate_num_checked_children(root)
 
-                    else: #already considered all children
-                        done = True
-
                 elif win_status is True: #if we forced a win, check other children to make sure
                     roots_best_child = None
                     for child in root['children']:
                         if child['win_status'] is False:
                             roots_best_child = child
                             break
-                    best_child_other_children = roots_best_child['other_children']
-                    if best_child_other_children is not None:
-                        roots_best_child['children'].extend(best_child_other_children)
-                        roots_best_child['other_children'] = None
+                    if roots_best_child is not None:
+                        best_child_other_children = roots_best_child['other_children']
+                        if best_child_other_children is not None:
+                            roots_best_child['children'].extend(best_child_other_children)
+                            roots_best_child['other_children'] = None
 
-                        roots_best_child['win_status'] = None
-                        update_win_status_from_children(roots_best_child)
-                        backpropagate_num_checked_children(roots_best_child)
+                            roots_best_child['win_status'] = None
+                            update_win_status_from_children(roots_best_child)
+                            backpropagate_num_checked_children(roots_best_child)
 
-                        root['win_status'] = None
-                        update_win_status_from_children(root)
-                        backpropagate_num_checked_children(root)
-                    else:#already considered all counter moves
-                        done = True
+                            root['win_status'] = None
+                            update_win_status_from_children(root)
+                            backpropagate_num_checked_children(root)
 
+        if root['subtree_checked']:
+            done = True
         else:
             done = False
 
@@ -496,7 +495,7 @@ def expand_leaf_node(root, depth, depth_limit, sim_info, this_height, MCTS_Type,
 #     while node['gameover']is False:
 #         with async_update_lock:  # make sure it's not being updated asynchronously
 #             while node['children']is not None:
-#                 node = randomly_choose_a_winning_move(node, sim_info.game_num)  # if child is a leaf, chooses policy net's top choice
+#                 node = randomly_choose_a_winning_move(node, sim_info['game_num'])  # if child is a leaf, chooses policy net's top choice
 #                 this_height += 1
 #         expand(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net)
 #
@@ -543,7 +542,7 @@ def select_UCT_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type,
         #     node['subtree_checked']= False
         while node is not None and node['children']is not None:
             node['threads_checking_node']= 0 #clean this up on the way down
-            # if sim_info.counter > 500:
+            # if sim_info['counter'] > 500 and len(sim_info['game_tree']) == 0:
             #     breakpoint = True
             if node['parent']is not None:
                 node['parent']['subtree_being_checked'] =False
@@ -563,7 +562,7 @@ def select_UCT_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type,
 # def select_best_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think):
 #     with async_update_lock: #make sure it's not being updated asynchronously
 #         while node['children']is not None:
-#             node = randomly_choose_a_winning_move(node, sim_info.game_num) #if child is a leaf, chooses policy net's top choice
+#             node = randomly_choose_a_winning_move(node, sim_info['game_num']) #if child is a leaf, chooses policy net's top choice
 #             this_height += 1
 #     play_MCTS_game_with_expansions(node, depth, depth_limit, sim_info, this_height, MCTS_Type, policy_net, start_time, time_to_think)
 #
@@ -574,25 +573,25 @@ def select_UCT_child(node, depth, depth_limit, sim_info, this_height, MCTS_Type,
 
 
 def log_max_tree_height(sim_info, this_height):
-    if this_height > sim_info.game_tree_height:  # keep track of max tree height
-        sim_info.game_tree_height = this_height#
+    if this_height > sim_info['game_tree_height']:  # keep track of max tree height
+        sim_info['game_tree_height'] = this_height#
 
 def print_simulation_statistics(sim_info):#TODO: try not calling this and see if this is what is slowing down the program
-    root = sim_info.root
-    start_time = sim_info.start_time
-    time_to_think = sim_info.time_to_think
+    root = sim_info['root']
+    start_time = sim_info['start_time']
+    time_to_think = sim_info['time_to_think']
     overwhelming_on = False
         
     wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(root, overwhelming_on)
     print("Monte Carlo Game {iteration}\n"
           "Played at root   Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}     true_losses = {true_losses}    prob = %{prob}    win = {win_status}\n".format(
         height = root['height'], color=root['color'], uct=0, wins=wins, visits=visits,true_wins=true_wins,true_losses=true_losses,
-        iteration=sim_info.counter+1, prob=(root['UCT_multiplier']-1)*100, win_status = root['win_status']),file=sim_info.file)
-    print_board(sim_info.root['game_board'],sim_info.file)
-    print("\n", file=sim_info.file)
+        iteration=sim_info['counter']+1, prob=(root['UCT_multiplier']-1)*100, win_status = root['win_status']),file=sim_info['file'])
+    print_board(sim_info['root']['game_board'],sim_info['file'])
+    print("\n", file=sim_info['file'])
     #to see best reply
     if root['children']is not None:
-        best_child = randomly_choose_a_winning_move(root, sim_info.game_num)
+        best_child = randomly_choose_a_winning_move(root, sim_info['game_num'])
         best_move =  move_lookup_by_index(best_child['index'],root['color'])
         best_child_UCT = get_UCT(best_child, root['visits'], start_time, time_to_think,sim_info)
         wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(best_child, overwhelming_on)
@@ -601,10 +600,10 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
               "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}     true_losses = {true_losses}   prob = %{prob}    win = {win_status}\n".format(
             best_move=best_move,
             height=best_child['height'], color=best_child['color'], uct=best_child_UCT, wins=wins,true_wins=true_wins,true_losses=true_losses,
-            visits=visits, prob=(best_child['UCT_multiplier']-1)*100, win_status = best_child['win_status']),file=sim_info.file)
-        print_board(best_child['game_board'],sim_info.file)
+            visits=visits, prob=(best_child['UCT_multiplier']-1)*100, win_status = best_child['win_status']),file=sim_info['file'])
+        print_board(best_child['game_board'],sim_info['file'])
 
-        print("All Moves", file=sim_info.file)
+        print("All Moves", file=sim_info['file'])
         for child in root['children']:
             move = move_lookup_by_index(child['index'],root['color'])
 
@@ -615,12 +614,12 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
                 move=move,
                 uct=child_UCT,
                 wins=wins, true_wins=true_wins, true_losses=true_losses,
-                visits=visits, prob=(child['UCT_multiplier']-1)*100, win_status = child['win_status']),file=sim_info.file)
-            print_board(child['game_board'],sim_info.file)
+                visits=visits, prob=(child['UCT_multiplier']-1)*100, win_status = child['win_status']),file=sim_info['file'])
+            print_board(child['game_board'],sim_info['file'])
 
         #to see predicted best counter
         if best_child['children'] is not None:
-            best_counter_child = randomly_choose_a_winning_move(best_child, sim_info.game_num)
+            best_counter_child = randomly_choose_a_winning_move(best_child, sim_info['game_num'])
             best_counter_move = move_lookup_by_index(best_counter_child['index'],best_child['color'])
             best_counter_child_UCT = get_UCT(best_counter_child, best_child['visits'], start_time, time_to_think,sim_info)
             wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(best_counter_child, overwhelming_on)
@@ -629,11 +628,11 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
                   "Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}     true_losses = {true_losses}    prob = %{prob}    win = {win_status}\n".format(
                 best_counter_move=best_counter_move, true_wins=true_wins, true_losses=true_losses,
                 height=best_counter_child['height'], color=best_counter_child['color'],uct=best_counter_child_UCT,wins=wins,
-                visits=visits, prob=(best_counter_child['UCT_multiplier']-1)*100, win_status = best_counter_child['win_status']),file=sim_info.file)
-            print_board(best_counter_child['game_board'],sim_info.file)
+                visits=visits, prob=(best_counter_child['UCT_multiplier']-1)*100, win_status = best_counter_child['win_status']),file=sim_info['file'])
+            print_board(best_counter_child['game_board'],sim_info['file'])
 
 
-            print("All Counter Moves",file=sim_info.file)
+            print("All Counter Moves",file=sim_info['file'])
             for counter_child in best_child['children']:
                 counter_move = move_lookup_by_index(counter_child['index'],best_child['color'])
 
@@ -644,23 +643,23 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
                     counter_move=counter_move,
                     uct=counter_child_UCT, true_wins=true_wins, true_losses=true_losses,
                     wins=wins,
-                    visits=visits, prob=(counter_child['UCT_multiplier']-1)*100, win_status = counter_child['win_status']),file=sim_info.file)
-                print_board(counter_child['game_board'],sim_info.file)
+                    visits=visits, prob=(counter_child['UCT_multiplier']-1)*100, win_status = counter_child['win_status']),file=sim_info['file'])
+                print_board(counter_child['game_board'],sim_info['file'])
 
         else:
-            print("No Counter Moves explored",file=sim_info.file)
+            print("No Counter Moves explored",file=sim_info['file'])
     else:
-        print("No Moves explored", file=sim_info.file)
+        print("No Moves explored", file=sim_info['file'])
 
 
 
-    print("\n", file=sim_info.file)
+    print("\n", file=sim_info['file'])
     k = 1
-    while len(sim_info.eval_times)>0:
+    while len(sim_info['eval_times'])>0:
         total = 0
         count = 0
         new_eval_times = []
-        for eval_stat in sim_info.eval_times:
+        for eval_stat in sim_info['eval_times']:
             if eval_stat[0] == k:
                 total+= eval_stat[1]
                 count+=1
@@ -668,41 +667,41 @@ def print_simulation_statistics(sim_info):#TODO: try not calling this and see if
                 new_eval_times.append(eval_stat)
         if count > 0:
             avg_time = total/count
-            print("approximately {time} ms to evaluate {num_nodes} node (out of {trials})".format(time=avg_time, num_nodes=k, trials=count), end='\n', file=sim_info.file)
-        sim_info.eval_times = new_eval_times
+            print("approximately {time} ms to evaluate {num_nodes} node (out of {trials})".format(time=avg_time, num_nodes=k, trials=count), end='\n', file=sim_info['file'])
+        sim_info['eval_times'] = new_eval_times
         k+=1
 
 
-    # for i in range(0, len(sim_info.game_tree)):
-    #     node_parent = sim_info.game_tree[i]['parent']
+    # for i in range(0, len(sim_info['game_tree'])):
+    #     node_parent = sim_info['game_tree'][i]['parent']
     #     if node_parent is None:
     #         UCT = 0
     #     else:
-    #         UCT = get_UCT(sim_info.game_tree[i], node_parent['visits'], start_time, time_to_think, sim_info)
+    #         UCT = get_UCT(sim_info['game_tree'][i], node_parent['visits'], start_time, time_to_think, sim_info)
     #     print("Node {i} Height {height}:    Player = {color}    UCT = {uct}     wins = {wins}       visits = {visits}      true_wins = {true_wins}       true_losses = {true_losses} checked = {checked}".format(
-    #         i=i, height=sim_info.game_tree[i]['height'], color=sim_info.game_tree[i]['color'], uct=UCT, wins=sim_info.game_tree[i]['wins'], visits=sim_info.game_tree[i]['visits'], checked=sim_info.game_tree[i]['subtree_checked']),
-    #         file=sim_info.file)
-    #     print_board(sim_info.game_tree[i]['game_board'], sim_info.file)
-    #     print("\n", file=sim_info.file)
+    #         i=i, height=sim_info['game_tree'][i]['height'], color=sim_info['game_tree'][i]['color'], uct=UCT, wins=sim_info['game_tree'][i]['wins'], visits=sim_info['game_tree'][i]['visits'], checked=sim_info['game_tree'][i]['subtree_checked']),
+    #         file=sim_info['file'])
+    #     print_board(sim_info['game_tree'][i]['game_board'], sim_info['file'])
+    #     print("\n", file=sim_info['file'])
 
 def print_expansion_statistics(sim_info, start_time):
     print_simulation_statistics(sim_info)
-    tree_size = get_num_nodes_in_tree(sim_info.root)
+    tree_size = get_num_nodes_in_tree(sim_info['root'])
     print("Number of Tree Nodes added in simulation {counter} = "
           "{nodes}. Time to print this statistic =  {time} seconds\n"
-          "Tree rooted at height = {height} Number of nodes in Tree = {tree_size}".format(counter=sim_info.counter+1,
+          "Tree rooted at height = {height} Number of nodes in Tree = {tree_size}".format(counter=sim_info['counter']+1,
                                                     tree_size=tree_size,
-                                                  nodes=len(sim_info.game_tree) #- sim_info.prev_game_tree_size
+                                                  nodes=len(sim_info['game_tree']) #- sim_info['prev_game_tree_size']
                                                   ,
                                                   time=time() - start_time,
-                                                  height=sim_info.root['height']),file=sim_info.file)
+                                                  height=sim_info['root']['height']),file=sim_info['file'])
 def print_best_move(player_color, best_move, sim_info):
     print("For {player_color}, best move is {move}\n".format(player_color=player_color, move=best_move),
-          file=sim_info.file)
+          file=sim_info['file'])
 
 
 def print_forced_win(root_win_status, sim_info):
     if root_win_status is True:
-        print('I have forced a win!', file=sim_info.file)
+        print('I have forced a win!', file=sim_info['file'])
     elif root_win_status is False:
-        print(r'I\'m doomed!', file=sim_info.file)
+        print(r'I\'m doomed!', file=sim_info['file'])

@@ -11,32 +11,21 @@ from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_a
 # from numpy import argsort
 # from time import time
 
-class SimulationInfo():
-    def __init__(self, file):
-        self.file= file
-        self.counter = 0
-        self.prev_game_tree_size = 0
-        self.game_tree = []
-        self.game_tree_height = 0
-        self.start_time = None
-        self.time_to_think = None
-        self.root = None
-        self.game_num = 0
-        self.do_eval = True
-        self.main_pid = -1
-        self.root_thread_counter = 0
-        self.eval_times = []
+def SimulationInfo(file):
+        return {'file': file,
+        'counter': 0,
+        'prev_game_tree_size': 0,
+        'game_tree': [],
+        'game_tree_height': 0,
+        'start_time': None,
+        'time_to_think': None,
+        'root': None,
+        'game_num': 0,
+        'do_eval': True,
+        'main_pid': -1,
+        'root_thread_counter': 0,
+        'eval_times': []}
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.counter = 1
-        self.prev_game_tree_size = 0
-        self.game_tree = []
-        self.game_tree_height = 0
-        self.game_node_height = []  # synchronized with nodes in game_tree
-        self.start_time = None
 
 cdef extern from "limits.h":
     double INT_MAX
@@ -79,12 +68,13 @@ def update_win_statuses(node, win_status, new_subtree=False):
             node['times_reexpanded']+=1
             if node['num_to_consider'] <len(node['other_children']):
                 node['children'].extend(node['other_children'][:node['num_to_consider']])#TODO do eval onthesechildren?
-                node['other_children'] =node['other_children'][node['num_to_consider']:]
+                node['other_children'] = node['other_children'][node['num_to_consider']:]
             else:
                 node['children'].extend(node['other_children'])#TODO do eval onthesechildren?
                 node['other_children'] =None
                 node['reexpanded_already'] =True
             backpropagate_num_checked_children(node)
+            update_num_children_being_checked(node)
 
 
     if continue_propagating:
@@ -152,7 +142,7 @@ def _crement_threads_checking_node(node, amount):
         previous_status = parent['subtree_being_checked']
 
         #if no threads checking node (purportedly)
-        if node['threads_checking_node']<=0:
+        if node['threads_checking_node']<=0: #reset or decremented
             parent['subtree_being_checked'] = False
             if parent['num_children_being_checked'] > 0:
                 parent['num_children_being_checked'] -= 1
@@ -266,15 +256,28 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
 def find_best_UCT_child(node, start_time, time_to_think, sim_info):
     parent_visits = node['visits']
     best = None
+    viable_children = []
     #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss_init
     if node['win_status'] is not None:#search subtrees that need to be reexpanded (probably won't happenanymore)
-        viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked']) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
+        for child in node['children']:
+            if  (child['win_status'] is None and not child['subtree_being_checked']) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+                viable_children.append(child)
+        # viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked']) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
         if len(viable_children) == 0:#search until all subtrees are checked
-            viable_children = list(filter(lambda x:  not x['subtree_checked'] and not x['subtree_being_checked'] and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
+            for child in node['children']:
+                if  (not child['subtree_checked'] and not child['subtree_being_checked']) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+                    viable_children.append(child)
+            # viable_children = list(filter(lambda x:  not x['subtree_checked'] and not x['subtree_being_checked'] and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
     else:#search subtrees that need to be reexpanded
-        viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] and x['UCT_multiplier'] > 1.01 ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
+        for child in node['children']:
+            if  (child['win_status'] is None and not child['subtree_being_checked']and child['UCT_multiplier'] > 1.01 ) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+                viable_children.append(child)
+        # viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] and x['UCT_multiplier'] > 1.01 ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
         if len(viable_children) == 0:
-            viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
+            for child in node['children']:
+                if  (child['win_status'] is None and not child['subtree_being_checked'] ) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+                    viable_children.append(child)
+            # viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
     if len(viable_children)>0:
         best = viable_children[0]
         best_val = get_UCT(best, parent_visits, start_time, time_to_think, sim_info)
@@ -470,7 +473,7 @@ def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
 
 def check_for_forced_win(node_children, game_num):
     forced_win = False
-    guaranteed_children = list(filter(lambda x: x.gameover, node_children))
+    guaranteed_children = list(filter(lambda x: x['gameover'], node_children))
 
     if len (guaranteed_children) <=0:
 
@@ -987,8 +990,8 @@ def update_child(child, NN_output, sim_info, do_eval=True):
             game_saving_move = enemy_piece == parent['game_board'][int(move[4])][move[3]]
             gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
             maybe_in_danger = enemy_piece in parent['game_board'][caution_row].values()
-            # kinda_sorta_maybe_in_danger = enemy_piece in child['game_board'][maybe_caution_row].values()
-            if game_saving_move: #Probably isn't necessary
+            kinda_sorta_maybe_in_danger = enemy_piece in child['game_board'][maybe_caution_row].values()
+            if game_saving_move: #
                 child['gameover_visits'] = 1000
                 child['gameover_wins'] = 0
                 child['visits'] = 65536
@@ -996,7 +999,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
                 child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
                 child['game_saving_move'] = True
                 do_update = False
-            elif not gameover_next_move and not maybe_in_danger and child_color == 'Black' and child['height'] < 50:
+            elif not gameover_next_move and not maybe_in_danger and not kinda_sorta_maybe_in_danger and child['height'] < 60: #child_color == 'Black' and
                 child['gameover_visits'] = 9000
                 child['gameover_wins'] = 9000
                 child['visits'] = 65536
@@ -1043,7 +1046,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
                 child['gameover_wins'] =weighted_wins
 
             random_prob = 1
-            if sim_info.do_eval and do_eval:
+            if sim_info['do_eval'] and do_eval:
                 # rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
                 eval_child(child)
 

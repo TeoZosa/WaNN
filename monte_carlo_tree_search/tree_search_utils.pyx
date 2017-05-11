@@ -54,27 +54,27 @@ def update_win_statuses(node, win_status, new_subtree=False):
     # #TODO: Remember to change this color for reverse tests!
     continue_propagating = True
 
-    if win_status is False and not node['gameover'] and not node['reexpanded_already']:
-        if node['color'] =='White':
-            reexpansion_limit = 1 #don't ever get doomed unless you know you are doomed
-        else:
-            reexpansion_limit = 1
-
-        if node['num_to_consider']<=0 or node['other_children'] is None or len(node['other_children']) <= 0 or node['times_reexpanded']>=reexpansion_limit:
-            node['reexpanded_already'] =True
-            continue_propagating = True#redundant
-        else:
-            continue_propagating = False
-            node['times_reexpanded']+=1
-            if node['num_to_consider'] <len(node['other_children']):
-                node['children'].extend(node['other_children'][:node['num_to_consider']])#TODO do eval onthesechildren?
-                node['other_children'] = node['other_children'][node['num_to_consider']:]
-            else:
-                node['children'].extend(node['other_children'])#TODO do eval onthesechildren?
-                node['other_children'] =None
-                node['reexpanded_already'] =True
-            backpropagate_num_checked_children(node)
-            update_num_children_being_checked(node)
+    # if win_status is False and not node['gameover'] and not node['reexpanded_already']:
+    #     if node['color'] =='White':
+    #         reexpansion_limit = 1 #don't ever get doomed unless you know you are doomed
+    #     else:
+    #         reexpansion_limit = 1
+    #
+    #     if node['num_to_consider']<=0 or node['other_children'] is None or len(node['other_children']) <= 0 or node['times_reexpanded']>=reexpansion_limit:
+    #         node['reexpanded_already'] =True
+    #         continue_propagating = True#redundant
+    #     else:
+    #         continue_propagating = False
+    #         node['times_reexpanded']+=1
+    #         if node['num_to_consider'] <len(node['other_children']):
+    #             node['children'].extend(node['other_children'][:node['num_to_consider']])#TODO do eval onthesechildren?
+    #             node['other_children'] = node['other_children'][node['num_to_consider']:]
+    #         else:
+    #             node['children'].extend(node['other_children'])#TODO do eval onthesechildren?
+    #             node['other_children'] =None
+    #             node['reexpanded_already'] =True
+    #         backpropagate_num_checked_children(node)
+    #         update_num_children_being_checked(node)
 
 
     if continue_propagating:
@@ -541,7 +541,7 @@ def check_for_forced_win(node_children, game_num):
 
         if len(guaranteed_children) > 0: #TODO: does it really matter which losing child is the best if all are losers?
             # guaranteed_children = get_best_children(guaranteed_children, game_num)
-            best_guaranteed_child = choose_best_true_loser(guaranteed_children)
+            best_guaranteed_child = guaranteed_children[0]#choose_best_true_loser(guaranteed_children)
             if best_guaranteed_child is not None:
                 guaranteed_children = [best_guaranteed_child]
     else:

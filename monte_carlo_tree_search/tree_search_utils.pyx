@@ -242,7 +242,11 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             break
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
-            if best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['gameover_wins'] <1000 and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
+            if best_child['gameover_wins'] > 1000:
+                win_bool = best_child['gameover_wins'] * 2 < best_child['gameover_visits'] #wins less than losses
+            else:
+                win_bool = True
+            if best_child['win_status'] is None and not best_child['subtree_being_checked'] and win_bool and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
                 best = node['best_child']
             else:
                 best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
@@ -278,12 +282,20 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
             second_threshold_= 1.01
 
         for child in node['children']:
-            if  (child['win_status'] is None and not child['subtree_being_checked']and child['UCT_multiplier'] > threshold and child['gameover_wins'] <1000) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+            if child['gameover_wins'] > 1000:
+                win_bool = child['gameover_wins'] * 2 < child['gameover_visits'] #wins less than losses
+            else:
+                win_bool = True
+            if  (child['win_status'] is None and not child['subtree_being_checked']and child['UCT_multiplier'] > threshold and win_bool) and (child['threads_checking_node'] <=0 or child['children'] is not None):
                 viable_children.append(child)
         # viable_children = list(filter(lambda x:  (x['win_status'] is None and not x['subtree_being_checked'] and x['UCT_multiplier'] > 1.01 ) and (x['threads_checking_node'] <=0 or x['children'] is not None), node['children']))
         if len(viable_children) == 0:
             for child in node['children']:
-                if  (child['win_status'] is None and not child['subtree_being_checked'] and child['UCT_multiplier'] > second_threshold and child['gameover_wins'] <1000) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+                if child['gameover_wins'] > 1000:
+                    win_bool = child['gameover_wins'] * 2 < child['gameover_visits'] #wins less than losses
+                else:
+                    win_bool = True
+                if  (child['win_status'] is None and not child['subtree_being_checked'] and child['UCT_multiplier'] > second_threshold and win_bool) and (child['threads_checking_node'] <=0 or child['children'] is not None):
                     viable_children.append(child)
         if len(viable_children) == 0:
             for child in node['children']:
@@ -1030,7 +1042,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
 
         if (2 <= child_index <= 7 or 14<= child_index <=19)  :
 
-            if child_color =='White':
+            if child_color =='White':#parent was black
                 game_over_row = 7
                 caution_row = 6
                 maybe_caution_row = 5
@@ -1045,10 +1057,11 @@ def update_child(child, NN_output, sim_info, do_eval=True):
             # right_columns= {'a':'b', 'b':'c', 'c':'d', 'd':'e', 'e':'f', 'f':'g', 'g':'h'}
 
         #only allowable if it was to save from gameovers
-            game_saving_move = enemy_piece == parent['game_board'][int(move[4])][move[3]]
-            gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
-            maybe_in_danger = enemy_piece in parent['game_board'][caution_row].values()
-            kinda_sorta_maybe_in_danger = enemy_piece in child['game_board'][maybe_caution_row].values()
+            previous_game_board = parent['game_board']
+            game_saving_move = enemy_piece == previous_game_board[int(move[4])][move[3]]
+            gameover_next_move = enemy_piece in previous_game_board[game_over_row].values()
+            maybe_in_danger = enemy_piece in previous_game_board[caution_row].values()
+            kinda_sorta_maybe_in_danger = enemy_piece in previous_game_board[maybe_caution_row].values()
             if game_saving_move: #
                 child['gameover_visits'] = 1000
                 child['gameover_wins'] = 0

@@ -469,17 +469,22 @@ def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
     return best
 
 def check_for_forced_win(node_children, game_num):
-    guaranteed_children = []
     forced_win = False
-    for child in node_children:
-        if child['win_status'] is False:
-            guaranteed_children.append(child)
-            forced_win = True
-    if len(guaranteed_children) > 0: #TODO: does it really matter which losing child is the best if all are losers?
-        # guaranteed_children = get_best_children(guaranteed_children, game_num)
-        best_guaranteed_child = choose_best_true_loser(guaranteed_children)
-        if best_guaranteed_child is not None:
-            guaranteed_children = [best_guaranteed_child]
+    guaranteed_children = list(filter(lambda x: x.gameover, node_children))
+
+    if len (guaranteed_children) <=0:
+
+        for child in node_children:
+            if child['win_status'] is False:
+                guaranteed_children.append(child)
+                forced_win = True
+        if len(guaranteed_children) > 0: #TODO: does it really matter which losing child is the best if all are losers?
+            # guaranteed_children = get_best_children(guaranteed_children, game_num)
+            best_guaranteed_child = choose_best_true_loser(guaranteed_children)
+            if best_guaranteed_child is not None:
+                guaranteed_children = [best_guaranteed_child]
+    else:
+        forced_win = True
     return forced_win, guaranteed_children
 
 def transform_wrt_overwhelming_amount(child, overwhelming_on=False):
@@ -991,7 +996,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
                 child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
                 child['game_saving_move'] = True
                 do_update = False
-            elif not gameover_next_move and not maybe_in_danger and child_color == 'Black' and child['height'] < 70:
+            elif not gameover_next_move and not maybe_in_danger and child_color == 'Black' and child['height'] < 50:
                 child['gameover_visits'] = 9000
                 child['gameover_wins'] = 9000
                 child['visits'] = 65536

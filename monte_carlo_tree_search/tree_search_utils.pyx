@@ -958,12 +958,25 @@ def update_child(child, NN_output, sim_info, do_eval=True):
         #              17: 'g1-f2',
         #              18: 'g1-g2',
         #              19: 'g1-h2',
-        if (2 <= child_index <= 7 or 14<= child_index <=19) and child['height'] < 70:
-            child['gameover_visits'] = 9000
-            child['gameover_wins'] = 9000
-            child['visits'] = 65536
-            child['wins'] = 65536
-            do_update = False
+
+        if (2 <= child_index <= 7 or 14<= child_index <=19) and child['height'] < 60 :
+            if child['color'] =='White':
+                game_over_row = 7
+                caution_row = 6
+                enemy_piece = 'w'
+            else:
+                game_over_row = 2
+                caution_row = 3
+                enemy_piece = 'b'
+        #only allowable if it was to save from gameovers
+            in_danger = enemy_piece in child['game_board'][game_over_row].values() or enemy_piece in child['game_board'][caution_row].values()
+            if not in_danger:
+                child['gameover_visits'] = 9000
+                child['gameover_wins'] = 9000
+                child['visits'] = 65536
+                child['wins'] = 65536
+                do_update = False
+                child['UCT_multiplier'] = 1.01 #might mess up search if I don't do this?
 
             #some large but not impossibly large value to discourage moving pieces from the home row
     if do_update:
@@ -998,7 +1011,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
             weighted_wins = ((
                              child['visits'] - weighted_losses) ) #/ child['visits']  # may be a negative number if we are increasing probability **2
             child['wins'] =  min(weighted_wins, child['visits']*.75)#to prevent it from initializing it with a 0 win rate for really low probabilitynodes
-            if weighted_wins < child['visits']*.90:
+            if weighted_wins < child['visits']*.70:
                 child['gameover_visits'] =child['visits']
                 child['gameover_wins'] =weighted_wins
 

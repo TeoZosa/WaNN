@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
     </list>
@@ -38,7 +36,7 @@
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes.coverage" NAME="PlayerDataDirectoryToAnalysisFormatWBPOEBinaryFeaturePlanes Coverage Results" MODIFIED="1466110437671" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/PlayersToDataStructure" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$SortPlayerListByRank.coverage" NAME="SortPlayerListByRank Coverage Results" MODIFIED="1465934883390" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughANN$black_and_white_policy_nets.coverage" NAME="black_and_white_policy_nets Coverage Results" MODIFIED="1494190669168" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/self_play_files/policy_net" />
-    <SUITE FILE_PATH="coverage/BreakthroughANN$wander_vs_opponent.coverage" NAME="wander_vs_opponent Coverage Results" MODIFIED="1494460274607" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Breakthrough_Player" />
+    <SUITE FILE_PATH="coverage/BreakthroughANN$wander_vs_opponent.coverage" NAME="wander_vs_opponent Coverage Results" MODIFIED="1494462796695" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Breakthrough_Player" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$SortPlayerListByRank__1_.coverage" NAME="SortPlayerListByRank (1) Coverage Results" MODIFIED="1466111527074" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Tools" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$ValueNetByRankBinaryFeaturePlanes.coverage" NAME="ValueNetByRankBinaryFeaturePlanes Coverage Results" MODIFIED="1466031440108" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/BreakthroughDataProcessingTools$NumpyArray.coverage" NAME="NumpyArray Coverage Results" MODIFIED="1465991406057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -85,8 +83,8 @@
           <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="762">
-                  <caret line="984" column="78" lean-forward="true" selection-start-line="984" selection-start-column="78" selection-end-line="984" selection-end-column="78" />
+                <state relative-caret-position="803">
+                  <caret line="1021" column="0" lean-forward="true" selection-start-line="982" selection-start-column="5" selection-end-line="1021" selection-end-column="0" />
                   <folding>
                     <element signature="e#46#77#0" expanded="true" />
                   </folding>
@@ -94,21 +92,21 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="tree_search_utils.c" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
+          <file leaf-file-name="TreeNode.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="2620">
-                  <caret line="22713" column="72" lean-forward="false" selection-start-line="22713" selection-start-column="72" selection-end-line="22713" selection-end-column="72" />
+                <state relative-caret-position="472">
+                  <caret line="114" column="28" lean-forward="true" selection-start-line="114" selection-start-column="28" selection-end-line="114" selection-end-column="28" />
                   <folding />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="TreeNode.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py">
+          <file leaf-file-name="tree_search_utils.c" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="626">
-                  <caret line="100" column="12" lean-forward="false" selection-start-line="100" selection-start-column="12" selection-end-line="100" selection-end-column="12" />
+                <state relative-caret-position="4356">
+                  <caret line="22924" column="72" lean-forward="false" selection-start-line="22924" selection-start-column="72" selection-end-line="22924" selection-end-column="72" />
                   <folding />
                 </state>
               </provider>
@@ -139,8 +137,8 @@
           <file leaf-file-name="expansion_MCTS_functions.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="522">
-                  <caret line="248" column="0" lean-forward="true" selection-start-line="248" selection-start-column="0" selection-end-line="254" selection-end-column="58" />
+                <state relative-caret-position="299">
+                  <caret line="469" column="0" lean-forward="false" selection-start-line="469" selection-start-column="0" selection-end-line="469" selection-end-column="0" />
                   <folding>
                     <element signature="e#46#104#0" expanded="true" />
                   </folding>
@@ -173,8 +171,8 @@
           <file leaf-file-name="tree_builder.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="72">
-                  <caret line="495" column="10" lean-forward="false" selection-start-line="495" selection-start-column="10" selection-end-line="495" selection-end-column="10" />
+                <state relative-caret-position="713">
+                  <caret line="541" column="2" lean-forward="false" selection-start-line="541" selection-start-column="2" selection-end-line="542" selection-end-column="27" />
                   <folding>
                     <element signature="e#46#173#0" expanded="true" />
                   </folding>
@@ -196,13 +194,13 @@
       </split-first>
       <split-second>
         <leaf>
-          <file leaf-file-name="utils.pyx" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
+          <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="887">
-                  <caret line="132" column="35" lean-forward="true" selection-start-line="127" selection-start-column="7" selection-end-line="132" selection-end-column="35" />
+                <state relative-caret-position="582">
+                  <caret line="971" column="12" lean-forward="false" selection-start-line="971" selection-start-column="12" selection-end-line="971" selection-end-column="12" />
                   <folding>
-                    <element signature="e#46#55#0" expanded="true" />
+                    <element signature="e#46#77#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -344,11 +342,11 @@
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.py" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
+        <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c" />
-        <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
       </list>
     </option>
   </component>
@@ -359,10 +357,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="698" />
-    <option name="y" value="323" />
-    <option name="width" value="2073" />
-    <option name="height" value="1368" />
+    <option name="x" value="669" />
+    <option name="y" value="687" />
+    <option name="width" value="2824" />
+    <option name="height" value="1663" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -1078,13 +1076,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00181" summary="more comments, broke up functions, integrated MCTS async into the options and had it use existing expansion wrt NN just in case we cared to use it in the future">
-      <created>1489258339452</created>
-      <option name="number" value="00181" />
-      <option name="presentableId" value="LOCAL-00181" />
-      <option name="project" value="LOCAL" />
-      <updated>1489258339452</updated>
-    </task>
     <task id="LOCAL-00182" summary="made the stochasticity for multithreading a stochastic function of stage in the game, so that later stages are less likely to explore">
       <created>1489268776991</created>
       <option name="number" value="00182" />
@@ -1421,7 +1412,14 @@
       <option name="project" value="LOCAL" />
       <updated>1494429760361</updated>
     </task>
-    <option name="localTasksCounter" value="230" />
+    <task id="LOCAL-00230" summary="penalizing moves from key home row areas (domain knowledge :'( )">
+      <created>1494460382288</created>
+      <option name="number" value="00230" />
+      <option name="presentableId" value="LOCAL-00230" />
+      <option name="project" value="LOCAL" />
+      <updated>1494460382289</updated>
+    </task>
+    <option name="localTasksCounter" value="231" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1434,20 +1432,20 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="698" y="323" width="2073" height="1368" extended-state="0" />
+    <frame x="669" y="687" width="2824" height="1663" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15829529" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1146216" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15037194" sideWeight="0.14035088" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922536" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19701493" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.7094595" sideWeight="0.42654794" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14964789" sideWeight="0.8596491" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.48008385" sideWeight="0.42654794" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3675751" sideWeight="0.8596491" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2498671" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11530287" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3274648" sideWeight="0.8696774" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.47550675" sideWeight="0.9203463" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31161973" sideWeight="0.9203463" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32982618" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -1499,7 +1497,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="added new tiers for filtering, filtering based on color, put back batch expansions (EOG after height 40)" />
     <MESSAGE value="added enumeration by piece arrays" />
     <MESSAGE value="changed to play 93M node Wanderer, misc" />
     <MESSAGE value="Cythonized, changed NN index sorting to bottleneck argpartsort, changed gameover value to 2^16" />
@@ -1524,7 +1521,8 @@
     <MESSAGE value="further optimizing (C-ified UCT calculation)" />
     <MESSAGE value="turned treenode into dict. Some bug somewhere?" />
     <MESSAGE value="made subtree check flag backpropagate, removed best child choice (threads not respecting flags)" />
-    <option name="LAST_COMMIT_MESSAGE" value="made subtree check flag backpropagate, removed best child choice (threads not respecting flags)" />
+    <MESSAGE value="penalizing moves from key home row areas (domain knowledge :'( )" />
+    <option name="LAST_COMMIT_MESSAGE" value="penalizing moves from key home row areas (domain knowledge :'( )" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1624,6 +1622,11 @@
           <line>44</line>
           <option name="timeStamp" value="636" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py</url>
+          <line>542</line>
+          <option name="timeStamp" value="651" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
@@ -1635,7 +1638,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="651" />
+      <option name="time" value="652" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1907,26 +1910,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
-          <caret line="495" column="10" lean-forward="false" selection-start-line="495" selection-start-column="10" selection-end-line="495" selection-end-column="10" />
-          <folding>
-            <element signature="e#46#173#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="522">
-          <caret line="248" column="0" lean-forward="true" selection-start-line="248" selection-start-column="0" selection-end-line="254" selection-end-column="58" />
-          <folding>
-            <element signature="e#46#104#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3485">
@@ -1945,20 +1928,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py">
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="626">
-          <caret line="100" column="12" lean-forward="false" selection-start-line="100" selection-start-column="12" selection-end-line="100" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="762">
-          <caret line="984" column="78" lean-forward="true" selection-start-line="984" selection-start-column="78" selection-end-line="984" selection-end-column="78" />
+        <state relative-caret-position="299">
+          <caret line="469" column="0" lean-forward="false" selection-start-line="469" selection-start-column="0" selection-end-line="469" selection-end-column="0" />
           <folding>
-            <element signature="e#46#77#0" expanded="true" />
+            <element signature="e#46#104#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1971,10 +1946,38 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="713">
+          <caret line="541" column="2" lean-forward="false" selection-start-line="541" selection-start-column="2" selection-end-line="542" selection-end-column="27" />
+          <folding>
+            <element signature="e#46#173#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="472">
+          <caret line="114" column="28" lean-forward="true" selection-start-line="114" selection-start-column="28" selection-end-line="114" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="803">
+          <caret line="1021" column="0" lean-forward="true" selection-start-line="982" selection-start-column="5" selection-end-line="1021" selection-end-column="0" />
+          <folding>
+            <element signature="e#46#77#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2620">
-          <caret line="22713" column="72" lean-forward="false" selection-start-line="22713" selection-start-column="72" selection-end-line="22713" selection-end-column="72" />
+        <state relative-caret-position="4356">
+          <caret line="22924" column="72" lean-forward="false" selection-start-line="22924" selection-start-column="72" selection-end-line="22924" selection-end-column="72" />
           <folding />
         </state>
       </provider>

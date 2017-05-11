@@ -539,7 +539,8 @@ def assign_children(parent, children, lock):
                     parent['reexpanded_already'] = True
                 update_win_status_from_children(parent)
                 backpropagate_num_checked_children(parent)
-
+    # if parent['children'] is None:
+    #     breakpoint = True
     return parent['children']
 
 

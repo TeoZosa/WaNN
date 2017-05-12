@@ -259,7 +259,8 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             break
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
-            if best_child['gameover_wins'] > 1000 and best_child['UCT_multiplier']<1.70:
+
+            if best_child['gameover_wins'] > 1000 and (best_child['UCT_multiplier']<1.9 or (node['color'] == sim_info.root['color'] and best_child['UCT_multiplier']<1.7)):
                 win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.6 #wins less than losses
             else:
                 win_bool = True
@@ -1073,7 +1074,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
             # gameover_next_move = enemy_piece in previous_game_board[game_over_row].values()
             maybe_in_danger = enemy_piece in previous_game_board[caution_row].values()
             kinda_sorta_maybe_in_danger = enemy_piece in previous_game_board[maybe_caution_row].values()
-            if not maybe_in_danger and not kinda_sorta_maybe_in_danger : #child_color == 'Black' and and child['height'] < 60 not gameover_next_move and
+            if not maybe_in_danger and not kinda_sorta_maybe_in_danger and child['height'] < 50: #child_color == 'Black' and and child['height'] < 60 not gameover_next_move and
                 child['gameover_visits'] = 9000
                 child['gameover_wins'] = 9000
                 child['visits'] = 65536

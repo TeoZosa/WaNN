@@ -54,9 +54,9 @@ def update_win_statuses(node, win_status, new_subtree=False):
     # #TODO: Remember to change this color for reverse tests!
     continue_propagating = True
     if win_status is True:
-        update_tree_wins(node, 10, gameover=True)
+        update_tree_wins(node, 2, gameover=True)
     elif win_status is False:
-        update_tree_losses(node, 10, gameover=True)
+        update_tree_losses(node, 2, gameover=True)
 
 
     # if win_status is False and not node['gameover'] and not node['reexpanded_already']:
@@ -94,9 +94,20 @@ def update_win_status_from_children(node, new_subtree=False):
 
 def get_win_statuses_of_children(node):
     win_statuses = []
-    if node['children'] is not None:
-        for child in node['children']:
-            win_statuses.append(child['win_status'])
+    if node['color'] == 'White': #for WaNN, don't check all the children,
+        win_statuses_considering = []
+        if node['children'] is not None:
+            for child in node['children']:
+                if child['UCT_multiplier'] > 1.10:
+                    win_statuses_considering.append(child['win_status'])
+                win_statuses.append(child['win_status'])
+        if False not in win_statuses: #if any children are false, node is true. Else, just consider the ones over threshold probability. If they are True => just say we are doomed.
+            win_statuses = win_statuses_considering
+    else:
+        if node['children'] is not None:
+            for child in node['children']:
+                win_statuses.append(child['win_status'])
+
     return win_statuses
 
 def set_win_status_from_children(node, children_win_statuses, new_subtree=False):
@@ -247,8 +258,8 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             break
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
-            if best_child['gameover_wins'] > 1000 and best_child['UCT_Multiplier']<1.70:
-                win_bool = best_child['gameover_wins'] * 2 < best_child['gameover_visits'] #wins less than losses
+            if best_child['gameover_wins'] > 1000 and best_child['UCT_multiplier']<1.70:
+                win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.4 #wins less than losses
             else:
                 win_bool = True
             if best_child['win_status'] is None and not best_child['subtree_being_checked'] and win_bool and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
@@ -280,6 +291,7 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
     else:#search subtrees that need to be reexpanded
 
         if node['color'] == 'White':
+            # best_prob = node['children'][0]['UCT_multiplier']-1
             threshold = 1.2
             second_threshold = 1.1
         else:

@@ -1043,6 +1043,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
     child_color = child['color']
     parent = child['parent']
     do_update = True
+
     if 0< child_index < 21 and parent is not None:#home rows that can capture; check for game-saving moves
         if child_color =='White':#parent was black
             game_over_row = 7
@@ -1079,7 +1080,8 @@ def update_child(child, NN_output, sim_info, do_eval=True):
                 child['wins'] = 65536
                 child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
                 do_update = False
-    elif 23 <=child_index <=42 and parent is not None: #Row guarding home
+
+    elif 23 <=child_index <=42 and parent is not None: #Row guarding home that can capture
 
         if child_color =='White':#parent was black
             enemy_piece = 'w'
@@ -1096,7 +1098,7 @@ def update_child(child, NN_output, sim_info, do_eval=True):
             child['wins'] = 0
             child['UCT_multiplier'] = 1+max(NN_output[child_index], 0.60) #might mess up search if I don't do this?
             do_update = False
-            #some large but not impossibly large value to discourage moving pieces from the home row
+
     if do_update:
         child_val = NN_output[child_index]
 

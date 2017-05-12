@@ -53,10 +53,7 @@ def update_tree_losses(node, amount=1, gameover=False): # visit and no win = los
 def update_win_statuses(node, win_status, new_subtree=False):
     # #TODO: Remember to change this color for reverse tests!
     continue_propagating = True
-    if win_status is True:
-        update_tree_wins(node, 2, gameover=True)
-    elif win_status is False:
-        update_tree_losses(node, 2, gameover=True)
+
 
 
     # if win_status is False and not node['gameover'] and not node['reexpanded_already']:
@@ -83,9 +80,13 @@ def update_win_statuses(node, win_status, new_subtree=False):
 
 
     if continue_propagating:
+        if win_status is True:
+            update_tree_wins(node, 1, gameover=True)
+        elif win_status is False:
+            update_tree_losses(node, 1, gameover=True)
         node['win_status'] =win_status
         parent = node['parent']
-        if parent is not None:#parent may now know if it is a win or loss_init.
+        if parent is not None:#parent may now know if it is a win or loss.
             update_win_status_from_children(parent, new_subtree)
 
 def update_win_status_from_children(node, new_subtree=False):
@@ -94,19 +95,19 @@ def update_win_status_from_children(node, new_subtree=False):
 
 def get_win_statuses_of_children(node):
     win_statuses = []
-    if node['color'] == 'White': #for WaNN, don't check all the children,
-        win_statuses_considering = []
-        if node['children'] is not None:
-            for child in node['children']:
-                if child['UCT_multiplier'] > 1.10:
-                    win_statuses_considering.append(child['win_status'])
-                win_statuses.append(child['win_status'])
-        if False not in win_statuses and len (win_statuses_considering)>0: #if any children are false, node is true. Else, just consider the ones over threshold probability. If they are True => just say we are doomed.
-            win_statuses = win_statuses_considering
-    else:
-        if node['children'] is not None:
-            for child in node['children']:
-                win_statuses.append(child['win_status'])
+    # if node['color'] == 'White': #for WaNN, don't check all the children,
+    win_statuses_considering = []
+    if node['children'] is not None:
+        for child in node['children']:
+            if child['UCT_multiplier'] > 1.001:
+                win_statuses_considering.append(child['win_status'])
+            win_statuses.append(child['win_status'])
+    if False not in win_statuses and len (win_statuses_considering)>0: #if any children are false, node is true. Else, just consider the ones over threshold probability. If they are True => just say we are doomed.
+        win_statuses = win_statuses_considering
+    # else:
+    #     if node['children'] is not None:
+    #         for child in node['children']:
+    #             win_statuses.append(child['win_status'])
 
     return win_statuses
 
@@ -259,7 +260,7 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
             if best_child['gameover_wins'] > 1000 and best_child['UCT_multiplier']<1.70:
-                win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.4 #wins less than losses
+                win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.6 #wins less than losses
             else:
                 win_bool = True
             if best_child['win_status'] is None and not best_child['subtree_being_checked'] and win_bool and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
@@ -541,7 +542,7 @@ def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
                     else: #find absolute best loser
                         predicate = true_losses> best_losses # and (loss_rate > 0.5 or total < 20)
 
-                    if predicate and child['win_status'] is not True and child['UCT_multiplier'] > 1.05:
+                    if predicate and child['win_status'] is not True and child['UCT_multiplier'] > 1.01:#
                         best = child
                         best_losses = true_losses
                         best_wins = true_wins
@@ -1042,60 +1043,59 @@ def update_child(child, NN_output, sim_info, do_eval=True):
     child_color = child['color']
     parent = child['parent']
     do_update = True
-    if child_index <= 19 and parent is not None:
-        #              2: 'b1-a2',
-        #              3: 'b1-b2',
-        #              4: 'b1-c2',
-        #              5: 'c1-b2',
-        #              6: 'c1-c2',
-        #              7: 'c1-d2',
+    if 0< child_index < 21 and parent is not None:#home rows that can capture; check for game-saving moves
+        if child_color =='White':#parent was black
+            game_over_row = 7
+            caution_row = 6
+            maybe_caution_row = 5
+            enemy_piece = 'w'
+        else:
+            game_over_row = 2
+            caution_row = 3
+            maybe_caution_row = 4
+            enemy_piece = 'b'
 
-        #              14: 'f1-e2',
-        #              15: 'f1-f2',
-        #              16: 'f1-g2',
-        #              17: 'g1-f2',
-        #              18: 'g1-g2',
-        #              19: 'g1-h2',
+        move = move_lookup_by_index(child_index, get_opponent_color(child_color))
+        previous_game_board = parent['game_board']
+        game_saving_move = enemy_piece == previous_game_board[int(move[4])][move[3]]
 
-        if (2 <= child_index <= 7 or 14<= child_index <=19)  :
 
-            if child_color =='White':#parent was black
-                game_over_row = 7
-                caution_row = 6
-                maybe_caution_row = 5
-                enemy_piece = 'w'
-            else:
-                game_over_row = 2
-                caution_row = 3
-                maybe_caution_row = 4
-                enemy_piece = 'b'
-            move = move_lookup_by_index(child_index, get_opponent_color(child_color))
-            # left_columns = {'b':'a', 'c':'b', 'd':'c', 'e':'d', 'f':'e', 'g':'f', 'h':'g'}
-            # right_columns= {'a':'b', 'b':'c', 'c':'d', 'd':'e', 'e':'f', 'f':'g', 'g':'h'}
-
-        #only allowable if it was to save from gameovers
-            previous_game_board = parent['game_board']
-            game_saving_move = enemy_piece == previous_game_board[int(move[4])][move[3]]
-            gameover_next_move = enemy_piece in previous_game_board[game_over_row].values()
+        if game_saving_move: #
+            child['gameover_visits'] = 1000
+            child['gameover_wins'] = 0
+            child['visits'] = 65536
+            child['wins'] = 0
+            child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
+            child['game_saving_move'] = True
+            do_update = False
+        elif (2 <= child_index <= 7 or 14<= child_index <=19): #if gameover next move and it wasn't a game saving move, it will be marked a loser so we don't need to consider that case anymore
+            # gameover_next_move = enemy_piece in previous_game_board[game_over_row].values()
             maybe_in_danger = enemy_piece in previous_game_board[caution_row].values()
             kinda_sorta_maybe_in_danger = enemy_piece in previous_game_board[maybe_caution_row].values()
-            if game_saving_move: #
-                child['gameover_visits'] = 1000
-                child['gameover_wins'] = 0
-                child['visits'] = 65536
-                child['wins'] = 0
-                child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
-                child['game_saving_move'] = True
-                do_update = False
-            elif not gameover_next_move and not maybe_in_danger and not kinda_sorta_maybe_in_danger and child['height'] < 60: #child_color == 'Black' and
+            if not maybe_in_danger and not kinda_sorta_maybe_in_danger : #child_color == 'Black' and and child['height'] < 60 not gameover_next_move and
                 child['gameover_visits'] = 9000
                 child['gameover_wins'] = 9000
                 child['visits'] = 65536
                 child['wins'] = 65536
                 child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
                 do_update = False
+    elif 23 <=child_index <=42 and parent is not None: #Row guarding home
 
+        if child_color =='White':#parent was black
+            enemy_piece = 'w'
+        else:
+            enemy_piece = 'b'
+        move = move_lookup_by_index(child_index, get_opponent_color(child_color))
 
+        previous_game_board = parent['game_board']
+        capture_close_to_home = enemy_piece == previous_game_board[int(move[4])][move[3]]
+        if capture_close_to_home: #values are ad-hoc, not sure how important this is every time.
+            child['gameover_visits'] = 100
+            child['gameover_wins'] = 0
+            child['visits'] = 100
+            child['wins'] = 0
+            child['UCT_multiplier'] = 1+max(NN_output[child_index], 0.60) #might mess up search if I don't do this?
+            do_update = False
             #some large but not impossibly large value to discourage moving pieces from the home row
     if do_update:
         child_val = NN_output[child_index]

@@ -278,11 +278,11 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
                             num_children = len(children)
                             if num_children>=2:
                                 child_0 =children [0]
-                                child_1 = children [1]
                                 if child_0['win_status'] is None and child_0['threads_checking_node']<=0 and not child_0['subtree_being_checked']:
                                     unexpanded_children.append(children[0])
-                                if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked']:
-                                    unexpanded_children.append(children[1])
+                                # child_1 = children [1]
+                                # if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked']:
+                                #     unexpanded_children.append(children[1])
                             elif num_children==1:
                                 child_0 = children[0]
                                 if child_0['win_status'] is None and child_0['threads_checking_node'] <= 0 and not child_0['subtree_being_checked']:
@@ -570,6 +570,8 @@ def assign_children(parent, children, lock):
 
                 if parent['num_to_consider'] == 0 or (parent['other_children'] is None or len (parent['other_children']) == 0): # len (parent['children']) >=  Virtually reexpanded;  else may try to reexpand and thrash around in tree search
                     parent['reexpanded_already'] = True
+                # if parent['parent'] is None:
+                #     parent['children'] = [parent['children'][0]]
                 update_win_status_from_children(parent)
                 backpropagate_num_checked_children(parent)
     # if parent['children'] is None:

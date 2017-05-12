@@ -25,7 +25,27 @@ import pandas as pd
 #     for batch in inference_batches:
 #         output.extend(call_policy_net(batch))
 #     return output
-
+def debug_piece_arrays():
+    white_pieces = ['a6', 'c5', 'b4', 'f4', 'f3', 'g4', 'd2', 'd1', 'c1', 'b1', 'f1', 'g1']
+    black_pieces = ['b8', 'c8', 'f8', 'g8', 'c7', 'c6', 'e6', 'f6', 'g6', 'f5', 'c4', 'e3']
+    return white_pieces, black_pieces
+def debug_game_board():
+    empty = 'e'
+    white = 'w'
+    black = 'b'
+    return {
+        10: -1,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+        # equivalent to 0 if white's move, 1 if black's move
+        9: 1,  # is player_color white
+        8: {'a': empty, 'b': black, 'c': black, 'd': empty, 'e': empty, 'f': black, 'g': black, 'h': empty},
+        7: {'a': empty, 'b': empty, 'c': black, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        6: {'a': white, 'b': empty, 'c': black, 'd': empty, 'e': black, 'f': black, 'g': black, 'h': empty},
+        5: {'a': empty, 'b': empty, 'c': white, 'd': empty, 'e': empty, 'f': black, 'g': empty, 'h': empty},
+        4: {'a': empty, 'b': white, 'c': black, 'd': empty, 'e': empty, 'f': white, 'g': white, 'h': empty},
+        3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': black, 'f': white, 'g': empty, 'h': empty},
+        2: {'a': empty, 'b': empty, 'c': empty, 'd': white, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+        1: {'a': empty, 'b': white, 'c': white, 'd': white, 'e': empty, 'f': white, 'g': white, 'h': empty}
+    }
 
 def initial_game_board():
     empty = 'e'

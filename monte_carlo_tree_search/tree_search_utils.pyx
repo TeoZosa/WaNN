@@ -53,6 +53,11 @@ def update_tree_losses(node, amount=1, gameover=False): # visit and no win = los
 def update_win_statuses(node, win_status, new_subtree=False):
     # #TODO: Remember to change this color for reverse tests!
     continue_propagating = True
+    if win_status is True:
+        update_tree_wins(node, 10, gameover=True)
+    elif win_status is False:
+        update_tree_losses(node, 10, gameover=True)
+
 
     # if win_status is False and not node['gameover'] and not node['reexpanded_already']:
     #     if node['color'] =='White':
@@ -242,7 +247,7 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             break
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
-            if best_child['gameover_wins'] > 1000:
+            if best_child['gameover_wins'] > 1000 and best_child['UCT_Multiplier']<1.70:
                 win_bool = best_child['gameover_wins'] * 2 < best_child['gameover_visits'] #wins less than losses
             else:
                 win_bool = True
@@ -279,7 +284,7 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
             second_threshold = 1.1
         else:
             threshold = 1.1
-            second_threshold_= 1.01
+            second_threshold= 1.01
 
         for child in node['children']:
             if child['gameover_wins'] > 1000:
@@ -297,9 +302,9 @@ def find_best_UCT_child(node, start_time, time_to_think, sim_info):
                     win_bool = True
                 if  (child['win_status'] is None and not child['subtree_being_checked'] and child['UCT_multiplier'] > second_threshold and win_bool) and (child['threads_checking_node'] <=0 or child['children'] is not None):
                     viable_children.append(child)
-        if len(viable_children) == 0:
-            for child in node['children']:
-                if  (child['win_status'] is None and not child['subtree_being_checked']) and (child['threads_checking_node'] <=0 or child['children'] is not None):
+        if len(viable_children) == 0:#TODO: WILL STALL THE TREE SEARCH IF WE DO EOG BATCH EXPANSIONS WITH B = 1 (THREADS BURROW INTO TREE. SINCE ONLY 1 CHILD => SUBTREE BEING CHECKED)
+            for child in node['children']: #and child['UCT_multiplier'] > second_threshold
+                if  (child['win_status'] is None and not child['subtree_being_checked'] ) and (child['threads_checking_node'] <=0 or child['children'] is not None):
                     viable_children.append(child)
 
 
@@ -524,7 +529,7 @@ def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
                     else: #find absolute best loser
                         predicate = true_losses> best_losses # and (loss_rate > 0.5 or total < 20)
 
-                    if predicate and child['win_status'] is not True:
+                    if predicate and child['win_status'] is not True and child['UCT_multiplier'] > 1.05:
                         best = child
                         best_losses = true_losses
                         best_wins = true_wins

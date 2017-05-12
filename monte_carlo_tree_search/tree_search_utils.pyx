@@ -101,7 +101,7 @@ def get_win_statuses_of_children(node):
                 if child['UCT_multiplier'] > 1.10:
                     win_statuses_considering.append(child['win_status'])
                 win_statuses.append(child['win_status'])
-        if False not in win_statuses: #if any children are false, node is true. Else, just consider the ones over threshold probability. If they are True => just say we are doomed.
+        if False not in win_statuses and len (win_statuses_considering)>0: #if any children are false, node is true. Else, just consider the ones over threshold probability. If they are True => just say we are doomed.
             win_statuses = win_statuses_considering
     else:
         if node['children'] is not None:

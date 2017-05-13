@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" afterPath="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
@@ -78,11 +77,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="525">
-      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="false">
+      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1190">
-              <caret line="453" column="40" lean-forward="false" selection-start-line="453" selection-start-column="40" selection-end-line="453" selection-end-column="40" />
+            <state relative-caret-position="1224">
+              <caret line="290" column="34" lean-forward="true" selection-start-line="290" selection-start-column="34" selection-end-line="290" selection-end-column="34" />
               <folding>
                 <element signature="e#46#77#0" expanded="true" />
               </folding>
@@ -100,7 +99,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tree_search_utils.c" pinned="false" current-in-tab="true">
+      <file leaf-file-name="tree_search_utils.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="344940">
@@ -226,9 +225,9 @@
       <find>black</find>
       <find>white</find>
       <find>counter_child</find>
-      <find>1L &lt;&lt;</find>
       <find>eval_child</find>
       <find>sample</find>
+      <find>1L &lt;&lt;</find>
     </findStrings>
     <replaceStrings>
       <replace>['win_status']</replace>
@@ -259,8 +258,8 @@
       <replace>sim_info['eval_times']</replace>
       <replace>empty</replace>
       <replace>best_child</replace>
-      <replace>1LL &lt;&lt;</replace>
       <replace>'$1':</replace>
+      <replace>1LL &lt;&lt;</replace>
     </replaceStrings>
     <dirStrings>
       <dir>C:\Users\damon\PycharmProjects\BreakthroughANN</dir>
@@ -324,9 +323,9 @@
         <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.py" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.c" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
       </list>
     </option>
   </component>
@@ -1060,13 +1059,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00199" summary="changed eval to return a percentage too, moved print statement outside to give search more time">
-      <created>1490403674211</created>
-      <option name="number" value="00199" />
-      <option name="presentableId" value="LOCAL-00199" />
-      <option name="project" value="LOCAL" />
-      <updated>1490403674211</updated>
-    </task>
     <task id="LOCAL-00200" summary="Many things added. Main thing: RL. Warning: The code is so ugly now from doing so many modifications for the paper.">
       <created>1490881079873</created>
       <option name="number" value="00200" />
@@ -1403,7 +1395,14 @@
       <option name="project" value="LOCAL" />
       <updated>1494685741184</updated>
     </task>
-    <option name="localTasksCounter" value="248" />
+    <task id="LOCAL-00248" summary="changed NN scaling for UCT WR choice to 1/4 as opposed to 1/10">
+      <created>1494686052031</created>
+      <option name="number" value="00248" />
+      <option name="presentableId" value="LOCAL-00248" />
+      <option name="project" value="LOCAL" />
+      <updated>1494686052031</updated>
+    </task>
+    <option name="localTasksCounter" value="249" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1423,7 +1422,7 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46666667" sideWeight="0.70046085" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19701493" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.48008385" sideWeight="0.42654794" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16737513" sideWeight="0.85749733" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16737513" sideWeight="0.85749733" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11530287" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14646465" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922536" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1481,7 +1480,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="Added a move prediction LSTM. (more for class project than something useful)" />
     <MESSAGE value="CNN RNN&#10;" />
     <MESSAGE value="Fixed CNN conversion to RNN data. better initalization to rnn." />
     <MESSAGE value="new net and tweaking search parameters" />
@@ -1506,7 +1504,8 @@
     <MESSAGE value="guarding home better, check all home rows that can capture for game saving moves." />
     <MESSAGE value="search best if under threshold (diff for each player), put height back into penalty judgment" />
     <MESSAGE value="lower confidence bound for exploiting best child" />
-    <option name="LAST_COMMIT_MESSAGE" value="lower confidence bound for exploiting best child" />
+    <MESSAGE value="changed NN scaling for UCT WR choice to 1/4 as opposed to 1/10" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed NN scaling for UCT WR choice to 1/4 as opposed to 1/10" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1939,16 +1938,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1190">
-          <caret line="453" column="40" lean-forward="false" selection-start-line="453" selection-start-column="40" selection-end-line="453" selection-end-column="40" />
-          <folding>
-            <element signature="e#46#77#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1080">
@@ -1962,6 +1951,16 @@
         <state relative-caret-position="344940">
           <caret line="23759" column="72" lean-forward="false" selection-start-line="23759" selection-start-column="72" selection-end-line="23759" selection-end-column="72" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1224">
+          <caret line="290" column="34" lean-forward="true" selection-start-line="290" selection-start-column="34" selection-end-line="290" selection-end-column="34" />
+          <folding>
+            <element signature="e#46#77#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

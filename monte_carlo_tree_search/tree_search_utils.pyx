@@ -259,17 +259,25 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             break
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
-            lower_confidence_bound = best_child['UCT_multiplier']>1.35
-            if best_child['height'] > 20 and lower_confidence_bound:
-                win_predicate = best_child['gameover_wins'] > 5000
+            true_wins = best_child['gameover_wins']
+
+            prior_prob = best_child['UCT_multiplier'] -1
+            over_LCB = prior_prob>0.35
+            under_UCB = (node['color'] != sim_info['root']['color'] and prior_prob<0.9) or (node['color'] == sim_info['root']['color'] and prior_prob<0.7)
+
+            if best_child['height'] > 20 and over_LCB:
+                threshold_gameover_visits = true_wins > 5000
             else:
-                win_predicate=best_child['gameover_wins'] > 1000
-            if win_predicate and ((node['color'] != sim_info['root']['color'] and best_child['UCT_multiplier']<1.9) or (node['color'] == sim_info['root']['color'] and best_child['UCT_multiplier']<1.7)):
-                win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.6 and lower_confidence_bound#wins less than losses and over our lower confidence bound (borrowed terminology)
+                threshold_gameover_visits= true_wins > 1000
+
+            if threshold_gameover_visits and under_UCB:
+                winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 and over_LCB#wins less than losses and over our lower confidence bound (borrowed terminology)
             else:
-                win_bool = True
-            if best_child['win_status'] is None and not best_child['subtree_being_checked'] and win_bool and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
-                best = node['best_child']
+                winrate_threshold = True
+
+            best_child_can_be_searched = best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0
+            if best_child_can_be_searched and winrate_threshold :
+                best = best_child
             else:
                 best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
 

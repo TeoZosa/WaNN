@@ -259,12 +259,13 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             break
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
-            if best_child['height'] > 20:
+            lower_confidence_bound = best_child['UCT_multiplier']>1.35
+            if best_child['height'] > 20 and lower_confidence_bound:
                 win_predicate = best_child['gameover_wins'] > 5000
             else:
                 win_predicate=best_child['gameover_wins'] > 1000
             if win_predicate and ((node['color'] != sim_info['root']['color'] and best_child['UCT_multiplier']<1.9) or (node['color'] == sim_info['root']['color'] and best_child['UCT_multiplier']<1.7)):
-                win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.6 and best_child['UCT_multiplier']>1.35#wins less than losses and over our lower confidence bound (borrowed terminology)
+                win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.6 and lower_confidence_bound#wins less than losses and over our lower confidence bound (borrowed terminology)
             else:
                 win_bool = True
             if best_child['win_status'] is None and not best_child['subtree_being_checked'] and win_bool and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
@@ -450,7 +451,7 @@ cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
     cdef int norm_losses
 
     if total_gameovers > 10: #true_loss_rate > 0.2 and  or total_gameovers > 100OR keep exploring best child until it hits 100 gameovers? or node['parent']['color'] != sim_info.root['color']  or (node isnotnode['parent']['best_child'])
-        prior_prob_weighting = NN_prob/10#.80 => .08 TODO should I? this may defeat the search a bit.
+        prior_prob_weighting = NN_prob/4#.80 => .08 TODO should I? this may defeat the search a bit.
         norm_loss_rate = (true_losses/ total_gameovers)+ prior_prob_weighting
     else:
         norm_losses = (norm_visits-norm_wins)

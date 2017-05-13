@@ -13,7 +13,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   time_to_think = 10
   depth_limit = 5
   date = r'05122017'
-  file_designator = '068Nets_1ExWinStatGOVals_1Batch_Doom001probBoth_guardHome_1.9S'
+  file_designator = '068Nets_1ExWinStat_NoPenalty_Doom001probBoth_guardHome__Thresh_'
   #BatchExpansionsH40_Depth80__3at40to65_2at65to69_3at70_WM_2at40to51_3at52to60_2at61to69BM
   expansion_MCTS = 'Expansion MCTS'
   expansion_MCTS_pruning = 'Expansion MCTS Pruning'

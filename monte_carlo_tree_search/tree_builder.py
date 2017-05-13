@@ -524,6 +524,9 @@ def assign_children(parent, children, lock):
                 other_children = []
                 children.sort(key=lambda x: x['UCT_multiplier'], reverse=True)#sort them by probability
                 best_val = children[0]['UCT_multiplier']
+                # if best_val <1.30 and parent['color'] =='White':
+                #     update_tree_losses(parent, 10, gameover=True)#maybe the tree with these patterns wins?
+
                 parent['best_child'] = children[0]
 
                 if parent['color'] == 'Black':

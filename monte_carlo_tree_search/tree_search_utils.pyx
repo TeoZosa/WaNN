@@ -80,9 +80,9 @@ def update_win_statuses(node, win_status, new_subtree=False):
 
 
     if continue_propagating:
-        if win_status is True:
-            update_tree_wins(node, 1, gameover=True)
-        elif win_status is False:
+        # if win_status is True:
+        #     update_tree_wins(node, 1, gameover=True)
+        if win_status is False and node['color'] == 'Black':
             update_tree_losses(node, 1, gameover=True)
         node['win_status'] =win_status
         parent = node['parent']
@@ -259,9 +259,12 @@ def choose_UCT_or_best_child(node, start_time, time_to_think, sim_info):
         #             break
         if node['best_child'] is not None: #return best child if not already previouslyexpanded
             best_child = node['best_child']
-
-            if best_child['gameover_wins'] > 1000 and (best_child['UCT_multiplier']<1.9 or (node['color'] == sim_info.root['color'] and best_child['UCT_multiplier']<1.7)):
-                win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.6 #wins less than losses
+            if best_child['height'] > 20:
+                win_predicate = best_child['gameover_wins'] > 5000
+            else:
+                win_predicate=best_child['gameover_wins'] > 1000
+            if win_predicate and ((node['color'] != sim_info['root']['color'] and best_child['UCT_multiplier']<1.9) or (node['color'] == sim_info['root']['color'] and best_child['UCT_multiplier']<1.7)):
+                win_bool = best_child['gameover_wins']  < best_child['gameover_visits'] *.6 and best_child['UCT_multiplier']>1.35#wins less than losses and over our lower confidence bound (borrowed terminology)
             else:
                 win_bool = True
             if best_child['win_status'] is None and not best_child['subtree_being_checked'] and win_bool and best_child['threads_checking_node'] <=0:#best_child['gameover']_visits<100
@@ -533,6 +536,11 @@ def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
 
         else:
             for i in range(0,2):
+                height = node_children[0]['height']
+                if height < 40:
+                    prob_threshold = 1.05
+                else:
+                    prob_threshold = 1.00
                 for child in node_children: #sorted by prob
                     _, child_visits_norm,true_wins, true_losses = transform_wrt_overwhelming_amount(child, overwhelming_on=False)
                     prior_prob_weighting = (child['UCT_multiplier']-1)/1#.80 =>.80
@@ -543,7 +551,7 @@ def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
                     else: #find absolute best loser
                         predicate = true_losses> best_losses # and (loss_rate > 0.5 or total < 20)
 
-                    if predicate and child['win_status'] is not True and child['UCT_multiplier'] > 1.01:#
+                    if predicate and child['win_status'] is not True and child['UCT_multiplier'] > prob_threshold:#
                         best = child
                         best_losses = true_losses
                         best_wins = true_wins
@@ -1070,17 +1078,17 @@ def update_child(child, NN_output, sim_info, do_eval=True):
             child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
             child['game_saving_move'] = True
             do_update = False
-        elif (2 <= child_index <= 7 or 14<= child_index <=19): #if gameover next move and it wasn't a game saving move, it will be marked a loser so we don't need to consider that case anymore
-            # gameover_next_move = enemy_piece in previous_game_board[game_over_row].values()
-            maybe_in_danger = enemy_piece in previous_game_board[caution_row].values()
-            kinda_sorta_maybe_in_danger = enemy_piece in previous_game_board[maybe_caution_row].values()
-            if not maybe_in_danger and not kinda_sorta_maybe_in_danger and child['height'] < 50: #child_color == 'Black' and and child['height'] < 60 not gameover_next_move and
-                child['gameover_visits'] = 9000
-                child['gameover_wins'] = 9000
-                child['visits'] = 65536
-                child['wins'] = 65536
-                child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
-                do_update = False
+        # elif (2 <= child_index <= 7 or 14<= child_index <=19): #if gameover next move and it wasn't a game saving move, it will be marked a loser so we don't need to consider that case anymore
+        #     # gameover_next_move = enemy_piece in previous_game_board[game_over_row].values()
+        #     maybe_in_danger = enemy_piece in previous_game_board[caution_row].values()
+        #     kinda_sorta_maybe_in_danger = enemy_piece in previous_game_board[maybe_caution_row].values()
+        #     if not maybe_in_danger and not kinda_sorta_maybe_in_danger and child['height'] < 40: #child_color == 'Black' and and child['height'] < 60 not gameover_next_move and
+        #         child['gameover_visits'] = 9000
+        #         child['gameover_wins'] = 9000
+        #         child['visits'] = 65536
+        #         child['wins'] = 65536
+        #         child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
+        #         do_update = False
 
     elif 23 <=child_index <=42 and parent is not None: #Row guarding home that can capture
 

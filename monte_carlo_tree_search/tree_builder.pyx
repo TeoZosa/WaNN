@@ -1,21 +1,18 @@
 #cython: language_level=3, boundscheck=False
 
-from Breakthrough_Player.board_utils import game_over, enumerate_legal_moves_using_piece_arrays, move_piece_update_piece_arrays
+from Breakthrough_Player.board_utils import enumerate_legal_moves_using_piece_arrays, move_piece_update_piece_arrays
 from tools.utils import index_lookup_by_move, move_lookup_by_index
-from monte_carlo_tree_search.TreeNode import dict_TreeNode
+from monte_carlo_tree_search.TreeNode import TreeNode
 from Breakthrough_Player.board_utils import  check_legality_MCTS
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, \
-    get_top_children, update_child, set_win_status_from_children, random_rollout, \
-    update_win_status_from_children, eval_child, eval_children, SimulationInfo, backpropagate_num_checked_children, \
+    get_top_children, update_child, update_win_status_from_children, eval_child, eval_children, SimulationInfo, backpropagate_num_checked_children, \
     increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node, get_opponent_color
 from multiprocessing import Pool, Process, pool
 # from math import ceil
 from threading import Lock, current_thread
 from sys import stdout
 from time import time
-from random import sample
 cimport numpy as np
-from numpy cimport ndarray
 
 class NoDaemonProcess(Process):
     # make 'daemon' attribute always return False
@@ -134,6 +131,7 @@ cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int d
         list unexpanded_children
         dict child
         dict parent
+
     entered_once = False
     over_time = not( time() - sim_info['start_time'] < sim_info['time_to_think'])
     while depth < depth_limit and not over_time :# and len(sim_info['game_tree'])<10000
@@ -142,10 +140,14 @@ cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int d
         #     if unexpanded_nodes[0] is None:
         #         True
         unfiltered_unexpanded_nodes = unexpanded_nodes
-        for node in unexpanded_nodes:
-            if node['children'] is None and node['win_status'] is None:
-                filtered_unexpanded_nodes.append(node)
-
+        if sim_info['root']['win_status'] is not None:
+            for node in unexpanded_nodes:
+                if node['children'] is None and node['win_status'] is None:
+                    filtered_unexpanded_nodes.append(node)
+        else: # search child even if it has a win status
+            for node in unexpanded_nodes:
+                if node['children'] is None and not node['gameover']:
+                    filtered_unexpanded_nodes.append(node)
 
         # filtered_unexpanded_nodes = list(filter(lambda x: ((x['children'] is None) and not x['gameover'] ), unexpanded_nodes)) #redundant
         if len(filtered_unexpanded_nodes) > 0 and len(filtered_unexpanded_nodes)<=256: #if any nodes to expand;
@@ -606,7 +608,7 @@ cdef init_unique_child_node_and_board(child_as_move, dict parent):
     already_in_parent = check_for_twin(parent, child_index)
     if not already_in_parent:
         child_board, child_white_pieces, child_black_pieces, child_color = get_child_attributes(parent, child_as_move)
-        child = dict_TreeNode(child_board, child_white_pieces, child_black_pieces, child_color, child_index, parent, parent['height'] + 1)
+        child = TreeNode(child_board, child_white_pieces, child_black_pieces, child_color, child_index, parent, parent['height'] + 1)
     else:
         child = None
     return child
@@ -743,7 +745,7 @@ cdef update_piece_arrays(dict parent, player_piece_to_add, player_piece_to_remov
 #     already_in_parent = check_for_twin(parent, child_index)
 #     if not already_in_parent:
 #         child_board, child_white_pieces, child_black_pieces, child_color = get_child_attributes(parent, child_as_move)
-#         child = dict_TreeNode(child_board, child_white_pieces, child_black_pieces, child_color, child_index, parent, parent['height'] + 1)
+#         child = TreeNode(child_board, child_white_pieces, child_black_pieces, child_color, child_index, parent, parent['height'] + 1)
 #     else:
 #         child = None
 #     return child
@@ -800,7 +802,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
             print("Pruning too aggressive: New root's parent still has no children after expansion", file=sim_info['file'])
 
             # new_root_index = index_lookup_by_move(new_root_as_move)
-            # new_root = dict_TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
+            # new_root = TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
             #                     new_root_parent['height'] + 1)
 
             new_root = init_unique_child_node_and_board(new_root_as_move, new_root_parent)
@@ -832,7 +834,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
                       file=sim_info['file'])
 
                 # new_root_index = index_lookup_by_move(new_root_as_move)
-                # new_root = dict_TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
+                # new_root = TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
                 #                     new_root_parent['height'] + 1)
 
                 new_root = init_unique_child_node_and_board(new_root_as_move, new_root_parent)
@@ -855,7 +857,7 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
               file=sim_info['file'])
         # new_root_index = index_lookup_by_move(new_root_as_move)
         #
-        # new_root = dict_TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
+        # new_root = TreeNode(new_root_game_board, player_color, new_root_index, new_root_parent,
         #                     new_root_parent['height'] + 1)
 
         new_root = init_unique_child_node_and_board(new_root_as_move, new_root_parent)
@@ -886,21 +888,6 @@ cdef void check_for_winning_move(dict child_node, rollout=False):
 def set_game_over_values(node):
     node['gameover'] =True
     node['subtree_checked'] =True
-    #
-    # if rollout is False:
-    #     overwhelming_amount = node['overwhelming_amount']# is this value right? technically true and will draw parent towards siblings of winningmoves
-    #     #but will make it too greedy when choosing a best move; maybe make best move be conservative? choose safest child?
-    # else:
-    #     overwhelming_amount = 1
-    # if node['parent']['children'] is None:
-    #     # overwhelming_amount = 10000
-    #
-    #     if winner_color == node_color:
-    #         node['gameover_wins'] = 65536 #overwhelming amount replacesthis
-    #         node['gameover_visits'] =65536
-    #         update_tree_wins(node, overwhelming_amount, gameover=True) #draw agent towards subtree
-    #         node['win_status'] =True
-    #     else:
     node['wins'] = 0 # this node will neverwin;
     node['gameover_visits'] = 65536
     node['visits'] = 65536

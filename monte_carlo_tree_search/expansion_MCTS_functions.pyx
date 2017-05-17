@@ -1,6 +1,6 @@
 #cython: language_level=3, boundscheck=False
 
-from monte_carlo_tree_search.TreeNode import dict_TreeNode
+from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, \
     SimulationInfo, increment_threads_checking_node, decrement_threads_checking_node, transform_wrt_overwhelming_amount, backpropagate_num_checked_children, update_win_status_from_children
 from monte_carlo_tree_search.tree_builder import expand_descendants_to_depth_wrt_NN, init_new_root
@@ -207,8 +207,8 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
     if best_child['parent'] is not None:#separate for backgroundsearch
         parent = best_child['parent']
         parent['children'] = [best_child]
-        best_child['parent']['other_children'] =None
-        best_child['parent']['reexpanded_already']=True
+        parent['other_children'] =None
+        parent['reexpanded_already']=True
 
 
     best_child['reexpanded_already'] =True
@@ -263,16 +263,16 @@ def assign_root_reinforcement_learning(game_board, player_color, previous_move, 
             #     exit(-10)
             # debug_height = 54
             # debug_white_pieces, debug_black_pieces = debug_piece_arrays()
-            # root = dict_TreeNode(debug_game_board(), debug_white_pieces, debug_black_pieces, player_color, 0, None, debug_height)
+            # root = TreeNode(debug_game_board(), debug_white_pieces, debug_black_pieces, player_color, 0, None, debug_height)
 
-            root = dict_TreeNode(game_board, white_pieces, black_pieces, player_color, 0, None, move_number)
+            root = TreeNode(game_board, white_pieces, black_pieces, player_color, 0, None, move_number)
     elif move_number == 1: #WaNN is black
         if previous_move is None: #saving new board
             # print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info['file'])
             # answer = input("WARNING: INITIALIZING A NEW BOARD TO BE SAVED, ENTER \'yes\' TO CONTINUE")
             # if answer.lower() != 'yes':
             #     exit(-10)
-            previous_move = dict_TreeNode(initial_game_board(), white_pieces, black_pieces, 'White', 0, None, 0) #initialize a dummy start board state to get white's info
+            previous_move = TreeNode(initial_game_board(), white_pieces, black_pieces, 'White', 0, None, 0) #initialize a dummy start board state to get white's info
             root = init_new_root(last_opponent_move, game_board, player_color, previous_move, policy_net, sim_info,
                                  async_update_lock)
             print("Initialized and appended new subtree", file=sim_info['file'])

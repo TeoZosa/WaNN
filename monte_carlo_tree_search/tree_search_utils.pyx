@@ -6,15 +6,12 @@ from libc.math cimport sqrt
 from libcpp cimport bool
 from random import sample, randint
 from bottleneck import argpartition
-# from copy import deepcopy
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, new_game_board
-# from numpy import argsort
 # from time import time
 cimport numpy as np
-from numpy cimport ndarray
 
-def SimulationInfo(file):
+cpdef dict SimulationInfo(file):
         return {'file': file,
         'counter': 0,
         'prev_game_tree_size': 0,
@@ -95,14 +92,15 @@ cpdef void update_win_statuses(dict node, win_status, new_subtree=False):
         if parent is not None:#parent may now know if it is a win or loss.
             update_win_status_from_children(parent, new_subtree)
 
-def update_win_status_from_children(node, new_subtree=False):
-    win_statuses = get_win_statuses_of_children(node)
+cpdef void update_win_status_from_children(dict node, new_subtree=False):
+    cdef list win_statuses = get_win_statuses_of_children(node)
     set_win_status_from_children(node, win_statuses, new_subtree)
 
-def get_win_statuses_of_children(node):
-    win_statuses = []
-    # if node['color'] == 'White': #for WaNN, don't check all the children,
-    win_statuses_considering = []
+cdef list get_win_statuses_of_children(dict node):
+    cdef:
+        list win_statuses = []
+        list win_statuses_considering = []
+        dict child
     if node['children'] is not None:
         for child in node['children']:
             if child['UCT_multiplier'] > 1.001:
@@ -117,7 +115,7 @@ def get_win_statuses_of_children(node):
 
     return win_statuses
 
-def set_win_status_from_children(node, children_win_statuses, new_subtree=False):
+cdef void set_win_status_from_children(dict node, list children_win_statuses, new_subtree=False):
     if False in children_win_statuses: #Fact: if any child is false => parent is true
         update_win_statuses(node, True, new_subtree)  # some kid is a loser, I have some game winning move to choose from
     elif True in children_win_statuses and not False in children_win_statuses and not None in children_win_statuses:
@@ -127,7 +125,7 @@ def set_win_status_from_children(node, children_win_statuses, new_subtree=False)
        # some kids are winners, some kids are unknown => can't say anything with certainty
 
 
-def backpropagate_num_checked_children(node):
+cpdef void backpropagate_num_checked_children(dict node):
     while node is not None:
         set_num_checked_children(node)
         if node['num_children_checked'] ==len(node['children']):
@@ -882,8 +880,6 @@ def rollout(node_to_update, descendant_to_eval):
             update_tree_wins(node_to_update)
 
 cdef evaluation_function(dict root):
-    # row 2:
-    # if white piece or (?) no diagonal black pieces in row 3\
     cdef:
         dict weighted_board = {  #50%
             8: {'a': 24, 'b': 24, 'c': 24, 'd': 24, 'e': 24, 'f': 24, 'g': 24, 'h': 24},
@@ -920,19 +916,15 @@ cdef evaluation_function(dict root):
     if result > 0:
         if player_color == 'White':
             outcome = 1
-            # result = result / max(max_result_can_be, result)
         else:
             outcome =  0
-            # result = 1 - (result / max(max_result_can_be, result))
 
     else:
         if player_color == 'Black':
             outcome = 1
-            # result = abs(result / max(max_result_can_be, result))
 
         else:
             outcome = 0
-            # result = 1 - abs(result / max(max_result_can_be, result))
     return outcome
 
 def evaluation_function_nodeless(white_pieces, black_pieces, player_color):
@@ -952,10 +944,10 @@ def evaluation_function_nodeless(white_pieces, black_pieces, player_color):
     black = 'b'
     is_white_index = 9
     white_move_index = 10
-    opponent_dict = { 'White': 'Black',
-             'Black': 'White'
-
-    }
+    # opponent_dict = { 'White': 'Black',
+    #          'Black': 'White'
+    #
+    # }
     win_weight = 0
     result = 0
 
@@ -967,100 +959,20 @@ def evaluation_function_nodeless(white_pieces, black_pieces, player_color):
         col = piece[0]
         row = int(piece[1])
         result -= weighted_board[row][col]
-    # print(result)
-    # max_result_can_be = 141
-    # max_result_can_be = max_result_can_be/1.5
+
     if result > 0:
         if player_color == 'White':
             outcome = 1
-            # result = result / max(max_result_can_be, result)
         else:
             outcome =  0
-            # result = 1 - (result / max(max_result_can_be, result))
 
     else:
         if player_color == 'Black':
             outcome = 1
-            # result = abs(result / max(max_result_can_be, result))
 
         else:
             outcome = 0
-            # result = 1 - abs(result / max(max_result_can_be, result))
     return outcome, result
-
-
-
-
-# def update_values_from_policy_net(game_tree, policy_net, lock = None, pruning=False): #takes in a list of parents with children,
-#     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss_init info already backpropagated)
-#     # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do that
-#     NN_output = policy_net.evaluate(game_tree)
-#     # if lock is None: #make a useless lock so we can have clean code either way
-#     #     lock = threading.Lock()
-#     with lock:
-#         for i in range(0, len(NN_output)):
-#             top_children_indexes = get_top_children(NN_output[i], num_top=5)#TODO: play with this number
-#             parent = game_tree[i]
-#             sum_for_normalization = update_sum_for_normalization(parent, NN_output, top_children_indexes)
-#             if parent['children'] is not None:
-#                 pruned_children = []
-#                 for child in parent['children']:#iterate to update values
-#                     normalized_value = (NN_output[child['index']] / sum_for_normalization) *100
-#                     if child['gameover'] is False and normalized_value > 0:# update only if not the end of the game or a reasonablevalue
-#                         if child['index'] in top_children_indexes:#prune
-#                             pruned_children.append(child)
-#                             update_child(child, NN_output[i], top_children_indexes)
-#                         elif not pruning:#if unknown and not pruning, keep
-#                             pruned_children.append(child)
-#                             update_child(child, NN_output[i], top_children_indexes)
-#                     elif child['win_status'] is not None: #if win/loss_init for parent,keep
-#                             pruned_children.append(child)
-#                         #no need to update child[''] if it has a win status, either it was expanded or was an instant gameover
-#                 parent['children'] = pruned_children
-
-
-# def update_value_from_policy_net_async(game_tree, lock, policy_net, thread = None, pruning=False): #takes in a list of parents with children,
-#     # removes children who were guaranteed losses for parent (should be fine as guaranteed loss_init info already backpropagated))
-#     # can also prune for not in top NN, but EBFS MCTS with depth_limit = 1 will also do tha
-#     # NN_processing = False
-#
-#     #TODO: figure out if this even needs thread local storage since threads enter separate function calls?
-#
-#     if thread is None:
-#         thread = threading.local()
-#     with lock:
-#         thread.game_tree = game_tree
-#     thread.NN_output = policy_net.evaluate(thread.game_tree)
-#
-#     #TODO: test thread safety without lock using local variables
-#     thread['parent']_index = 0
-#     # with lock:
-#     while thread['parent']_index < len(thread.NN_output): #batch of nodes unique to thread in block
-#         thread.pruned_children = []
-#         thread.top_children_indexes = get_top_children(thread.NN_output[thread['parent']_index], num_top=5)#TODO: play with this number
-#         thread['parent'] = thread.game_tree[thread['parent']_index]
-#         if thread['parent']['children'] is not None:
-#             thread.child_index = 0
-#             while thread.child_index < len(thread['parent']['children']):
-#                 thread.child = thread['parent']['children'][thread.child_index]
-#                 if thread.child['index'] inthread.top_children_indexes:
-#                     thread.pruned_children.append(thread.child)
-#                     if thread.child['gameover'] is False:  # update only if not the end of thegame
-#                         with lock:
-#                             update_child(thread.child, thread.NN_output[thread['parent']_index], thread.top_children_indexes)
-#                 elif thread.child['win_status'] is not None: #if win/loss_init for thread['parent'],keep
-#                     thread.pruned_children.append(thread.child)
-#                     #no need to update child[''] if it has a win status, either it was expanded or was an instant gameover
-#                 elif pruning:
-#                     subtract_child_wins_and_visits(thread['parent'], thread.child)
-#                 elif not pruning:#if unknown and not pruning, keep non-top child
-#                     if thread.child['gameover'] is False:
-#                         with lock:
-#                             update_child(thread.child, thread.NN_output[thread['parent']_index], thread.top_children_indexes)
-#                     thread.pruned_children.append(thread.child)
-#                 thread.child_index += 1
-#         thread['parent']['children'] = thread.pruned_children
-#         thread['parent']_index += 1
 
 cpdef void update_child(dict child, np.ndarray NN_output, dict sim_info, do_eval=True):
     cdef:

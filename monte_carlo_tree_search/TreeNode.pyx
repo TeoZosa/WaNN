@@ -90,8 +90,8 @@ from cpython.array cimport array
     # int num_to_keep = 1
     # int times_reexpanded = 0
 
-cpdef dict_TreeNode(dict game_board, list white_pieces, list black_pieces, str player_color, int index, dict parent,  int height):
-    cdef:
+cpdef dict TreeNode(dict game_board, list white_pieces, list black_pieces, str player_color, int index, dict parent, int height):
+    cdef: #redundant
         int visits = 0
         int wins = 0
         int gameover_visits = 0

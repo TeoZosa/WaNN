@@ -183,6 +183,13 @@ def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both',
                 color_to_filter = i % 2 == 1
                 # win_filter = game['Win'] is True
                 win_filter = True
+            elif color =='WINNR': #only train on winning games from both colors
+                color_to_filter = True
+                win_filter = game['Win'] is True
+            elif color =='ALLMV': #train on all games from both colors
+                color_to_filter = True
+                # win_filter = game['Win'] is True
+                win_filter = True
 
             else:
                 color_to_filter = True
@@ -193,13 +200,13 @@ def filter_for_self_play(self_play_data, NNType, game_stage='All', color='Both',
                 if win_filter:
                     game_length = len(game['BoardStates']['PlayerPOV'])
                     if game_stage == 'All':
-                        start = 2
+                        start = 0
                         end = game_length
                         if game['BoardStates']['PlayerPOV'][end-1][2][154] == 1:
                             end -=1
                     elif game_stage == '1st':
                         # Start-Game Value Net
-                        start = 2
+                        start = 0
                         # end = math.floor(game_length / 3)
                         end = 10
                     elif game_stage == '2nd':

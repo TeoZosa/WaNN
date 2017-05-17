@@ -1,3 +1,293 @@
+# #cython: language_level=3, boundscheck=False
+#
+# import os
+# import fnmatch
+# import sys
+# # import copy
+# from cpython cimport array
+# import numpy as np
+#
+# def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
+#     for root, dirs, files in os.walk(path):
+#         for file in fnmatch.filter(files, extension):
+#             yield os.path.join(root, file)
+#
+# def batch_split(training_examples, labels, batch_size):# lazily split into training batches of size batch_size
+#     X_train_batches = [training_examples[:batch_size]]
+#     y_train_batches = [labels[:batch_size]]
+#     remaining_x_train = training_examples[batch_size:]
+#     remaining_y_train = labels[batch_size:]
+#     for i in range(1, len(training_examples) // batch_size):
+#         X_train_batches.append(remaining_x_train[:batch_size])
+#         y_train_batches.append(remaining_y_train[:batch_size])
+#         remaining_x_train = remaining_x_train[batch_size:]
+#         remaining_y_train = remaining_y_train[batch_size:]
+#     if len(remaining_x_train) > 0:
+#         X_train_batches.append(remaining_x_train)  # append remaining training examples
+#         y_train_batches.append(remaining_y_train)
+#     return X_train_batches, y_train_batches
+#
+# def batch_split_no_labels(inference_examples, batch_size):# lazily split into training batches of size batch_size
+#     input_batch = [inference_examples[:batch_size]]
+#     remaining_inputs = inference_examples[batch_size:]
+#     for i in range(1, len(inference_examples) // batch_size):
+#         input_batch.append(remaining_inputs[:batch_size])
+#         remaining_inputs = remaining_inputs[batch_size:]
+#     if len(remaining_inputs)>0:
+#         input_batch.append(remaining_inputs)  # append remaining training examples
+#     return input_batch
+#
+# def win_lookup(index):
+#     if index == 0:
+#         return 'Win'
+#     else:
+#         return 'Lose'
+
+#
+#
+# def generate_move_lookup():
+#     chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+#     white_transitions = []
+#     for k in range (1, 9): #white's moves
+#         if k != 8:
+#             for i in range(0, len(chars)):
+#                 if i == 0:
+#                     white_transitions.append(chars[i]+str(k)+'-'+chars[i]+str(k+1))
+#                     white_transitions.append(chars[i] + str(k) + '-' + chars[i+1] + str(k + 1))
+#                 elif i == len(chars)-1:
+#                     white_transitions.append(chars[i] + str(k) + '-' + chars[i-1] + str(k + 1))
+#                     white_transitions.append(chars[i] + str(k) + '-' + chars[i] + str(k + 1))
+#                 else:
+#                     white_transitions.append(chars[i] + str(k) + '-' + chars[i - 1] + str(k + 1))
+#                     white_transitions.append(chars[i] + str(k) + '-' + chars[i] + str(k + 1))
+#                     white_transitions.append(chars[i] + str(k) + '-' + chars[i+1] + str(k + 1))
+#     black_transitions = []
+#     for k in range (8, 0, -1): #black's moves
+#         if k != 1:
+#             for i in range(len(chars)-1, -1, -1):
+#                 if i == 0:
+#                     black_transitions.append(chars[i] + str(k) + '-' + chars[i+1] + str(k - 1))
+#                     black_transitions.append(chars[i]+str(k)+'-'+chars[i]+str(k-1))
+#                 elif i == len(chars)-1:
+#                     black_transitions.append(chars[i] + str(k) + '-' + chars[i] + str(k - 1))
+#                     black_transitions.append(chars[i] + str(k) + '-' + chars[i-1] + str(k - 1))
+#                 else:
+#                     black_transitions.append(chars[i] + str(k) + '-' + chars[i+1] + str(k - 1))
+#                     black_transitions.append(chars[i] + str(k) + '-' + chars[i] + str(k - 1))
+#                     black_transitions.append(chars[i] + str(k) + '-' + chars[i - 1] + str(k - 1))
+#     white_transitions.append('no-move')
+#     black_transitions.append('no-move')
+#     # return dict([(key[1], key[0]) for key in enumerate(white_transitions)]), dict([(key[1], key[0]) for key in enumerate(black_transitions)]) # for index lookup by move
+#     return white_transitions, black_transitions
+#
+# def generate_transition_vector(to, _from, player_color):
+#     # probability distribution over the 155 possible (vs legal) moves from the POV of the player.
+#     # Reasoning: six center columns where, if a piece was present, it could move one of three ways.
+#     # A piece in one of the two side columns can move one of two ways.
+#     # Since nothing can move in the farthest row, there are only seven rows of possible movement.
+#     # => (2*2*7) + (6*3*7) = 154; 154 +1 for no move
+#     # ==> 155 element vector of all 0s sans the 1 for the transition that was actually made.
+#     # i.e. a1-a2 (if White) == h8-h7 (if Black) =>
+#     # row 0 (closest row), column 0(farthest left)
+#     # moves to
+#     # row +1, column 0
+#     # <=> transition[0] = 1, transition[1:len(transition)] = 0
+#
+#     # Notes: when calling NN, just reverse board state if black and decode output with black's table
+#
+#
+#     from_column = _from[0]
+#     to_column = to[0]
+#     from_row = int(_from[1])
+#     to_row = int(to[1])
+#     # ex if white and from_column is b => 1*3; moves starting from b are [2] or [3] or [4];
+#     column_offset = (ord(from_column) - ord('a')) * 3
+#     if player_color == 'Black':
+#         row_offset = (to_row - 1) * 22  # 22 possible moves per row
+#         assert (row_offset == (from_row - 2) * 22)  # double check
+#         index = 153 - (
+#         ord(to_column) - ord(from_column) + column_offset + row_offset)  # 153 reverses the board for black
+#     else:
+#         row_offset = (from_row - 1) * 22  # 22 possible moves per row
+#         assert (row_offset == (to_row - 2) * 22)  # double check
+#         index = ord(to_column) - ord(from_column) + column_offset + row_offset
+#     transition_vector = [0] * 155 #  last index is the no move index
+#     transition_vector[index] = 1
+#     return transition_vector
+#
+# def generate_binary_vector(state, player_color, what_to_filter):
+#     bias = 1
+#     binary_vector = []
+#     is_white_index = 9
+#     white_move_index = 10
+#     if what_to_filter == 'White' or what_to_filter == 'Black':
+#         what_to_filter_dict = {
+#         'White': {
+#             'e': 0,
+#             'w': 1,
+#             'b': 0},
+#         'Black': {
+#             'e': 0,
+#             'w': 0,
+#             'b': 1}}
+#     elif what_to_filter == 'Player':
+#         what_to_filter_dict = {
+#             'White':{
+#                 'e': 0,
+#                 'w': 1,
+#                 'b': 0},
+#             'Black': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 1}}
+#     elif what_to_filter == 'Opponent':
+#         what_to_filter_dict = {
+#             'White': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 1},
+#             'Black': {
+#                 'e': 0,
+#                 'w': 1,
+#                 'b': 0}}
+#     elif what_to_filter == 'Empty':
+#         what_to_filter_dict = {
+#             'White':{
+#                 'e': 1,
+#                 'w': 0,
+#                 'b': 0},
+#             'Black': {
+#                 'e': 1,
+#                 'w': 0,
+#                 'b': 0}}
+#     elif what_to_filter == 'Capture Move':
+#         what_to_filter_dict = {
+#             'White': {
+#                 'e': 1,
+#                 'w': 1,
+#                 'b': 1},
+#             'Black': {
+#                 'e': 1,
+#                 'w': 1,
+#                 'b': 1}}
+#     elif what_to_filter == 'Non-Capture Move':
+#         what_to_filter_dict = {
+#             'White': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0},
+#             'Black': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0}}
+#     elif what_to_filter == 'Moves From':
+#         what_to_filter_dict = {
+#             'White':{
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 0,
+#                 'Player Move From': 1,
+#                 'Player Capture To': 0,
+#                 'Player Capture From': 0},
+#             'Black': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 0,
+#                 'Player Move From': 1,
+#                 'Player Capture To': 0,
+#                 'Player Capture From': 0}}
+#     elif what_to_filter == 'Moves To':
+#         what_to_filter_dict = {
+#             'White': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 1,
+#                 'Player Move From': 0,
+#                 'Player Capture To': 0,
+#                 'Player Capture From': 0}  ,
+#             'Black': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 1,
+#                 'Player Move From': 0,
+#                 'Player Capture To': 0,
+#                 'Player Capture From': 0}}
+#     elif what_to_filter == 'Captures From':
+#         what_to_filter_dict = {
+#             'White': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 0,
+#                 'Player Move From': 0,
+#                 'Player Capture To': 0,
+#                 'Player Capture From': 1},
+#             'Black': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 0,
+#                 'Player Move From': 0,
+#                 'Player Capture To': 0,
+#                 'Player Capture From': 1}}
+#     elif what_to_filter == 'Captures To':
+#         what_to_filter_dict = {
+#             'White': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 0,
+#                 'Player Move From': 0,
+#                 'Player Capture To': 1,
+#                 'Player Capture From': 0},
+#             'Black': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 0,
+#                 'Player Move From': 0,
+#                 'Player Capture To': 1,
+#                 'Player Capture From': 0}}
+#     elif what_to_filter == 'Bias':  # duplicate across 64 positions since CNN needs same dimensions
+#         what_to_filter_dict = {
+#             'White': {
+#                 'e': bias,
+#                 'w': bias,
+#                 'b': bias},
+#             'Black': {
+#                 'e': bias,
+#                 'w': bias,
+#                 'b': bias}}
+#     else:
+#         print("Error, generate_binary_vector needs a valid argument to filter")
+#         what_to_filter_dict = {
+#             'White': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 0,
+#                 'Player Move From': 0,
+#                 'Player Capture To': 0,
+#                 'Player Capture From': 0},
+#             'Black': {
+#                 'e': 0,
+#                 'w': 0,
+#                 'b': 0,
+#                 'Player Move To': 0,
+#                 'Player Move From': 0,
+#                 'Player Capture To': 0,
+#                 'Player Capture From': 0}}
+#     for row in sorted(state):
+#         if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#             for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#                 binary_vector.append(what_to_filter_dict[player_color][state[row][column]])
+#     return binary_vector
+
+
 #cython: language_level=3, boundscheck=False
 
 import os
@@ -5,13 +295,20 @@ import fnmatch
 import sys
 # import copy
 from cpython cimport array
+cimport  numpy as np
+
+# import array
 import numpy as np
 
+
+DTYPE = np.int8
+
+ctypedef np.int_t DTYPE_t
 def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
     for root, dirs, files in os.walk(path):
         for file in fnmatch.filter(files, extension):
             yield os.path.join(root, file)
-            
+
 def batch_split(training_examples, labels, batch_size):# lazily split into training batches of size batch_size
     X_train_batches = [training_examples[:batch_size]]
     y_train_batches = [labels[:batch_size]]
@@ -37,12 +334,16 @@ def batch_split_no_labels(inference_examples, batch_size):# lazily split into tr
         input_batch.append(remaining_inputs)  # append remaining training examples
     return input_batch
 
-def win_lookup(index):
+cpdef str win_lookup(int index):
+    cdef str win
     if index == 0:
-        return 'Win'
+        win = 'Win'
     else:
-        return 'Lose'
-def index_lookup_by_move (move):
+        win = 'Lose'
+    return win
+
+cpdef int index_lookup_by_move (str move):
+    cdef dict move_dict
     move_dict = { #white moves
         'a1-a2': 0, 'a1-b2': 1, 'a2-a3': 22, 'a2-b3': 23, 'a3-a4': 44, 'a3-b4': 45, 'a4-a5': 66, 'a4-b5': 67,
         'a5-a6': 88, 'a5-b6': 89, 'a6-a7': 110, 'a6-b7': 111, 'a7-a8': 132, 'a7-b8': 133, 'b1-a2': 2, 'b1-b2': 3,
@@ -89,13 +390,16 @@ def index_lookup_by_move (move):
     return move_dict[move.lower()]
 
 
-def move_lookup_by_index(index, player_color):
+
+cpdef str move_lookup_by_index(int index, str player_color):
     """'
     Enumerated the moves for lookup speed/visual reference (see commented out dictionary).
     Code can be prettified by calling generate_move_lookup instead
     ''"""
+
+    cdef list transitions
     if player_color == 'White':
-        transitions = ['a1-a2', 'a1-b2', 'b1-a2', 'b1-b2', 'b1-c2', 'c1-b2', 'c1-c2', 'c1-d2', 'd1-c2', 'd1-d2',
+         transitions = ['a1-a2', 'a1-b2', 'b1-a2', 'b1-b2', 'b1-c2', 'c1-b2', 'c1-c2', 'c1-d2', 'd1-c2', 'd1-d2',
                        'd1-e2', 'e1-d2', 'e1-e2', 'e1-f2', 'f1-e2', 'f1-f2', 'f1-g2', 'g1-f2', 'g1-g2', 'g1-h2',
                        'h1-g2', 'h1-h2', 'a2-a3', 'a2-b3', 'b2-a3', 'b2-b3', 'b2-c3', 'c2-b3', 'c2-c3', 'c2-d3',
                        'd2-c3', 'd2-d3', 'd2-e3', 'e2-d3', 'e2-e3', 'e2-f3', 'f2-e3', 'f2-f3', 'f2-g3', 'g2-f3',
@@ -111,7 +415,7 @@ def move_lookup_by_index(index, player_color):
                        'h6-g7', 'h6-h7', 'a7-a8', 'a7-b8', 'b7-a8', 'b7-b8', 'b7-c8', 'c7-b8', 'c7-c8', 'c7-d8',
                        'd7-c8', 'd7-d8', 'd7-e8', 'e7-d8', 'e7-e8', 'e7-f8', 'f7-e8', 'f7-f8', 'f7-g8', 'g7-f8',
                        'g7-g8', 'g7-h8', 'h7-g8', 'h7-h8', 'no-move']
-        
+
         # transitions = {0: 'a1-a2',
         #              1: 'a1-b2',
         #              2: 'b1-a2',
@@ -444,11 +748,11 @@ def move_lookup_by_index(index, player_color):
         #               154: 'no-move'}
 
     else:
-        transitions = []
+        # transitions = []
         print("ERROR: Please specify a valid player color", file=sys.stderr)
         exit(10)
     return transitions[index]
-
+#
 
 def generate_move_lookup():
     chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
@@ -485,84 +789,50 @@ def generate_move_lookup():
     # return dict([(key[1], key[0]) for key in enumerate(white_transitions)]), dict([(key[1], key[0]) for key in enumerate(black_transitions)]) # for index lookup by move
     return white_transitions, black_transitions
 
-def initial_game_board():
-    empty = 'e'
-    white = 'w'
-    black = 'b'
-    return {
-        10: -1,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
-        # equivalent to 0 if white's move, 1 if black's move
-        9: 1,  # is player_color white
-        8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-        7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-        6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-        5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-        4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-        3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-        2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
-        1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
-    }
+cpdef dict initial_game_board():
+    cdef:
+        int from_white = -1
+        int is_white = 1
+        str empty = 'e'
+        str white = 'w'
+        str black = 'b'
+        dict row_7And8 = {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black}
+        dict row_3To6 = {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty}
+        dict row_1And2 = {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
+        dict gameboard= {
+            10: from_white,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+            # equivalent to 0 if white's move, 1 if black's move
+            9: is_white,  # is player_color white
+            8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
+            7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
+            6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+            5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+            4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+            3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
+            2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
+            1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
+        }
+    return gameboard
 
-def convert_board_to_2d_matrix_POEB(game_board, player_color):
+
+
+
+cpdef np.ndarray convert_board_to_2d_matrix_POEB(dict game_board, str player_color):
     # Note: not the same as reflect_board_state in self_play_logs_to_datastructures;
-    # def reflect_board_state(state):  # since black needs to have a POV representation
-    #     # Note: not the same as mirror_board_state in self_play_logs_to_datastructures;
-    #     def mirror_board_state(state):  # helper method for reflect_board_state
-    #         mirror_state = initial_game_board() #copy.deepcopy(state)  # edit copy of board_state
-    #         # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
-    #         is_white_index = 9
-    #         white_move_index = 10
-    #         for row in sorted(state):
-    #             if row != is_white_index and row != white_move_index:  # these indexes don't change
-    #                 for column in sorted(state[row]):
-    #                     if column == 'a':
-    #                         mirror_state[row]['h'] = state[row][column]
-    #                     elif column == 'b':
-    #                         mirror_state[row]['g'] = state[row][column]
-    #                     elif column == 'c':
-    #                         mirror_state[row]['f'] = state[row][column]
-    #                     elif column == 'd':
-    #                         mirror_state[row]['e'] = state[row][column]
-    #                     elif column == 'e':
-    #                         mirror_state[row]['d'] = state[row][column]
-    #                     elif column == 'f':
-    #                         mirror_state[row]['c'] = state[row][column]
-    #                     elif column == 'g':
-    #                         mirror_state[row]['b'] = state[row][column]
-    #                     elif column == 'h':
-    #                         mirror_state[row]['a'] = state[row][column]
-    #         return mirror_state
-    #
-    #     semi_reflected_state = mirror_board_state(state)
-    #     reflected_state = semi_reflected_state #copy.deepcopy(semi_reflected_state)
-    #
-    #     #copies
-    #     row1 = {'a': semi_reflected_state[1]['a'], 'b': semi_reflected_state[1]['b'], 'c': semi_reflected_state[1]['c'], 'd':semi_reflected_state[1]['d'], 'e': semi_reflected_state[1]['e'], 'f':semi_reflected_state[1]['f'], 'g': semi_reflected_state[1]['g'], 'h': semi_reflected_state[1]['h']}# reflected_state[1].copy()
-    #     row2 = {'a': semi_reflected_state[2]['a'], 'b': semi_reflected_state[2]['b'], 'c': semi_reflected_state[2]['c'], 'd':semi_reflected_state[2]['d'], 'e': semi_reflected_state[2]['e'], 'f':semi_reflected_state[2]['f'], 'g': semi_reflected_state[2]['g'], 'h': semi_reflected_state[2]['h']}# reflected_state[2].copy()
-    #     row3 = {'a': semi_reflected_state[3]['a'], 'b': semi_reflected_state[3]['b'], 'c': semi_reflected_state[3]['c'], 'd':semi_reflected_state[3]['d'], 'e': semi_reflected_state[3]['e'], 'f':semi_reflected_state[3]['f'], 'g': semi_reflected_state[3]['g'], 'h': semi_reflected_state[3]['h']}#reflected_state[3].copy()
-    #     row4 = {'a': semi_reflected_state[4]['a'], 'b': semi_reflected_state[4]['b'], 'c': semi_reflected_state[4]['c'], 'd':semi_reflected_state[4]['d'], 'e': semi_reflected_state[4]['e'], 'f':semi_reflected_state[4]['f'], 'g': semi_reflected_state[4]['g'], 'h': semi_reflected_state[4]['h']}#reflected_state[4].copy()
-    #     #
-    #     # 4:
-    #     # 3:
-    #     # 2:
-    #     # 1:
-    #
-    #
-    #     reflected_state[1] = semi_reflected_state[8]
-    #     reflected_state[2] = semi_reflected_state[7]
-    #     reflected_state[3] = semi_reflected_state[6]
-    #     reflected_state[4] = semi_reflected_state[5]
-    #     reflected_state[5] = row4
-    #     reflected_state[6] = row3
-    #     reflected_state[7] = row2
-    #     reflected_state[8] = row1
-    #     return reflected_state
-
-    if player_color == 'Black':
-        mirror_state = initial_game_board() #copy.deepcopy(state)  # edit copy of board_state
+    cdef:
         # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
-        is_white_index = 9
-        white_move_index = 10
+        int is_white_index = 9
+        int white_move_index = 10
+        int row
+        str column
+        dict mirror_state
+        dict row1
+        dict row2
+        dict row3
+        dict row4
+    if player_color == 'Black':
+        mirror_state = initial_game_board() # edit copy of board_state
+
         for row in sorted(game_board):
             if row != is_white_index and row != white_move_index:  # these indexes don't change
                 for column in sorted(game_board[row]):
@@ -582,6 +852,7 @@ def convert_board_to_2d_matrix_POEB(game_board, player_color):
                         mirror_state[row]['b'] = game_board[row][column]
                     elif column == 'h':
                         mirror_state[row]['a'] = game_board[row][column]
+
         row1 = {'a': mirror_state[1]['a'], 'b': mirror_state[1]['b'], 'c': mirror_state[1]['c'], 'd':mirror_state[1]['d'], 'e': mirror_state[1]['e'], 'f':mirror_state[1]['f'], 'g': mirror_state[1]['g'], 'h': mirror_state[1]['h']}# mirror_state[1].copy()
         row2 = {'a': mirror_state[2]['a'], 'b': mirror_state[2]['b'], 'c': mirror_state[2]['c'], 'd':mirror_state[2]['d'], 'e': mirror_state[2]['e'], 'f':mirror_state[2]['f'], 'g': mirror_state[2]['g'], 'h': mirror_state[2]['h']}# mirror_state[2].copy()
         row3 = {'a': mirror_state[3]['a'], 'b': mirror_state[3]['b'], 'c': mirror_state[3]['c'], 'd':mirror_state[3]['d'], 'e': mirror_state[3]['e'], 'f':mirror_state[3]['f'], 'g': mirror_state[3]['g'], 'h': mirror_state[3]['h']}#mirror_state[3].copy()
@@ -599,6 +870,8 @@ def convert_board_to_2d_matrix_POEB(game_board, player_color):
         game_board =  mirror_state#reflect_board_state(game_board)
 
     return generate_binary_plane_POEB(game_board, player_color)
+
+
 def generate_transition_vector(to, _from, player_color):
     # probability distribution over the 155 possible (vs legal) moves from the POV of the player.
     # Reasoning: six center columns where, if a piece was present, it could move one of three ways.
@@ -806,18 +1079,27 @@ def generate_binary_vector(state, player_color, what_to_filter):
                 binary_vector.append(what_to_filter_dict[player_color][state[row][column]])
     return binary_vector
 
-def generate_binary_plane_POEB(state, player_color):
+cpdef np.ndarray generate_binary_plane_POEB(dict state, str player_color):
     #TODO consider reshaping for C++ input; could also put it into 3d matrix on the fly,
     # ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
-    bias = 1
-    binary_plane = np.array([[[0,0,0,bias]]*8]*8, dtype=np.float32)
+    cdef:
+        int bias = 1
+        np.ndarray binary_plane = np.array([[[0,0,0,bias]]*8]*8, dtype=DTYPE)
 
-    is_white_index = 9
-    white_move_index = 10
-    #feature plane index
-    player_index = 0
-    opponent_index = 1
-    empty_index = 2
+        int is_white_index = 9
+        int white_move_index = 10
+        #feature plane index
+        int player_index = 0
+        int opponent_index = 1
+        int empty_index = 2
+
+        str empty = 'e'
+        int plane_row = 0
+        int plane_column
+        str player
+        str opponent
+        str board_square
+
 
     if player_color == 'White':
         player = 'w'
@@ -825,8 +1107,7 @@ def generate_binary_plane_POEB(state, player_color):
     else:
         player = 'b'
         opponent = 'w'
-    empty = 'e'
-    plane_row = 0
+
     for row in sorted(state):
         if row != is_white_index and row != white_move_index:  # don't touch these indexes
             plane_column = 0
@@ -842,3 +1123,41 @@ def generate_binary_plane_POEB(state, player_color):
                 plane_column +=1
             plane_row +=1
     return binary_plane
+
+#
+# def generate_binary_plane_POEB(state, player_color):
+#     #TODO consider reshaping for C++ input; could also put it into 3d matrix on the fly,
+#     # ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
+#     bias = 1
+#     binary_plane = np.array([[[0,0,0,bias]]*8]*8, dtype=np.float32)
+#
+#     is_white_index = 9
+#     white_move_index = 10
+#     #feature plane index
+#     player_index = 0
+#     opponent_index = 1
+#     empty_index = 2
+#
+#     if player_color == 'White':
+#         player = 'w'
+#         opponent = 'b'
+#     else:
+#         player = 'b'
+#         opponent = 'w'
+#     empty = 'e'
+#     plane_row = 0
+#     for row in sorted(state):
+#         if row != is_white_index and row != white_move_index:  # don't touch these indexes
+#             plane_column = 0
+#             for column in sorted(state[row]):  # needs to be sorted to traverse dictionary in lexicographical order
+#
+#                 board_square = state[row][column]
+#                 if board_square ==player:
+#                     binary_plane[plane_row][plane_column][player_index] = 1
+#                 elif board_square == opponent:
+#                     binary_plane[plane_row][plane_column][opponent_index] = 1
+#                 elif board_square == empty:
+#                     binary_plane[plane_row][plane_column][empty_index] = 1
+#                 plane_column +=1
+#             plane_row +=1
+#     return binary_plane

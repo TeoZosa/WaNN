@@ -122,10 +122,10 @@ def assign_path(deviceName='Workstation'):
     elif deviceName == 'MBP2011':
         path = r'/Users/Home/PycharmProjects/BreakthroughANN/'
     elif deviceName == 'Workstation':
-        path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}AllThirdWhite'.format(
+        path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}AllThirdWINNR'.format(
             features='POE', net_type='PolicyNet')
     elif deviceName == 'Workstation_Black':
-        path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}AllThirdBlack'.format(
+        path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}AllThirdALLMV'.format(
             features='POE', net_type='PolicyNet')
     else:
         path = ''  # todo:error checking
@@ -158,10 +158,10 @@ def hidden_layer_init(prev_layer, n_filters_in, n_filters_out, filter_size, name
     # of filters in each layer ranged from 64-192
     std_dev_He = np.sqrt(2 / np.prod(prev_layer.get_shape().as_list()[1:]))
     with tf.variable_scope(name or 'hidden_layer', reuse=reuse):
-        if name == "hidden_layer/1":
-            # paddings = [[0, 0], [4, 4], [4, 4], [0, 0]]
-            # tf.pad(prev_layer, paddings, "CONSTANT")
-            filter_size = 5
+        # if name == "hidden_layer/1":
+        #     # paddings = [[0, 0], [4, 4], [4, 4], [0, 0]]
+        #     # tf.pad(prev_layer, paddings, "CONSTANT")
+        #     filter_size = 5
         kernel = tf.get_variable(name='weights',
                                  shape=[filter_size, filter_size,  # h x w
                                         n_filters_in,
@@ -545,7 +545,7 @@ else:
         os.path.join(input_path_BLACK, r'TestDataEnd'))
 
 
-for num_hidden in [i for i in range(4,10)#[1, 9]
+for num_hidden in [i for i in range(4,5)#[1, 9]
                    #
                    ]:
 
@@ -560,12 +560,12 @@ for num_hidden in [i for i in range(4,10)#[1, 9]
 
         file_WHITE = open(os.path.join(input_path_WHITE,
                                        r'ExperimentLogs',
-                                       game_stage + '_0507WHITE_5then3_{num_filters}And1x1Filters{num_layers}Layers_1st2AndLastExcl.txt'.format(num_filters=n_filters,num_layers=num_hidden)),
+                                       game_stage + '_0516WINNR{num_filters}And1x1Filters{num_layers}Layers_LastExcl.txt'.format(num_filters=n_filters,num_layers=num_hidden)),
                           'a')
 
         file_BLACK = open(os.path.join(input_path_WHITE,
                                        r'ExperimentLogs',
-                                       game_stage + '_0507BLACK_5then3_{num_filters}FiltersAnd1x1{num_layers}Layers_1st2AndLastExcl.txt'.format(
+                                       game_stage + '_0516ALLMV{num_filters}FiltersAnd1x1{num_layers}Layers_LastExcl.txt'.format(
                                            num_filters=n_filters,num_layers=num_hidden)), 'a')
         print("# of Training Examples: {}".format(len(training_examples_WHITE)), end='\n', file=file_WHITE)
         print("# of Testing Examples: {}".format(len(validation_examples_WHITE)), end='\n', file=file_WHITE)
@@ -910,7 +910,7 @@ for num_hidden in [i for i in range(4,10)#[1, 9]
                                 compute_accuracy(WHITE_testing_examples_partition_k, WHITE_testing_labels_partition_k,
                                                  X_WHITE, y_WHITE, accuracy_function_WHITE, None, None, 0)[0] >0.65:
                         save_path = saver.save(sess, os.path.join(input_path_BLACK,  r'065AccIteration ({})'.format(1),
-                                                                  r'0507WinningWhiteNet065Accuracy_{num_filters}_{num_layers}_'.format(
+                                                                  r'0516WinningNetAgnostic065Accuracy_{num_filters}_{num_layers}_'.format(
                                                                       num_filters=n_filters, num_layers=num_hidden)))
 
 
@@ -924,7 +924,7 @@ for num_hidden in [i for i in range(4,10)#[1, 9]
             print_statistics_BLACK()
 
             # save the model now
-            save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'0507WinningWhiteNet070Accuracy_{num_filters}_{num_layers}_'.format(num_filters=n_filters, num_layers=num_hidden)))
+            save_path = saver.save(sess, os.path.join(input_path_BLACK, r'model', r'0516WinningAgnosticNet070Accuracy_{num_filters}_{num_layers}_'.format(num_filters=n_filters, num_layers=num_hidden)))
 
             sess.close()
     file_WHITE.close()

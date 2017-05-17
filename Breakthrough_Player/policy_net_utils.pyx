@@ -50,7 +50,7 @@ def instantiate_session_both_128():#todo: return the graph as well in case we wa
 
     saver = tf.train.Saver()
     # path = os.path.join(r'..',r'policy_net_model',  r'combined_policy_nets', r'4')
-    path = os.path.join(r'..', r'policy_net_model', r'685AccWhite', r'0507WinningWhiteNet065Accuracy_192_4_')
+    path = os.path.join(r'..', r'policy_net_model', r'699AccEpoch14', r'0516WinningNetAgnostic065Accuracy_192_4_')
     # path = os.path.join(r'C:\Users\damon\PycharmProjects\BreakthroughANN\policy_net_model',  r'combined_policy_nets', r'4')
     # path = os.path.join(r'C:\Users\damon\PycharmProjects\BreakthroughANN\policy_net_model\DualWinningNets065Accuracy', r'DualWinningNets065Accuracy')
 
@@ -183,10 +183,10 @@ def hidden_layer_init_128(prev_layer, n_filters_in, n_filters_out, filter_size, 
     std_dev_He = np.sqrt(2 / np.prod(prev_layer.get_shape().as_list()[1:])) #He et. al
     #initialize layer in the given namespace
     with tf.variable_scope(name or 'hidden_layer', reuse=reuse):
-        if name == "hidden_layer/1":
-            # paddings = [[0, 0], [4, 4], [4, 4], [0, 0]]
-            # tf.pad(prev_layer, paddings, "CONSTANT")
-            filter_size = 5
+        # if name == "hidden_layer/1":
+        #     # paddings = [[0, 0], [4, 4], [4, 4], [0, 0]]
+        #     # tf.pad(prev_layer, paddings, "CONSTANT")
+        #     filter_size = 5
         # convolutional filters
         kernel = tf.get_variable(
             name='weights',

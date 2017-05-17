@@ -14,7 +14,7 @@ from threading import Lock, current_thread
 from sys import stdout
 from time import time
 from random import sample
-
+cimport numpy as np
 
 class NoDaemonProcess(Process):
     # make 'daemon' attribute always return False
@@ -121,7 +121,7 @@ def expand_node(parent_node, rollout=False):
     return child_nodes
 
 
-def expand_descendants_to_depth_wrt_NN(unexpanded_nodes, depth, depth_limit, sim_info, lock, policy_net): #nodes are all at the same depth
+def expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int depth_limit, dict sim_info, lock, policy_net): #nodes are all at the same depth
     # Prunes child nodes to be the NN's top predictions or instant gameovers.
     # expands all nodes at a depth to the depth limit to take advantage of GPU batch processing.
     # This step takes time away from MCTS in the beginning, but builds the tree that the MCTS will use later on in the game.
@@ -280,9 +280,9 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
                                 child_0 =children [0]
                                 if child_0['win_status'] is None and child_0['threads_checking_node']<=0 and not child_0['subtree_being_checked']:
                                     unexpanded_children.append(children[0])
-                                # child_1 = children [1]
-                                # if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked']:
-                                #     unexpanded_children.append(children[1])
+                                child_1 = children [1]
+                                if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked'] and child_0['UCT_multiplier']<1.35:#if first child wasn't that good
+                                    unexpanded_children.append(children[1])
                             elif num_children==1:
                                 child_0 = children[0]
                                 if child_0['win_status'] is None and child_0['threads_checking_node'] <= 0 and not child_0['subtree_being_checked']:
@@ -373,9 +373,11 @@ def update_parents_for_process(args):#when more than n parents, have a separate 
 
 
 
-def enumerate_update_and_prune(parent, NN_output, sim_info, lock):
-    children = []
-    children_as_moves = enumerate_legal_moves_using_piece_arrays(parent)
+cdef enumerate_update_and_prune(dict parent, np.ndarray NN_output, dict sim_info, lock):
+    cdef:
+        list children = []
+        list pruned_children
+        list children_as_moves = enumerate_legal_moves_using_piece_arrays(parent)
 
     for move in children_as_moves:
         child = get_child(parent, move, NN_output,sim_info, lock)# get_cached_child_new(parent, move, NN_output, sim_info, lock, num_legal_moves, aggressive=None)
@@ -428,7 +430,7 @@ def get_best_child_val(parent, NN_output, top_children_indexes):
             rank += 1
     return best_child_val, rank
 
-def get_num_children_to_consider(parent):
+cdef get_num_children_to_consider(dict parent):
     parent['num_to_consider'] = 0  # 8
     parent['num_to_keep'] = 999
     return parent['num_to_keep']
@@ -503,7 +505,7 @@ def get_num_children_to_consider(parent):
 
 
 
-def get_child(parent, move, NN_output, sim_info, lock):
+cdef get_child(dict parent, str move, np.ndarray NN_output, dict sim_info, lock):
     child = init_unique_child_node_and_board(move, parent)
     if child is not None:
         check_for_winning_move(child)  # 1-step lookahead for gameover
@@ -512,7 +514,14 @@ def get_child(parent, move, NN_output, sim_info, lock):
         update_child(child, NN_output, sim_info, do_eval=False)
     return child
 
-def assign_children(parent, children, lock):
+cdef assign_children(dict parent, list children, lock):
+    cdef:
+        list parent_children
+        list other_children
+        double best_val
+        int game_over_row
+        str enemy_piece
+
     with lock:
         decrement_threads_checking_node(parent)
 
@@ -536,6 +545,7 @@ def assign_children(parent, children, lock):
                     game_over_row = 2
                     enemy_piece = 'b'
                 gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
+
                 if gameover_next_move:
                     for i in range(0, len(children)):
                         #game_winning or game_saving moves only (if not game_saving, it'll be a loss)
@@ -582,8 +592,13 @@ def assign_children(parent, children, lock):
     return parent['children']
 
 
-def init_unique_child_node_and_board(child_as_move, parent):
-    child_index = index_lookup_by_move(child_as_move)
+cdef init_unique_child_node_and_board(child_as_move, dict parent):
+    cdef:
+        int child_index = index_lookup_by_move(child_as_move)
+        dict child_board
+        list child_white_pieces
+        list child_black_pieces
+        str child_color
     already_in_parent = check_for_twin(parent, child_index)
     if not already_in_parent:
         child_board, child_white_pieces, child_black_pieces, child_color = get_child_attributes(parent, child_as_move)
@@ -592,7 +607,7 @@ def init_unique_child_node_and_board(child_as_move, parent):
         child = None
     return child
 
-def check_for_twin(parent, child_index):
+cdef check_for_twin(dict parent, int child_index):
     duplicate = False
     if parent['children'] is not None:
         for child in parent['children']:
@@ -601,8 +616,14 @@ def check_for_twin(parent, child_index):
                 break
     return duplicate
 
-def get_child_attributes(parent, child_as_move):
-    child_color = get_opponent_color(parent['color'])
+cdef get_child_attributes(dict parent, child_as_move):
+    cdef:
+        str child_color = get_opponent_color(parent['color'])
+        dict child_board
+        # str player_piece_to_add
+        # str player_piece_to_remove
+        list child_white_pieces
+        list child_black_pieces
 
     child_board, player_piece_to_add, player_piece_to_remove, remove_opponent_piece\
         = move_piece_update_piece_arrays(parent['game_board'], child_as_move, parent['color'])
@@ -611,7 +632,13 @@ def get_child_attributes(parent, child_as_move):
         = update_piece_arrays(parent, player_piece_to_add, player_piece_to_remove, remove_opponent_piece)
     return child_board, child_white_pieces, child_black_pieces, child_color
 
-def update_piece_arrays(parent, player_piece_to_add, player_piece_to_remove, remove_opponent_piece):
+cdef update_piece_arrays(dict parent, player_piece_to_add, player_piece_to_remove, remove_opponent_piece):
+    cdef:
+        list player_pieces
+        list opponent_pieces
+        list child_white_pieces
+        list child_black_pieces
+
     # slicing is the fastest way to make a copy
     if parent['color'] == 'White':
         player_pieces = parent['white_pieces'][:]
@@ -627,6 +654,132 @@ def update_piece_arrays(parent, player_piece_to_add, player_piece_to_remove, rem
     if remove_opponent_piece:
         opponent_pieces.remove(player_piece_to_add)
     return child_white_pieces, child_black_pieces
+
+# def get_child(parent, move, NN_output, sim_info, lock):
+#     child = init_unique_child_node_and_board(move, parent)
+#     if child is not None:
+#         check_for_winning_move(child)  # 1-step lookahead for gameover
+#         if child['gameover']:
+#             sim_info['game_tree'].append(child)
+#         update_child(child, NN_output, sim_info, do_eval=False)
+#     return child
+#
+# def assign_children(parent, children, lock):
+#     with lock:
+#         decrement_threads_checking_node(parent)
+#
+#
+#         if len(children) > 0:
+#             if parent['children'] is None:
+#                 get_num_children_to_consider(parent)
+#                 parent_children = []
+#                 other_children = []
+#                 children.sort(key=lambda x: x['UCT_multiplier'], reverse=True)#sort them by probability
+#                 best_val = children[0]['UCT_multiplier']
+#                 # if best_val <1.30 and parent['color'] =='White':
+#                 #     update_tree_losses(parent, 10, gameover=True)#maybe the tree with these patterns wins?
+#
+#                 parent['best_child'] = children[0]
+#
+#                 if parent['color'] == 'Black':
+#                     game_over_row = 7
+#                     enemy_piece = 'w'
+#                 else:
+#                     game_over_row = 2
+#                     enemy_piece = 'b'
+#                 gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
+#                 if gameover_next_move:
+#                     for i in range(0, len(children)):
+#                         #game_winning or game_saving moves only (if not game_saving, it'll be a loss)
+#                         if children[i]['game_saving_move'] or children[i]['gameover']:  # or best_val - children[i]['UCT_multiplier'] < .20
+#                             parent_children.append(children[i])
+#                         else:  # when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
+#                             set_game_over_values_1_step_lookahead(children[i])
+#                             parent_children.append(children[i])
+#                     parent['children'] = parent_children
+#
+#
+#
+#
+#
+#                 elif parent['num_to_keep']  != 999:
+#                     if best_val >1.9: # > 90%
+#                         parent['num_to_keep'] = 1
+#                     min_val_threshold = (best_val-1)/2.5
+#                     threshold_val = 0.10
+#                     for i in range(0, len(children)):
+#                         # if len(parent_children) < 2:# and parent['color'] == 'White'
+#                         #     threshold_val = 0.25
+#                         # else:
+#                         #     threshold_val = 0.10
+#                         if i < parent['num_to_keep'] or (best_val - children[i]['UCT_multiplier'] < threshold_val and children[i]['UCT_multiplier'] -1 > min_val_threshold) or children[i]['gameover']:#or best_val - children[i]['UCT_multiplier'] < .20
+#                             parent_children.append(children[i])
+#                         else: #when appending other children to children later on, will still be in sorted order UNLESS there were gameovers in the middle, in which case who cares.
+#                             other_children.append(children[i])
+#                     parent['children'] = parent_children
+#                     eval_children(parent_children)
+#                     parent['other_children'] = other_children
+#                 else:
+#                     parent['children'] = children
+#                     eval_children(children)#slightly more efficient to do them as a batch
+#
+#                 if parent['num_to_consider'] == 0 or (parent['other_children'] is None or len (parent['other_children']) == 0): # len (parent['children']) >=  Virtually reexpanded;  else may try to reexpand and thrash around in tree search
+#                     parent['reexpanded_already'] = True
+#                 # if parent['parent'] is None:
+#                 #     parent['children'] = [parent['children'][0]]
+#                 update_win_status_from_children(parent)
+#                 backpropagate_num_checked_children(parent)
+#     # if parent['children'] is None:
+#     #     breakpoint = True
+#     return parent['children']
+#
+#
+# def init_unique_child_node_and_board(child_as_move, parent):
+#     child_index = index_lookup_by_move(child_as_move)
+#     already_in_parent = check_for_twin(parent, child_index)
+#     if not already_in_parent:
+#         child_board, child_white_pieces, child_black_pieces, child_color = get_child_attributes(parent, child_as_move)
+#         child = dict_TreeNode(child_board, child_white_pieces, child_black_pieces, child_color, child_index, parent, parent['height'] + 1)
+#     else:
+#         child = None
+#     return child
+#
+# def check_for_twin(parent, child_index):
+#     duplicate = False
+#     if parent['children'] is not None:
+#         for child in parent['children']:
+#             if child['index'] ==child_index:
+#                 duplicate = True
+#                 break
+#     return duplicate
+#
+# def get_child_attributes(parent, child_as_move):
+#     child_color = get_opponent_color(parent['color'])
+#
+#     child_board, player_piece_to_add, player_piece_to_remove, remove_opponent_piece\
+#         = move_piece_update_piece_arrays(parent['game_board'], child_as_move, parent['color'])
+#
+#     child_white_pieces, child_black_pieces \
+#         = update_piece_arrays(parent, player_piece_to_add, player_piece_to_remove, remove_opponent_piece)
+#     return child_board, child_white_pieces, child_black_pieces, child_color
+#
+# def update_piece_arrays(parent, player_piece_to_add, player_piece_to_remove, remove_opponent_piece):
+#     # slicing is the fastest way to make a copy
+#     if parent['color'] == 'White':
+#         player_pieces = parent['white_pieces'][:]
+#         opponent_pieces = parent['black_pieces'][:]
+#         child_white_pieces = player_pieces
+#         child_black_pieces = opponent_pieces
+#     else:
+#         player_pieces = parent['black_pieces'][:]
+#         opponent_pieces = parent['white_pieces'][:]
+#         child_white_pieces = opponent_pieces
+#         child_black_pieces = player_pieces
+#     player_pieces[player_pieces.index(player_piece_to_remove)] = player_piece_to_add
+#     if remove_opponent_piece:
+#         opponent_pieces.remove(player_piece_to_add)
+#     return child_white_pieces, child_black_pieces
+
 
 def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_parent, policy_net, sim_info, lock): #online reinforcement learning if wanderer made a move that wasn't in the tree
 

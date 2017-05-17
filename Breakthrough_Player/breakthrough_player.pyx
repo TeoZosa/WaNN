@@ -63,7 +63,7 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer)
     wanderer.log_file = sys.stdout
 
-    policy_net = NeuralNetsCombined_128()
+    policy_net = NeuralNetsCombined_128()#_128
     computer_MCTS_tree = MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net)
     computer_MCTS_tree.game_num = game_num
     if root is not None:

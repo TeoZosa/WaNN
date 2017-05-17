@@ -107,6 +107,7 @@ class NeuralNetsCombined():
         batch_size = 16384
         inference_batches = batch_split_no_labels(board_representations, batch_size)
         output = []
+
         if player_color == 'White':
             y_pred = self.output_white
             X = self.input_white
@@ -142,7 +143,7 @@ class NeuralNetsCombined_128():
         batch_size = 16384
         inference_batches = batch_split_no_labels(board_representations, batch_size)
         output = []
-        if player_color == 'White':
+        if player_color == 'White':#Leave as is for WaNN as White. White == Winner, Black == All
             y_pred = self.output_white
             X = self.input_white
         else:

@@ -83,12 +83,12 @@ def AggregateSelfPlayDataStructures():
     outputList.close()
 
 def self_play_data_structures_to_numpy():
-    for color in ['White',
+    for color in ['WINNR',
 
-                  'Black'
+                  'ALLMV'
                   ]:
-        for game_stage in [#'All' ,
-                           # '1st', '2nd',
+        for game_stage in ['All' ,
+                            '1st', '2nd',
                             '3rd'
                            ]:
               path = r'G:\TruncatedLogs\PythonDataSets\DataStructures'

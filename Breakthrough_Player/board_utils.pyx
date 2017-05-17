@@ -47,26 +47,42 @@ def debug_game_board():
         1: {'a': empty, 'b': white, 'c': white, 'd': white, 'e': empty, 'f': white, 'g': white, 'h': empty}
     }
 
-def initial_game_board():
-    empty = 'e'
-    white = 'w'
-    black = 'b'
-    return {
-        10: -1,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
-        # equivalent to 0 if white's move, 1 if black's move
-        9: 1,  # is player_color white
-        8: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-        7: {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black},
-        6: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-        5: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-        4: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-        3: {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty},
-        2: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white},
-        1: {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
-    }
+cpdef dict initial_game_board():
+    cdef:
+        int from_white = -1
+        int is_white = 1
+        str empty = 'e'
+        str white = 'w'
+        str black = 'b'
+        dict row_7And8 = {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black}
+        dict row_3To6 = {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty}
+        dict row_1And2 = {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
+        dict gameboard= {
+            10: from_white,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+            # equivalent to 0 if white's move, 1 if black's move
+            9: is_white,  # is player_color white
+            8: row_7And8,
+            7: row_7And8,
+            6: row_3To6,
+            5: row_3To6,
+            4: row_3To6,
+            3: row_3To6,
+            2: row_1And2,
+            1: row_1And2
+        }
+    return gameboard
 
-def new_game_board(board_state):
-    return {
+cpdef dict new_game_board(dict board_state):
+    cdef:
+        # int from_white = -1
+        # int is_white = 1
+        # str empty = 'e'
+        # str white = 'w'
+        # str black = 'b'
+        # dict row_7And8 = {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black}
+        # dict row_3To6 = {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty}
+        # dict row_1And2 = {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
+        dict gameboard= {
         10: board_state[10],  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
         # equivalent to 0 if white's move, 1 if black's move
         9: board_state[9],  # is player_color white
@@ -79,11 +95,14 @@ def new_game_board(board_state):
         2: {'a': board_state[2]['a'], 'b': board_state[2]['b'], 'c': board_state[2]['c'], 'd':board_state[2]['d'], 'e': board_state[2]['e'], 'f':board_state[2]['f'], 'g': board_state[2]['g'], 'h': board_state[2]['h']},
         1: {'a': board_state[1]['a'], 'b': board_state[1]['b'], 'c': board_state[1]['c'], 'd':board_state[1]['d'], 'e': board_state[1]['e'], 'f':board_state[1]['f'], 'g': board_state[1]['g'], 'h': board_state[1]['h']},
     }
+    return gameboard
+
 
 def initial_piece_arrays():
-    white_pieces = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2',
+
+    cdef list white_pieces = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2',
                          'h2', ]
-    black_pieces = ['a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7', 'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8',
+    cdef list black_pieces = ['a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7', 'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8',
                          'h8', ]
     return white_pieces, black_pieces
 #Note: not the same as move_piece in self_play_logs_to_datastructures; is white index now changes as we are sharing a board,
@@ -110,6 +129,45 @@ def move_piece(board_state, move, whose_move):
     assert (board_state != next_board_state)
 
     return next_board_state
+
+# cpdef move_piece_update_piece_arrays(dict board_state, str move_string, str whose_move):
+#     cdef:
+#         str empty = 'e'
+#         int white_move_index = 10
+#         int is_white_index = 9
+#         # str to
+#         # str _from
+#         dict next_board_state
+#         # str to_position
+#         str player_piece_to_remove
+#         str player_piece_to_add
+#         list move
+#
+#     remove_opponent_piece = False
+#     if move_string[2] == '-':
+#         move = move_string.split('-')
+#     else:
+#         move = move_string.split('x')#x for wanderer captures.
+#     _from = move[0].lower()
+#     to = move[1].lower()
+#     next_board_state = new_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
+#     to_position =  next_board_state[int(to[1])][to[0]]
+#     player_piece_to_remove = _from #this will always become empty
+#     player_piece_to_add = to
+#     next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
+#     next_board_state[int(_from[1])][_from[0]] = empty
+#     if whose_move == 'White':
+#         next_board_state[white_move_index] = 1
+#         next_board_state[is_white_index] = 0 #next move isn't white's
+#         if to_position == 'b':
+#             remove_opponent_piece = True
+#     else:
+#         next_board_state[white_move_index] = 0
+#         next_board_state[is_white_index] = 1 #since black made this move, white makes next move
+#         if to_position == 'w':
+#             remove_opponent_piece = True
+#     # assert (board_state != next_board_state)
+#     return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
 
 def move_piece_update_piece_arrays(board_state, move, whose_move):
     empty = 'e'
@@ -356,15 +414,19 @@ def enumerate_legal_moves(game_board, player_color):
                         legal_moves.append(possible_move)
     return legal_moves
 
-def enumerate_legal_moves_using_piece_arrays(node):
-    player_color = node['color']
-    game_board = node['game_board']
+cpdef list enumerate_legal_moves_using_piece_arrays(dict node):
+    cdef:
+        str player_color = node['color']
+        dict game_board = node['game_board']
+        list pieces
+        list columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+        list legal_moves = []
+        int row
+        str column
     if player_color == 'White':
         pieces = node['white_pieces']
     else: #player_color =='Black':
         pieces = node['black_pieces']
-    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    legal_moves = []
     for piece in pieces:
         row = int(piece[1])
         column = piece[0]
@@ -384,8 +446,8 @@ def enumerate_legal_moves_using_piece_arrays_nodeless(player_color, game_board, 
                 legal_moves.append(possible_move)
     return legal_moves
 
-def get_possible_moves(game_board, row, column, player_color):
-    possible_moves = [None]*3
+cpdef list get_possible_moves(dict game_board, int row, str column, str player_color):
+    cdef list possible_moves = [None]*3
 
     left_diagonal_move = check_left_diagonal_move(game_board, row, column, player_color)
     possible_moves[0]=left_diagonal_move
@@ -398,7 +460,7 @@ def get_possible_moves(game_board, row, column, player_color):
 
     return possible_moves
 
-def check_left_diagonal_move(game_board, row, column, player_color):
+cpdef check_left_diagonal_move(dict game_board, int row, str column, str player_color):
     left_columns = {'b':'a', 'c':'b', 'd':'c', 'e':'d', 'f':'e', 'g':'f', 'h':'g'}
     move = None
     if column != 'a':  # check for left diagonal move only if not already at far left
@@ -418,7 +480,7 @@ def check_left_diagonal_move(game_board, row, column, player_color):
                 move = '-'.join((_from, to))
     return move
 
-def check_forward_move(game_board, row, column, player_color):
+cpdef check_forward_move(dict game_board, int row, str column, str player_color):
     move = None
     _from = ''.join((column, str(row)))
     if player_color == 'White':
@@ -439,7 +501,7 @@ def check_forward_move(game_board, row, column, player_color):
 
     return move
 
-def check_right_diagonal_move(game_board, row, column, player_color):
+cpdef check_right_diagonal_move(dict game_board, int row, str column, str player_color):
     right_columns= {'a':'b', 'b':'c', 'c':'d', 'd':'e', 'e':'f', 'f':'g', 'g':'h'}
     move = None
     if column != 'h':  # check for right diagonal move only if not already at far right

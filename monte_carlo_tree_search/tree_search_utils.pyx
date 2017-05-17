@@ -138,22 +138,21 @@ cpdef void backpropagate_num_checked_children(dict node):
 
 
 
-def set_num_checked_children(node): #necessary for gameover kids: wouldn't have reported that they are expanded since another node may also be
-    count = 0
+cdef void set_num_checked_children(dict node): #necessary for gameover kids: wouldn't have reported that they are expanded since another node may also be
+    cdef:
+        int count = 0
+        dict child
     for child in node['children']:
         if child['subtree_checked']:
-            count+= 1
-    node['num_children_checked'] =count
-
-def subtract_child_wins_and_visits(node, child): #for pruning tree built by MCTS using async updates
-    parent = node
-    while parent is not None:
-        parent['wins'] -= child['wins']
-        parent['visits'] -= child['visits']
-        parent = parent['parent']
+            count += 1
+    node['num_children_checked'] = count
 
 
-def _crement_threads_checking_node(node, amount):
+cdef void _crement_threads_checking_node(dict node, int amount):
+    cdef:
+        dict parent
+        int num_children
+
     if amount == 0:
         node['threads_checking_node'] =0
     else:
@@ -188,17 +187,19 @@ def _crement_threads_checking_node(node, amount):
             update_num_children_being_checked(parent['parent'])
 
 
-def increment_threads_checking_node(node):
+cpdef void increment_threads_checking_node(dict node):
     _crement_threads_checking_node(node, 1)#
 
-def decrement_threads_checking_node(node):
+cpdef void decrement_threads_checking_node(dict node):
     _crement_threads_checking_node(node, -1)
 
-def reset_threads_checking_node(node):
+cpdef void reset_threads_checking_node(dict node):
     _crement_threads_checking_node(node, 0)
 
-def update_num_children_being_checked(node):
-    children_being_checked=0
+cdef void update_num_children_being_checked(dict node):
+    cdef:
+        int children_being_checked = 0
+        dict child
     if node['children'] is not None:
         for child in node['children']:
             if child['threads_checking_node'] > 0 or child['subtree_being_checked']:
@@ -288,15 +289,12 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
                     children_to_check = True
 
         if not children_to_check and best['win_status'] is False:  # all children were False (losers);
-            # print("RL Error: UCT shouldn't have chosen a subtree with children who have win statuses")
             for i in range(1, len(viable_children)):
                     child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think, sim_info)
                     if child_value > best_val:
                         best = viable_children[i]
                         best_val = child_value
 
-        # if best['children'] is None:
-        #     best['threads_checking_node'] += 1
     return best
 
 
@@ -312,125 +310,34 @@ cpdef choose_UCT_or_best_child(dict node, start_time, int time_to_think, dict si
     best = None  # shouldn't ever return None
     if num_children == 1:
         best = node['children'][0]
-    #
-    # elif node['color'] == sim_info.root['color'] and node['children'][0]['gameover']_visits <100 and node['children'][0]['win_status'] is None:#TODO ensure all childrenwerecheckedevenly?
-    #         best = node['children'][0]
-    #     close_val_children = []
-    #     for child in node['children']:
-    #         if child['win_status'] is None:
-    #             best = child
-    #             break
-    #     #TODO UCT Select from close val children?
-        # for child in node['children']:
-        #     if best['UCT_multiplier'] - child['UCT_multiplier'] <.10:
-        #         close_val_children.append(child)
-
-    # elif node is sim_info.root:
-    #     if num_children>1:
-    #         best = node['children'][sim_info.root_thread_counter%num_children]
-    #         sim_info.root_thread_counter+=1
-    # elif node['color'] =='Black':
-    #     best = None
-    #     # if node['children'] is not None:
-    #     #     if node['children'][0]['win_status'] is None:
-    #     #         best = node['children'][0]
-    #     for child in node['children']:
-    #         if child['win_status'] is None:
-    #             best = child
-    #             break
-    #     if best is None:
-    #         best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
-
     else:
-        # if node['color'] == sim_info.root['color']:
-        #     for child in node['children']:
-        #         if child['win_status'] is None and not child['subtree_being_checked'] and child['threads_checking_node'] <=0:
-        #             best = child
-        #             break
-        if node['best_child'] is not None: #return best child if not already previouslyexpanded
+        if node['best_child'] is not None:
             best_child = node['best_child']
             true_wins = best_child['gameover_wins']
-
             prior_prob = best_child['UCT_multiplier'] -1
             over_LCB = prior_prob>0.35
-            # under_UCB = (node['color'] != sim_info['root']['color'] and prior_prob<0.9) or (node['color'] == sim_info['root']['color'] and prior_prob<0.7)
             under_UCB = prior_prob <0.9
+
             if best_child['height'] > 20 and over_LCB:
                 threshold_gameover_visits = true_wins > 5000
             else:
                 threshold_gameover_visits= true_wins > 1000
 
             if threshold_gameover_visits and under_UCB:
-                winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 and over_LCB#wins less than losses and over our lower confidence bound (borrowed terminology)
+                meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 and over_LCB#wins less than losses and over our lower confidence bound (borrowed terminology)
             else:
-                winrate_threshold = True
+                meets_winrate_threshold = True
 
             best_child_can_be_searched = best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0
-            if best_child_can_be_searched and winrate_threshold :
+            if best_child_can_be_searched and meets_winrate_threshold :
                 best = best_child
             else:
                 best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
 
         elif node['children'] is not None: #if this node has children to choose from: should alwayshappen
             best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
-    return best  # because a win for me = a loss for child
-# def get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
-#
-#
-#
-#
-#     # # 03/11/2017 games actually good with this and no division, but annealing seems right?
-#     # stochasticity_for_multithreading = random.random()  #/2.4 # keep between [0,0.417] => [1, 1.417]; 1.414 ~ √2
-#     # stoch_for_NN_weighting = 1- (stochasticity_for_multithreading/4)#since this can get so huge in the beginning,
-#     # maybe bouncing it around will be good so threads don't knock into each other?
-#     # # #TODO test this. SEEMS like a good idea since it will explore early and exploit later
-#     # annealed_factor = 1 - (
-#     #     (start_time - time()) / time_to_think)  # starts at 1 and trends towards 0 as search proceeds
-#     # # with stochasticity multiplier between .5 and 1 so multithreading sees different values
-#     # stochasticity_for_multithreading = (1 - random.random() / 2) * max(0.25,
-#     #                                                                    annealed_factor)  # in printed stats games, probably never got to a low value
-#
-#     # stochasticity_for_multithreading = (random.random()*4) * max(0.25, annealed_factor) #in printed stats games, probably never got to a low value
-#
-#     # exploration_constant = 0.1 + stochasticity_for_multithreading # 1.414 ~ √2
-#     # exploration_constant =  stochasticity_for_multithreading # 1.414 ~ √2
-#     # if node['parent']['color'] ==sim_info.root['color']:#make black's moveexploremore?
-#     #     PUCT_exploration_constant = stochasticity_for_multithreading*1000#1000
-#     # else:
-#     PUCT_exploration_constant = 3#3*annealed_factor# stochasticity_for_multithreading
-#
-#
-#     # norm_wins, norm_visits,true_wins, true_losses = transform_wrt_overwhelming_amount(node, overwhelming_on=False)
-#     norm_wins = node['wins']
-#     norm_visits = node['visits']
-#     true_wins = node['gameover_wins']
-#
-#     total_gameovers = node['gameover_visits']
-#     true_losses = total_gameovers-true_wins
-#
-#     #TODO: problem: exploring lower ranked children when their gameover ratio is favorable. Stops exploring higher ranked children even though their long term ratios may improve and get higher UCT vals
-#     NN_prob = (node['UCT_multiplier'] -1)
-#
-#
-#     if total_gameovers > 10: #true_loss_rate > 0.2 and  or total_gameovers > 100OR keep exploring best child until it hits 100 gameovers? or node['parent']['color'] != sim_info.root['color']  or (node isnotnode['parent']['best_child'])
-#         prior_prob_weighting = NN_prob/10#.80 => .08 TODO should I? this may defeat the search a bit.
-#         norm_loss_rate = (true_losses/ total_gameovers)+ prior_prob_weighting
-#     else:
-#         norm_losses = (norm_visits-norm_wins)
-#         norm_loss_rate = norm_losses/norm_visits
-#
-#     PUCT_exploration = PUCT_exploration_constant*NN_prob*(sqrt(max(1, parent_visits-norm_visits))/(1+norm_visits)) #interchange norm visits with node visits
-#     sibling_visits = max(1, parent_visits-norm_visits)
-#     # with nogil:
-#     #  PUCT_exploration = calculate_PUCT(PUCT_exploration_constant, NN_prob, sibling_visits, norm_visits)
-#
-#     exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
-#
-#     # exploitation_factor = (node['visits'] - node['wins']) / node['visits']  # losses / visits of child = wins / visitsforparent
-#     # exploration_factor = exploration_constant * sqrt(log(1+parent_visits) / node['visits'])
-#     # UCT = (exploitation_factor + exploration_factor)
-#     PUCT = (exploitation_factor + PUCT_exploration)
-#     return PUCT # UCT + PUCT_exploration #* (node['UCT_multiplier'] ) #UCT from parent'sPOV
+    return best
+
 cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
 
 
@@ -763,46 +670,6 @@ def get_best_child(node_children, non_doomed = True):
             best_val_NN_scaled = 0
     return best, best_val_NN_scaled
 
-def get_best_most_visited_child(node_children):
-    k = 0
-    threshold_kids = []
-    best = None
-    best_visits = 0
-    best_val = 100
-    sorted_by_visit_count = sorted(node_children, key=lambda x: x['visits'], reverse=True)
-    for child in sorted_by_visit_count:
-        if best is not None:
-            if child['visits'] >0:
-                child_win_rate = child['wins'] /child['visits']
-                if best_visits == 0:
-                    visit_ratio = 1
-                    visit_difference = 0
-                else:
-                    visit_ratio = child['visits']/sorted_by_visit_count[0]['visits'] #should always be 1 or less than since we are walking down sortedarray
-                    visit_difference = abs(best_visits-child['visits'])
-                if child_win_rate < best_val and (visit_ratio > .5 or best_val > .5) and child_win_rate < .50:#Should be fine since the huge gameover values will make this ratio small compared to trees with no gameover values
-                    best = child
-                    best_val = child_win_rate
-                    best_visits = child['visits']
-        else:
-            best = child
-            if child['visits'] >0:
-                child_win_rate = child['wins'] /child['visits']
-                best_val = child_win_rate
-            best_visits = child['visits']
-    if best is None:
-        best = node_children[0]
-        best_val = 0
-    return best, best_val
-
-
-def random_eval(node):
-    amount = 1  # increase to pretend to outweigh NN?
-    win = randint(0, 1)
-    if win == 1:
-        update_tree_wins(node, amount)
-    else:
-        update_tree_losses(node, amount)
 
 def random_rollout(node):
     move = node
@@ -1077,16 +944,13 @@ cpdef void update_child(dict child, np.ndarray NN_output, dict sim_info, do_eval
             prior_value_multiplier = 1
             weighted_losses = normalized_value * prior_value_multiplier
             child['visits'] = 100 *prior_value_multiplier
-            # weighted_wins = (child['visits']-weighted_losses)
-            weighted_wins = ((
-                             child['visits'] - weighted_losses) ) #/ child['visits']  # may be a negative number if we are increasing probability **2
+            weighted_wins = ((child['visits'] - weighted_losses) ) #/ child['visits']  # may be a negative number if we are increasing probability **2
             child['wins'] =  min(weighted_wins, child['visits']*.75)#to prevent it from initializing it with a 0 win rate for really low probabilitynodes
             if weighted_wins < child['visits']*.70:
                 child['gameover_visits'] =child['visits']
                 child['gameover_wins'] =weighted_wins
 
             if sim_info['do_eval'] and do_eval:
-                # rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
                 eval_child(child)
 
 def random_to_depth_rollout(parent_to_update, depth=0): #bad because will not find every depth d child
@@ -1142,17 +1006,8 @@ cpdef void eval_children(list children):
     update_tree_losses(parent, parent_losses)
     update_tree_wins(parent, parent_wins)
 
-# def update_sum_for_normalization(parent, NN_output, child_indexes):
-#     #if we want to normalize over legal/top children vs relying on NN's softmax
-#     if parent.sum_for_children_normalization is None:
-#         parent.sum_for_children_normalization = sum(map(lambda child_index:
-#                                     NN_output[child_index],
-#                                                         child_indexes))
-#     return parent.sum_for_children_normalization
-
 #returns a sorted list (best to worst as evaluated by the NN) of the children as move indexes
 def get_top_children(NN_output, num_top=0):
-
     if num_top == 0:
         num_top = len(NN_output)
         full_sort = NN_output.argsort()[::-1][:num_top]

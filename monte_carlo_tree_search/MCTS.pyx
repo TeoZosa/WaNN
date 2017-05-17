@@ -6,7 +6,10 @@ from Breakthrough_Player.board_utils import get_best_move
 from Breakthrough_Player.policy_net_utils import instantiate_session_both, instantiate_session,  instantiate_session_both_128
 from tools.utils import convert_board_to_2d_matrix_POEB, batch_split_no_labels
 import re
-
+import numpy as np
+cimport numpy as np
+DTYPE = np.float32
+ctypedef np.float_t DTYPE_t
 
 class MCTS(object):
     #Option B: Traditional MCTS with expansion using policy net to generate prior values and prune tree
@@ -48,14 +51,6 @@ class MCTS(object):
             else:
                 self.previous_selected_child = previous_child
                 self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.last_opponent_move, self.height, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
-        # elif self.MCTS_type == 'Expansion MCTS' \
-        #     or self.MCTS_type == 'Expansion MCTS Pruning' \
-        #     or self.MCTS_type ==  'MCTS Asynchronous'\
-        #     or self.MCTS_type == 'Expansion MCTS Post-Pruning': #pruning with no depth expansions       #NOTE: seemed to be good initially
-        #
-        #     self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.last_opponent_move, self['height'], self.log_file, self.MCTS_type, self.policy_net, self.game_num)
-        # # elif self.MCTS_type == 'BFS MCTS':
-        # #     self.selected_child, move = MCTS_BFS_to_depth_limit(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.log_file, self.policy_net)
         elif self.MCTS_type == 'Policy':
             ranked_moves = self.policy_net.evaluate(game_board, player_color)
             move = get_best_move(game_board, ranked_moves)
@@ -94,6 +89,13 @@ class NeuralNetsCombined():
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):
+        cdef:
+            list moves = []
+            np.ndarray output
+            list board_representations
+            list inference_batches
+            int batch_size = 16384
+
         if not already_converted:
             if player_color is not None: #1 board + 1 color from direct policy net call
                 board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
@@ -104,9 +106,11 @@ class NeuralNetsCombined():
             board_representations = game_nodes
         if player_color is None and not already_converted:
             player_color = game_nodes[0]['color']
-        batch_size = 16384
-        inference_batches = batch_split_no_labels(board_representations, batch_size)
-        output = []
+
+        if len(board_representations) > batch_size:
+            inference_batches = batch_split_no_labels(board_representations, batch_size)
+        else:
+            inference_batches = [board_representations]
 
         if player_color == 'White':
             y_pred = self.output_white
@@ -114,12 +118,13 @@ class NeuralNetsCombined():
         else:
             y_pred = self.output_black
             X = self.input_black
-        # self.sess.close()
-        # self.sess, self.output, self.input = get_NN(player_color)
-
-        for batch in inference_batches:
-            predicted_moves = self.sess.run(y_pred, feed_dict={X: batch})
-            output.extend(predicted_moves)
+        if len(inference_batches) >1:
+            for batch in inference_batches:
+                predicted_moves = self.sess.run(y_pred, feed_dict={X: batch})
+                moves.extend(predicted_moves)
+            output = np.ndarray(moves, dtype =DTYPE)
+         else:
+            output = self.sess.run(y_pred, feed_dict={X: inference_batches[0]})
         return output
 
 class NeuralNetsCombined_128():
@@ -130,6 +135,12 @@ class NeuralNetsCombined_128():
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):
+        cdef:
+            list moves = []
+            np.ndarray output
+            list board_representations
+            list inference_batches
+            int batch_size = 16384
         if not already_converted:
             if player_color is not None: #1 board + 1 color from direct policy net call
                 board_representations = [convert_board_to_2d_matrix_POEB(game_nodes, player_color)]
@@ -140,9 +151,10 @@ class NeuralNetsCombined_128():
             board_representations = game_nodes
         if player_color is None and not already_converted:
             player_color = game_nodes[0]['color']
-        batch_size = 16384
-        inference_batches = batch_split_no_labels(board_representations, batch_size)
-        output = []
+        if len(board_representations) > batch_size:
+            inference_batches = batch_split_no_labels(board_representations, batch_size)
+        else:
+            inference_batches = [board_representations]
         if player_color == 'White':#Leave as is for WaNN as White. White == Winner, Black == All
             y_pred = self.output_white
             X = self.input_white
@@ -152,9 +164,13 @@ class NeuralNetsCombined_128():
         # self.sess.close()
         # self.sess, self.output, self.input = get_NN(player_color)
 
-        for batch in inference_batches:
-            predicted_moves = self.sess.run(y_pred, feed_dict={X: batch})
-            output.extend(predicted_moves)
+        if len(inference_batches) >1:
+            for batch in inference_batches:
+                predicted_moves = self.sess.run(y_pred, feed_dict={X: batch})
+                moves.extend(predicted_moves)
+            output = np.ndarray(moves, dtype =DTYPE)
+        else:
+            output = self.sess.run(y_pred, feed_dict={X: inference_batches[0]})
         return output
 
 class NeuralNet():

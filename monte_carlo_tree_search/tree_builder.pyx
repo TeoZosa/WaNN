@@ -127,7 +127,7 @@ cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int d
     cdef:
         list unfiltered_unexpanded_nodes
         list filtered_unexpanded_nodes = []
-        list NN_output
+        np.ndarray NN_output
         list unexpanded_children
         dict child
         dict parent
@@ -247,7 +247,7 @@ def offload_updates_to_separate_process(unexpanded_nodes,  depth, depth_limit, N
             sim_info['game_tree'].extend(expanded_parents)
     return unexpanded_children, over_time
 
-cdef do_updates_in_the_same_process(list unexpanded_nodes, int depth, int depth_limit, list NN_output, dict sim_info, lock):
+cdef do_updates_in_the_same_process(list unexpanded_nodes, int depth, int depth_limit, np.ndarray NN_output, dict sim_info, lock):
     cdef:
         list unexpanded_children = []
         int i

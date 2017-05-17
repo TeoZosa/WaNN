@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tools/utils.pyx" afterPath="$PROJECT_DIR$/tools/utils.pyx" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
@@ -202,10 +201,10 @@
           <file leaf-file-name="utils.pyx" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1016">
-                  <caret line="816" column="4" lean-forward="false" selection-start-line="816" selection-start-column="4" selection-end-line="816" selection-end-column="4" />
+                <state relative-caret-position="391">
+                  <caret line="23" column="53" lean-forward="true" selection-start-line="23" selection-start-column="53" selection-end-line="23" selection-end-column="53" />
                   <folding>
-                    <element signature="e#46#55#0" expanded="true" />
+                    <element signature="e#46#71#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
@@ -262,7 +261,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>sim_info.e</find>
       <find>sim_info.</find>
       <find>sim_info.r</find>
       <find>sim_info.ro</find>
@@ -292,6 +290,7 @@
       <find>1L &lt;&lt;</find>
       <find>NN_output</find>
       <find>cpdef</find>
+      <find>sys</find>
     </findStrings>
     <replaceStrings>
       <replace>['index']</replace>
@@ -1123,13 +1122,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00209" summary="Alphago Win scaling">
-      <created>1492713145943</created>
-      <option name="number" value="00209" />
-      <option name="presentableId" value="LOCAL-00209" />
-      <option name="project" value="LOCAL" />
-      <updated>1492713145943</updated>
-    </task>
     <task id="LOCAL-00210" summary="updated pruning and bottleneck">
       <created>1492713456204</created>
       <option name="number" value="00210" />
@@ -1466,7 +1458,14 @@
       <option name="project" value="LOCAL" />
       <updated>1495060295887</updated>
     </task>
-    <option name="localTasksCounter" value="258" />
+    <task id="LOCAL-00258" summary="documenting code">
+      <created>1495061129546</created>
+      <option name="number" value="00258" />
+      <option name="presentableId" value="LOCAL-00258" />
+      <option name="project" value="LOCAL" />
+      <updated>1495061129546</updated>
+    </task>
+    <option name="localTasksCounter" value="259" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1544,7 +1543,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="made subtree check flag backpropagate, removed best child choice (threads not respecting flags)" />
     <MESSAGE value="penalizing moves from key home row areas (domain knowledge :'( )" />
     <MESSAGE value="fixed penalization (ignore for game-saving moves)" />
     <MESSAGE value="fixed bug when children returned None" />
@@ -1569,7 +1567,8 @@
     <MESSAGE value="deleting old code" />
     <MESSAGE value="tightened up the NN Eval code" />
     <MESSAGE value="tidying up, documenting code" />
-    <option name="LAST_COMMIT_MESSAGE" value="tidying up, documenting code" />
+    <MESSAGE value="documenting code" />
+    <option name="LAST_COMMIT_MESSAGE" value="documenting code" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1653,11 +1652,6 @@
           <url>file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx</url>
           <line>401</line>
           <option name="timeStamp" value="648" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/tools/utils.pyx</url>
-          <line>2</line>
-          <option name="timeStamp" value="635" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/Breakthrough_Player/policy_net_utils.pyx</url>
@@ -2054,10 +2048,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1016">
-          <caret line="816" column="4" lean-forward="false" selection-start-line="816" selection-start-column="4" selection-end-line="816" selection-end-column="4" />
+        <state relative-caret-position="391">
+          <caret line="23" column="53" lean-forward="true" selection-start-line="23" selection-start-column="53" selection-end-line="23" selection-end-column="53" />
           <folding>
-            <element signature="e#46#55#0" expanded="true" />
+            <element signature="e#46#71#0" expanded="true" />
           </folding>
         </state>
       </provider>

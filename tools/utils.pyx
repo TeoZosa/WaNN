@@ -1,8 +1,8 @@
 #cython: language_level=3, boundscheck=False
 
-import os
-import fnmatch
-import sys
+from os import walk, path
+from fnmatch import filter as fnmatch_filter
+from sys import stderr
 
 # from cpython cimport array
 cimport  numpy as np
@@ -15,14 +15,14 @@ DTYPE = np.int8
 
 ctypedef np.int_t DTYPE_t
 
-def find_files(path, extension):
+def find_files(file_path, extension):
     """'
      Recursively find files at path with extension; pulled from StackOverflow
     ''"""#
 
-    for root, dirs, files in os.walk(path):
-        for file in fnmatch.filter(files, extension):
-            yield os.path.join(root, file)
+    for root, dirs, files in walk(file_path):
+        for file in fnmatch_filter(files, extension):
+            yield path.join(root, file)
 
 def batch_split(training_examples, labels, batch_size):#
     """'
@@ -469,7 +469,7 @@ cpdef str move_lookup_by_index(int index, str player_color):
         #               154: 'no-move'
 
     else:
-        print("ERROR: Please specify a valid player color", file=sys.stderr)
+        print("ERROR: Please specify a valid player color", file=stderr)
         exit(10)
     return transitions[index]
 #

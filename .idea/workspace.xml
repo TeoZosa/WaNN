@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="tightened up the NN Eval code">
+    <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" afterPath="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tools/utils.pyx" afterPath="$PROJECT_DIR$/tools/utils.pyx" />
     </list>
@@ -203,8 +202,8 @@
           <file leaf-file-name="utils.pyx" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1377">
-                  <caret line="106" column="12" lean-forward="false" selection-start-line="104" selection-start-column="3" selection-end-line="107" selection-end-column="9" />
+                <state relative-caret-position="1016">
+                  <caret line="816" column="4" lean-forward="false" selection-start-line="816" selection-start-column="4" selection-end-line="816" selection-end-column="4" />
                   <folding>
                     <element signature="e#46#55#0" expanded="true" />
                   </folding>
@@ -241,8 +240,8 @@
           <file leaf-file-name="MCTS.pyx" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="897">
-                  <caret line="134" column="70" lean-forward="false" selection-start-line="134" selection-start-column="70" selection-end-line="134" selection-end-column="70" />
+                <state relative-caret-position="523">
+                  <caret line="124" column="9" lean-forward="false" selection-start-line="120" selection-start-column="3" selection-end-line="124" selection-end-column="9" />
                   <folding>
                     <element signature="e#46#127#0" expanded="true" />
                   </folding>
@@ -388,9 +387,9 @@
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
-        <option value="$PROJECT_DIR$/tools/utils.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
+        <option value="$PROJECT_DIR$/tools/utils.pyx" />
       </list>
     </option>
   </component>
@@ -1124,13 +1123,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00208" summary="Cythonized, changed NN index sorting to bottleneck argpartsort, changed gameover value to 2^16">
-      <created>1492710902917</created>
-      <option name="number" value="00208" />
-      <option name="presentableId" value="LOCAL-00208" />
-      <option name="project" value="LOCAL" />
-      <updated>1492710902918</updated>
-    </task>
     <task id="LOCAL-00209" summary="Alphago Win scaling">
       <created>1492713145943</created>
       <option name="number" value="00209" />
@@ -1467,7 +1459,14 @@
       <option name="project" value="LOCAL" />
       <updated>1495058115135</updated>
     </task>
-    <option name="localTasksCounter" value="257" />
+    <task id="LOCAL-00257" summary="tidying up, documenting code">
+      <created>1495060295887</created>
+      <option name="number" value="00257" />
+      <option name="presentableId" value="LOCAL-00257" />
+      <option name="project" value="LOCAL" />
+      <updated>1495060295887</updated>
+    </task>
+    <option name="localTasksCounter" value="258" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1545,7 +1544,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="turned treenode into dict. Some bug somewhere?" />
     <MESSAGE value="made subtree check flag backpropagate, removed best child choice (threads not respecting flags)" />
     <MESSAGE value="penalizing moves from key home row areas (domain knowledge :'( )" />
     <MESSAGE value="fixed penalization (ignore for game-saving moves)" />
@@ -1570,7 +1568,8 @@
     <MESSAGE value="bug fixes" />
     <MESSAGE value="deleting old code" />
     <MESSAGE value="tightened up the NN Eval code" />
-    <option name="LAST_COMMIT_MESSAGE" value="tightened up the NN Eval code" />
+    <MESSAGE value="tidying up, documenting code" />
+    <option name="LAST_COMMIT_MESSAGE" value="tidying up, documenting code" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1986,10 +1985,31 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="309">
-          <caret line="1007" column="0" lean-forward="true" selection-start-line="1007" selection-start-column="0" selection-end-line="1007" selection-end-column="0" />
+        <state relative-caret-position="440">
+          <caret line="859" column="0" lean-forward="false" selection-start-line="859" selection-start-column="0" selection-end-line="859" selection-end-column="0" />
           <folding>
             <element signature="e#46#77#0" expanded="true" />
+            <marker date="1495056471600" expanded="true" signature="442:465" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="12975:14033" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="13684:14033" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="13774:14033" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="13935:14033" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="14391:15728" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="36569:36669" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="36605:36630" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="36643:36669" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="36679:36779" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="36715:36740" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="36754:36779" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="37748:37809" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="38117:38217" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="38153:38178" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="38191:38217" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="38227:38327" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="38263:38288" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="38302:38327" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="43700:43734" ph="..." />
+            <marker date="1495056471600" expanded="true" signature="45709:45803" ph="..." />
           </folding>
         </state>
       </provider>
@@ -2022,22 +2042,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1377">
-          <caret line="106" column="12" lean-forward="false" selection-start-line="104" selection-start-column="3" selection-end-line="107" selection-end-column="9" />
+        <state relative-caret-position="523">
+          <caret line="124" column="9" lean-forward="false" selection-start-line="120" selection-start-column="3" selection-end-line="124" selection-end-column="9" />
           <folding>
-            <element signature="e#46#55#0" expanded="true" />
+            <element signature="e#46#127#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx">
+    <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="897">
-          <caret line="134" column="70" lean-forward="false" selection-start-line="134" selection-start-column="70" selection-end-line="134" selection-end-column="70" />
+        <state relative-caret-position="1016">
+          <caret line="816" column="4" lean-forward="false" selection-start-line="816" selection-start-column="4" selection-end-line="816" selection-end-column="4" />
           <folding>
-            <element signature="e#46#127#0" expanded="true" />
+            <element signature="e#46#55#0" expanded="true" />
           </folding>
         </state>
       </provider>

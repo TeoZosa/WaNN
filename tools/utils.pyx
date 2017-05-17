@@ -14,12 +14,20 @@ import numpy as np
 DTYPE = np.int8
 
 ctypedef np.int_t DTYPE_t
-def find_files(path, extension):  # recursively find files at path with extension; pulled from StackOverflow
+
+def find_files(path, extension):
+    """'
+     Recursively find files at path with extension; pulled from StackOverflow
+    ''"""#
+
     for root, dirs, files in os.walk(path):
         for file in fnmatch.filter(files, extension):
             yield os.path.join(root, file)
 
-def batch_split(training_examples, labels, batch_size):# lazily split into training batches of size batch_size
+def batch_split(training_examples, labels, batch_size):#
+    """'
+     Lazily split into training batches of size batch_size
+    ''"""#
     X_train_batches = [training_examples[:batch_size]]
     y_train_batches = [labels[:batch_size]]
     remaining_x_train = training_examples[batch_size:]
@@ -45,6 +53,9 @@ def batch_split_no_labels(inference_examples, batch_size):# lazily split into tr
     return input_batch
 
 cpdef str win_lookup(int index):
+    """'
+     For value net result lookup
+    ''"""
     cdef str win
     if index == 0:
         win = 'Win'
@@ -125,8 +136,8 @@ cpdef str move_lookup_by_index(int index, str player_color):
                        'h6-g7', 'h6-h7', 'a7-a8', 'a7-b8', 'b7-a8', 'b7-b8', 'b7-c8', 'c7-b8', 'c7-c8', 'c7-d8',
                        'd7-c8', 'd7-d8', 'd7-e8', 'e7-d8', 'e7-e8', 'e7-f8', 'f7-e8', 'f7-f8', 'f7-g8', 'g7-f8',
                        'g7-g8', 'g7-h8', 'h7-g8', 'h7-h8', 'no-move']
-
-        # transitions = {0: 'a1-a2',
+#Visual guide
+        #              0: 'a1-a2',
         #              1: 'a1-b2',
         #              2: 'b1-a2',
         #              3: 'b1-b2',
@@ -280,7 +291,7 @@ cpdef str move_lookup_by_index(int index, str player_color):
         #              151: 'g7-h8',
         #              152: 'h7-g8',
         #              153: 'h7-h8',
-        #              154: 'no-move'}
+        #              154: 'no-move'
 
     elif player_color.lower() == 'Black'.lower():
         transitions = ['h8-h7', 'h8-g7', 'g8-h7', 'g8-g7', 'g8-f7', 'f8-g7', 'f8-f7', 'f8-e7', 'e8-f7', 'e8-e7',
@@ -299,9 +310,9 @@ cpdef str move_lookup_by_index(int index, str player_color):
                        'a3-b2', 'a3-a2', 'h2-h1', 'h2-g1', 'g2-h1', 'g2-g1', 'g2-f1', 'f2-g1', 'f2-f1', 'f2-e1',
                        'e2-f1', 'e2-e1', 'e2-d1', 'd2-e1', 'd2-d1', 'd2-c1', 'c2-d1', 'c2-c1', 'c2-b1', 'b2-c1',
                        'b2-b1', 'b2-a1', 'a2-b1', 'a2-a1', 'no-move']
+#Visual guide
 
-
-        # transitions = {0: 'h8-h7',
+        #               0: 'h8-h7',
         #               1: 'h8-g7',
         #               2: 'g8-h7',
         #               3: 'g8-g7',
@@ -455,16 +466,18 @@ cpdef str move_lookup_by_index(int index, str player_color):
         #               151: 'b2-a1',
         #               152: 'a2-b1',
         #               153: 'a2-a1',
-        #               154: 'no-move'}
+        #               154: 'no-move'
 
     else:
-        # transitions = []
         print("ERROR: Please specify a valid player color", file=sys.stderr)
         exit(10)
     return transitions[index]
 #
 
 def generate_move_lookup():
+    """'
+    generates the lookup tables for move_look_by_index and index_lookup_by_move 
+    ''"""#
     chars = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     white_transitions = []
     for k in range (1, 9): #white's moves
@@ -500,6 +513,9 @@ def generate_move_lookup():
     return white_transitions, black_transitions
 
 cpdef dict initial_game_board():
+    """'
+    generates an initial game board
+    ''"""#
     cdef:
         int from_white = -1
         int is_white = 1
@@ -528,6 +544,10 @@ cpdef dict initial_game_board():
 
 
 cpdef np.ndarray convert_board_to_2d_matrix_POEB(dict game_board, str player_color):
+    """'
+    converts a game board to player POV representations and converts that into the corresponding neural network representation
+    returns the neural network input representation of the game board
+    ''"""#
     # Note: not the same as reflect_board_state in self_play_logs_to_datastructures;
     cdef:
         # the board state; state[1] is the win or loss_init value, state [2] is the transition vector
@@ -618,6 +638,10 @@ def generate_transition_vector(to, _from, player_color):
     return transition_vector
 
 def generate_binary_vector(state, player_color, what_to_filter):
+    """'
+    converts a game board to a one-hot vector representation
+    returns the one-hot vector representation of the game board
+    ''"""#
     bias = 1
     binary_vector = []
     is_white_index = 9
@@ -790,6 +814,10 @@ def generate_binary_vector(state, player_color, what_to_filter):
     return binary_vector
 
 cpdef np.ndarray generate_binary_plane_POEB(dict state, str player_color):
+    """'
+    converts a game board to player POV representations and converts that into the corresponding neural network representation
+    returns the neural network input representation of the game board
+    ''"""#
     #TODO consider reshaping for C++ input; could also put it into 3d matrix on the fly,
     # ex. if player == board[i][j], X[n][i][j] = [1, 0, 0, 1]
     cdef:

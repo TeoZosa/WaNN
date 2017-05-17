@@ -122,12 +122,10 @@ class NeuralNetsCombined_128():
     Neural Net object. 
     Holds the Tensorflow session and input/output ends of the graph. 
     evaluate performs data handling prior to submitting work to the Tensorflow graph.
-    ''"""
-    #initialize the Neural Net (Only works with combined net for now)
+    ''"""    #initialize the Neural Net (Only works with combined net for now)
     def __init__(self):
         self.sess, self.output_white, self.input_white, self.output_black, self.input_black= instantiate_session_both_128()
 
-    #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):
         """'
         evaluate takes nodes to be evaluated and passes them to the Tensorflow graph.

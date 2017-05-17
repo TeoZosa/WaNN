@@ -26,7 +26,7 @@ def find_files(file_path, extension):
 
 def batch_split(training_examples, labels, batch_size):#
     """'
-     Lazily split into training batches of size batch_size
+     Lazily split examples and labels into training batches of size batch_size
     ''"""#
     X_train_batches = [training_examples[:batch_size]]
     y_train_batches = [labels[:batch_size]]
@@ -42,7 +42,10 @@ def batch_split(training_examples, labels, batch_size):#
         y_train_batches.append(remaining_y_train)
     return X_train_batches, y_train_batches
 
-def batch_split_no_labels(inference_examples, batch_size):# lazily split into training batches of size batch_size
+def batch_split_no_labels(inference_examples, batch_size):
+    """'
+     Lazily split examples into training batches of size batch_size
+    ''"""#
     input_batch = [inference_examples[:batch_size]]
     remaining_inputs = inference_examples[batch_size:]
     for i in range(1, len(inference_examples) // batch_size):

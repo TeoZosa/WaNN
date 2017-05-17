@@ -140,7 +140,11 @@ cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int d
         #     if unexpanded_nodes[0] is None:
         #         True
         unfiltered_unexpanded_nodes = unexpanded_nodes
-        if sim_info['root']['win_status'] is not None:
+        if sim_info['root'] is not None:
+            win_bool = sim_info['root']['win_status'] is None
+        else:
+            win_bool = False
+        if win_bool:
             for node in unexpanded_nodes:
                 if node['children'] is None and node['win_status'] is None:
                     filtered_unexpanded_nodes.append(node)

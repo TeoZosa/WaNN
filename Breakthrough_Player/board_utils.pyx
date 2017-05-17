@@ -1,6 +1,6 @@
 #cython: language_level=3, boundscheck=False
 
-from tools import utils
+from tools.utils import move_lookup_by_index, generate_transition_vector #, initial_game_board
 import sys
 import random
 import pandas as pd
@@ -27,32 +27,10 @@ def debug_game_board():
         1: {'a': empty, 'b': white, 'c': white, 'd': white, 'e': empty, 'f': white, 'g': white, 'h': empty}
     }
 
-cpdef dict initial_game_board():
-    cdef:
-        int from_white = -1
-        int is_white = 1
-        str empty = 'e'
-        str white = 'w'
-        str black = 'b'
-        dict row_7And8 = {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black}
-        dict row_3To6 = {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty}
-        dict row_1And2 = {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
-        dict gameboard= {
-            10: from_white,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
-            # equivalent to 0 if white's move, 1 if black's move
-            9: is_white,  # is player_color white
-            8: row_7And8,
-            7: row_7And8,
-            6: row_3To6,
-            5: row_3To6,
-            4: row_3To6,
-            3: row_3To6,
-            2: row_1And2,
-            1: row_1And2
-        }
-    return gameboard
-
-cpdef dict new_game_board(dict board_state):
+cpdef dict copy_game_board(dict game_board):
+    """'
+     Returns a copy of the input game board
+    ''"""#
     cdef:
         # int from_white = -1
         # int is_white = 1
@@ -62,29 +40,33 @@ cpdef dict new_game_board(dict board_state):
         # dict row_7And8 = {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black}
         # dict row_3To6 = {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty}
         # dict row_1And2 = {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
-        dict gameboard= {
-        10: board_state[10],  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+        dict game_board = {
+        10: game_board[10],  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
         # equivalent to 0 if white's move, 1 if black's move
-        9: board_state[9],  # is player_color white
-        8: {'a': board_state[8]['a'], 'b': board_state[8]['b'], 'c': board_state[8]['c'], 'd':board_state[8]['d'], 'e': board_state[8]['e'], 'f':board_state[8]['f'], 'g': board_state[8]['g'], 'h': board_state[8]['h']},
-        7: {'a': board_state[7]['a'], 'b': board_state[7]['b'], 'c': board_state[7]['c'], 'd':board_state[7]['d'], 'e': board_state[7]['e'], 'f':board_state[7]['f'], 'g': board_state[7]['g'], 'h': board_state[7]['h']},
-        6: {'a': board_state[6]['a'], 'b': board_state[6]['b'], 'c': board_state[6]['c'], 'd':board_state[6]['d'], 'e': board_state[6]['e'], 'f':board_state[6]['f'], 'g': board_state[6]['g'], 'h': board_state[6]['h']},
-        5: {'a': board_state[5]['a'], 'b': board_state[5]['b'], 'c': board_state[5]['c'], 'd':board_state[5]['d'], 'e': board_state[5]['e'], 'f':board_state[5]['f'], 'g': board_state[5]['g'], 'h': board_state[5]['h']},
-        4: {'a': board_state[4]['a'], 'b': board_state[4]['b'], 'c': board_state[4]['c'], 'd':board_state[4]['d'], 'e': board_state[4]['e'], 'f':board_state[4]['f'], 'g': board_state[4]['g'], 'h': board_state[4]['h']},
-        3: {'a': board_state[3]['a'], 'b': board_state[3]['b'], 'c': board_state[3]['c'], 'd':board_state[3]['d'], 'e': board_state[3]['e'], 'f':board_state[3]['f'], 'g': board_state[3]['g'], 'h': board_state[3]['h']},
-        2: {'a': board_state[2]['a'], 'b': board_state[2]['b'], 'c': board_state[2]['c'], 'd':board_state[2]['d'], 'e': board_state[2]['e'], 'f':board_state[2]['f'], 'g': board_state[2]['g'], 'h': board_state[2]['h']},
-        1: {'a': board_state[1]['a'], 'b': board_state[1]['b'], 'c': board_state[1]['c'], 'd':board_state[1]['d'], 'e': board_state[1]['e'], 'f':board_state[1]['f'], 'g': board_state[1]['g'], 'h': board_state[1]['h']},
+        9: game_board[9],  # is player_color white
+        8: {'a': game_board[8]['a'], 'b': game_board[8]['b'], 'c': game_board[8]['c'], 'd':game_board[8]['d'], 'e': game_board[8]['e'], 'f':game_board[8]['f'], 'g': game_board[8]['g'], 'h': game_board[8]['h']},
+        7: {'a': game_board[7]['a'], 'b': game_board[7]['b'], 'c': game_board[7]['c'], 'd':game_board[7]['d'], 'e': game_board[7]['e'], 'f':game_board[7]['f'], 'g': game_board[7]['g'], 'h': game_board[7]['h']},
+        6: {'a': game_board[6]['a'], 'b': game_board[6]['b'], 'c': game_board[6]['c'], 'd':game_board[6]['d'], 'e': game_board[6]['e'], 'f':game_board[6]['f'], 'g': game_board[6]['g'], 'h': game_board[6]['h']},
+        5: {'a': game_board[5]['a'], 'b': game_board[5]['b'], 'c': game_board[5]['c'], 'd':game_board[5]['d'], 'e': game_board[5]['e'], 'f':game_board[5]['f'], 'g': game_board[5]['g'], 'h': game_board[5]['h']},
+        4: {'a': game_board[4]['a'], 'b': game_board[4]['b'], 'c': game_board[4]['c'], 'd':game_board[4]['d'], 'e': game_board[4]['e'], 'f':game_board[4]['f'], 'g': game_board[4]['g'], 'h': game_board[4]['h']},
+        3: {'a': game_board[3]['a'], 'b': game_board[3]['b'], 'c': game_board[3]['c'], 'd':game_board[3]['d'], 'e': game_board[3]['e'], 'f':game_board[3]['f'], 'g': game_board[3]['g'], 'h': game_board[3]['h']},
+        2: {'a': game_board[2]['a'], 'b': game_board[2]['b'], 'c': game_board[2]['c'], 'd':game_board[2]['d'], 'e': game_board[2]['e'], 'f':game_board[2]['f'], 'g': game_board[2]['g'], 'h': game_board[2]['h']},
+        1: {'a': game_board[1]['a'], 'b': game_board[1]['b'], 'c': game_board[1]['c'], 'd':game_board[1]['d'], 'e': game_board[1]['e'], 'f':game_board[1]['f'], 'g': game_board[1]['g'], 'h': game_board[1]['h']},
     }
-    return gameboard
+    return game_board
 
 
 def initial_piece_arrays():
-
+    """'
+     Returns the initial piece arrays
+    ''"""#
     cdef list white_pieces = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1', 'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2',
                          'h2', ]
     cdef list black_pieces = ['a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7', 'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8',
                          'h8', ]
     return white_pieces, black_pieces
+
+
 #Note: not the same as move_piece in self_play_logs_to_datastructures; is white index now changes as we are sharing a board,
 #so player U opponent = self_play_log_board with is_white_index changing based on who owns the board
 def move_piece(board_state, move, whose_move):
@@ -97,7 +79,7 @@ def move_piece(board_state, move, whose_move):
         move = move.split('x')#x for wanderer captures.
     _from = move[0].lower()
     to = move[1].lower()
-    next_board_state = new_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
+    next_board_state = copy_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
     next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
     next_board_state[int(_from[1])][_from[0]] = empty
     if whose_move == 'White':
@@ -122,7 +104,7 @@ def move_piece_update_piece_arrays(board_state, move, whose_move):
         move = move.split('x')#x for wanderer captures.
     _from = move[0].lower()
     to = move[1].lower()
-    next_board_state = new_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
+    next_board_state = copy_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
     to_position =  next_board_state[int(to[1])][to[0]]
     player_piece_to_remove = _from #this will always become empty
     player_piece_to_add = to
@@ -315,7 +297,7 @@ def get_best_move(game_board, policy_net_output):
     legal_move_indexes = convert_legal_moves_into_policy_net_indexes(legal_moves, player_color)
     for move in ranked_move_indexes:#iterate over moves from best to worst and pick the first legal move; will terminate before loop ends
         if move in legal_move_indexes:
-            return utils.move_lookup_by_index(move, player_color)
+            return move_lookup_by_index(move, player_color)
 
 def get_one_of_the_best_moves(game_board, policy_net_output): #if we want successful stochasticity in pure policy net moves
     player_color_index = 9
@@ -339,7 +321,7 @@ def get_one_of_the_best_moves(game_board, policy_net_output): #if we want succes
             if move_val/best_move_val > 0.9: #if within 10% of best_move_val
                 best_moves.append(move)
     a_best_move = random.sample(best_moves, 1)[0]
-    return utils.move_lookup_by_index(a_best_move, player_color)
+    return move_lookup_by_index(a_best_move, player_color)
 
 def enumerate_legal_moves(game_board, player_color):
     if player_color == 'White':
@@ -463,7 +445,7 @@ cpdef check_right_diagonal_move(dict game_board, int row, str column, str player
 
 def convert_legal_moves_into_policy_net_indexes(legal_moves, player_color):
     return [move.index(1) for move in list(map(lambda move:
-                    utils.generate_transition_vector(move['To'], move['From'], player_color), legal_moves))]
+                    generate_transition_vector(move['To'], move['From'], player_color), legal_moves))]
 
 
 # check for gameover (white in row 8; black in row 1); check in between moves

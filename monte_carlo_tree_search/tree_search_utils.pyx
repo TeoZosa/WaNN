@@ -7,7 +7,7 @@ from libcpp cimport bool
 from random import sample, randint
 from bottleneck import argpartition
 from tools.utils import move_lookup_by_index
-from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, new_game_board
+from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, copy_game_board
 # from time import time
 cimport numpy as np
 
@@ -683,7 +683,7 @@ def random_rollout(node):
     return result
 
 def real_random_rollout(node, end_of_game=True):
-    local_board = new_game_board(node['game_board'])
+    local_board = copy_game_board(node['game_board'])
     current_color = player_color = node['color']
     local_white_pieces = node['white_pieces'][:]
     local_black_pieces = node['black_pieces'][:]

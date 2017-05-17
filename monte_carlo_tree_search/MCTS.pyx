@@ -12,14 +12,14 @@ DTYPE = np.float32
 ctypedef np.float_t DTYPE_t
 
 class MCTS(object):
-    #Option B: Traditional MCTS with expansion using policy net to generate prior values and prune tree
-    # start with root and put in NN queue, (level 0)
-    # while time to think,
-    # 1. MCTS search to find the best move
-    # 2. When we reach a leaf node, expand, evaluate with policy net, prune and update prior values on children
-    # 3. keep searching to desired depth (final depth = depth at expansion + depth_limit)
-    # 4. do random rollouts. repeat 1.
-
+    """'
+    Monte Carlo Tree Object. The interface between breakthrough_player (engine) and the computer players. 
+    Stores relevant game info for the tree search. 
+        If WaNN,  holds the tree info in between moves.
+        If Wanderer, receives Wanderer's text output from the afferent end of the pipe
+        If policy net, just calls the  neural net. 
+     
+    ''"""
     def __init__(self, depth_limit, time_to_think, color, MCTS_type, MCTS_log_file, neural_net):
         self.time_to_think = time_to_think
         self.depth_limit = depth_limit
@@ -45,7 +45,7 @@ class MCTS(object):
             or self.MCTS_type == 'Expansion MCTS' \
             or self.MCTS_type == 'Expansion MCTS Pruning' \
             or self.MCTS_type ==  'MCTS Asynchronous'\
-            or self.MCTS_type == 'Expansion MCTS Post-Pruning': #pruning plus depth expansions      #NOTE: good in theory, untested
+            or self.MCTS_type == 'Expansion MCTS Post-Pruning': #TODO remove references to deprecated versions
             if background_search:
                 _, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, self.previous_selected_child, self.last_opponent_move, self.height-1, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
             else:
@@ -55,31 +55,21 @@ class MCTS(object):
             ranked_moves = self.policy_net.evaluate(game_board, player_color)
             move = get_best_move(game_board, ranked_moves)
         elif self.MCTS_type == 'Wanderer':
-            # sleep(self.time_to_think)
             if self.color == 'White':
-                move_regex = re.compile(r".*play\sw\s([a-h]\d.[a-h]\d).*",
-                                        re.IGNORECASE)
+                move_regex = re.compile(r".*play\sw\s([a-h]\d.[a-h]\d).*", re.IGNORECASE)
                 self.policy_net.expect('play w.*', timeout=200)
-
-                move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
-                print(move, file=self.log_file)
-                move = move_regex.search(move)
-                if move is not None:
-                    move = move.group(1)
             else:
-                move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",
-                                        re.IGNORECASE)
+                move_regex = re.compile(r".*play\sb\s([a-h]\d.[a-h]\d).*",re.IGNORECASE)
                 self.policy_net.expect('play b.*', timeout=200)
-
-                move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
-                print(move, file=self.log_file)
-                move = move_regex.search(move)
-                if move is not None:
-                    move = move.group(1)
+            move = self.policy_net.before.decode('utf-8') + self.policy_net.after.decode('utf-8')
+            print(move, file=self.log_file)
+            move = move_regex.search(move)
+            if move is not None:
+                move = move.group(1)
 
         return move
 
-
+#TODO integrate these different neural network classes together to reduce code duplication/remove the ones we don't use
 
 class NeuralNetsCombined():
 
@@ -122,19 +112,28 @@ class NeuralNetsCombined():
             for batch in inference_batches:
                 predicted_moves = self.sess.run(y_pred, feed_dict={X: batch})
                 moves.extend(predicted_moves)
-            output = np.ndarray(moves, dtype =DTYPE)
-         else:
+            output = np.ndarray(moves, dtype = DTYPE)
+        else:
             output = self.sess.run(y_pred, feed_dict={X: inference_batches[0]})
         return output
 
 class NeuralNetsCombined_128():
-
+    """'
+    Neural Net object. 
+    Holds the Tensorflow session and input/output ends of the graph. 
+    evaluate performs data handling prior to submitting work to the Tensorflow graph.
+    ''"""
     #initialize the Neural Net (Only works with combined net for now)
     def __init__(self):
         self.sess, self.output_white, self.input_white, self.output_black, self.input_black= instantiate_session_both_128()
 
     #evaluate a list of game nodes or a game board directly (must pass in player_color in the latter case)
     def evaluate(self, game_nodes, player_color=None, already_converted=False):
+        """'
+        evaluate takes nodes to be evaluated and passes them to the Tensorflow graph.
+        Performs data handling prior to submitting work to the Tensorflow graph.
+        returns np.ndarray of neural net results, such that output element i contains the probability distribution over input element i's transitions
+        ''"""
         cdef:
             list moves = []
             np.ndarray output
@@ -172,6 +171,8 @@ class NeuralNetsCombined_128():
         else:
             output = self.sess.run(y_pred, feed_dict={X: inference_batches[0]})
         return output
+
+#TODO: Deprecated. Remove.
 
 class NeuralNet():
 

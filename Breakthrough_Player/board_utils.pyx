@@ -1,30 +1,10 @@
 #cython: language_level=3, boundscheck=False
 
-# import copy
 from tools import utils
 import sys
 import random
 import pandas as pd
-# from Breakthrough_Player.policy_net_utils import call_policy_net
 
-# def generate_policy_net_moves(game_board, player_color):
-#     board_representation = utils.convert_board_to_2d_matrix_POEB(game_board, player_color)
-#     return call_policy_net(board_representation)
-
-# def get_NN(separate=True):
-#     if separate:
-#         return instantiate_session_both()
-#     else:
-#         return  instantiate_session()
-
-# def generate_policy_net_moves_batch(game_nodes, batch_size=16384):
-#
-#     board_representations = [utils.convert_board_to_2d_matrix_POEB(node['game_board'], node['color']) for node in game_nodes]
-#     inference_batches = utils.batch_split_no_labels(board_representations, batch_size)
-#     output = []
-#     for batch in inference_batches:
-#         output.extend(call_policy_net(batch))
-#     return output
 def debug_piece_arrays():
     white_pieces = ['a6', 'c5', 'b4', 'f4', 'f3', 'g4', 'd2', 'd1', 'c1', 'b1', 'f1', 'g1']
     black_pieces = ['b8', 'c8', 'f8', 'g8', 'c7', 'c6', 'e6', 'f6', 'g6', 'f5', 'c4', 'e3']
@@ -130,44 +110,6 @@ def move_piece(board_state, move, whose_move):
 
     return next_board_state
 
-# cpdef move_piece_update_piece_arrays(dict board_state, str move_string, str whose_move):
-#     cdef:
-#         str empty = 'e'
-#         int white_move_index = 10
-#         int is_white_index = 9
-#         # str to
-#         # str _from
-#         dict next_board_state
-#         # str to_position
-#         str player_piece_to_remove
-#         str player_piece_to_add
-#         list move
-#
-#     remove_opponent_piece = False
-#     if move_string[2] == '-':
-#         move = move_string.split('-')
-#     else:
-#         move = move_string.split('x')#x for wanderer captures.
-#     _from = move[0].lower()
-#     to = move[1].lower()
-#     next_board_state = new_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
-#     to_position =  next_board_state[int(to[1])][to[0]]
-#     player_piece_to_remove = _from #this will always become empty
-#     player_piece_to_add = to
-#     next_board_state[int(to[1])][to[0]] = next_board_state[int(_from[1])][_from[0]]
-#     next_board_state[int(_from[1])][_from[0]] = empty
-#     if whose_move == 'White':
-#         next_board_state[white_move_index] = 1
-#         next_board_state[is_white_index] = 0 #next move isn't white's
-#         if to_position == 'b':
-#             remove_opponent_piece = True
-#     else:
-#         next_board_state[white_move_index] = 0
-#         next_board_state[is_white_index] = 1 #since black made this move, white makes next move
-#         if to_position == 'w':
-#             remove_opponent_piece = True
-#     # assert (board_state != next_board_state)
-#     return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
 
 def move_piece_update_piece_arrays(board_state, move, whose_move):
     empty = 'e'

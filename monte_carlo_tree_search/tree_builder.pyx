@@ -15,6 +15,7 @@ from sys import stdout
 from time import time
 from random import sample
 cimport numpy as np
+from numpy cimport ndarray
 
 class NoDaemonProcess(Process):
     # make 'daemon' attribute always return False
@@ -32,100 +33,107 @@ class MyPool(pool.Pool):  # Had to make a special class to allow for an inner pr
 
 
 
-def build_game_tree(player_color, depth, unvisited_queue, depth_limit): #first-pass BFS to enumerate all the concrete nodes we want to keep track of/run through policy net
-    if depth < depth_limit: # play game at this root to depth limit
-       visited_queue = visit_to_depth_limit(player_color, depth, unvisited_queue, depth_limit)
-    else: #reached depth limit;
-       update_bottom_of_tree(unvisited_queue)
-       visited_queue = [] #don't return bottom of tree so it doesn't run inference on these nodes
-    return visited_queue
+# def build_game_tree(player_color, depth, unvisited_queue, depth_limit): #first-pass BFS to enumerate all the concrete nodes we want to keep track of/run through policy net
+#     if depth < depth_limit: # play game at this root to depth limit
+#        visited_queue = visit_to_depth_limit(player_color, depth, unvisited_queue, depth_limit)
+#     else: #reached depth limit;
+#        update_bottom_of_tree(unvisited_queue)
+#        visited_queue = [] #don't return bottom of tree so it doesn't run inference on these nodes
+#     return visited_queue
+#
+#
+# def visit_to_depth_limit(player_color, depth, unvisited_queue, depth_limit):
+#
+#     unvisited_children = visit_all_nodes_and_expand_multithread(unvisited_queue, player_color)
+#     visited_queue = unvisited_queue  # all queue members have now been visited
+#
+#     if len(unvisited_children) > 0:  # if children to visit
+#         # visit children
+#         opponent_color = get_opponent_color(player_color)
+#         visited_queue.extend(build_game_tree(opponent_color, depth + 1, unvisited_children,
+#                                              depth_limit)) #TODO: is recursion taking too long/too much stack space?
+#         # else: game over taken care of in visit
+#     return visited_queue
+#
+#
+# def update_bottom_of_tree(unvisited_queue):#don't do this as it will mark the bottom as losses
+#     #NN will take care of these wins.
+#     for node in unvisited_queue:  # bottom of tree, so percolate visits to the top
+#         random_rollout(node)
+#         #don't return bottom of tree so it doesn't run inference on these nodes
+#     # visited_queue = unvisited_queue
+#     # return visited_queue
 
 
-def visit_to_depth_limit(player_color, depth, unvisited_queue, depth_limit):
 
-    unvisited_children = visit_all_nodes_and_expand_multithread(unvisited_queue, player_color)
-    visited_queue = unvisited_queue  # all queue members have now been visited
-
-    if len(unvisited_children) > 0:  # if children to visit
-        # visit children
-        opponent_color = get_opponent_color(player_color)
-        visited_queue.extend(build_game_tree(opponent_color, depth + 1, unvisited_children,
-                                             depth_limit)) #TODO: is recursion taking too long/too much stack space?
-        # else: game over taken care of in visit
-    return visited_queue
-
-
-def update_bottom_of_tree(unvisited_queue):#don't do this as it will mark the bottom as losses
-    #NN will take care of these wins.
-    for node in unvisited_queue:  # bottom of tree, so percolate visits to the top
-        random_rollout(node)
-        #don't return bottom of tree so it doesn't run inference on these nodes
-    # visited_queue = unvisited_queue
-    # return visited_queue
-
-
-
-def visit_all_nodes_and_expand_single_thread(unvisited_queue, player_color):
-    unvisited_children = []
-    for this_root_node in unvisited_queue:  # if empty=> nothing to visit;
-       unvisited_child_nodes= visit_single_node_and_expand([this_root_node, player_color])
-       unvisited_children.extend(unvisited_child_nodes)
-    return unvisited_children
-
-def visit_all_nodes_and_expand_multithread(unvisited_queue, player_color):
-    unvisited_children = []
-    arg_lists = [[node, player_color] for node in unvisited_queue]
-    processes = Pool(processes=7)#prevent threads from taking up too much memory before joining
-    unvisited_children_separated = processes.map(visit_single_node_and_expand, arg_lists)  # synchronized with unvisited queue
-    processes.close()
-    processes.join()
-    for i in range (0, len(unvisited_children_separated)):#does this still outweigh just single threading?
-        child_nodes = unvisited_children_separated[i]
-        parent_node = arg_lists[i][0]
-        for child in child_nodes:
-            child['parent'] =parent_node
-        parent_node['children'] =child_nodes
-        unvisited_children.extend(child_nodes)
-    return unvisited_children
-
-def visit_single_node_and_expand(node_and_color):
-    node = node_and_color[0]
-    unvisited_children = expand_node(node)
-    return unvisited_children #necessary if multiprocessing from above
-
-def visit_single_node_and_expand_no_lookahead(node_and_color):
-    node = node_and_color[0]
-    node_color = node_and_color[1]
-    unvisited_children = []
-    game_board = node['game_board']
-    is_game_over, winner_color = game_over(game_board)
-    if is_game_over:  # only useful at end of game
-        set_game_over_values(node)
-    else:  # expand node, adding children to parent
-        unvisited_children = expand_node(node)
-    return unvisited_children
-
-def expand_node(parent_node, rollout=False):
-    children_as_moves = enumerate_legal_moves_using_piece_arrays(parent_node)
-    child_nodes = []
-    children_win_statuses = []
-    for child_as_move in children_as_moves:  # generate children
-        move = child_as_move['From'] + r'-' + child_as_move['To']
-        child_node = init_unique_child_node_and_board(move, parent_node)
-        check_for_winning_move(child_node, rollout) #1-step lookahead for gameover
-        children_win_statuses.append(child_node['win_status'])
-        child_nodes.append(child_node)
-    set_win_status_from_children(parent_node, children_win_statuses)
-    if parent_node['children'] is None: #if another thread didn't expand and update thisnode
-       parent_node['children'] =child_nodes
-    return child_nodes
+# def visit_all_nodes_and_expand_single_thread(unvisited_queue, player_color):
+#     unvisited_children = []
+#     for this_root_node in unvisited_queue:  # if empty=> nothing to visit;
+#        unvisited_child_nodes= visit_single_node_and_expand([this_root_node, player_color])
+#        unvisited_children.extend(unvisited_child_nodes)
+#     return unvisited_children
+#
+# def visit_all_nodes_and_expand_multithread(unvisited_queue, player_color):
+#     unvisited_children = []
+#     arg_lists = [[node, player_color] for node in unvisited_queue]
+#     processes = Pool(processes=7)#prevent threads from taking up too much memory before joining
+#     unvisited_children_separated = processes.map(visit_single_node_and_expand, arg_lists)  # synchronized with unvisited queue
+#     processes.close()
+#     processes.join()
+#     for i in range (0, len(unvisited_children_separated)):#does this still outweigh just single threading?
+#         child_nodes = unvisited_children_separated[i]
+#         parent_node = arg_lists[i][0]
+#         for child in child_nodes:
+#             child['parent'] =parent_node
+#         parent_node['children'] =child_nodes
+#         unvisited_children.extend(child_nodes)
+#     return unvisited_children
+#
+# def visit_single_node_and_expand(node_and_color):
+#     node = node_and_color[0]
+#     unvisited_children = expand_node(node)
+#     return unvisited_children #necessary if multiprocessing from above
+#
+# def visit_single_node_and_expand_no_lookahead(node_and_color):
+#     node = node_and_color[0]
+#     node_color = node_and_color[1]
+#     unvisited_children = []
+#     game_board = node['game_board']
+#     is_game_over, winner_color = game_over(game_board)
+#     if is_game_over:  # only useful at end of game
+#         set_game_over_values(node)
+#     else:  # expand node, adding children to parent
+#         unvisited_children = expand_node(node)
+#     return unvisited_children
+#
+# def expand_node(parent_node, rollout=False):
+#     children_as_moves = enumerate_legal_moves_using_piece_arrays(parent_node)
+#     child_nodes = []
+#     children_win_statuses = []
+#     for child_as_move in children_as_moves:  # generate children
+#         move = child_as_move['From'] + r'-' + child_as_move['To']
+#         child_node = init_unique_child_node_and_board(move, parent_node)
+#         check_for_winning_move(child_node, rollout) #1-step lookahead for gameover
+#         children_win_statuses.append(child_node['win_status'])
+#         child_nodes.append(child_node)
+#     set_win_status_from_children(parent_node, children_win_statuses)
+#     if parent_node['children'] is None: #if another thread didn't expand and update thisnode
+#        parent_node['children'] =child_nodes
+#     return child_nodes
 
 
-def expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int depth_limit, dict sim_info, lock, policy_net): #nodes are all at the same depth
+cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int depth_limit, dict sim_info, lock, policy_net): #nodes are all at the same depth
     # Prunes child nodes to be the NN's top predictions or instant gameovers.
     # expands all nodes at a depth to the depth limit to take advantage of GPU batch processing.
     # This step takes time away from MCTS in the beginning, but builds the tree that the MCTS will use later on in the game.
     # original_unexpanded_node.
+    cdef:
+        list unfiltered_unexpanded_nodes
+        list filtered_unexpanded_nodes = []
+        list NN_output
+        list unexpanded_children
+        dict child
+        dict parent
     entered_once = False
     over_time = not( time() - sim_info['start_time'] < sim_info['time_to_think'])
     while depth < depth_limit and not over_time :# and len(sim_info['game_tree'])<10000
@@ -134,31 +142,23 @@ def expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int dep
         #     if unexpanded_nodes[0] is None:
         #         True
         unfiltered_unexpanded_nodes = unexpanded_nodes
+        for node in unexpanded_nodes:
+            if node['children'] is None and node['win_status'] is None:
+                filtered_unexpanded_nodes.append(node)
 
-        unexpanded_nodes = list(filter(lambda x: ((x['children'] is None) and not x['gameover'] ), unexpanded_nodes)) #redundant
-        if len(unexpanded_nodes) > 0 and len(unexpanded_nodes)<=256: #if any nodes to expand;
+
+        # filtered_unexpanded_nodes = list(filter(lambda x: ((x['children'] is None) and not x['gameover'] ), unexpanded_nodes)) #redundant
+        if len(filtered_unexpanded_nodes) > 0 and len(filtered_unexpanded_nodes)<=256: #if any nodes to expand;
             # if sim_info['root'] is not None: #aren't coming from reinitializing a root
             #     if sim_info['main_pid'] == current_thread().name:
             #         depth_limit = 1 #main thread expands once and exits to call other threads
-            #     # elif unexpanded_nodes[0]['height'] > 80:
-            #     #     # if len(unexpanded_nodes) == 1:
-            #     #     #     print("1 element to expand\n"
-            #     #     #           "move = {move} at height {height}\n"
-            #     #     #           "threads checking this node = {threads}\n".format(threads=unexpanded_nodes[0]['threads_checking_node'],height=unexpanded_nodes[0]['height'],move=move_lookup_by_index(unexpanded_nodes[0]['index'], get_opponent_color(unexpanded_nodes[0]['color']))))
-            #     #     # else:
-            #     #     #     print(len(unexpanded_nodes))
-            #     #     depth_limit = 128
-            #     # elif unexpanded_nodes[0]['height'] > 70:
-            #     #     depth_limit = 16
-            #     else:
-            #         depth_limit = 800
 
                 #
-                # elif unexpanded_nodes[0]['height'] > 50:
+                # elif filtered_unexpanded_nodes[0]['height'] > 50:
                 #     depth_limit = 800
-                # elif unexpanded_nodes[0]['height'] > 40:
+                # elif filtered_unexpanded_nodes[0]['height'] > 40:
                 #     depth_limit = 800
-                # elif unexpanded_nodes[0]['height'] > 20:
+                # elif filtered_unexpanded_nodes[0]['height'] > 20:
                 #     depth_limit = 800
                 #
                 # else:
@@ -169,30 +169,30 @@ def expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int dep
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
             # start = time()
-            NN_output = policy_net.evaluate(unexpanded_nodes)
+            NN_output = policy_net.evaluate(filtered_unexpanded_nodes)
             # total_time = (time()-start)*1000 # in ms
-            # sim_info['eval_times'].append([len(unexpanded_nodes),total_time])
+            # sim_info['eval_times'].append([len(filtered_unexpanded_nodes),total_time])
 
 
             multiprocess = False
-            if multiprocess and ((len(unexpanded_nodes) >= 25 and (unexpanded_nodes[0]['color'] != sim_info['root']['color'])) or len(unexpanded_nodes) >=100):#lots of children toappend
-                unexpanded_children, over_time = offload_updates_to_separate_process(unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock)
+            if multiprocess and ((len(filtered_unexpanded_nodes) >= 25 and (filtered_unexpanded_nodes[0]['color'] != sim_info['root']['color'])) or len(filtered_unexpanded_nodes) >=100):#lots of children toappend
+                unexpanded_children, over_time = offload_updates_to_separate_process(filtered_unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock)
             else:
-                unexpanded_children, over_time = do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock)
+                unexpanded_children, over_time = do_updates_in_the_same_process(filtered_unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock)
 
-            unexpanded_nodes = unexpanded_children
+            filtered_unexpanded_nodes = unexpanded_children
 
             depth += 1
             if not over_time and depth<depth_limit:# and len(sim_info['game_tree'])<10000
-                for child in unexpanded_nodes: #set flag for children we were planning to check
+                for child in filtered_unexpanded_nodes: #set flag for children we were planning to check
                     increment_threads_checking_node(child)
 
         else:
             depth = depth_limit #done if no nodes to expand or too many nodes to expand
-            for parent in unfiltered_unexpanded_nodes:
+            for parent in unfiltered_unexpanded_nodes: #these nodes were from inside the function call or the unexpanded_nodes
                 reset_threads_checking_node(parent)
     if not entered_once:
-        for parent in unexpanded_nodes:
+        for parent in unexpanded_nodes: #these nodes were from outside the function call
             decrement_threads_checking_node(parent)#
 
 def offload_updates_to_separate_process(unexpanded_nodes,  depth, depth_limit, NN_output, sim_info, lock):
@@ -241,8 +241,14 @@ def offload_updates_to_separate_process(unexpanded_nodes,  depth, depth_limit, N
             sim_info['game_tree'].extend(expanded_parents)
     return unexpanded_children, over_time
 
-def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock):
-    unexpanded_children = []
+cdef do_updates_in_the_same_process(list unexpanded_nodes, int depth, int depth_limit, list NN_output, dict sim_info, lock):
+    cdef:
+        list unexpanded_children = []
+        int i
+        dict parent
+        dict child_0
+        dict child_1
+
     over_time = False
     for i in range(0, len(unexpanded_nodes)):
         parent = unexpanded_nodes[i]
@@ -257,23 +263,22 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
                     abort = True
             if not abort:
                 children = update_parent(parent, NN_output[i], sim_info, lock)
-                children_to_consider = []
                 if depth+1 < depth_limit and children is not None:  # if we are allowed to enter the outermost while loop again
                     with lock:
-
-                        # game_tree_root = sim_info['root']
-                        if parent['color'] == 'White':  # sim_info['root']['color'] playermove
-                            best_child = None
-                            for child in children: #walk down children sorted by NN probability
-                                if child['win_status'] is None and child['threads_checking_node']<=0 and not child['subtree_being_checked']:
-                                    best_child = child
-                                    break
-                            if best_child is not None:
-                                unexpanded_children.append(best_child)
-                        else:  # white move
-                            # best_child = children[0]
-                            # children_to_consider = [children[0]]
-                            # children_to_consider = children
+                        #
+                        # # game_tree_root = sim_info['root']
+                        # if parent['color'] == 'White':  # sim_info['root']['color'] playermove
+                        #     best_child = None
+                        #     for child in children: #walk down children sorted by NN probability
+                        #         if child['win_status'] is None and child['threads_checking_node']<=0 and not child['subtree_being_checked']:
+                        #             best_child = child
+                        #             break
+                        #     if best_child is not None:
+                        #         unexpanded_children.append(best_child)
+                        # else:  # white move
+                        #     # best_child = children[0]
+                        #     # children_to_consider = [children[0]]
+                        #     # children_to_consider = children
 
                             num_children = len(children)
                             if num_children>=2:
@@ -281,36 +286,23 @@ def do_updates_in_the_same_process(unexpanded_nodes, depth, depth_limit, NN_outp
                                 if child_0['win_status'] is None and child_0['threads_checking_node']<=0 and not child_0['subtree_being_checked']:
                                     unexpanded_children.append(children[0])
                                 child_1 = children [1]
-                                if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked'] and child_0['UCT_multiplier']<1.35:#if first child wasn't that good
+                                if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked'] and child_0['UCT_multiplier']<1.35 :#if first child wasn't that good #and parent['color'] == 'Black'
                                     unexpanded_children.append(children[1])
                             elif num_children==1:
                                 child_0 = children[0]
                                 if child_0['win_status'] is None and child_0['threads_checking_node'] <= 0 and not child_0['subtree_being_checked']:
                                     unexpanded_children.append(children[0])
 
-                # unexpanded_children.extend(children_to_consider)
 
         else:
             reset_threads_checking_node(parent)  # have to iterate over all parents to set this
             over_time = True
     return unexpanded_children, over_time
 
-def reattach_parent_to_children(parent, children):
-    for child in children:
-        child['parent'] =parent
-        eval_child(child)
-        check_for_winning_move(child)
-
-def reattach_parent_to_grandparent(grandparent, parent):
-    for i in range(0, len(grandparent['children'])):
-        if parent['index'] == grandparent['children'][i]['index']:
-            grandparent['children'][i] = parent
-            parent['parent'] = grandparent
-            break
 
 
-def update_parent(parent, NN_output, sim_info, lock):
-    children = []
+cdef list update_parent(dict parent, np.ndarray NN_output, dict sim_info, lock):
+    cdef list children = []
     with lock:  # Lock after the NN update and check if we still need to update the parent
         if parent['children'] is None:
             abort = False
@@ -371,6 +363,18 @@ def update_parents_for_process(args):#when more than n parents, have a separate 
             over_time = True
     return unexpanded_nodes, unexpanded_children, over_time
 
+def reattach_parent_to_children(parent, children):
+    for child in children:
+        child['parent'] =parent
+        eval_child(child)
+        check_for_winning_move(child)
+
+def reattach_parent_to_grandparent(grandparent, parent):
+    for i in range(0, len(grandparent['children'])):
+        if parent['index'] == grandparent['children'][i]['index']:
+            grandparent['children'][i] = parent
+            parent['parent'] = grandparent
+            break
 
 
 cdef enumerate_update_and_prune(dict parent, np.ndarray NN_output, dict sim_info, lock):
@@ -874,8 +878,8 @@ def init_new_root(new_root_as_move, new_root_game_board, player_color, new_root_
 #
 
 
-def check_for_winning_move(child_node, rollout=False):
-    index = child_node['index']
+cdef void check_for_winning_move(dict child_node, rollout=False):
+    cdef int index = child_node['index']
     if index > 131 and index !=154:
         set_game_over_values(child_node)
 
@@ -900,47 +904,47 @@ def set_game_over_values(node):
     node['wins'] = 0 # this node will neverwin;
     node['gameover_visits'] = 65536
     node['visits'] = 65536
-    update_tree_losses(node, gameover=True) #keep agent away from subtree and towards subtrees of the same level
     node['win_status'] = False
+    update_tree_losses(node, gameover=True) #keep agent away from subtree and towards subtrees of the same level
 
 def set_game_over_values_1_step_lookahead(node):
     node['visits'] = 65536
     node['wins'] = 65536 # this node will neverwin;
     node['gameover_wins'] = 65536
     node['gameover_visits'] = 65536
-    update_tree_wins(node, gameover=True) #keep agent away from subtree and towards subtrees of the same level
     node['win_status'] = True
-
-def reset_game_over_values(node):
-    if node['gameover'] is True:
-        if node['win_status'] is False:
-            update_tree_wins(node, -(node['visits']-1))
-        elif node['win_status'] is True:
-            update_tree_losses(node, -(node['wins']-1))
-
-def true_random_rollout_EOG_thread_func(node):
-    depth = 0
-    while not node['gameover'] and depth <=4:
-        if node['children'] is None:
-            expand_node(node, rollout=True)
-        while node['children'] is not None:
-            node = sample(node['children'], 1)[0] #
-            depth += 1
-    random_rollout(node)
-    return node
-
-def true_random_rollout_EOG(node):
-    # with Pool(processes=10) as process:
-    #     outcome_node = process.apply_async(true_random_rollout_EOG_thread_func, [node])
-    #     outcome_node = outcome_node.get()
-    outcome_node = true_random_rollout_EOG_thread_func(node)
-    # if outcome_node['color'] ==node['color']:
-    #     if outcome_node['win_status'] is True:
-    #         update_tree_wins(node, 1)
-    #     elif outcome_node['win_status'] is False:
-    #         update_tree_losses(node, 1)
-    # else:
-    #     if outcome_node['win_status'] is True:
-    #         update_tree_losses(node, 1)
-    #     elif outcome_node['win_status'] is False:
-    #         update_tree_wins(node, 1)
+    update_tree_wins(node, gameover=True) #keep agent away from subtree and towards subtrees of the same level
+# 
+# def reset_game_over_values(node):
+#     if node['gameover'] is True:
+#         if node['win_status'] is False:
+#             update_tree_wins(node, -(node['visits']-1))
+#         elif node['win_status'] is True:
+#             update_tree_losses(node, -(node['wins']-1))
+# 
+# def true_random_rollout_EOG_thread_func(node):
+#     depth = 0
+#     while not node['gameover'] and depth <=4:
+#         if node['children'] is None:
+#             expand_node(node, rollout=True)
+#         while node['children'] is not None:
+#             node = sample(node['children'], 1)[0] #
+#             depth += 1
+#     random_rollout(node)
+#     return node
+# 
+# def true_random_rollout_EOG(node):
+#     # with Pool(processes=10) as process:
+#     #     outcome_node = process.apply_async(true_random_rollout_EOG_thread_func, [node])
+#     #     outcome_node = outcome_node.get()
+#     outcome_node = true_random_rollout_EOG_thread_func(node)
+#     # if outcome_node['color'] ==node['color']:
+#     #     if outcome_node['win_status'] is True:
+#     #         update_tree_wins(node, 1)
+#     #     elif outcome_node['win_status'] is False:
+#     #         update_tree_losses(node, 1)
+#     # else:
+#     #     if outcome_node['win_status'] is True:
+#     #         update_tree_losses(node, 1)
+#     #     elif outcome_node['win_status'] is False:
+#     #         update_tree_wins(node, 1)

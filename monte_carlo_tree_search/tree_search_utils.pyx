@@ -11,6 +11,8 @@ from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, new_game_board
 # from numpy import argsort
 # from time import time
+cimport numpy as np
+from numpy cimport ndarray
 
 def SimulationInfo(file):
         return {'file': file,
@@ -353,8 +355,8 @@ cpdef choose_UCT_or_best_child(dict node, start_time, int time_to_think, dict si
 
             prior_prob = best_child['UCT_multiplier'] -1
             over_LCB = prior_prob>0.35
-            under_UCB = (node['color'] != sim_info['root']['color'] and prior_prob<0.9) or (node['color'] == sim_info['root']['color'] and prior_prob<0.7)
-
+            # under_UCB = (node['color'] != sim_info['root']['color'] and prior_prob<0.9) or (node['color'] == sim_info['root']['color'] and prior_prob<0.7)
+            under_UCB = prior_prob <0.9
             if best_child['height'] > 20 and over_LCB:
                 threshold_gameover_visits = true_wins > 5000
             else:
@@ -1060,10 +1062,24 @@ def evaluation_function_nodeless(white_pieces, black_pieces, player_color):
 #         thread['parent']['children'] = thread.pruned_children
 #         thread['parent']_index += 1
 
-def update_child(child, NN_output, sim_info, do_eval=True):
-    child_index = child['index']
-    child_color = child['color']
-    parent = child['parent']
+cpdef void update_child(dict child, np.ndarray NN_output, dict sim_info, do_eval=True):
+    cdef:
+        int child_index = child['index']
+        str child_color = child['color']
+        dict parent = child['parent']
+        int game_over_row
+        int caution_row
+        int maybe_caution_row
+        str enemy_piece
+        # str move
+        dict previous_game_board
+        double child_val
+        int normalized_value
+        int prior_value_multiplier
+        int weighted_losses
+        int weighted_wins
+
+
     do_update = True
 
     if 0< child_index < 21 and parent is not None:#home rows that can capture; check for game-saving moves
@@ -1157,7 +1173,6 @@ def update_child(child, NN_output, sim_info, do_eval=True):
                 child['gameover_visits'] =child['visits']
                 child['gameover_wins'] =weighted_wins
 
-            random_prob = 1
             if sim_info['do_eval'] and do_eval:
                 # rollout_and_eval_if_parent_at_depth(child, 1)  # since only called child initialization, inner check redundant
                 eval_child(child)

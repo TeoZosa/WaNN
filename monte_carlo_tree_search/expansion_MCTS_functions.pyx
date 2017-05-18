@@ -4,8 +4,8 @@ from monte_carlo_tree_search.TreeNode import TreeNode
 from monte_carlo_tree_search.tree_search_utils import get_UCT, randomly_choose_a_winning_move, choose_UCT_or_best_child, \
     SimulationInfo, increment_threads_checking_node, decrement_threads_checking_node, transform_wrt_overwhelming_amount, backpropagate_num_checked_children, update_win_status_from_children
 from monte_carlo_tree_search.tree_builder import expand_descendants_to_depth_wrt_NN, init_new_root
-from tools.utils import move_lookup_by_index
-from Breakthrough_Player.board_utils import print_board, initial_game_board, initial_piece_arrays, debug_game_board, debug_piece_arrays
+from tools.utils import move_lookup_by_index, initial_game_board
+from Breakthrough_Player.board_utils import print_board, initial_piece_arrays, debug_game_board, debug_piece_arrays
 from time import time
 from sys import stdout
 from math import ceil

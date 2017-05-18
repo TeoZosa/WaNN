@@ -101,7 +101,7 @@ cpdef dict TreeNode(dict game_board, list white_pieces, list black_pieces, str p
         int num_children_being_checked = 0
         int overwhelming_amount = 1
         int num_to_consider = 0
-        int num_to_keep = 0
+        int num_to_keep = 999
         int times_reexpanded = 0
         array[dict] children = None
         dict best_child = None

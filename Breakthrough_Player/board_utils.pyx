@@ -5,7 +5,7 @@ import sys
 import random
 import pandas as pd
 from bottleneck import argpartition
-
+from itertools import chain
 
 def debug_piece_arrays():
     white_pieces = ['a6', 'c5', 'b4', 'f4', 'f3', 'g4', 'd2', 'd1', 'c1', 'b1', 'f1', 'g1']
@@ -33,9 +33,8 @@ cpdef dict copy_game_board(dict game_board):
     """'
      Returns a copy of the input game board
     ''"""#
-    cdef:
-        dict game_board_copy = {
-        10: game_board[10],  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
+    return {
+        10:game_board[10],  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
         9: game_board[9],  # is player_color white
         8: {'a': game_board[8]['a'], 'b': game_board[8]['b'], 'c': game_board[8]['c'], 'd':game_board[8]['d'], 'e': game_board[8]['e'], 'f':game_board[8]['f'], 'g': game_board[8]['g'], 'h': game_board[8]['h']},
         7: {'a': game_board[7]['a'], 'b': game_board[7]['b'], 'c': game_board[7]['c'], 'd':game_board[7]['d'], 'e': game_board[7]['e'], 'f':game_board[7]['f'], 'g': game_board[7]['g'], 'h': game_board[7]['h']},
@@ -46,7 +45,6 @@ cpdef dict copy_game_board(dict game_board):
         2: {'a': game_board[2]['a'], 'b': game_board[2]['b'], 'c': game_board[2]['c'], 'd':game_board[2]['d'], 'e': game_board[2]['e'], 'f':game_board[2]['f'], 'g': game_board[2]['g'], 'h': game_board[2]['h']},
         1: {'a': game_board[1]['a'], 'b': game_board[1]['b'], 'c': game_board[1]['c'], 'd':game_board[1]['d'], 'e': game_board[1]['e'], 'f':game_board[1]['f'], 'g': game_board[1]['g'], 'h': game_board[1]['h']},
     }
-    return game_board_copy
 
 
 def initial_piece_arrays():
@@ -89,23 +87,32 @@ def move_piece(board_state, move, whose_move):
     return next_board_state
 
 
-def move_piece_update_piece_arrays(board_state, move, whose_move):
+cpdef move_piece_update_piece_arrays(dict board_state, str move, str whose_move):
     """'
      Returns a copy of the input game board where the move has been made, 
      which pieces to add/remove from the player's piece array, 
      and if an opponent's move must also be removed (capture move)
     ''"""#
-    empty = 'e'
+    cdef:
+        list move_list
+        str empty = 'e'
+        int white_move_index = 10
+        int is_white_index = 9
+        # str _from
+        # str to
+        str to_position
+        str player_piece_to_remove
+        str player_piece_to_add
+        dict next_board_state
     remove_opponent_piece = False
-    white_move_index = 10
-    is_white_index = 9
-    if move[2] == '-':
-        move = move.split('-')
-    else:
-        move = move.split('x')#x for wanderer captures.
-    _from = move[0].lower()
-    to = move[1].lower()
-    next_board_state = copy_game_board(board_state)#copy.deepcopy(board_state)  # edit copy of board_state; don't need this for breakthrough_player?
+    move_list = move.split('-')
+    # if move[2] == '-':
+    #     pass
+    # else:
+    #     move = move.split('x')#x for wanderer captures.
+    _from = move_list[0]
+    to = move_list[1]
+    next_board_state = copy_game_board(board_state)# edit copy of board_state; don't need this for breakthrough_player?
     to_position =  next_board_state[int(to[1])][to[0]]
     player_piece_to_remove = _from #this will always become empty
     player_piece_to_add = to
@@ -121,7 +128,6 @@ def move_piece_update_piece_arrays(board_state, move, whose_move):
         next_board_state[is_white_index] = 1 #since black made this move, white makes next move
         if to_position == 'w':
             remove_opponent_piece = True
-    # assert (board_state != next_board_state)
     return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
 
 def move_piece_update_piece_arrays_in_place(board_state, move, whose_move):
@@ -307,35 +313,21 @@ cpdef list enumerate_legal_moves_using_piece_arrays(str player_color, dict game_
      Returns a list of legal moves for player_color given a game board and player_color's piece arrays. 
      Iterates over the piece arrays (as opposed to iterating over the entire game board) for efficiency. 
     ''"""#
-    cdef:
-        list legal_moves = []
-        int row
-        str column
-    for piece in player_pieces:
-        row = int(piece[1])
-        column = piece[0]
-        for possible_move in get_possible_moves(game_board, row, column, player_color):
-            if possible_move is not None:
-                legal_moves.append(possible_move)
-    return legal_moves
+    # return [move for move in chain.from_iterable(
+    #     [get_possible_moves(game_board, int(piece[1]), piece[0], player_color) for piece in player_pieces]) if move is not None]
+    return [move for move in chain.from_iterable(
+        [[check_left_diagonal_move(game_board, int(piece[1]), piece[0], player_color),
+                                check_forward_move(game_board, int(piece[1]), piece[0], player_color),
+                                check_right_diagonal_move(game_board, int(piece[1]), piece[0], player_color)] for piece in player_pieces]) if move is not None]
 
 cpdef list get_possible_moves(dict game_board, int row, str column, str player_color):
     """'
      Returns a list of legal moves for player_color given a game board and player_color's piece arrays. 
      Iterates over the piece arrays (as opposed to iterating over the entire game board) for efficiency. 
     ''"""#
-    cdef list possible_moves = [None]*3
-
-    left_diagonal_move = check_left_diagonal_move(game_board, row, column, player_color)
-    possible_moves[0]=left_diagonal_move
-
-    forward_move = check_forward_move(game_board, row, column, player_color)
-    possible_moves[1] = forward_move
-
-    right_diagonal_move = check_right_diagonal_move(game_board, row, column, player_color)
-    possible_moves[2] = right_diagonal_move
-
-    return possible_moves
+    return [check_left_diagonal_move(game_board, row, column, player_color),
+                                check_forward_move(game_board, row, column, player_color),
+                                check_right_diagonal_move(game_board, row, column, player_color)]
 
 cpdef check_left_diagonal_move(dict game_board, int row, str column, str player_color):
     """'
@@ -412,10 +404,8 @@ def convert_legal_moves_into_policy_net_indexes(legal_moves):
     """'
      Returns the legal moves as policy net indexes
     ''"""#
-    return  list(map(lambda move: index_lookup_by_move(move), legal_moves))
+    return [index_lookup_by_move(move) for move in legal_moves]
 
-
-# check for gameover (white in row 8; black in row 1); check in between moves
 def game_over (game_board):
     """'
      Returns whether the game_board is a terminal state aka gameover (white in row 8; black in row 1)

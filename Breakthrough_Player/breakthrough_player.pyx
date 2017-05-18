@@ -1,7 +1,8 @@
 #cython: language_level=3, boundscheck=False
 
 from Breakthrough_Player.board_utils import print_board, move_piece, game_over, \
-    initial_game_board, check_legality, get_random_move
+    check_legality, get_random_move
+from tools.utils import initial_game_board
 from monte_carlo_tree_search.MCTS import MCTS, NeuralNetsCombined, NeuralNetsCombined_128
 import sys
 import os

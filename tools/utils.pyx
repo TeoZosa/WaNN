@@ -525,9 +525,6 @@ cpdef dict initial_game_board():
         str empty = 'e'
         str white = 'w'
         str black = 'b'
-        dict row_7And8 = {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black}
-        dict row_3To6 = {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty}
-        dict row_1And2 = {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
         dict gameboard= {
             10: from_white,  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
             # equivalent to 0 if white's move, 1 if black's move

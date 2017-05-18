@@ -1,6 +1,6 @@
 #cython: language_level=3, boundscheck=False
 
-from tools.utils import move_lookup_by_index, generate_transition_vector #, initial_game_board
+from tools.utils import move_lookup_by_index, index_lookup_by_move
 import sys
 import random
 import pandas as pd
@@ -255,7 +255,7 @@ def check_legality_MCTS(game_board, move):
 
 def get_best_move(game_board, policy_net_output):
     """'
-     Returns whether a move is legal on the given game board by checking it against rules of the game, and 
+     Returns the best policy net move 
     ''"""#
     player_color_index = 9
     is_white = 1
@@ -263,9 +263,9 @@ def get_best_move(game_board, policy_net_output):
         player_color = 'White'
     else:
         player_color = 'Black'
-    ranked_move_indexes = sorted(range(len(policy_net_output[0])), key=lambda i: policy_net_output[0][i], reverse=True) #inefficient
+    ranked_move_indexes = get_top_children(policy_net_output[0])#sorted(range(len(policy_net_output[0])), key=lambda i: policy_net_output[0][i], reverse=True) #inefficient
     legal_moves = enumerate_legal_moves(game_board, player_color)
-    legal_move_indexes = convert_legal_moves_into_policy_net_indexes(legal_moves, player_color)
+    legal_move_indexes = convert_legal_moves_into_policy_net_indexes(legal_moves)
     for move in ranked_move_indexes:#iterate over moves from best to worst and pick the first legal move; will terminate before loop ends
         if move in legal_move_indexes:
             return move_lookup_by_index(move, player_color)
@@ -302,7 +302,7 @@ def enumerate_legal_moves(game_board, player_color):
                         legal_moves.append(possible_move)
     return legal_moves
 
-cpdef list enumerate_legal_moves_using_piece_arrays_nodeless(str player_color, dict game_board, list player_pieces):
+cpdef list enumerate_legal_moves_using_piece_arrays(str player_color, dict game_board, list player_pieces):
     """'
      Returns a list of legal moves for player_color given a game board and player_color's piece arrays. 
      Iterates over the piece arrays (as opposed to iterating over the entire game board) for efficiency. 
@@ -320,6 +320,10 @@ cpdef list enumerate_legal_moves_using_piece_arrays_nodeless(str player_color, d
     return legal_moves
 
 cpdef list get_possible_moves(dict game_board, int row, str column, str player_color):
+    """'
+     Returns a list of legal moves for player_color given a game board and player_color's piece arrays. 
+     Iterates over the piece arrays (as opposed to iterating over the entire game board) for efficiency. 
+    ''"""#
     cdef list possible_moves = [None]*3
 
     left_diagonal_move = check_left_diagonal_move(game_board, row, column, player_color)
@@ -334,7 +338,11 @@ cpdef list get_possible_moves(dict game_board, int row, str column, str player_c
     return possible_moves
 
 cpdef check_left_diagonal_move(dict game_board, int row, str column, str player_color):
-    left_columns = {'b':'a', 'c':'b', 'd':'c', 'e':'d', 'f':'e', 'g':'f', 'h':'g'}
+    """'
+     Returns the left diagonal move if it is legal
+     else, returns None 
+    ''"""#
+    cdef dict left_columns = {'b':'a', 'c':'b', 'd':'c', 'e':'d', 'f':'e', 'g':'f', 'h':'g'}
     move = None
     if column != 'a':  # check for left diagonal move only if not already at far left
         left_diagonal_column = left_columns[column]
@@ -354,6 +362,10 @@ cpdef check_left_diagonal_move(dict game_board, int row, str column, str player_
     return move
 
 cpdef check_forward_move(dict game_board, int row, str column, str player_color):
+    """'
+     Returns the forward move if it is legal
+     else, returns None 
+    ''"""#
     move = None
     _from = ''.join((column, str(row)))
     if player_color == 'White':
@@ -375,7 +387,11 @@ cpdef check_forward_move(dict game_board, int row, str column, str player_color)
     return move
 
 cpdef check_right_diagonal_move(dict game_board, int row, str column, str player_color):
-    right_columns= {'a':'b', 'b':'c', 'c':'d', 'd':'e', 'e':'f', 'f':'g', 'g':'h'}
+    """'
+     Returns the right diagonal move if it is legal
+     else, returns None 
+    ''"""#
+    cdef dict right_columns= {'a':'b', 'b':'c', 'c':'d', 'd':'e', 'e':'f', 'f':'g', 'g':'h'}
     move = None
     if column != 'h':  # check for right diagonal move only if not already at far right
         right_diagonal_column = right_columns[column]
@@ -392,9 +408,11 @@ cpdef check_right_diagonal_move(dict game_board, int row, str column, str player
                 move = '-'.join((_from, to))
     return move
 
-def convert_legal_moves_into_policy_net_indexes(legal_moves, player_color):
-    return [move.index(1) for move in list(map(lambda move:
-                    generate_transition_vector(move['To'], move['From'], player_color), legal_moves))]
+def convert_legal_moves_into_policy_net_indexes(legal_moves):
+    """'
+     Returns the legal moves as policy net indexes
+    ''"""#
+    return  list(map(lambda move: index_lookup_by_move(move), legal_moves))
 
 
 # check for gameover (white in row 8; black in row 1); check in between moves

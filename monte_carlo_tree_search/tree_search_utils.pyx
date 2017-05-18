@@ -6,7 +6,7 @@ from libc.math cimport sqrt
 from libcpp cimport bool
 from random import sample, randint
 from tools.utils import move_lookup_by_index
-from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, copy_game_board
+from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays, game_over, move_piece_update_piece_arrays_in_place, copy_game_board
 # from time import time
 cimport numpy as np
 
@@ -701,7 +701,7 @@ def real_random_rollout(node, end_of_game=True):
             player_pieces = local_black_pieces
             opponent_pieces = local_white_pieces
 
-        moves = enumerate_legal_moves_using_piece_arrays_nodeless(current_color, local_board, player_pieces)
+        moves = enumerate_legal_moves_using_piece_arrays(current_color, local_board, player_pieces)
         random_move = sample(moves, 1)[0]
         random_move =  random_move['From'] + r'-' + random_move['To']
 

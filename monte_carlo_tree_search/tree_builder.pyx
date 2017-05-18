@@ -1,6 +1,6 @@
 #cython: language_level=3, boundscheck=False
 
-from Breakthrough_Player.board_utils import enumerate_legal_moves_using_piece_arrays_nodeless, move_piece_update_piece_arrays
+from Breakthrough_Player.board_utils import enumerate_legal_moves_using_piece_arrays, move_piece_update_piece_arrays
 from tools.utils import index_lookup_by_move, move_lookup_by_index
 from monte_carlo_tree_search.TreeNode import TreeNode
 from Breakthrough_Player.board_utils import  check_legality_MCTS, get_top_children
@@ -104,7 +104,7 @@ class MyPool(pool.Pool):  # Had to make a special class to allow for an inner pr
 #     return unvisited_children
 #
 # def expand_node(parent_node, rollout=False):
-#     children_as_moves = enumerate_legal_moves_using_piece_arrays_nodeless(parent_node)
+#     children_as_moves = enumerate_legal_moves_using_piece_arrays(parent_node)
 #     child_nodes = []
 #     children_win_statuses = []
 #     for child_as_move in children_as_moves:  # generate children
@@ -397,7 +397,7 @@ cdef list enumerate_update_and_prune(dict parent, np.ndarray NN_output, dict sim
         player_pieces = parent['white_pieces']
     else:
         player_pieces = parent['black_pieces']
-    children_as_moves = enumerate_legal_moves_using_piece_arrays_nodeless(color, parent['game_board'], player_pieces)
+    children_as_moves = enumerate_legal_moves_using_piece_arrays(color, parent['game_board'], player_pieces)
 
     for move in children_as_moves:
         child = get_child(parent, move, NN_output,sim_info, lock)# get_cached_child_new(parent, move, NN_output, sim_info, lock, num_legal_moves, aggressive=None)

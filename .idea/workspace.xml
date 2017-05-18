@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" afterPath="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tools/utils.pyx" afterPath="$PROJECT_DIR$/tools/utils.pyx" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -132,10 +132,10 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="board_utils.pyx" pinned="false" current-in-tab="true">
+          <file leaf-file-name="board_utils.pyx" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="586">
+                <state relative-caret-position="1300">
                   <caret line="421" column="43" lean-forward="false" selection-start-line="421" selection-start-column="43" selection-end-line="421" selection-end-column="43" />
                   <folding>
                     <element signature="e#46#112#0" expanded="true" />
@@ -144,11 +144,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="utils.pyx" pinned="false" current-in-tab="false">
+          <file leaf-file-name="utils.pyx" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="560">
-                  <caret line="609" column="4" lean-forward="false" selection-start-line="609" selection-start-column="4" selection-end-line="609" selection-end-column="4" />
+                <state relative-caret-position="356">
+                  <caret line="609" column="107" lean-forward="false" selection-start-line="609" selection-start-column="107" selection-end-line="609" selection-end-column="107" />
                   <folding>
                     <element signature="e#46#71#0" expanded="true" />
                   </folding>
@@ -375,8 +375,8 @@
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
-        <option value="$PROJECT_DIR$/tools/utils.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
+        <option value="$PROJECT_DIR$/tools/utils.pyx" />
       </list>
     </option>
   </component>
@@ -1110,13 +1110,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00215" summary="Added cheat mode (keep searching while opponent is thinking)">
-      <created>1492886719371</created>
-      <option name="number" value="00215" />
-      <option name="presentableId" value="LOCAL-00215" />
-      <option name="project" value="LOCAL" />
-      <updated>1492886719371</updated>
-    </task>
     <task id="LOCAL-00216" summary="added real random rollouts. Still very inefficient.">
       <created>1492969656145</created>
       <option name="number" value="00216" />
@@ -1453,7 +1446,14 @@
       <option name="project" value="LOCAL" />
       <updated>1495086026180</updated>
     </task>
-    <option name="localTasksCounter" value="264" />
+    <task id="LOCAL-00264" summary="documenting code, reducing duplicate code">
+      <created>1495086140460</created>
+      <option name="number" value="00264" />
+      <option name="presentableId" value="LOCAL-00264" />
+      <option name="project" value="LOCAL" />
+      <updated>1495086140460</updated>
+    </task>
+    <option name="localTasksCounter" value="265" />
     <servers />
   </component>
   <component name="TodoView">
@@ -2028,22 +2028,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
+    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="560">
-          <caret line="609" column="4" lean-forward="false" selection-start-line="609" selection-start-column="4" selection-end-line="609" selection-end-column="4" />
+        <state relative-caret-position="1300">
+          <caret line="421" column="43" lean-forward="false" selection-start-line="421" selection-start-column="43" selection-end-line="421" selection-end-column="43" />
           <folding>
-            <element signature="e#46#71#0" expanded="true" />
+            <element signature="e#46#112#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx">
+    <entry file="file://$PROJECT_DIR$/tools/utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="586">
-          <caret line="421" column="43" lean-forward="false" selection-start-line="421" selection-start-column="43" selection-end-line="421" selection-end-column="43" />
+        <state relative-caret-position="356">
+          <caret line="609" column="107" lean-forward="false" selection-start-line="609" selection-start-column="107" selection-end-line="609" selection-end-column="107" />
           <folding>
-            <element signature="e#46#112#0" expanded="true" />
+            <element signature="e#46#71#0" expanded="true" />
           </folding>
         </state>
       </provider>

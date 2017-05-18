@@ -607,18 +607,7 @@ cpdef np.ndarray convert_board_to_2d_matrix_POEB(dict game_board, str player_col
 
 def generate_transition_vector(to, _from, player_color):
     """'
-    
-    # probability distribution over the 155 possible (vs legal) moves from the POV of the player.
-    # Reasoning: six center columns where, if a piece was present, it could move one of three ways.
-    # A piece in one of the two side columns can move one of two ways.
-    # Since nothing can move in the farthest row, there are only seven rows of possible movement.
-    # => (2*2*7) + (6*3*7) = 154; 154 +1 for no move
-    # ==> 155 element vector of all 0s sans the 1 for the transition that was actually made.
-    # i.e. a1-a2 (if White) == h8-h7 (if Black) =>
-    # row 0 (closest row), column 0(farthest left)
-    # moves to
-    # row +1, column 0
-    # <=> transition[0] = 1, transition[1:len(transition)] = 0
+    returns a one hot vector with the index corresponding to the transition (from-to) having a value of one
     ''"""#
     # probability distribution over the 155 possible (vs legal) moves from the POV of the player.
     # Reasoning: six center columns where, if a piece was present, it could move one of three ways.

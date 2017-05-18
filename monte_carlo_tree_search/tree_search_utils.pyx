@@ -5,7 +5,6 @@ from libc.math cimport sqrt
 # from libc.stdlib cimport rand
 from libcpp cimport bool
 from random import sample, randint
-from bottleneck import argpartition
 from tools.utils import move_lookup_by_index
 from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_arrays_nodeless, game_over, move_piece_update_piece_arrays_in_place, copy_game_board
 # from time import time
@@ -1005,14 +1004,4 @@ cpdef void eval_children(list children):
             parent_wins +=1
     update_tree_losses(parent, parent_losses)
     update_tree_wins(parent, parent_wins)
-
-#returns a sorted list (best to worst as evaluated by the NN) of the children as move indexes
-def get_top_children(NN_output, num_top=0):
-    if num_top == 0:
-        num_top = len(NN_output)
-        full_sort = NN_output.argsort()[::-1][:num_top]
-    else:
-        partial_sort = argpartition(NN_output, NN_output.size-num_top+1)[-num_top:]
-        full_sort = partial_sort[NN_output[partial_sort].argsort()][::-1]
-    return full_sort
 

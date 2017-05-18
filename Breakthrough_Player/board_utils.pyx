@@ -4,6 +4,8 @@ from tools.utils import move_lookup_by_index, generate_transition_vector #, init
 import sys
 import random
 import pandas as pd
+from bottleneck import argpartition
+
 
 def debug_piece_arrays():
     white_pieces = ['a6', 'c5', 'b4', 'f4', 'f3', 'g4', 'd2', 'd1', 'c1', 'b1', 'f1', 'g1']
@@ -32,17 +34,8 @@ cpdef dict copy_game_board(dict game_board):
      Returns a copy of the input game board
     ''"""#
     cdef:
-        # int from_white = -1
-        # int is_white = 1
-        # str empty = 'e'
-        # str white = 'w'
-        # str black = 'b'
-        # dict row_7And8 = {'a': black, 'b': black, 'c': black, 'd': black, 'e': black, 'f': black, 'g': black, 'h': black}
-        # dict row_3To6 = {'a': empty, 'b': empty, 'c': empty, 'd': empty, 'e': empty, 'f': empty, 'g': empty, 'h': empty}
-        # dict row_1And2 = {'a': white, 'b': white, 'c': white, 'd': white, 'e': white, 'f': white, 'g': white, 'h': white}
-        dict game_board = {
+        dict game_board_copy = {
         10: game_board[10],  # (-1 for initial state, 0 if black achieved state, 1 if white achieved state)
-        # equivalent to 0 if white's move, 1 if black's move
         9: game_board[9],  # is player_color white
         8: {'a': game_board[8]['a'], 'b': game_board[8]['b'], 'c': game_board[8]['c'], 'd':game_board[8]['d'], 'e': game_board[8]['e'], 'f':game_board[8]['f'], 'g': game_board[8]['g'], 'h': game_board[8]['h']},
         7: {'a': game_board[7]['a'], 'b': game_board[7]['b'], 'c': game_board[7]['c'], 'd':game_board[7]['d'], 'e': game_board[7]['e'], 'f':game_board[7]['f'], 'g': game_board[7]['g'], 'h': game_board[7]['h']},
@@ -53,7 +46,7 @@ cpdef dict copy_game_board(dict game_board):
         2: {'a': game_board[2]['a'], 'b': game_board[2]['b'], 'c': game_board[2]['c'], 'd':game_board[2]['d'], 'e': game_board[2]['e'], 'f':game_board[2]['f'], 'g': game_board[2]['g'], 'h': game_board[2]['h']},
         1: {'a': game_board[1]['a'], 'b': game_board[1]['b'], 'c': game_board[1]['c'], 'd':game_board[1]['d'], 'e': game_board[1]['e'], 'f':game_board[1]['f'], 'g': game_board[1]['g'], 'h': game_board[1]['h']},
     }
-    return game_board
+    return game_board_copy
 
 
 def initial_piece_arrays():
@@ -70,6 +63,9 @@ def initial_piece_arrays():
 #Note: not the same as move_piece in self_play_logs_to_datastructures; is white index now changes as we are sharing a board,
 #so player U opponent = self_play_log_board with is_white_index changing based on who owns the board
 def move_piece(board_state, move, whose_move):
+    """'
+     Returns a copy of the input game board where the move has been made
+    ''"""#
     empty = 'e'
     white_move_index = 10
     is_white_index = 9
@@ -94,6 +90,11 @@ def move_piece(board_state, move, whose_move):
 
 
 def move_piece_update_piece_arrays(board_state, move, whose_move):
+    """'
+     Returns a copy of the input game board where the move has been made, 
+     which pieces to add/remove from the player's piece array, 
+     and if an opponent's move must also be removed (capture move)
+    ''"""#
     empty = 'e'
     remove_opponent_piece = False
     white_move_index = 10
@@ -124,6 +125,11 @@ def move_piece_update_piece_arrays(board_state, move, whose_move):
     return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
 
 def move_piece_update_piece_arrays_in_place(board_state, move, whose_move):
+    """'
+     Returns the input game board where the move has been made (mutates the input game board), 
+     which pieces to add/remove from the player's piece array, 
+     and if an opponent's move must also be removed (capture move)
+    ''"""#
     empty = 'e'
     remove_opponent_piece = False
     white_move_index = 10
@@ -153,12 +159,18 @@ def move_piece_update_piece_arrays_in_place(board_state, move, whose_move):
     return next_board_state, player_piece_to_add, player_piece_to_remove, remove_opponent_piece
 
 def get_random_move(game_board, player_color):
+    """'
+     Returns a random move for player_color given the input game_board 
+    ''"""#
     possible_moves = enumerate_legal_moves(game_board, player_color)
     random_move = random.sample(possible_moves, 1)[0]
     move = random_move['From'] + '-' + random_move['To']
     return move
 
 def print_board(game_board, file=sys.stdout):
+    """'
+     Prints the input game board 
+    ''"""#
     new_piece_map = {
         'w': 'w',
         'b': 'b',
@@ -168,6 +180,9 @@ def print_board(game_board, file=sys.stdout):
           .apply(lambda x: x.apply(lambda y: new_piece_map[y])), file=file)  # transmogrify e's to _'s
 
 def check_legality(game_board, move):
+    """'
+     Returns whether a move is legal on the given game board by checking if it is in the set of all legal moves
+    ''"""#
     if move[2] == '-':
         move = move.split('-')
     else:
@@ -190,52 +205,10 @@ def check_legality(game_board, move):
             return True#return True after finding the move in the list of legal moves
     return False# if move not in list of legal moves, return False
 
-def check_legality_efficient(game_board, move):
-    move = move.split('-')
-    move_from = move[0].lower()
-    move_to = move[1].lower()
-
-    move_from_column = move_from[0]
-    move_from_row = move_from[1]
-
-    move_to_column = move_to[0]
-    move_to_row = move_to[1]
-    piece = game_board[move_from_row][move_from_column]
-
-    columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    rows = ['1', '2', '3', '4', '5', '6', '7', '8']
-    player_color_index = 9
-    is_white = 1
-    if game_board[player_color_index] == is_white:
-        player_color = 'White'
-    else:
-        player_color = 'Black'
-    moves = [check_left_diagonal_move(game_board, move_from_row, move_from_column, player_color),
-             check_forward_move(game_board, move_from_row, move_from_column, player_color),
-             check_right_diagonal_move(game_board, move_from_row, move_from_column, player_color)]
-    if abs(ord(move_to_column) - ord(move_from_column)) > 1:
-        return False
-
-    if player_color == 'White':
-        if move_to_row < move_from_row:
-            return False
-        if piece !='w':
-            return False
-
-    else:
-        if move_to_row > move_from_row:
-            return False
-        if piece !='b':
-            return False
-
-    legal_moves = enumerate_legal_moves(game_board, player_color)
-    for legal_move in legal_moves:
-        if move_from == legal_move['From'].lower() and move_to == legal_move['To'].lower():
-            return True#return True after finding the move in the list of legal moves
-    return False# if move not in list of legal moves, return False
-
-
 def check_legality_MCTS(game_board, move):
+    """'
+     Returns whether a move is legal on the given game board by checking it against rules of the game
+    ''"""#
     if move.lower() == 'no-move':
         return False
     split_move = move.split('-')
@@ -273,57 +246,48 @@ def check_legality_MCTS(game_board, move):
 
     moves = [check_left_diagonal_move(game_board, move_from_row, move_from_column, player_color),
              check_forward_move(game_board, move_from_row, move_from_column, player_color),
-             check_right_diagonal_move(game_board, move_from_row, move_from_column, player_color)]
-    moves = list(map(lambda x: convert_move_dict_to_move(x), moves ))
+             check_right_diagonal_move(game_board, move_from_row, move_from_column, player_color)] #either move as a string or None
 
     if move.lower() in moves:
         return True
     else:
         return False  # if move not in list of legal moves, return False
 
-def convert_move_dict_to_move(move):
-    if not move is None:
-        move =  move['From'] + r'-' + move['To']
-    return move
 def get_best_move(game_board, policy_net_output):
+    """'
+     Returns whether a move is legal on the given game board by checking it against rules of the game, and 
+    ''"""#
     player_color_index = 9
     is_white = 1
     if game_board[player_color_index] == is_white:
         player_color = 'White'
     else:
         player_color = 'Black'
-    ranked_move_indexes = sorted(range(len(policy_net_output[0])), key=lambda i: policy_net_output[0][i], reverse=True)
+    ranked_move_indexes = sorted(range(len(policy_net_output[0])), key=lambda i: policy_net_output[0][i], reverse=True) #inefficient
     legal_moves = enumerate_legal_moves(game_board, player_color)
     legal_move_indexes = convert_legal_moves_into_policy_net_indexes(legal_moves, player_color)
     for move in ranked_move_indexes:#iterate over moves from best to worst and pick the first legal move; will terminate before loop ends
         if move in legal_move_indexes:
             return move_lookup_by_index(move, player_color)
 
-def get_one_of_the_best_moves(game_board, policy_net_output): #if we want successful stochasticity in pure policy net moves
-    player_color_index = 9
-    is_white = 1
-    if game_board[player_color_index] == is_white:
-        player_color = 'White'
+def get_top_children(NN_output, num_top=0):
+    """'
+     Returns a sorted list (of partitions of size num_top) of the NN output, from best to worst. 
+     NOTE: if num_top less than 2 or greater than size NN_output, returns a fully sorted list (num_top = 1)
+    ''"""#
+    if 1 < num_top <len(NN_output):
+        partial_sort = argpartition(NN_output, NN_output.size-num_top+1)[-num_top:]
+        full_sort = partial_sort[NN_output[partial_sort].argsort()][::-1]
     else:
-        player_color = 'Black'
-    ranked_move_indexes = sorted(range(len(policy_net_output[0])), key=lambda i: policy_net_output[0][i], reverse=True)
-    legal_moves = enumerate_legal_moves(game_board, player_color)
-    legal_move_indexes = convert_legal_moves_into_policy_net_indexes(legal_moves, player_color)
-    best_moves = []
-    best_move = None
-    for move in ranked_move_indexes:#iterate over moves from best to worst and pick the first legal move =? best legal move; will terminate before loop ends
-        if move in legal_move_indexes:
-            best_move = move
-    best_move_val = policy_net_output[best_move] #to get value to compare
-    for move in ranked_move_indexes:#do it again to get array of best moves
-        if move in legal_move_indexes:
-            move_val = policy_net_output[move]
-            if move_val/best_move_val > 0.9: #if within 10% of best_move_val
-                best_moves.append(move)
-    a_best_move = random.sample(best_moves, 1)[0]
-    return move_lookup_by_index(a_best_move, player_color)
+        num_top = len(NN_output)
+        full_sort = NN_output.argsort()[::-1][:num_top]
+
+    return full_sort
 
 def enumerate_legal_moves(game_board, player_color):
+    """'
+     Returns a list of legal moves for player_color given a game_board by iterating over entire board
+    ''"""#
     if player_color == 'White':
         player = 'w'
     else: #player_color =='Black':
@@ -338,30 +302,15 @@ def enumerate_legal_moves(game_board, player_color):
                         legal_moves.append(possible_move)
     return legal_moves
 
-cpdef list enumerate_legal_moves_using_piece_arrays(dict node):
+cpdef list enumerate_legal_moves_using_piece_arrays_nodeless(str player_color, dict game_board, list player_pieces):
+    """'
+     Returns a list of legal moves for player_color given a game board and player_color's piece arrays. 
+     Iterates over the piece arrays (as opposed to iterating over the entire game board) for efficiency. 
+    ''"""#
     cdef:
-        str player_color = node['color']
-        dict game_board = node['game_board']
-        list pieces
-        list columns = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         list legal_moves = []
         int row
         str column
-    if player_color == 'White':
-        pieces = node['white_pieces']
-    else: #player_color =='Black':
-        pieces = node['black_pieces']
-    for piece in pieces:
-        row = int(piece[1])
-        column = piece[0]
-        for possible_move in get_possible_moves(game_board, row, column, player_color):
-            if possible_move is not None:
-                legal_moves.append(possible_move)
-    return legal_moves
-
-def enumerate_legal_moves_using_piece_arrays_nodeless(player_color, game_board, player_pieces):
-    legal_moves = []
-    num_legal_moves = 0
     for piece in player_pieces:
         row = int(piece[1])
         column = piece[0]

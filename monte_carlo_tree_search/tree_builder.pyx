@@ -1,11 +1,11 @@
 #cython: language_level=3, boundscheck=False
 
-from Breakthrough_Player.board_utils import enumerate_legal_moves_using_piece_arrays, move_piece_update_piece_arrays
+from Breakthrough_Player.board_utils import enumerate_legal_moves_using_piece_arrays_nodeless, move_piece_update_piece_arrays
 from tools.utils import index_lookup_by_move, move_lookup_by_index
 from monte_carlo_tree_search.TreeNode import TreeNode
-from Breakthrough_Player.board_utils import  check_legality_MCTS
+from Breakthrough_Player.board_utils import  check_legality_MCTS, get_top_children
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, \
-    get_top_children, update_child, update_win_status_from_children, eval_child, eval_children, SimulationInfo, backpropagate_num_checked_children, \
+    update_child, update_win_status_from_children, eval_child, eval_children, SimulationInfo, backpropagate_num_checked_children, \
     increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node, get_opponent_color
 from multiprocessing import Pool, Process, pool
 # from math import ceil
@@ -104,7 +104,7 @@ class MyPool(pool.Pool):  # Had to make a special class to allow for an inner pr
 #     return unvisited_children
 #
 # def expand_node(parent_node, rollout=False):
-#     children_as_moves = enumerate_legal_moves_using_piece_arrays(parent_node)
+#     children_as_moves = enumerate_legal_moves_using_piece_arrays_nodeless(parent_node)
 #     child_nodes = []
 #     children_win_statuses = []
 #     for child_as_move in children_as_moves:  # generate children
@@ -383,11 +383,21 @@ def reattach_parent_to_grandparent(grandparent, parent):
             break
 
 
-cdef enumerate_update_and_prune(dict parent, np.ndarray NN_output, dict sim_info, lock):
+cdef list enumerate_update_and_prune(dict parent, np.ndarray NN_output, dict sim_info, lock):
     cdef:
         list children = []
         list pruned_children
-        list children_as_moves = enumerate_legal_moves_using_piece_arrays(parent)
+        list player_pieces
+        list children_as_moves
+        str color
+        str move
+
+    color = parent['color']
+    if color == 'White':
+        player_pieces = parent['white_pieces']
+    else:
+        player_pieces = parent['black_pieces']
+    children_as_moves = enumerate_legal_moves_using_piece_arrays_nodeless(color, parent['game_board'], player_pieces)
 
     for move in children_as_moves:
         child = get_child(parent, move, NN_output,sim_info, lock)# get_cached_child_new(parent, move, NN_output, sim_info, lock, num_legal_moves, aggressive=None)
@@ -396,37 +406,6 @@ cdef enumerate_update_and_prune(dict parent, np.ndarray NN_output, dict sim_info
 
     pruned_children = assign_children(parent, children, lock)
     return pruned_children
-
-#
-# def get_cached_child_new(parent, move, NN_output, sim_info, lock, num_legal_moves, aggressive=None, on = False):
-#     if on:
-#         opening_move = True
-#         opening_moves = ['g2-f3', 'b2-c3', 'a2-b3', 'h2-g3']
-#
-#         if aggressive is not None: #not agnostic
-#             if aggressive:
-#                 opening_moves.extend(['d2-d3', 'e2-e3'])
-#
-#             else: #defensive
-#                 opening_moves.extend(['a1-b2', 'h1-g2'])
-#         move_number = ceil(parent['height']/2)
-#         if move_number < len(opening_moves): #or parent['height'] <20
-#              # : #opening moves
-#             if parent['height'] %2 == 0: #white's move
-#                 if move.lower() == opening_moves[move_number]:
-#                     child = get_child(parent, move, NN_output,sim_info, lock)
-#                 else:#don't check moves we know we aren't going to make
-#                     child = None
-#             else: #black's move
-#                 child= get_child(parent, move, NN_output, sim_info, lock)
-#         else: #non-opening move
-#             opening_move = False
-#             child = get_child(parent, move, NN_output, sim_info, lock)
-#     else:
-#         opening_move = False
-#         child= get_child(parent, move, NN_output, sim_info, lock)
-#
-#     return child
 
 def get_best_child_val(parent, NN_output, top_children_indexes):
     best_child_val = 0

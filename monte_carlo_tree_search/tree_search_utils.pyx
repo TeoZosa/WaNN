@@ -393,23 +393,26 @@ cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
     #     PUCT_exploration_constant = stochasticity_for_multithreading*1000#1000
     # else:
     # cdef double random_number = rand()/INT_MAX
-
-    cdef double PUCT_exploration_constant = 3#*random_number#3*annealed_factor# stochasticity_for_multithreading
-
-
-    # norm_wins, norm_visits,true_wins, true_losses = transform_wrt_overwhelming_amount(node, overwhelming_on=False)
-    cdef int norm_wins = node['wins']
-    cdef int norm_visits = node['visits']
-    cdef int true_wins = node['gameover_wins']
-
-    cdef int total_gameovers = node['gameover_visits']
-    cdef int true_losses = total_gameovers-true_wins
-
-    #TODO: problem: exploring lower ranked children when their gameover ratio is favorable. Stops exploring higher ranked children even though their long term ratios may improve and get higher UCT vals
-    cdef double NN_prob = max(0.10,(node['UCT_multiplier'] -1))
-    cdef double prior_prob_weighting
-    cdef double norm_loss_rate
-    cdef int norm_losses
+    cdef:
+        double PUCT_exploration_constant = 3#*random_number#3*annealed_factor# stochasticity_for_multithreading
+    
+    
+        # norm_wins, norm_visits,true_wins, true_losses = transform_wrt_overwhelming_amount(node, overwhelming_on=False)
+        int norm_wins = node['wins']
+        int norm_visits = node['visits']
+        int true_wins = node['gameover_wins']
+    
+        int total_gameovers = node['gameover_visits']
+        int true_losses = total_gameovers-true_wins
+    
+        #TODO: problem: exploring lower ranked children when their gameover ratio is favorable. Stops exploring higher ranked children even though their long term ratios may improve and get higher UCT vals
+        double NN_prob = max(0.10,(node['UCT_multiplier'] -1))
+        double prior_prob_weighting
+        double norm_loss_rate
+        int norm_losses
+        cdef int sibling_visits
+        cdef double PUCT_exploration
+        cdef double exploitation_factor
 
     if total_gameovers > 10 and node['color'] != sim_info['root']['color']: #opponent may explore more based on eval results whereas we use EOG values (but maybe that approximates wanderer's eval better anyway?)
         prior_prob_weighting = NN_prob/4#.80 => .08 TODO should I? this may defeat the search a bit.
@@ -419,17 +422,17 @@ cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
         norm_loss_rate = norm_losses/norm_visits
 
     # PUCT_exploration = PUCT_exploration_constant*NN_prob*(sqrt(max(1, parent_visits-norm_visits))/(1+norm_visits)) #interchange norm visits with node visits
-    cdef int sibling_visits = max(1, parent_visits-norm_visits)
+    sibling_visits = max(1, parent_visits-norm_visits)
     # with nogil:
-    cdef double PUCT_exploration = calculate_PUCT(PUCT_exploration_constant, NN_prob, sibling_visits, norm_visits)
+    PUCT_exploration = calculate_PUCT(PUCT_exploration_constant, NN_prob, sibling_visits, norm_visits)
 
-    cdef double exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
+    exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
 
     # exploitation_factor = (node['visits'] - node['wins']) / node['visits']  # losses / visits of child = wins / visitsforparent
     # exploration_factor = exploration_constant * sqrt(log(1+parent_visits) / node['visits'])
     # UCT = (exploitation_factor + exploration_factor)
-    cdef double PUCT = (exploitation_factor + PUCT_exploration)
-    return PUCT # UCT + PUCT_exploration #* (node['UCT_multiplier'] ) #UCT from parent'sPOV
+    # cdef double PUCT = (exploitation_factor + PUCT_exploration)
+    return exploitation_factor + PUCT_exploration # PUCT from parent's point of view
 
 cdef double calculate_PUCT(double c, double NN_prob, int sibling_visits, int visits):
     return c*NN_prob*(sqrt(sibling_visits)/(1+visits))
@@ -453,7 +456,7 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
     #     breakpoint = True
     return best_nodes[0]  # because a win for me = a loss for child
 
-def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
+def choose_best_true_loser(node_children, second_time=False):
     best_losses = 0
     best_wins = 0
     best_rate = 0
@@ -461,65 +464,76 @@ def choose_best_true_loser(node_children, highest_losses=0, second_time=False):
     best = None
     filtered_children  = []
 
-    for child in node_children:
-        if child['UCT_multiplier'] > 1.05 and child['win_status'] is not True:
-            filtered_children.append(child)
+    filtered_children = [child for child in node_children if (child['UCT_multiplier'] > 1.05 and child['win_status'] is not True)]
+    # for child in node_children:
+    #     if child['UCT_multiplier'] > 1.05 and child['win_status'] is not True:
+    #         filtered_children.append(child)
 
     if len(filtered_children) ==0:
-        for child in node_children:
-            if child['UCT_multiplier'] > 1.02 and child['win_status'] is not True:
-                filtered_children.append(child)
+        filtered_children = [child for child in node_children if (child['UCT_multiplier'] > 1.02 and child['win_status'] is not True)]
+
+        # for child in node_children:
+        #     if child['UCT_multiplier'] > 1.02 and child['win_status'] is not True:
+        #         filtered_children.append(child)
     if len(filtered_children) ==0:
-        for child in node_children:
-            if child['win_status'] is not True:
-                filtered_children.append(child)
+        filtered_children = [child for child in node_children if child['win_status'] is not True]
+
+        # for child in node_children:
+        #     if child['win_status'] is not True:
+        #         filtered_children.append(child)
 
     if len(filtered_children) > 0:
-        highest_rank_child = filtered_children[0]
+        # highest_rank_child = filtered_children[0]
 
-        if highest_rank_child['height'] <1:
-            best = None
-            best_val = 0
+        # if highest_rank_child['height'] <1:
+        #     best = None
+        #     best_val = 0
+        #
+        #     for child in filtered_children:
+        #         losses = child['gameover_visits'] - child['gameover_wins']
+        #         if losses >= best_val:
+        #             best = child
+        #             best_val = losses
+        #     # best = max(filtered_children, key=lambda x: x['gameover_visits'] - x['gameover_wins'])
+        #     if best['gameover_visits'] == 0:
+        #         best = None
+        #         best_val = 0
+        #         for child in filtered_children:
+        #             losses = child['visits'] - child['wins']
+        #             if losses > best_val:
+        #                 best = child
+        #                 best_val = losses
+        #
+        # else:
+        best_losses, best = max( zip(
+                    [child['gameover_visits']-child['gameover_wins'] for child in filtered_children],
+                    filtered_children),
+                 key=itemgetter(0))
+        highest_losses = best_losses
 
-            for child in filtered_children:
-                losses = child['gameover_visits'] - child['gameover_wins']
-                if losses >= best_val:
-                    best = child
-                    best_val = losses
-            # best = max(filtered_children, key=lambda x: x['gameover_visits'] - x['gameover_wins'])
-            if best['gameover_visits'] == 0:
-                best = None
-                best_val = 0
-                for child in filtered_children:
-                    losses = child['visits'] - child['wins']
-                    if losses > best_val:
-                        best = child
-                        best_val = losses
+        # for i in range(0,2):
+            # height = filtered_children[0]['height']
+            # if height < 40:
+            #     prob_threshold = 1.00
+            # else:
+            #     prob_threshold = 1.00
+        for child in filtered_children: #sorted by prob
+            _, child_visits_norm,true_wins, true_losses = transform_wrt_overwhelming_amount(child, overwhelming_on=False)
+            prior_prob_weighting = (child['UCT_multiplier']-1)/4#.80 =>.24
+            total = true_losses + true_wins
+            loss_rate = (true_losses/max(1, total)) + prior_prob_weighting
+            # if highest_losses >0: #find best rate within some threshold error (to prevent low visits and slightly higher WR) and magnitude
+            predicate = loss_rate> best_rate and loss_rate-best_rate > 0.05 and true_losses/highest_losses>.30
+            # else: #find absolute best loser
+            #     predicate = true_losses> best_losses # and (loss_rate > 0.5 or total < 20)
 
-        else:
-            for i in range(0,2):
-                height = filtered_children[0]['height']
-                if height < 40:
-                    prob_threshold = 1.00
-                else:
-                    prob_threshold = 1.00
-                for child in filtered_children: #sorted by prob
-                    _, child_visits_norm,true_wins, true_losses = transform_wrt_overwhelming_amount(child, overwhelming_on=False)
-                    prior_prob_weighting = (child['UCT_multiplier']-1)/4#.80 =>.80
-                    total = true_losses + true_wins
-                    loss_rate = (true_losses/max(1, total)) + prior_prob_weighting
-                    if highest_losses >0: #find best rate within some threshold error (to prevent low visits and slightly higher WR) and magnitude
-                        predicate = loss_rate> best_rate and loss_rate-best_rate > 0.05 and true_losses/highest_losses>.30
-                    else: #find absolute best loser
-                        predicate = true_losses> best_losses # and (loss_rate > 0.5 or total < 20)
-
-                    if predicate and child['win_status'] is not True and child['UCT_multiplier'] > prob_threshold:#
-                        best = child
-                        best_losses = true_losses
-                        best_wins = true_wins
-                        best_rate = loss_rate
-                        best_total = total
-                highest_losses = best_losses
+            if predicate and child['win_status'] is not True:#  and child['UCT_multiplier'] > prob_threshold
+                best = child
+                best_losses = true_losses
+                best_wins = true_wins
+                best_rate = loss_rate
+                best_total = total
+            # highest_losses = best_losses
     else:
         best = node_children[0]
     return best

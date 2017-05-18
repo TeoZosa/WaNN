@@ -313,12 +313,11 @@ cpdef list enumerate_legal_moves_using_piece_arrays(str player_color, dict game_
      Returns a list of legal moves for player_color given a game board and player_color's piece arrays. 
      Iterates over the piece arrays (as opposed to iterating over the entire game board) for efficiency. 
     ''"""#
-    # return [move for move in chain.from_iterable(
-    #     [get_possible_moves(game_board, int(piece[1]), piece[0], player_color) for piece in player_pieces]) if move is not None]
     return [move for move in chain.from_iterable(
         [[check_left_diagonal_move(game_board, int(piece[1]), piece[0], player_color),
                                 check_forward_move(game_board, int(piece[1]), piece[0], player_color),
                                 check_right_diagonal_move(game_board, int(piece[1]), piece[0], player_color)] for piece in player_pieces]) if move is not None]
+
 
 cpdef list get_possible_moves(dict game_board, int row, str column, str player_color):
     """'

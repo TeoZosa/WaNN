@@ -417,6 +417,10 @@ def convert_legal_moves_into_policy_net_indexes(legal_moves):
 
 # check for gameover (white in row 8; black in row 1); check in between moves
 def game_over (game_board):
+    """'
+     Returns whether the game_board is a terminal state aka gameover (white in row 8; black in row 1)
+     If True, also returns the winner color
+    ''"""#
     white = 'w'
     black = 'b'
     black_home_row = game_board[8]

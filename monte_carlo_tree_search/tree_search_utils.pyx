@@ -347,7 +347,7 @@ cpdef choose_UCT_or_best_child(dict node, start_time, int time_to_think, dict si
             true_wins = best_child['gameover_wins']
             prior_prob = best_child['UCT_multiplier'] -1
             over_LCB = prior_prob>0.35
-            under_UCB = prior_prob <0.9
+            under_UCB = prior_prob <0.8
 
             if best_child['height'] > 20 and over_LCB:
                 threshold_gameover_visits = true_wins > 5000
@@ -355,7 +355,14 @@ cpdef choose_UCT_or_best_child(dict node, start_time, int time_to_think, dict si
                 threshold_gameover_visits= true_wins > 1000
 
             if threshold_gameover_visits and under_UCB:
-                meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 and over_LCB#wins less than losses and over our lower confidence bound (borrowed terminology)
+                if node['color'] == sim_info['root']['color']:
+                    if prior_prob > .5:
+                        meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6
+                    else:
+                        meets_winrate_threshold = true_wins*2.5  < best_child['gameover_visits']
+                else:
+                    meets_winrate_threshold = true_wins * 3 <  best_child['gameover_visits'] #wins less than losses and over our lower confidence bound (borrowed terminology)
+                meets_winrate_threshold = meets_winrate_threshold and over_LCB
             else:
                 meets_winrate_threshold = True
 
@@ -445,7 +452,7 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
         if not win_can_be_forced:
 
             best = choose_best_true_loser(node['children'])
-
+            # best = most_visited(node['children'])
             if best is not None:
                best_nodes.append(best)
 
@@ -456,6 +463,11 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
     #     breakpoint = True
     return best_nodes[0]  # because a win for me = a loss for child
 
+def most_visited(node_children):
+    return  max( zip([child['visits'] for child in node_children],
+                    node_children),
+                 key=itemgetter(0))[1]
+
 def choose_best_true_loser(node_children, second_time=False):
     best_losses = 0
     best_wins = 0
@@ -463,77 +475,41 @@ def choose_best_true_loser(node_children, second_time=False):
     best_total = 0
     best = None
     filtered_children  = []
+    prob_scaling = 3
+    if node_children[0]['UCT_multiplier']<1.1: #really only happens on the first couple of moves
+        first_threshold = second_threshold = 1.04 #under 4% moves may have good stats but look whacky
+    else:
+        first_threshold = 1.05
+        second_threshold = 1.02
+    filtered_children = [child for child in node_children if (child['UCT_multiplier'] > first_threshold and child['win_status'] is not True)]
 
-    filtered_children = [child for child in node_children if (child['UCT_multiplier'] > 1.05 and child['win_status'] is not True)]
-    # for child in node_children:
-    #     if child['UCT_multiplier'] > 1.05 and child['win_status'] is not True:
-    #         filtered_children.append(child)
 
     if len(filtered_children) ==0:
-        filtered_children = [child for child in node_children if (child['UCT_multiplier'] > 1.02 and child['win_status'] is not True)]
+        filtered_children = [child for child in node_children if (child['UCT_multiplier'] > second_threshold and child['win_status'] is not True)]
 
-        # for child in node_children:
-        #     if child['UCT_multiplier'] > 1.02 and child['win_status'] is not True:
-        #         filtered_children.append(child)
     if len(filtered_children) ==0:
         filtered_children = [child for child in node_children if child['win_status'] is not True]
 
-        # for child in node_children:
-        #     if child['win_status'] is not True:
-        #         filtered_children.append(child)
 
     if len(filtered_children) > 0:
-        # highest_rank_child = filtered_children[0]
 
-        # if highest_rank_child['height'] <1:
-        #     best = None
-        #     best_val = 0
-        #
-        #     for child in filtered_children:
-        #         losses = child['gameover_visits'] - child['gameover_wins']
-        #         if losses >= best_val:
-        #             best = child
-        #             best_val = losses
-        #     # best = max(filtered_children, key=lambda x: x['gameover_visits'] - x['gameover_wins'])
-        #     if best['gameover_visits'] == 0:
-        #         best = None
-        #         best_val = 0
-        #         for child in filtered_children:
-        #             losses = child['visits'] - child['wins']
-        #             if losses > best_val:
-        #                 best = child
-        #                 best_val = losses
-        #
-        # else:
         best_losses, best = max( zip(
                     [child['gameover_visits']-child['gameover_wins'] for child in filtered_children],
                     filtered_children),
                  key=itemgetter(0))
         highest_losses = best_losses
+        best_rate = best_losses/max(1, best['gameover_visits']) + (best['UCT_multiplier']-1)/prob_scaling
 
-        # for i in range(0,2):
-            # height = filtered_children[0]['height']
-            # if height < 40:
-            #     prob_threshold = 1.00
-            # else:
-            #     prob_threshold = 1.00
+
         for child in filtered_children: #sorted by prob
             _, child_visits_norm,true_wins, true_losses = transform_wrt_overwhelming_amount(child, overwhelming_on=False)
-            prior_prob_weighting = (child['UCT_multiplier']-1)/4#.80 =>.24
+            prior_prob_weighting = (child['UCT_multiplier']-1)/prob_scaling#.80 =>.
             total = true_losses + true_wins
             loss_rate = (true_losses/max(1, total)) + prior_prob_weighting
-            # if highest_losses >0: #find best rate within some threshold error (to prevent low visits and slightly higher WR) and magnitude
-            predicate = loss_rate> best_rate and loss_rate-best_rate > 0.05 and true_losses/highest_losses>.30
-            # else: #find absolute best loser
-            #     predicate = true_losses> best_losses # and (loss_rate > 0.5 or total < 20)
 
-            if predicate and child['win_status'] is not True:#  and child['UCT_multiplier'] > prob_threshold
+            if loss_rate> best_rate and true_losses/highest_losses>.30 and child['win_status'] is not True:#  and child['UCT_multiplier'] > prob_threshold
                 best = child
-                best_losses = true_losses
-                best_wins = true_wins
                 best_rate = loss_rate
-                best_total = total
-            # highest_losses = best_losses
     else:
         best = node_children[0]
     return best

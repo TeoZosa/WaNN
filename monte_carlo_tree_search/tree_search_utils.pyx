@@ -476,16 +476,19 @@ def choose_best_true_loser(node_children, second_time=False):
     best = None
     filtered_children  = []
     prob_scaling = 3
+    action_value_threshold = 10000
     if node_children[0]['UCT_multiplier']<1.1: #really only happens on the first couple of moves
         first_threshold = second_threshold = 1.04 #under 4% moves may have good stats but look whacky
     else:
         first_threshold = 1.05
         second_threshold = 1.02
-    filtered_children = [child for child in node_children if ((child['UCT_multiplier'] > first_threshold or child['gameover_visits']-child['gameover_wins'] > 10000) and child['win_status'] is not True)]
+
+    #non-losing moves over probability threshold or action-value threshold (10000 seems safe )
+    filtered_children = [child for child in node_children if ((child['UCT_multiplier'] > first_threshold or child['gameover_visits']-child['gameover_wins'] > action_value_threshold) and child['win_status'] is not True)]
 
 
     if len(filtered_children) ==0:
-        filtered_children = [child for child in node_children if ((child['UCT_multiplier'] > second_threshold or child['gameover_visits']-child['gameover_wins'] > 10000) and child['win_status'] is not True)]
+        filtered_children = [child for child in node_children if ((child['UCT_multiplier'] > second_threshold or child['gameover_visits']-child['gameover_wins'] > action_value_threshold) and child['win_status'] is not True)]
 
     if len(filtered_children) ==0:
         filtered_children = [child for child in node_children if child['win_status'] is not True]

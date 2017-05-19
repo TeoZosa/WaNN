@@ -80,54 +80,14 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
 
     sim_info = SimulationInfo(log_file)
     time_to_think = time_to_think+1 #takes 1 second for first eval (io needs to warm up?)with threads, takes 1.125 times longer to finish up
-    # sim_info['root'] = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
     sim_info['game_num'] = game_num
     sim_info['time_to_think'] = time_to_think
-    sim_info['start_time'] = time()
 
-    sim_info['root'] = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info, async_update_lock)
-    sim_info['main_pid'] = current_thread().name
-    # if move_number == 0 or move_number == 1:
-    #     time_to_think = 60
-    # if root['height']>= 60: #still missing forced wins
-    #     time_to_think = 6000
+    root = assign_root(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info, async_update_lock)
+    sim_info['root'] = root
+    # sim_info['main_pid'] = current_thread().name
 
 
-
-    #TODO: prune the tree later once it gets too big? Does this matter since current search will only check a subtree without a win status?
-    # i.e. from height 60 (where all children are enumerated), if a node is a guaranteed loss_init for parent, remove?
-    # ex if True, remove all but one loser child (since we only need one route to win)
-    #if False
-
-    def prune_red_herrings_from_parents_with_win_status(root): #if calling this, stop reexpanding nodes at height 60 with less than their number of legal children
-        unvisited_queue = [root]
-        while len (unvisited_queue)>0:
-            node = unvisited_queue.pop()
-            if node['height']>=60 and not node['gameover']:
-                if node['win_status']is True: #pick all losing children
-                    losing_children = []
-                    for child in node['children']:
-                        if child['win_status'] is False:
-                            losing_children.append(child)
-                    node['children']= losing_children#some forced win
-                    unvisited_queue.extend(losing_children)
-                    #note: this may be bad if path to loss_init is so long and you don't kkno
-                # elif node['win_status']is False: #pick one out of all of your losing children.
-                #     winning_child = None
-                #     for child in node['children']:
-                #         if child['win_status'] is True:
-                #             winning_child = child
-                #             break
-                #     node['children']= [winning_child] #some doomed move
-                #     unvisited_queue.append(winning_child)
-                else: #win_status is False or None => some kids may be True, some may be None; check them all.
-                    if node['children']is not None:
-                        unvisited_queue.extend(node['children'])
-            else:
-                if node['children']is not None:
-                    unvisited_queue.extend(node['children'])
-    # if move_number == 0:
-    #     reinit_gameover_values(root)
 
     if root['subtree_checked']:# or root['win_status']is True
         done = True
@@ -163,12 +123,6 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
 
 
 
-
-    # async_NN_update_threads.close()
-    # async_NN_update_threads.join()
-
-
-
     best_child = randomly_choose_a_winning_move(root, max(0, game_num))
 
     # if (move_number == 0 or move_number == 1) and game_num > -1: #save each iteration. If training makes it worse, we can revert back to a better version and change search parameters.
@@ -198,7 +152,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
     print("Total Time = {}".format(true_search_time))
 
 
-    best_move = get_best_move(best_child, player_color, move_number, aggressive=None)
+    best_move = move_lookup_by_index(best_child['index'], player_color)#get_best_move(best_child, player_color, move_number, aggressive=None)
     print_expansion_statistics(sim_info, time())
 
     print_best_move(player_color, best_move, sim_info)
@@ -246,32 +200,18 @@ def reset_thread_flag(root):
             unvisited_queue.extend(node['children'])
 
 
-def assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info, async_update_lock):
-    # if move_number == 0 and version > 0:
-    #     input_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\AgnosticRoot{}.p'.format(str(version-1)),
-    #                            'r+b')
-    #     root = pickle.load(input_file)
-    #     input_file.close()
+def assign_root(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info, async_update_lock):
+
     white_pieces, black_pieces = initial_piece_arrays()
     if move_number == 0:
         if previous_move is not None: #saved root
             root = previous_move
-        else:#saving a new board
-            # print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info['file'])
-            # answer = input("WARNING: INITIALIZING A NEW BOARD TO BE SAVED, ENTER \'yes\' TO CONTINUE")
-            # if answer.lower() != 'yes':
-            #     exit(-10)
-            # debug_height = 54
-            # debug_white_pieces, debug_black_pieces = debug_piece_arrays()
-            # root = TreeNode(debug_game_board(), debug_white_pieces, debug_black_pieces, player_color, 0, None, debug_height)
+        else:#a new board
+
 
             root = TreeNode(game_board, white_pieces, black_pieces, player_color, 0, None, move_number)
     elif move_number == 1: #WaNN is black
-        if previous_move is None: #saving new board
-            # print("WARNING: INITIALIZING A NEW BOARD TO BE SAVED", file=sim_info['file'])
-            # answer = input("WARNING: INITIALIZING A NEW BOARD TO BE SAVED, ENTER \'yes\' TO CONTINUE")
-            # if answer.lower() != 'yes':
-            #     exit(-10)
+        if previous_move is None:
             previous_move = TreeNode(initial_game_board(), white_pieces, black_pieces, 'White', 0, None, 0) #initialize a dummy start board state to get white's info
             root = init_new_root(last_opponent_move, game_board, player_color, previous_move, policy_net, sim_info,
                                  async_update_lock)
@@ -308,11 +248,7 @@ def assign_root_reinforcement_learning(game_board, player_color, previous_move, 
     root['num_children_being_checked']= 0
     root['subtree_being_checked']= False
 
-    #can't do this anymore if we are background searching
-    # #break off tree so python can garbage collect from memory
-    # if root['parent']is not None:
-    #     root['parent']['children'] =None
-    # root['parent']= None #garbage collect
+    #if we are background searching, we can only remove the parts of the tree above the grandparent of the root
     if root['parent']is not None:
         parent = root['parent']
         if parent['parent'] is not None:
@@ -371,7 +307,7 @@ cpdef run_MCTS_with_expansions_simulation(dict root,int depth_limit, dict sim_in
 
 
 
-cdef play_MCTS_game_with_expansions(dict root, int depth, int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think, async_update_lock):
+cdef void play_MCTS_game_with_expansions(dict root, int depth, int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think, async_update_lock):
     if root['gameover']is False: #terminates at end-of-game moves
         if root['children']is None : #reached non-game ending leaf node
             with async_update_lock:
@@ -383,14 +319,12 @@ cdef play_MCTS_game_with_expansions(dict root, int depth, int depth_limit, dict 
             if not abort:
                 expand_leaf_node(root, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think, async_update_lock)
         else:#keep searching tree
-
             select_UCT_child(root, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think, async_update_lock)
 
 
 cdef void expand_leaf_node(dict root, int depth, int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think, async_update_lock):
     if depth < depth_limit:
-        # expand_and_select(root, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think)
-        expand_descendants_to_depth_wrt_NN([root], depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
+        expand_descendants_to_depth_wrt_NN([root], depth, depth_limit, sim_info, async_update_lock, policy_net)
     else:  # reached depth limit
         decrement_threads_checking_node(root)
 
@@ -400,15 +334,14 @@ cdef void select_UCT_child(dict node, int depth, int depth_limit, dict sim_info,
             node['threads_checking_node']= 0 #clean this up on the way down
             # if sim_info['counter'] > 500 and len(sim_info['game_tree']) == 0:
             #     breakpoint = True
-            # if node['parent']is not None:
-            #     node['parent']['subtree_being_checked'] =False
+
             node = choose_UCT_or_best_child(node, start_time, time_to_think, sim_info) #if child is a leaf, chooses policy net's top choice
     if node is not None:
         play_MCTS_game_with_expansions(node, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think)
 
 
 
-cpdef void print_simulation_statistics(dict sim_info):#TODO: try not calling this and see if this is what is slowing down the program
+cpdef void print_simulation_statistics(dict sim_info):
     cdef:
         dict root = sim_info['root']
         int time_to_think = sim_info['time_to_think']

@@ -133,8 +133,8 @@
       <file leaf-file-name="expansion_MCTS_functions.pyx" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5788">
-              <caret line="396" column="141" lean-forward="false" selection-start-line="396" selection-start-column="141" selection-end-line="396" selection-end-column="141" />
+            <state relative-caret-position="3887">
+              <caret line="320" column="33" lean-forward="false" selection-start-line="320" selection-start-column="33" selection-end-line="320" selection-end-column="33" />
               <folding>
                 <element signature="e#46#99#0" expanded="true" />
               </folding>
@@ -315,8 +315,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="801" />
-    <option name="y" value="305" />
+    <option name="x" value="330" />
+    <option name="y" value="244" />
     <option name="width" value="2532" />
     <option name="height" value="1705" />
   </component>
@@ -1038,13 +1038,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00221" summary="CNN RNN&#10;">
-      <created>1493326417094</created>
-      <option name="number" value="00221" />
-      <option name="presentableId" value="LOCAL-00221" />
-      <option name="project" value="LOCAL" />
-      <updated>1493326417094</updated>
-    </task>
     <task id="LOCAL-00222" summary="Fixed CNN conversion to RNN data. better initalization to rnn.">
       <created>1493414016730</created>
       <option name="number" value="00222" />
@@ -1381,7 +1374,14 @@
       <option name="project" value="LOCAL" />
       <updated>1495152642984</updated>
     </task>
-    <option name="localTasksCounter" value="270" />
+    <task id="LOCAL-00270" summary="passing async update lock as a function parameter instead of using it as a global">
+      <created>1495152955434</created>
+      <option name="number" value="00270" />
+      <option name="presentableId" value="LOCAL-00270" />
+      <option name="project" value="LOCAL" />
+      <updated>1495152955434</updated>
+    </task>
+    <option name="localTasksCounter" value="271" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1394,7 +1394,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="801" y="305" width="2532" height="1705" extended-state="0" />
+    <frame x="330" y="244" width="2532" height="1705" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
@@ -1459,7 +1459,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="turned sim info into dict, only penalize if opponent not in home territory" />
     <MESSAGE value="pseudo-pruning now. eval children in batches" />
     <MESSAGE value="turned off reexpansion checks, pick the highest NN prob guaranteed child" />
     <MESSAGE value="fixed caution referencing child game board instead of parent game board" />
@@ -1484,7 +1483,8 @@
     <MESSAGE value="code cleanup" />
     <MESSAGE value="messing with search parameters" />
     <MESSAGE value="comments" />
-    <option name="LAST_COMMIT_MESSAGE" value="comments" />
+    <MESSAGE value="passing async update lock as a function parameter instead of using it as a global" />
+    <option name="LAST_COMMIT_MESSAGE" value="passing async update lock as a function parameter instead of using it as a global" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1566,7 +1566,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx</url>
-          <line>401</line>
+          <line>335</line>
           <option name="timeStamp" value="648" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
@@ -1952,8 +1952,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5788">
-          <caret line="396" column="141" lean-forward="false" selection-start-line="396" selection-start-column="141" selection-end-line="396" selection-end-column="141" />
+        <state relative-caret-position="3887">
+          <caret line="320" column="33" lean-forward="false" selection-start-line="320" selection-start-column="33" selection-end-line="320" selection-end-column="33" />
           <folding>
             <element signature="e#46#99#0" expanded="true" />
           </folding>

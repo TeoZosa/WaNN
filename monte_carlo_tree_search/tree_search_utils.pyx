@@ -357,13 +357,13 @@ cpdef choose_UCT_or_best_child(dict node, start_time, int time_to_think, dict si
             if threshold_gameover_visits and under_UCB:
                 if node['color'] == sim_info['root']['color']:
                     if prior_prob > .5:
-                        meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6
+                        meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 #Keep searching best until it drops down to a 40% WR if it is a high-ish probability node
                     else:
-                        meets_winrate_threshold = true_wins*2.5  < best_child['gameover_visits']
+                        meets_winrate_threshold = true_wins*2.5  < best_child['gameover_visits']#Keep searching best until it drops down to a 60% WR if it is a low probability node
                 else:
-                    meets_winrate_threshold = true_wins * 3 <  best_child['gameover_visits'] #wins less than losses and over our lower confidence bound (borrowed terminology)
+                    meets_winrate_threshold = true_wins * 3 <  best_child['gameover_visits'] #Keep for Wanderer if best has a 66% WR
                 meets_winrate_threshold = meets_winrate_threshold and over_LCB
-            else:
+            else: #keep searching if it is over a very high probability threshold
                 meets_winrate_threshold = True
 
             best_child_can_be_searched = best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0

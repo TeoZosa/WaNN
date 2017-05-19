@@ -71,12 +71,12 @@ from threading import Lock, local, current_thread
 # (we can't multiprocess since tensorflow complains about interleaving calls to NNs from separate processes)
 
 
-NN_queue_lock = Lock()#making sure the queue is accessed one at a time
-async_update_lock = Lock() #for expansions, updates, and selecting a child
-NN_input_queue = [] #for expanded nodes that need to be evaluated asynchronously
-#for production, remove simulation info logging code
+# NN_queue_lock = Lock()#making sure the queue is accessed one at a time
+# NN_input_queue = [] #for expanded nodes that need to be evaluated asynchronously
+
 def MCTS_with_expansions(game_board, player_color, time_to_think,
                          depth_limit, previous_move, last_opponent_move, move_number, log_file=stdout, MCTS_Type='Expansion MCTS Pruning', policy_net=None, game_num = -1):
+    async_update_lock = Lock() #for expansions, updates, and selecting a child
 
     sim_info = SimulationInfo(log_file)
     time_to_think = time_to_think+1 #takes 1 second for first eval (io needs to warm up?)with threads, takes 1.125 times longer to finish up
@@ -85,7 +85,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
     sim_info['time_to_think'] = time_to_think
     sim_info['start_time'] = time()
 
-    sim_info['root'] = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info)
+    sim_info['root'] = root = assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move,  move_number, policy_net, sim_info, async_update_lock)
     sim_info['main_pid'] = current_thread().name
     # if move_number == 0 or move_number == 1:
     #     time_to_think = 60
@@ -143,7 +143,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
     parallel_search_threads = ThreadPool(processes=num_processes)
 
     sim_info['start_time'] = start_time = time()
-    MCTS_args = [[root, depth_limit,  sim_info,  policy_net, start_time, time_to_think]] * int(num_processes)
+    MCTS_args = [[root, depth_limit,  sim_info,  policy_net, start_time, time_to_think, async_update_lock]] * int(num_processes)
     #BFS tree to reset node check semaphore
     reset_thread_flag(root)
 
@@ -153,7 +153,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
             # async_NN_update_threads.apply_async(async_node_updates, NN_args)
         else:
             parallel_search_threads.starmap_async(run_MCTS_with_expansions_simulation, MCTS_args)
-            done = run_MCTS_with_expansions_simulation(root,depth_limit, sim_info,  policy_net, start_time, time_to_think) #have the main thread return done
+            done = run_MCTS_with_expansions_simulation(root,depth_limit, sim_info,  policy_net, start_time, time_to_think, async_update_lock) #have the main thread return done
     search_time = time() - start_time
     parallel_search_threads.terminate()
     # parallel_search_threads.close()
@@ -246,7 +246,7 @@ def reset_thread_flag(root):
             unvisited_queue.extend(node['children'])
 
 
-def assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info):
+def assign_root_reinforcement_learning(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info, async_update_lock):
     # if move_number == 0 and version > 0:
     #     input_file = open(r'G:\TruncatedLogs\PythonDataSets\DataStructures\GameTree\AgnosticRoot{}.p'.format(str(version-1)),
     #                            'r+b')
@@ -355,9 +355,9 @@ def get_num_nodes_in_tree(root):
         checked.append(node)
     return len(checked)
 
-cpdef run_MCTS_with_expansions_simulation(dict root,int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think ):
+cpdef run_MCTS_with_expansions_simulation(dict root,int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think , async_update_lock):
     if not root['subtree_checked']:
-        play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info,  policy_net, start_time, time_to_think)
+        play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info,  policy_net, start_time, time_to_think, async_update_lock)
         sim_info['counter'] += 1
         if root['subtree_checked']: #necessary for end game moves since 1-step lookahead makes the search stop prematurely
             done = True
@@ -371,7 +371,7 @@ cpdef run_MCTS_with_expansions_simulation(dict root,int depth_limit, dict sim_in
 
 
 
-cdef play_MCTS_game_with_expansions(dict root, int depth, int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think):
+cdef play_MCTS_game_with_expansions(dict root, int depth, int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think, async_update_lock):
     if root['gameover']is False: #terminates at end-of-game moves
         if root['children']is None : #reached non-game ending leaf node
             with async_update_lock:
@@ -381,20 +381,20 @@ cdef play_MCTS_game_with_expansions(dict root, int depth, int depth_limit, dict 
                 else:
                     abort = True
             if not abort:
-                expand_leaf_node(root, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think)
+                expand_leaf_node(root, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think, async_update_lock)
         else:#keep searching tree
 
-            select_UCT_child(root, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think)
+            select_UCT_child(root, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think, async_update_lock)
 
 
-cdef void expand_leaf_node(dict root, int depth, int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think):
+cdef void expand_leaf_node(dict root, int depth, int depth_limit, dict sim_info,  policy_net, start_time, int time_to_think, async_update_lock):
     if depth < depth_limit:
         # expand_and_select(root, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think)
         expand_descendants_to_depth_wrt_NN([root], depth, depth_limit, sim_info, async_update_lock, policy_net) #prepruning
     else:  # reached depth limit
         decrement_threads_checking_node(root)
 
-cdef void select_UCT_child(dict node, int depth, int depth_limit, dict sim_info, policy_net, start_time, int time_to_think):
+cdef void select_UCT_child(dict node, int depth, int depth_limit, dict sim_info, policy_net, start_time, int time_to_think, async_update_lock):
     with async_update_lock: #make sure it's not being updated asynchronously
         while node is not None and node['children']is not None:
             node['threads_checking_node']= 0 #clean this up on the way down

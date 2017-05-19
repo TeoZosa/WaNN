@@ -3,7 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -77,10 +77,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="525">
-      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="true">
+      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3893">
+            <state relative-caret-position="6205">
               <caret line="365" column="81" lean-forward="true" selection-start-line="365" selection-start-column="81" selection-end-line="365" selection-end-column="81" />
               <folding>
                 <element signature="e#46#77#0" expanded="true" />
@@ -130,12 +130,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="expansion_MCTS_functions.pyx" pinned="false" current-in-tab="false">
+      <file leaf-file-name="expansion_MCTS_functions.pyx" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="119">
-              <caret line="7" column="57" lean-forward="false" selection-start-line="7" selection-start-column="57" selection-end-line="7" selection-end-column="57" />
-              <folding />
+            <state relative-caret-position="5788">
+              <caret line="396" column="141" lean-forward="false" selection-start-line="396" selection-start-column="141" selection-end-line="396" selection-end-column="141" />
+              <folding>
+                <element signature="e#46#99#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -175,7 +177,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>column</find>
       <find>log_max_tree_height</find>
       <find>prev_game</find>
       <find>np.nd_array</find>
@@ -205,6 +206,7 @@
       <find>initial_game</find>
       <find>initial_gam</find>
       <find>cdef</find>
+      <find>async_update_lock</find>
     </findStrings>
     <replaceStrings>
       <replace>['num_to_keep']</replace>
@@ -296,13 +298,13 @@
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.c" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
         <option value="$PROJECT_DIR$/tools/utils.pyx" />
-        <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/TreeNode.pyx" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_builder.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/board_utils.pyx" />
         <option value="$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py" />
         <option value="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
+        <option value="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
       </list>
     </option>
   </component>
@@ -1036,13 +1038,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00220" summary="Added a move prediction LSTM. (more for class project than something useful)">
-      <created>1493240221367</created>
-      <option name="number" value="00220" />
-      <option name="presentableId" value="LOCAL-00220" />
-      <option name="project" value="LOCAL" />
-      <updated>1493240221368</updated>
-    </task>
     <task id="LOCAL-00221" summary="CNN RNN&#10;">
       <created>1493326417094</created>
       <option name="number" value="00221" />
@@ -1379,7 +1374,14 @@
       <option name="project" value="LOCAL" />
       <updated>1495152078970</updated>
     </task>
-    <option name="localTasksCounter" value="269" />
+    <task id="LOCAL-00269" summary="comments">
+      <created>1495152642984</created>
+      <option name="number" value="00269" />
+      <option name="presentableId" value="LOCAL-00269" />
+      <option name="project" value="LOCAL" />
+      <updated>1495152642984</updated>
+    </task>
+    <option name="localTasksCounter" value="270" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1393,12 +1395,13 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="801" y="305" width="2532" height="1705" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46652496" sideWeight="0.7020202" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19701493" sideWeight="0.44813278" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.26476577" sideWeight="0.42526963" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16836388" sideWeight="0.85699093" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16836388" sideWeight="0.85699093" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11530287" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22674897" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
@@ -1456,7 +1459,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="since 1 step lookahead gameover exists, prioritize choosing true gameovers vs. a win_status when possible" />
     <MESSAGE value="turned sim info into dict, only penalize if opponent not in home territory" />
     <MESSAGE value="pseudo-pruning now. eval children in batches" />
     <MESSAGE value="turned off reexpansion checks, pick the highest NN prob guaranteed child" />
@@ -1481,7 +1483,8 @@
     <MESSAGE value="bug fixes and optimizations" />
     <MESSAGE value="code cleanup" />
     <MESSAGE value="messing with search parameters" />
-    <option name="LAST_COMMIT_MESSAGE" value="messing with search parameters" />
+    <MESSAGE value="comments" />
+    <option name="LAST_COMMIT_MESSAGE" value="comments" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1613,7 +1616,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#46#99#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -1925,14 +1930,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="7" column="57" lean-forward="false" selection-start-line="7" selection-start-column="57" selection-end-line="7" selection-end-column="57" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/wanderer_vs_opponent.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="952">
@@ -1945,10 +1942,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3893">
+        <state relative-caret-position="6205">
           <caret line="365" column="81" lean-forward="true" selection-start-line="365" selection-start-column="81" selection-end-line="365" selection-end-column="81" />
           <folding>
             <element signature="e#46#77#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5788">
+          <caret line="396" column="141" lean-forward="false" selection-start-line="396" selection-start-column="141" selection-end-line="396" selection-end-column="141" />
+          <folding>
+            <element signature="e#46#99#0" expanded="true" />
           </folding>
         </state>
       </provider>

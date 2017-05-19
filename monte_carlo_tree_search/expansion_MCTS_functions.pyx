@@ -337,7 +337,7 @@ cdef void select_UCT_child(dict node, int depth, int depth_limit, dict sim_info,
 
             node = choose_UCT_or_best_child(node, start_time, time_to_think, sim_info) #if child is a leaf, chooses policy net's top choice
     if node is not None:
-        play_MCTS_game_with_expansions(node, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think)
+        play_MCTS_game_with_expansions(node, depth, depth_limit, sim_info,  policy_net, start_time, time_to_think, async_update_lock)
 
 
 

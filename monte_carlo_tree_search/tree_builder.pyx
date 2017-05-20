@@ -6,7 +6,7 @@ from monte_carlo_tree_search.TreeNode import TreeNode
 from Breakthrough_Player.board_utils import  check_legality_MCTS, get_top_children
 from monte_carlo_tree_search.tree_search_utils import update_tree_losses, update_tree_wins, \
     update_child, update_win_status_from_children, eval_child, eval_children, SimulationInfo, backpropagate_num_checked_children, \
-    increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node, get_opponent_color
+    increment_threads_checking_node, decrement_threads_checking_node, reset_threads_checking_node, get_opponent_color, update_num_children_being_checked
 from multiprocessing import Pool, Process, pool
 # from math import ceil
 from threading import Lock, current_thread
@@ -552,6 +552,7 @@ cdef assign_children(dict parent, list children, lock):
                 #     parent['children'] = [parent['children'][0]]
                 update_win_status_from_children(parent)
                 backpropagate_num_checked_children(parent)
+                update_num_children_being_checked(parent)
     # if parent['children'] is None:
     #     breakpoint = True
     return parent['children']

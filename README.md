@@ -20,9 +20,6 @@ This code is written in Python 3.5 and Cython syntax. Click the following links 
 - In [`self_play_to_data_structure`](../master/self_play_files/self_play_to_data_structure/), there are multiple auxiliary files (called from [`__main__.py`](../master/main.py)) for parsing the text files generated from self-play games by <a href="http://www.springer.com/cda/content/document/cda_downloaddocument/9783319279916-c2.pdf?SGWID=0-0-45-1545168-p177846880">`Wanderer`</a>, and transforming them into labeled training data for the neural networks (built using <a href="https://github.com/tensorflow/tensorflow"> Tensorflow</a>). 
 <br>NOTE: File destinations in the pipeline must be changed manually. In addition, these files use multiprocessing heavily. If you have a large corpus of data and do not have many processors with a significant amount of RAM (in my case, 16 and 128 GiB, respectively), use with caution (unless you want to render your computer unresponsive for a significant length of time).
 - The neural network training code resides in [`player_and_opponent_policy_nets.py`](../master/self_play_files/policy_net/player_and_opponent_policy_nets.py) (spaghetti as of 05/20/2017).
-<!---
-- In [`self_play_to_data_structure/`](../master/self_play_files/self_play_to_data_structure/), there are multiple auxiliary files for pulling the data from a <a href="https://www.littlegolem.net/jsp/games/gamedetail.jsp?gtid=brkthr">website storing Breakthrough game data</a>, or self-play logs, and transforming that data into labeled training data for the neural networks (built using <a href="https://github.com/tensorflow/tensorflow"> Tensorflow</a>).<p><p> 
---->
 - Currently optimizing `WaNN` based on feedback from games against Wanderer.
 
 ## Forthcoming

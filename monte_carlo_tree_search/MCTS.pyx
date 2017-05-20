@@ -41,7 +41,7 @@ class MCTS(object):
 
     def evaluate(self, game_board, player_color, background_search=False):
         previous_child = self.selected_child
-        if self.MCTS_type == 'EBFS MCTS' \
+        if self.MCTS_type == 'WaNN' \
             or self.MCTS_type == 'Expansion MCTS' \
             or self.MCTS_type == 'Expansion MCTS Pruning' \
             or self.MCTS_type ==  'MCTS Asynchronous'\

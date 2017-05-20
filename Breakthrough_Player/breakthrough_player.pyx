@@ -285,7 +285,7 @@ def get_player_move(game_board, color_to_move, player, MCTS_tree, background_sea
     elif player == 'Expansion MCTS' \
         or player == 'Expansion MCTS Pruning' \
         or player == 'Expansion MCTS Post-Pruning' \
-        or player == 'EBFS MCTS' \
+        or player == 'WaNN' \
         or player == 'MCTS Asynchronous'\
         or player == 'Wanderer'\
         or player == 'Policy':

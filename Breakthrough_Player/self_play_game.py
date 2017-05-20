@@ -18,11 +18,11 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   random_moves = 'Random'
   BFS_MCTS = 'BFS MCTS'
 
-  EBFS_MCTS = 'EBFS MCTS'
+  WaNN = 'WaNN'
 
   policy = "Policy"
 
-  opponent = EBFS_MCTS.strip(' ')
+  opponent = WaNN.strip(' ')
   path = r'G:\TruncatedLogs\PythonDatasets'
 
   #possible policy net opponents
@@ -44,7 +44,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
                                                                                          depth=depth_limit,
                                                                                          time_to_think=time_to_think)),
                                'a')
-    winner_color = self_play_game(white_player=EBFS_MCTS, black_opponent=policy, depth_limit=depth_limit,
+    winner_color = self_play_game(white_player=WaNN, black_opponent=policy, depth_limit=depth_limit,
                                   time_to_think=time_to_think, file_to_write=gameplay_file, MCTS_log_file=MCTS_logging_file)
     if winner_color == 'White':
       white_wins += 1

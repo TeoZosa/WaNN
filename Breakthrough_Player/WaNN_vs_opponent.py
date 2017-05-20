@@ -25,14 +25,14 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
 
   random_moves = 'Random'
   BFS_MCTS = 'BFS MCTS'
-  EBFS_MCTS = 'EBFS MCTS'
+  WaNN = 'WaNN'
   policy = "Policy"
   # player_for_path = 'EMCTSPruning'
-  player_for_path = EBFS_MCTS
+  player_for_path = WaNN
   Windows_path = r'G:\TruncatedLogs\PythonDatasets\10ttt'
   OSX_path = r'/Users/TeofiloZosa/BreakthroughData/03122017SelfPlay'
   path = Windows_path
-  white_player = EBFS_MCTS
+  white_player = WaNN
   black_opponent = wanderer
   # root = None
 

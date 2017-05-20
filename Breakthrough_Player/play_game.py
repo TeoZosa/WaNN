@@ -17,7 +17,7 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
   human = 'Human'
   random_moves = 'Random'
   BFS_MCTS = 'BFS MCTS'
-  EBFS_MCTS = 'EBFS MCTS'
+  WaNN = 'WaNN'
   policy = "Policy"
   opponent_for_path = 'EMCTSPruning'
   # path = r'G:\TruncatedLogs\PythonDatasets'

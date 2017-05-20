@@ -232,7 +232,7 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
     cdef:
         int parent_visits = node['visits']
         list viable_children = []
-        float threshold
+        float first_threshold
         float second_threshold
         double best_val
     best = None
@@ -263,7 +263,7 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
                                    if not (child['subtree_checked'] )  #DeMorgan's law
                                    and (child['threads_checking_node'] <=0 or child['children'] is not None)]
 
-    else:#search subtrees that need to be reexpanded
+    else:#
 
         best_prob = node['children'][0]['UCT_multiplier']-1
         if node['color'] == sim_info['root']['color']:
@@ -279,7 +279,7 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
                 first_threshold = 1.20
                 second_threshold = 1.15
         else:
-            threshold = 1.1
+            first_threshold = 1.1
             second_threshold= 1.01
 
 
@@ -292,7 +292,7 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
         #
         viable_children = [child for child in node['children']
                            if (child['win_status'] is None and not child['subtree_being_checked'])
-                           and child['UCT_multiplier'] > threshold
+                           and child['UCT_multiplier'] > first_threshold
                            and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
                            and (child['threads_checking_node'] <=0 or child['children'] is not None)]#and not child['subtree_being_checked']
         if len(viable_children) == 0:
@@ -305,7 +305,7 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
             if node is sim_info['root']:
                 viable_children = [child for child in node['children']
                                    if (child['win_status'] is None and not child['subtree_being_checked'])
-                                   and child['UCT_multiplier'] > threshold
+                                   and child['UCT_multiplier'] > first_threshold
                                    # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
                                    and (child['threads_checking_node'] <=0 or child['children'] is not None)]
 

@@ -36,7 +36,7 @@ from threading import Lock, local, current_thread
 #BEST SO FAR
 
 #OR
-# EBFS MCTS: Hybrid BFS MCTS with expansion to desired depth using policy net to generate prior values
+# WaNN: Hybrid BFS MCTS with expansion to desired depth using policy net to generate prior values
 # since we can use policy net to prune children, makes continued expansion tractable.
 # (O = num_moves_over_threshold ^depth)
 # Therefore, we can expand tree nodes in batches during MCTS to take advantage of batch NN processing

@@ -210,16 +210,16 @@ cpdef void update_num_children_being_checked(dict node):
             if (child['threads_checking_node'] > 0 and child['children'] is None) or child['subtree_being_checked'] or child['win_status'] is not None:
                 children_being_checked+=1
 
-    node['num_children_being_checked'] = children_being_checked
-    previous_status = node['subtree_being_checked']
-    if children_being_checked ==len(node['children']):
-        node['subtree_being_checked'] =True
-    else:
-        node['subtree_being_checked'] =False
+        node['num_children_being_checked'] = children_being_checked
+        previous_status = node['subtree_being_checked']
+        if children_being_checked ==len(node['children']):
+            node['subtree_being_checked'] =True
+        else:
+            node['subtree_being_checked'] =False
 
-    #if the flag changed, may have to update the parent
-    if previous_status != node['subtree_being_checked'] and node['parent'] is not None:
-        update_num_children_being_checked(node['parent'])
+        #if the flag changed, may have to update the parent
+        if previous_status != node['subtree_being_checked'] and node['parent'] is not None:
+            update_num_children_being_checked(node['parent'])
 
 
 def choose_UCT_move(node, start_time, time_to_think, sim_info):
@@ -302,6 +302,7 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
             #         and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))\
             #         and (child['threads_checking_node'] <=0 or child['children'] is not None):
             #         append(child)
+            #TODO: 70%WR had  if node is sim_info['root']:, must try switching back to color and uncommenting the last line
             if node is sim_info['root']:
                 viable_children = [child for child in node['children']
                                    if (child['win_status'] is None and not child['subtree_being_checked'])
@@ -336,7 +337,7 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
                                            # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
                                            and (child['threads_checking_node'] <=0 or child['children'] is not None)]#and not child['subtree_being_checked']
 
-                        # if len(viable_children) == 0:#TODO: WILL STALL THE TREE SEARCH IF WE DO EOG BATCH EXPANSIONS WITH B = 1 (THREADS BURROW INTO TREE. SINCE ONLY 1 CHILD => SUBTREE BEING CHECKED)
+                        # if len(viable_children) == 0:#TODO: WILL STALL THE TREE SEARCH IF WE DO EOG BATCH EXPANSIONS WITH B = 1 (THREADS BURROW INTO TREE. SINCE ONLY 1 CHILD => SUBTREE BEING CHECKED) since it needs to determine win statuses of lower prob children to determine win status
                             # viable_children = [child for child in node['children']
                             #        if (child['win_status'] is None)
                             #        and child['UCT_multiplier'] > threshold

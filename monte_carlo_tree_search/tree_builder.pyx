@@ -485,7 +485,7 @@ cdef dict get_child(dict parent, str move, np.ndarray NN_output, dict sim_info, 
 
 cdef assign_children(dict parent, list children, lock):
     cdef:
-        list parent_children
+        list parent_children = []
         list other_children
         double best_val
         int game_over_row
@@ -517,8 +517,11 @@ cdef assign_children(dict parent, list children, lock):
 
                 if gameover_next_move:
                     for child in children:
-                        if not (child['game_saving_move'] or child['gameover']):
+                        if child['game_saving_move']: #only check the children without a win_status
+                            parent_children.append(child)
+                        elif not child['gameover']: #if it didn't save or win the game, it was a loser
                             set_game_over_values_1_step_lookahead(child)
+
                     parent['children'] = children
 
                 elif parent['num_to_keep']  != 999:
@@ -544,6 +547,7 @@ cdef assign_children(dict parent, list children, lock):
                     parent['other_children'] = other_children
                 else:
                     parent['children'] = children
+                    parent_children = children
                     eval_children(children)#slightly more efficient to do them as a batch
 
                 if parent['num_to_consider'] == 0 or (parent['other_children'] is None or len (parent['other_children']) == 0): # len (parent['children']) >=  Virtually reexpanded;  else may try to reexpand and thrash around in tree search
@@ -555,7 +559,7 @@ cdef assign_children(dict parent, list children, lock):
                 update_num_children_being_checked(parent)
     # if parent['children'] is None:
     #     breakpoint = True
-    return parent['children']
+    return parent_children
 
 
 cdef dict init_unique_child_node_and_board(str child_as_move, dict parent):

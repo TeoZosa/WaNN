@@ -1,11 +1,9 @@
 import os
-import  pickle
+import pickle
 import warnings
 from multiprocessing import Process, pool, Pool
-from multiprocessing.pool import ThreadPool
 
-from tools import numpy_array
-from self_play_files.self_play_to_data_structure import self_play_logs_to_data_structures as convertLog
+from self_play_files.self_play_to_data_structure import self_play_logs_to_data_structures as convertLog, numpy_array
 
 
 class NoDaemonProcess(Process):

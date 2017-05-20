@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
-      <change type="MOVED" beforePath="$PROJECT_DIR$/tools/numpy_array.py" afterPath="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/numpy_array.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py" afterPath="$PROJECT_DIR$/self_play_files/policy_net/player_and_opponent_policy_nets.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" afterPath="$PROJECT_DIR$/self_play_files/self_play_to_data_structure/self_play_logs_to_training_data.py" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -78,13 +77,25 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="525">
-      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="true">
+      <file leaf-file-name="tree_search_utils.pyx" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="6545">
               <caret line="641" column="31" lean-forward="true" selection-start-line="641" selection-start-column="31" selection-end-line="641" selection-end-column="31" />
               <folding>
                 <element signature="e#46#77#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="player_and_opponent_policy_nets.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/player_and_opponent_policy_nets.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-867">
+              <caret line="125" column="15" lean-forward="false" selection-start-line="125" selection-start-column="15" selection-end-line="125" selection-end-column="15" />
+              <folding>
+                <element signature="e#1#39#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -186,7 +197,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>log_max_tree_height</find>
       <find>prev_game</find>
       <find>np.nd_array</find>
       <find>np.ndarray</find>
@@ -215,6 +225,7 @@
       <find>async_update_lock</find>
       <find>initial_game</find>
       <find>initial_gam</find>
+      <find>cdef</find>
       <find>cdef</find>
     </findStrings>
     <replaceStrings>
@@ -256,7 +267,7 @@
     </dirStrings>
   </component>
   <component name="Git.Settings">
-    <option name="UPDATE_TYPE" value="MERGE" />
+    <option name="UPDATE_TYPE" value="REBASE" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
@@ -324,8 +335,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-11" />
-    <option name="y" value="6" />
+    <option name="x" value="787" />
+    <option name="y" value="205" />
     <option name="width" value="1827" />
     <option name="height" value="1237" />
   </component>
@@ -469,39 +480,21 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="policy_net_model" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="policy_net_model" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="DualWinningNets065Accuracy" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="BreakthroughANN" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
               <option name="myItemId" value="monte_carlo_tree_search" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="BreakthroughANN" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="BreakthroughANN" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="little_golem_players_files" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -948,7 +941,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="BreakthroughANN" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\damon\PycharmProjects\BreakthroughANN\self_play_files\policy_net\player_and_opponent_policy_nets.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -1046,13 +1039,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
-    </task>
-    <task id="LOCAL-00226" summary="doing all copies and deepcopies by hand">
-      <created>1494304599047</created>
-      <option name="number" value="00226" />
-      <option name="presentableId" value="LOCAL-00226" />
-      <option name="project" value="LOCAL" />
-      <updated>1494304599047</updated>
     </task>
     <task id="LOCAL-00227" summary="further optimizing (C-ified UCT calculation)">
       <created>1494359554616</created>
@@ -1390,7 +1376,14 @@
       <option name="project" value="LOCAL" />
       <updated>1495292720429</updated>
     </task>
-    <option name="localTasksCounter" value="275" />
+    <task id="LOCAL-00275" summary="moved numpy">
+      <created>1495294085332</created>
+      <option name="number" value="00275" />
+      <option name="presentableId" value="LOCAL-00275" />
+      <option name="project" value="LOCAL" />
+      <updated>1495294085332</updated>
+    </task>
+    <option name="localTasksCounter" value="276" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1403,7 +1396,8 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-11" y="6" width="1827" height="1237" extended-state="0" />
+    <frame x="787" y="205" width="1827" height="1237" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46652496" sideWeight="0.7020202" order="7" side_tool="true" content_ui="tabs" />
@@ -1412,7 +1406,7 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24477611" sideWeight="0.85699093" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11530287" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31942028" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.31942028" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922536" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.45892736" sideWeight="0.2979798" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2498671" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -1467,7 +1461,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="a little more filtering and extra true wins/losses for visits that get a win_status." />
     <MESSAGE value="truncate win statuses for WaNN" />
     <MESSAGE value="guarding home better, check all home rows that can capture for game saving moves." />
     <MESSAGE value="search best if under threshold (diff for each player), put height back into penalty judgment" />
@@ -1492,7 +1485,8 @@
     <MESSAGE value="cleaning up code" />
     <MESSAGE value="added a move selection filter so low probability outliers with high mean action values can be chosen (rare, but happens)" />
     <MESSAGE value="cleaned up code" />
-    <option name="LAST_COMMIT_MESSAGE" value="cleaned up code" />
+    <MESSAGE value="moved numpy" />
+    <option name="LAST_COMMIT_MESSAGE" value="moved numpy" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1553,7 +1547,7 @@
           <option name="timeStamp" value="537" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py</url>
+          <url>file://$PROJECT_DIR$/self_play_files/policy_net/player_and_opponent_policy_nets.py</url>
           <line>224</line>
           <option name="timeStamp" value="576" />
         </line-breakpoint>
@@ -1568,7 +1562,7 @@
           <option name="timeStamp" value="604" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py</url>
+          <url>file://$PROJECT_DIR$/self_play_files/policy_net/player_and_opponent_policy_nets.py</url>
           <line>195</line>
           <option name="timeStamp" value="631" />
         </line-breakpoint>
@@ -1810,16 +1804,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/black_and_white_policy_nets.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="125" column="15" lean-forward="false" selection-start-line="125" selection-start-column="15" selection-end-line="125" selection-end-column="15" />
-          <folding>
-            <element signature="e#1#39#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/setup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="391">
@@ -1960,6 +1944,16 @@
           <caret line="641" column="31" lean-forward="true" selection-start-line="641" selection-start-column="31" selection-end-line="641" selection-end-column="31" />
           <folding>
             <element signature="e#46#77#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/self_play_files/policy_net/player_and_opponent_policy_nets.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-867">
+          <caret line="125" column="15" lean-forward="false" selection-start-line="125" selection-start-column="15" selection-end-line="125" selection-end-column="15" />
+          <folding>
+            <element signature="e#1#39#0" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -21,7 +21,6 @@ cpdef dict SimulationInfo(file):
         'start_time': None,
         'time_to_think': None,
         'root': None,
-        'game_num': 0,
         'do_eval': True,
         'main_pid': -1,
         'root_thread_counter': 0,
@@ -501,11 +500,11 @@ cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
 cdef double calculate_PUCT(double c, double NN_prob, int sibling_visits, int visits):
     return c*NN_prob*(sqrt(sibling_visits)/(1+visits))
 
-def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose among equally successful children
+def randomly_choose_a_winning_move(node): #for stochasticity: choose among equally successful children
     best_nodes = []
     win_can_be_forced = False
     if node['children'] is not None:
-        win_can_be_forced, best_nodes = check_for_forced_win(node['children'],game_num)
+        win_can_be_forced, best_nodes = check_for_forced_win(node['children'])
         if not win_can_be_forced:
 
             best = choose_best_true_loser(node['children'])
@@ -515,7 +514,7 @@ def randomly_choose_a_winning_move(node, game_num): #for stochasticity: choose a
 
 
             if len(best_nodes) == 0:
-                best_nodes = get_best_children(node['children'],game_num)
+                best_nodes = get_best_children(node['children'])
     # if len(best_nodes) == 0:
     #     breakpoint = True
     return best_nodes[0]  # because a win for me = a loss for child
@@ -581,7 +580,7 @@ def choose_best_true_loser(node_children, second_time=False):
         best = node_children[0]
     return best
 
-def check_for_forced_win(node_children, game_num):
+def check_for_forced_win(node_children):
     forced_win = False
     guaranteed_children = []
     best_guaranteed_child = None
@@ -627,7 +626,7 @@ def transform_wrt_overwhelming_amount(child, overwhelming_on=False):
     return child_wins_norm, child_visits_norm, true_wins, true_losses
 
 
-def get_best_children(node_children, game_num):#TODO: make sure to not pick winning children?
+def get_best_children(node_children):#TODO: make sure to not pick winning children?
     best, best_val = get_best_child(node_children)
     # best, best_val = get_best_most_visited_child(node_children)
     best_nodes = []

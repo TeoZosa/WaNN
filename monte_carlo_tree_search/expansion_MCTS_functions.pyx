@@ -76,11 +76,10 @@ from threading import Lock, local, current_thread
 
 def MCTS_with_expansions(game_board, player_color, time_to_think,
                          depth_limit, previous_move, last_opponent_move, move_number, log_file=stdout, MCTS_Type='Expansion MCTS Pruning', policy_net=None, game_num = -1):
-    async_update_lock = Lock() #for expansions, updates, and selecting a child
+    async_update_lock = Lock() #for expansions, updates, and selectinF a child
 
     sim_info = SimulationInfo(log_file)
     time_to_think = time_to_think+1 #takes 1 second for first eval (io needs to warm up?)with threads, takes 1.125 times longer to finish up
-    sim_info['game_num'] = game_num
     sim_info['time_to_think'] = time_to_think
 
     root = assign_root(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info, async_update_lock)
@@ -123,7 +122,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
 
 
 
-    best_child = randomly_choose_a_winning_move(root, max(0, game_num))
+    best_child = randomly_choose_a_winning_move(root)
 
     # if (move_number == 0 or move_number == 1) and game_num > -1: #save each iteration. If training makes it worse, we can revert back to a better version and change search parameters.
     #     top_root = root
@@ -357,7 +356,7 @@ cpdef void print_simulation_statistics(dict sim_info):
     print("\n", file=sim_info['file'])
     #to see best reply
     if root['children']is not None:
-        best_child = randomly_choose_a_winning_move(root, sim_info['game_num'])
+        best_child = randomly_choose_a_winning_move(root)
         best_move =  move_lookup_by_index(best_child['index'],root['color'])
         best_child_UCT = get_UCT(best_child, root['visits'], start_time, time_to_think,sim_info)
         wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(best_child, overwhelming_on)
@@ -385,7 +384,7 @@ cpdef void print_simulation_statistics(dict sim_info):
 
         #to see predicted best counter
         if best_child['children'] is not None:
-            best_counter_child = randomly_choose_a_winning_move(best_child, sim_info['game_num'])
+            best_counter_child = randomly_choose_a_winning_move(best_child)
             best_counter_move = move_lookup_by_index(best_counter_child['index'],best_child['color'])
             best_counter_child_UCT = get_UCT(best_counter_child, best_child['visits'], start_time, time_to_think,sim_info)
             wins, visits, true_wins, true_losses = transform_wrt_overwhelming_amount(best_counter_child, overwhelming_on)

@@ -28,7 +28,7 @@ class MCTS(object):
         self.last_opponent_move = None
         self.MCTS_type = MCTS_type
         self.log_file = MCTS_log_file
-        self.height = 0
+        self.root_height = 0
         self.policy_net = neural_net
         self.game_num = -1
         self.color = color
@@ -47,11 +47,7 @@ class MCTS(object):
 
     def evaluate(self, game_board, player_color, background_search=False):
         previous_child = self.selected_child
-        if self.MCTS_type == 'WaNN' \
-            or self.MCTS_type == 'Expansion MCTS' \
-            or self.MCTS_type == 'Expansion MCTS Pruning' \
-            or self.MCTS_type ==  'MCTS Asynchronous'\
-            or self.MCTS_type == 'Expansion MCTS Post-Pruning': #TODO remove references to deprecated versions
+        if self.MCTS_type == 'WaNN':
             if background_search:
                 _, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, self.previous_selected_child, self.last_opponent_move, self.height-1, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
             else:

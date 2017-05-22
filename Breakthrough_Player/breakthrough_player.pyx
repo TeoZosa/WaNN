@@ -28,7 +28,7 @@ class MyPool(pool.Pool):  # make a special class to allow for an inner process p
     Process = NoDaemonProcess
 
 def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout, root=None, game_num=-1, policy_net=None):
-    gc.disable()
+    # gc.disable()
     cheat_search = True
     if policy_net is None:
         policy_net = NeuralNetsCombined_128()#_128
@@ -65,18 +65,18 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     full_command = open_input_engine + ' ' + wanderer_color.lower() + ' ' + wanderer_executable + ' ' + ttt
     # wanderer = pexpect.spawn(open_input_engine,  args= [color_to_be, wanderer_executable, ttt])
     # wanderer = PopenSpawn(full_command, cwd=r'C:\Users\damon\PycharmProjects\BreakthroughANN' )
-    wanderer = PopenSpawn([open_input_engine, wanderer_color.lower(), wanderer_executable, ttt])
+    wanderer_exe = PopenSpawn([open_input_engine, wanderer_color.lower(), wanderer_executable, ttt])
 
-    with MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer) as wanderer_MCTS_tree, \
-        MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net) as computer_MCTS_tree:
+    with MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer_exe) as wanderer, \
+        MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net) as WaNN:
     # wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer)
-        wanderer.log_file = sys.stdout
+        wanderer_exe.log_file = sys.stdout
 
         # computer_MCTS_tree = MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net)
-        computer_MCTS_tree.game_num = game_num
+        WaNN.game_num = game_num
 
         if root is not None:
-            computer_MCTS_tree.selected_child = root
+            WaNN.selected_child = root
 
         print("{white} Vs. {black}".format(white=white_player, black=black_opponent), file=file_to_write)
 
@@ -85,11 +85,11 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
         move_number = 0
         winner_color = None
         web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
-        while not gameover: #TODO find a way to keep searching tree while waiting for wanderer's move instead of taking turns
+        while not gameover:
             gc.collect()
 
             print_board(game_board, file=file_to_write)
-            computer_MCTS_tree.height = wanderer_MCTS_tree.height = move_number
+            WaNN.root_height = wanderer.root_height = move_number
             if wanderer_color == 'Black':
                 wanderers_move = move_number % 2 == 1
             else:
@@ -98,12 +98,12 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
             if move_number>2 and wanderers_move and cheat_search:
 
                 #search again while waiting for wanderer's move
-                get_move(prev_game_board, white_player, black_opponent, move_number-1, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search=True)
+                get_move(prev_game_board, white_player, black_opponent, move_number-1, WaNN, wanderer, file_to_write, background_search=True)
 
                 #get wanderer's move
-                move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+                move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, WaNN, wanderer, file_to_write)
             else:
-                move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+                move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, WaNN, wanderer, file_to_write)
                 prev_game_board = game_board
             if move is None:
                 return move
@@ -115,7 +115,7 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
                 move = move.split(r'x')
             if (color_to_move == 'Black' and wanderer_color =='Black') or (color_to_move == 'White' and wanderer_color =='White'):
                 move_to_send = move[0]+'-' +move[1]
-                computer_MCTS_tree.last_opponent_move = move_to_send
+                WaNN.last_opponent_move = move_to_send
             web_visualizer_link = web_visualizer_link + move[0] + move[1]
             gameover, winner_color = game_over(game_board)
             move_number += 1
@@ -145,10 +145,82 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
 
 
 
-        if wanderer_MCTS_tree is not None:
-            wanderer_MCTS_tree.policy_net.sendline('quit')
+        if wanderer is not None:
+            wanderer.policy_net.sendline('quit')
         return winner_color
 
+def human_vs_WaNN(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout, root=None, game_num=-1, policy_net=None):
+    gc.disable()
+    cheat_search = True
+    if policy_net is None:
+        policy_net = NeuralNetsCombined_128()#_128
+
+    if white_player == 'WaNN':
+        human = 'Black'
+        WaNN_color = 'White'
+        human_player = black_opponent
+        WaNN_player = white_player
+
+    else:
+        human = 'White'
+        WaNN_color = 'Black'
+        human_player = white_player
+        WaNN_player = black_opponent
+
+    with MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net) as WaNN:
+        WaNN.game_num = game_num
+
+        if root is not None:
+            WaNN.selected_child = root
+
+        print("{white} Vs. {black}".format(white=white_player, black=black_opponent), file=file_to_write)
+
+        game_board = initial_game_board()
+        gameover = False
+        move_number = 0
+        winner_color = None
+        web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
+        while not gameover:
+            gc.collect()
+
+            print_board(game_board, file=file_to_write)
+            WaNN.root_height = move_number
+            if human == 'Black':
+                human_move = move_number % 2 == 1
+            else:
+                human_move = move_number %2 == 0
+
+            if move_number>2 and human_move and cheat_search:
+
+                #search again while waiting for wanderer's move
+                get_move(prev_game_board, white_player, black_opponent, move_number-1, WaNN, None, file_to_write, background_search=True)
+
+                #get human's move
+                move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, WaNN, None, file_to_write)
+            else:
+                move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, WaNN, None, file_to_write)
+                prev_game_board = game_board
+            if move is None:
+                return move
+            print_move(move, color_to_move, file_to_write)
+            game_board = move_piece(game_board, move, color_to_move)
+            if move[2] == r'-':
+                move = move.split(r'-')
+            else:
+                move = move.split(r'x')
+            if (color_to_move == 'Black' and human =='Black') or (color_to_move == 'White' and human =='White'):
+                move_to_send = move[0]+'-' +move[1]
+                WaNN.last_opponent_move = move_to_send
+            web_visualizer_link = web_visualizer_link + move[0] + move[1]
+            gameover, winner_color = game_over(game_board)
+            move_number += 1
+        print_board(game_board, file=file_to_write)
+        print("Game over. {} wins".format(winner_color), file=file_to_write)
+        print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
+
+
+
+        return winner_color
 
 def play_game(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=open(os.devnull, 'w')):
     policy_net = NeuralNetsCombined()
@@ -240,7 +312,7 @@ def self_play_game(white_player, black_opponent, depth_limit, time_to_think, fil
     winner_color = None
     web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
     while not gameover:
-        white_MCTS_tree.height = black_MCTS_tree.height = move_number
+        white_MCTS_tree.root_height = black_MCTS_tree.root_height = move_number
         print_board(game_board, file=file_to_write)
         move, color_to_move = get_move_self_play(game_board, white_player, move_number, black_opponent, white_MCTS_tree, black_MCTS_tree)
         print_move(move, color_to_move, file_to_write)
@@ -289,11 +361,7 @@ def get_blacks_move_self_play(game_board, black_opponent, move_number, black_MCT
 def get_player_move(game_board, color_to_move, player, MCTS_tree, background_search=False):
     if player == 'Random':
         move = get_random_move(game_board, color_to_move)
-    elif player == 'Expansion MCTS' \
-        or player == 'Expansion MCTS Pruning' \
-        or player == 'Expansion MCTS Post-Pruning' \
-        or player == 'WaNN' \
-        or player == 'MCTS Asynchronous'\
+    elif player == 'WaNN' \
         or player == 'Wanderer'\
         or player == 'Policy':
         move = MCTS_tree.evaluate(game_board, color_to_move, background_search)

@@ -25,7 +25,7 @@ This code is written in Python 3.5 and Cython syntax. Click the following links 
 
 ## Forthcoming
 - Command line arguments to [`WaNN_vs_opponent.py`](../master/Breakthrough_Player/WaNN_vs_opponent.py) for a more streamlined interface
-- `WaNN` will eventually be rewritten in C/C++.
+- `WaNN` entirely rewritten in C/C++.
 - Reinforcement Learning (maybe).
 
 ## Deprecated

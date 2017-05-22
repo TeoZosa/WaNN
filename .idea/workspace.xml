@@ -2,11 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="da30d3d7-bf9d-413b-8d12-0daf6d060639" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/WinRankAccuracyNumTrainingSamples.png" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/WinRatioValidationCurveNumHiddenUnits.png" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/WinRatioValidationCurveNumHiddenUnits2.png" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.pyx" afterPath="$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.pyx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/MCTS.pyx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/expansion_MCTS_functions.pyx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" afterPath="$PROJECT_DIR$/monte_carlo_tree_search/tree_search_utils.pyx" />
     </list>
     <list id="84d7ee66-7e02-4b3a-b6de-08181c4c4145" name="New changelist" comment="" />
     <ignored path="untitled1.iws" />
@@ -85,8 +84,8 @@
           <file leaf-file-name="breakthrough_player.pyx" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.pyx">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="561">
-                  <caret line="170" column="8" lean-forward="false" selection-start-line="170" selection-start-column="8" selection-end-line="170" selection-end-column="8" />
+                <state relative-caret-position="51">
+                  <caret line="140" column="61" lean-forward="false" selection-start-line="140" selection-start-column="61" selection-end-line="140" selection-end-column="61" />
                   <folding>
                     <element signature="e#46#163#0" expanded="true" />
                   </folding>
@@ -323,8 +322,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="743" />
-    <option name="y" value="424" />
+    <option name="x" value="916" />
+    <option name="y" value="633" />
     <option name="width" value="2590" />
     <option name="height" value="1439" />
   </component>
@@ -960,13 +959,6 @@
       <option name="presentableId" value="Default" />
       <updated>1463971285408</updated>
     </task>
-    <task id="LOCAL-00232" summary="fixed bug when children returned None">
-      <created>1494464471819</created>
-      <option name="number" value="00232" />
-      <option name="presentableId" value="LOCAL-00232" />
-      <option name="project" value="LOCAL" />
-      <updated>1494464471819</updated>
-    </task>
     <task id="LOCAL-00233" summary="1 step lookahead for a loss">
       <created>1494468956986</created>
       <option name="number" value="00233" />
@@ -1303,7 +1295,14 @@
       <option name="project" value="LOCAL" />
       <updated>1495471649253</updated>
     </task>
-    <option name="localTasksCounter" value="281" />
+    <task id="LOCAL-00281" summary="added a human v WaNN interface">
+      <created>1495476224598</created>
+      <option name="number" value="00281" />
+      <option name="presentableId" value="LOCAL-00281" />
+      <option name="project" value="LOCAL" />
+      <updated>1495476224598</updated>
+    </task>
+    <option name="localTasksCounter" value="282" />
     <servers />
   </component>
   <component name="TodoView">
@@ -1316,8 +1315,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="743" y="424" width="2590" height="1439" extended-state="0" />
-    <editor active="true" />
+    <frame x="916" y="633" width="2590" height="1439" extended-state="0" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17056324" sideWeight="0.47971144" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46652496" sideWeight="0.7020202" order="7" side_tool="true" content_ui="tabs" />
@@ -1326,7 +1324,7 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3802817" sideWeight="0.85699093" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.11530287" sideWeight="0.5135257" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22146302" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22146302" sideWeight="0.13032258" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32922536" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.45870647" sideWeight="0.2979798" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2498671" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -1381,7 +1379,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="changed NN scaling for UCT WR choice to 1/4 as opposed to 1/10" />
     <MESSAGE value="made UCT select code more readable" />
     <MESSAGE value="c-ified functions" />
     <MESSAGE value="reduced restrictions on choosing true losers." />
@@ -1406,7 +1403,8 @@
     <MESSAGE value="typo" />
     <MESSAGE value="only sending back game saving moves if next move is a game over, found out the tree search stalls on player because the threshold leaves out nodes that need to be checked for a win status." />
     <MESSAGE value="switched back to old config (18% better WR). Manually garbage collecting. Added exit statements and context managers. Still trying to figure out why the first game gets so many nodes while subsequent ones don't" />
-    <option name="LAST_COMMIT_MESSAGE" value="switched back to old config (18% better WR). Manually garbage collecting. Added exit statements and context managers. Still trying to figure out why the first game gets so many nodes while subsequent ones don't" />
+    <MESSAGE value="added a human v WaNN interface" />
+    <option name="LAST_COMMIT_MESSAGE" value="added a human v WaNN interface" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1882,8 +1880,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Breakthrough_Player/breakthrough_player.pyx">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="561">
-          <caret line="170" column="8" lean-forward="false" selection-start-line="170" selection-start-column="8" selection-end-line="170" selection-end-column="8" />
+        <state relative-caret-position="51">
+          <caret line="140" column="61" lean-forward="false" selection-start-line="140" selection-start-column="61" selection-end-line="140" selection-end-column="61" />
           <folding>
             <element signature="e#46#163#0" expanded="true" />
           </folding>

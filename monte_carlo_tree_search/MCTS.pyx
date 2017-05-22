@@ -33,11 +33,17 @@ class MCTS(object):
         self.game_num = -1
         self.color = color
 
-        def __enter__(self):
-            return self
+    def __enter__(self):
+        return self
 
-        def __exit__(self, exc_type, exc_value, traceback):
-            pass
+    def __exit__(self, exc_type, exc_value, traceback):
+
+        self.selected_child = None
+        self.previous_selected_child = None
+        self.last_opponent_move = None
+        self.log_file = None
+        self.policy_net = None
+
 
     def evaluate(self, game_board, player_color, background_search=False):
         previous_child = self.selected_child
@@ -116,6 +122,12 @@ class NeuralNetsCombined():
         else:
             output = self.sess.run(y_pred, feed_dict={X: inference_batches[0]})
         return output
+    def __enter__(self):
+        return self
+
+    #close the tensorflow session when we are done.
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.sess.close()
 
 class NeuralNetsCombined_128():
     """'
@@ -169,6 +181,12 @@ class NeuralNetsCombined_128():
         else:
             output = self.sess.run(y_pred, feed_dict={X: inference_batches[0]})
         return output
+    def __enter__(self):
+        return self
+
+    #close the tensorflow session when we are done.
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.sess.close()
 
 #TODO: Deprecated. Remove.
 

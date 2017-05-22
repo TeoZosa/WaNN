@@ -7,10 +7,11 @@ from monte_carlo_tree_search.MCTS import MCTS, NeuralNetsCombined, NeuralNetsCom
 import sys
 import os
 from multiprocessing import  Process, pool
-from multiprocessing.pool import ThreadPool
-import pexpect
+# from multiprocessing.pool import ThreadPool
+# import pexpect
 from pexpect.popen_spawn import PopenSpawn
-import pickle
+# import pickle
+import gc
 
 
 class NoDaemonProcess(Process):
@@ -26,8 +27,12 @@ class NoDaemonProcess(Process):
 class MyPool(pool.Pool):  # make a special class to allow for an inner process pool
     Process = NoDaemonProcess
 
-def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout, root=None, game_num=-1):
+def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=sys.stdout, root=None, game_num=-1, policy_net=None):
+    gc.disable()
     cheat_search = True
+    if policy_net is None:
+        policy_net = NeuralNetsCombined_128()#_128
+
 
 
 
@@ -61,61 +66,63 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
     # wanderer = pexpect.spawn(open_input_engine,  args= [color_to_be, wanderer_executable, ttt])
     # wanderer = PopenSpawn(full_command, cwd=r'C:\Users\damon\PycharmProjects\BreakthroughANN' )
     wanderer = PopenSpawn([open_input_engine, wanderer_color.lower(), wanderer_executable, ttt])
-    wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer)
-    wanderer.log_file = sys.stdout
 
-    policy_net = NeuralNetsCombined_128()#_128
-    computer_MCTS_tree = MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net)
-    computer_MCTS_tree.game_num = game_num
+    with MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer) as wanderer_MCTS_tree, \
+        MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net) as computer_MCTS_tree:
+    # wanderer_MCTS_tree = MCTS(depth_limit, time_to_think, wanderer_color, wand_player, MCTS_log_file, wanderer)
+        wanderer.log_file = sys.stdout
 
-    if root is not None:
-        computer_MCTS_tree.selected_child = root
+        # computer_MCTS_tree = MCTS(depth_limit, time_to_think, WaNN_color, WaNN_player, MCTS_log_file, policy_net)
+        computer_MCTS_tree.game_num = game_num
 
-    print("{white} Vs. {black}".format(white=white_player, black=black_opponent), file=file_to_write)
+        if root is not None:
+            computer_MCTS_tree.selected_child = root
 
-    game_board = initial_game_board()
-    gameover = False
-    move_number = 0
-    winner_color = None
-    web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
-    while not gameover: #TODO find a way to keep searching tree while waiting for wanderer's move instead of taking turns
+        print("{white} Vs. {black}".format(white=white_player, black=black_opponent), file=file_to_write)
+
+        game_board = initial_game_board()
+        gameover = False
+        move_number = 0
+        winner_color = None
+        web_visualizer_link = r'http://www.trmph.com/breakthrough/board#8,'
+        while not gameover: #TODO find a way to keep searching tree while waiting for wanderer's move instead of taking turns
+            gc.collect()
+
+            print_board(game_board, file=file_to_write)
+            computer_MCTS_tree.height = wanderer_MCTS_tree.height = move_number
+            if wanderer_color == 'Black':
+                wanderers_move = move_number % 2 == 1
+            else:
+                wanderers_move = move_number %2 == 0
+
+            if move_number>2 and wanderers_move and cheat_search:
+
+                #search again while waiting for wanderer's move
+                get_move(prev_game_board, white_player, black_opponent, move_number-1, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search=True)
+
+                #get wanderer's move
+                move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+            else:
+                move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
+                prev_game_board = game_board
+            if move is None:
+                return move
+            print_move(move, color_to_move, file_to_write)
+            game_board = move_piece(game_board, move, color_to_move)
+            if move[2] == r'-':
+                move = move.split(r'-')
+            else:
+                move = move.split(r'x')
+            if (color_to_move == 'Black' and wanderer_color =='Black') or (color_to_move == 'White' and wanderer_color =='White'):
+                move_to_send = move[0]+'-' +move[1]
+                computer_MCTS_tree.last_opponent_move = move_to_send
+            web_visualizer_link = web_visualizer_link + move[0] + move[1]
+            gameover, winner_color = game_over(game_board)
+            move_number += 1
+            # gc.collect()
         print_board(game_board, file=file_to_write)
-        computer_MCTS_tree.height = wanderer_MCTS_tree.height = move_number
-        if wanderer_color == 'Black':
-            wanderers_move = move_number % 2 == 1
-        else:
-            wanderers_move = move_number %2 == 0
-
-        if move_number>2 and wanderers_move and cheat_search:
-            # threads = ThreadPool(processes=1)
-            # WaNN_args = [game_board, white_player, black_opponent, move_number-1, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write]
-            # threads.starmap_async(get_move, WaNN_args)
-
-            #search again while waiting for wanderer's move
-            get_move(prev_game_board, white_player, black_opponent, move_number-1, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write, background_search=True)
-
-            #get wanderer's move
-            move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
-        else:
-            move, color_to_move = get_move(game_board, white_player, black_opponent, move_number, computer_MCTS_tree, wanderer_MCTS_tree, file_to_write)
-            prev_game_board = game_board
-        if move is None:
-            return move
-        print_move(move, color_to_move, file_to_write)
-        game_board = move_piece(game_board, move, color_to_move)
-        if move[2] == r'-':
-            move = move.split(r'-')
-        else:
-            move = move.split(r'x')
-        if (color_to_move == 'Black' and wanderer_color =='Black') or (color_to_move == 'White' and wanderer_color =='White'):
-            move_to_send = move[0]+'-' +move[1]
-            computer_MCTS_tree.last_opponent_move = move_to_send
-        web_visualizer_link = web_visualizer_link + move[0] + move[1]
-        gameover, winner_color = game_over(game_board)
-        move_number += 1
-    print_board(game_board, file=file_to_write)
-    print("Game over. {} wins".format(winner_color), file=file_to_write)
-    print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
+        print("Game over. {} wins".format(winner_color), file=file_to_write)
+        print("Visualization link = {}".format(web_visualizer_link), file=file_to_write)
 
 #TODO: consider permutations of winning subsequences? cut down on space/ have playbook. edit distance? as current subsequence gets farther from old subsequence, stop trying to match moves?
 
@@ -138,9 +145,9 @@ def play_game_vs_wanderer(white_player, black_opponent, depth_limit=1, time_to_t
 
 
 
-    if wanderer_MCTS_tree is not None:
-        wanderer_MCTS_tree.policy_net.sendline('quit')
-    return winner_color
+        if wanderer_MCTS_tree is not None:
+            wanderer_MCTS_tree.policy_net.sendline('quit')
+        return winner_color
 
 
 def play_game(white_player, black_opponent, depth_limit=1, time_to_think=10, file_to_write=sys.stdout, MCTS_log_file=open(os.devnull, 'w')):

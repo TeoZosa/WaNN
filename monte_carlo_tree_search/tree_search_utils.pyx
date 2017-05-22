@@ -338,20 +338,20 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
                                            and (child['threads_checking_node'] <=0 or child['children'] is not None)]#and not child['subtree_being_checked']
 
                         # if len(viable_children) == 0:#TODO: WILL STALL THE TREE SEARCH IF WE DO EOG BATCH EXPANSIONS WITH B = 1 (THREADS BURROW INTO TREE. SINCE ONLY 1 CHILD => SUBTREE BEING CHECKED) since it needs to determine win statuses of lower prob children to determine win status
-                            # viable_children = [child for child in node['children']
-                            #        if (child['win_status'] is None)
-                            #        and child['UCT_multiplier'] > threshold
-                            #        # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
-                            #        and (child['threads_checking_node'] <=0 or child['children'] is not None)]
-                            # for child in node['children']:
-                            #      if (child['win_status'] is None and not child['subtree_being_checked'])  \
-                            #          and (child['threads_checking_node'] <=0 or child['children'] is not None):
-                            #          append(child)
-                            #
-                            # viable_children = [child for child in node['children']
-                            #                    if (child['win_status'] is None and not child['subtree_being_checked'])
-                            #                    # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
-                            #                    and (child['threads_checking_node'] <=0 or child['children'] is not None)]
+                        #     # viable_children = [child for child in node['children']
+                        #     #        if (child['win_status'] is None)
+                        #     #        and child['UCT_multiplier'] > threshold
+                        #     #        # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
+                        #     #        and (child['threads_checking_node'] <=0 or child['children'] is not None)]
+                        #     # for child in node['children']:
+                        #     #      if (child['win_status'] is None and not child['subtree_being_checked'])  \
+                        #     #          and (child['threads_checking_node'] <=0 or child['children'] is not None):
+                        #     #          append(child)
+                        #     #
+                        #     viable_children = [child for child in node['children']
+                        #                        if (child['win_status'] is None and not child['subtree_being_checked'])
+                        #                        # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
+                        #                        and (child['threads_checking_node'] <=0 or child['children'] is not None)]
             else:
                 viable_children = [child for child in node['children']
                                    if (child['win_status'] is None and not child['subtree_being_checked'])

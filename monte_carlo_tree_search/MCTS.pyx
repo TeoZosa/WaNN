@@ -49,10 +49,10 @@ class MCTS(object):
         previous_child = self.selected_child
         if self.MCTS_type == 'WaNN':
             if background_search:
-                _, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, self.previous_selected_child, self.last_opponent_move, self.height-1, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
+                _, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, self.previous_selected_child, self.last_opponent_move, self.root_height-1, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
             else:
                 self.previous_selected_child = previous_child
-                self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.last_opponent_move, self.height, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
+                self.selected_child, move = MCTS_with_expansions(game_board, player_color, self.time_to_think, self.depth_limit, previous_child, self.last_opponent_move, self.root_height, self.log_file, self.MCTS_type, self.policy_net, self.game_num)
         elif self.MCTS_type == 'Policy':
             ranked_moves = self.policy_net.evaluate(game_board, player_color)
             move = get_best_move(game_board, ranked_moves)

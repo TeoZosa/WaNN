@@ -948,44 +948,44 @@ cpdef void update_child(dict child, np.ndarray NN_output, dict sim_info, do_eval
 
     do_update = True
 
-    if 0< child_index < 21 and parent is not None:#home rows that can capture; check for game-saving moves
-        if child_color =='White':#parent was black
-            game_over_row = 7
-            caution_row = 6
-            maybe_caution_row = 5
-            enemy_piece = 'w'
-        else:
-            game_over_row = 2
-            caution_row = 3
-            maybe_caution_row = 4
-            enemy_piece = 'b'
+    # if 0< child_index < 21 and parent is not None:#home rows that can capture; check for game-saving moves
+    #     if child_color =='White':#parent was black
+    #         game_over_row = 7
+    #         caution_row = 6
+    #         maybe_caution_row = 5
+    #         enemy_piece = 'w'
+    #     else:
+    #         game_over_row = 2
+    #         caution_row = 3
+    #         maybe_caution_row = 4
+    #         enemy_piece = 'b'
+    #
+    #     move = move_lookup_by_index(child_index, get_opponent_color(child_color))
+    #     previous_game_board = parent['game_board']
+    #     game_saving_move = enemy_piece == previous_game_board[int(move[4])][move[3]]
+    #
+    #
+    #     if game_saving_move: #
+    #         child['gameover_visits'] = 1000
+    #         child['gameover_wins'] = 0
+    #         child['visits'] = 65536
+    #         child['wins'] = 0
+    #         child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
+    #         child['game_saving_move'] = True
+    #         do_update = False
+    #     # elif (2 <= child_index <= 7 or 14<= child_index <=19): #if gameover next move and it wasn't a game saving move, it will be marked a loser so we don't need to consider that case anymore
+    #     #     # gameover_next_move = enemy_piece in previous_game_board[game_over_row].values()
+    #     #     maybe_in_danger = enemy_piece in previous_game_board[caution_row].values()
+    #     #     kinda_sorta_maybe_in_danger = enemy_piece in previous_game_board[maybe_caution_row].values()
+    #     #     if not maybe_in_danger and not kinda_sorta_maybe_in_danger and child['height'] < 40: #child_color == 'Black' and and child['height'] < 60 not gameover_next_move and
+    #     #         child['gameover_visits'] = 9000
+    #     #         child['gameover_wins'] = 9000
+    #     #         child['visits'] = 65536
+    #     #         child['wins'] = 65536
+    #     #         child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
+    #     #         do_update = False
 
-        move = move_lookup_by_index(child_index, get_opponent_color(child_color))
-        previous_game_board = parent['game_board']
-        game_saving_move = enemy_piece == previous_game_board[int(move[4])][move[3]]
-
-
-        if game_saving_move: #
-            child['gameover_visits'] = 1000
-            child['gameover_wins'] = 0
-            child['visits'] = 65536
-            child['wins'] = 0
-            child['UCT_multiplier'] = 1+NN_output[child_index] #might mess up search if I don't do this?
-            child['game_saving_move'] = True
-            do_update = False
-        # elif (2 <= child_index <= 7 or 14<= child_index <=19): #if gameover next move and it wasn't a game saving move, it will be marked a loser so we don't need to consider that case anymore
-        #     # gameover_next_move = enemy_piece in previous_game_board[game_over_row].values()
-        #     maybe_in_danger = enemy_piece in previous_game_board[caution_row].values()
-        #     kinda_sorta_maybe_in_danger = enemy_piece in previous_game_board[maybe_caution_row].values()
-        #     if not maybe_in_danger and not kinda_sorta_maybe_in_danger and child['height'] < 40: #child_color == 'Black' and and child['height'] < 60 not gameover_next_move and
-        #         child['gameover_visits'] = 9000
-        #         child['gameover_wins'] = 9000
-        #         child['visits'] = 65536
-        #         child['wins'] = 65536
-        #         child['UCT_multiplier'] = 1.0001 #might mess up search if I don't do this?
-        #         do_update = False
-
-    elif 23 <=child_index <=42 and parent is not None: #Row guarding home that can capture
+    if 23 <=child_index <=42 and parent is not None: #Row guarding home that can capture
 
         if child_color =='White':#parent was black
             enemy_piece = 'w'

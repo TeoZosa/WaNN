@@ -84,7 +84,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
 
     root = assign_root(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info, async_update_lock)
     sim_info['root'] = root
-    # sim_info['main_pid'] = current_thread().name
+    sim_info['main_pid'] = current_thread().name
 
 
 
@@ -157,6 +157,12 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
     print_best_move(player_color, best_move, sim_info)
     print(best_move)
 
+    background_search_prune(best_child)
+
+
+    return best_child, best_move #save this root to use next time
+
+cpdef background_search_prune(dict best_child):
     if best_child['parent'] is not None:#separate for backgroundsearch
         parent = best_child['parent']
         parent['children'] = [best_child]
@@ -183,9 +189,6 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
         backpropagate_num_checked_children(best_child)
 
         best_child['other_children'] =None
-
-
-    return best_child, best_move #save this root to use next time
 
 def reset_thread_flag(root):
     unvisited_queue = [root]

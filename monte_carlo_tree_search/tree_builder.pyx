@@ -497,6 +497,7 @@ cdef assign_children(dict parent, list children, lock):
         int game_over_row
         str enemy_piece
         dict child
+        dict game_board
 
     with lock:
         decrement_threads_checking_node(parent)
@@ -519,12 +520,19 @@ cdef assign_children(dict parent, list children, lock):
                 else:
                     game_over_row = 2
                     enemy_piece = 'b'
-                gameover_next_move = enemy_piece in parent['game_board'][game_over_row].values()
+                game_board = parent['game_board']
+                gameover_next_move = enemy_piece in game_board[game_over_row].values()
 
                 if gameover_next_move:
                     for child in children:
-                        if child['game_saving_move']: #only check the children without a win_status
+                        move = move_lookup_by_index(child['index'], get_opponent_color(child['color']))
+                        if enemy_piece == game_board[int(move[4])][move[3]]:
+                            child['gameover_visits'] = 1000
+                            child['gameover_wins'] = 0
+                            child['visits'] = 65536
+                            child['wins'] = 0
                             parent_children.append(child)
+                        # if child['game_saving_move']: #only check the children without a win_status
                         elif not child['gameover']: #if it didn't save or win the game, it was a loser
                             set_game_over_values_1_step_lookahead(child)
 

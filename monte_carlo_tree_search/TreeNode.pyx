@@ -121,7 +121,7 @@ cpdef dict TreeNode(dict game_board, list white_pieces, list black_pieces, str p
         'subtree_being_checked': False,
         'reexpanded_already': False,
         'gameover': False,
-        'game_saving_move': False,
+        # 'game_saving_move': False,
         'visits': visits,
         'wins': wins,
         'gameover_visits': gameover_visits,

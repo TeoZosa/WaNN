@@ -158,27 +158,33 @@ cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int d
                     append(node)
 
         if 0< len(filtered_unexpanded_nodes) < 256: #if any nodes to expand;
-            # if sim_info['root'] is not None: #aren't coming from reinitializing a root
-            #     if sim_info['main_pid'] == current_thread().name:
-            #         depth_limit = 1 #main thread expands once and exits to call other threads
+            if sim_info['root'] is not None: #aren't coming from reinitializing a root
+                is_player = sim_info['root']['color'] == filtered_unexpanded_nodes[0]['color']
+                if sim_info['main_pid'] == current_thread().name:
+                    depth_limit = 1 #main thread expands once and exits to call other threads
 
-                #
+
                 # elif filtered_unexpanded_nodes[0]['height'] > 50:
                 #     depth_limit = 800
                 # elif filtered_unexpanded_nodes[0]['height'] > 40:
                 #     depth_limit = 800
                 # elif filtered_unexpanded_nodes[0]['height'] > 20:
                 #     depth_limit = 800
-                #
-                # else:
-                #     depth_limit = 4
-                #
+
+                else:
+                    depth_limit = 800
+            else: #initializing a new root: root is opponent node
+                root = filtered_unexpanded_nodes[0]
+                while root['parent'] is not None:
+                    root = root['parent']
+                is_player = not (root['color'] == filtered_unexpanded_nodes[0]['color'])
+
 
             depth_limit = 800
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
             # start = time()
-            NN_output = policy_net.evaluate(filtered_unexpanded_nodes)
+            NN_output = policy_net.evaluate(filtered_unexpanded_nodes, is_player=is_player)
             # total_time = (time()-start)*1000 # in ms
             # sim_info['eval_times'].append([len(filtered_unexpanded_nodes),total_time])
 

@@ -134,7 +134,7 @@ class NeuralNetsCombined_128():
     def __init__(self):
         self.sess, self.output_white, self.input_white, self.output_black, self.input_black= instantiate_session_both_128()
 
-    def evaluate(self, game_nodes, player_color=None, already_converted=False):
+    def evaluate(self, game_nodes, player_color=None, is_player=True, already_converted=False):
         """'
         evaluate takes nodes to be evaluated and passes them to the Tensorflow graph.
         Performs data handling prior to submitting work to the Tensorflow graph.
@@ -160,7 +160,7 @@ class NeuralNetsCombined_128():
             inference_batches = batch_split_no_labels(board_representations, batch_size)
         else:
             inference_batches = [board_representations]
-        if player_color == 'White':#Leave as is for WaNN as White. White == Winner, Black == All
+        if True:#Leave as is for WaNN as White. White == Winner, Black == All
             y_pred = self.output_white
             X = self.input_white
         else:

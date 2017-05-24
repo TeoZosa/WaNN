@@ -227,6 +227,54 @@ def choose_UCT_move(node, start_time, time_to_think, sim_info):
         best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
     return best  #because a win for me = a loss_init for child
 
+
+cpdef choose_UCT_or_best_child(dict node, start_time, int time_to_think, dict sim_info):
+    cdef:
+        int num_children = len(node['children'])
+        dict best_child
+        int true_wins
+        double prior_prob
+
+
+    best = None  # shouldn't ever return None
+    if num_children == 1:
+        best = node['children'][0]
+    else:
+        if node['best_child'] is not None:
+            best_child = node['best_child']
+            true_wins = best_child['gameover_wins']
+            prior_prob = best_child['UCT_multiplier'] -1
+            over_LCB = prior_prob>0.35
+            under_UCB = prior_prob <0.8
+
+            if best_child['height'] > 20 and over_LCB:
+                threshold_gameover_visits = true_wins > 5000
+            else:
+                threshold_gameover_visits= true_wins > 1000
+
+            if threshold_gameover_visits and under_UCB:
+                if node['color'] == sim_info['root']['color']:
+                    if prior_prob > .4:
+                        meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 #Keep searching best until it drops down to a 40% WR if it is a high-ish probability node
+                    else:
+                        meets_winrate_threshold = true_wins*2  < best_child['gameover_visits']#Keep searching best until it drops down to a 50% WR if it is a low probability node
+                else:
+                    meets_winrate_threshold = true_wins * 3 <  best_child['gameover_visits'] #Keep searching for Wanderer if best has a 66% WR
+                meets_winrate_threshold = meets_winrate_threshold and over_LCB
+            else: #keep searching if it is over a very high probability threshold
+                meets_winrate_threshold = True
+
+            best_child_can_be_searched = best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0
+            if best_child_can_be_searched and meets_winrate_threshold :
+                best = best_child
+            else:
+                best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
+
+        elif node['children'] is not None: #if this node has children to choose from: should alwayshappen
+            best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
+    return best
+
+
 cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info):
     cdef:
         int parent_visits = node['visits']
@@ -385,53 +433,6 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
     return best
 
 
-
-cpdef choose_UCT_or_best_child(dict node, start_time, int time_to_think, dict sim_info):
-    cdef:
-        int num_children = len(node['children'])
-        dict best_child
-        int true_wins
-        double prior_prob
-
-
-    best = None  # shouldn't ever return None
-    if num_children == 1:
-        best = node['children'][0]
-    else:
-        if node['best_child'] is not None:
-            best_child = node['best_child']
-            true_wins = best_child['gameover_wins']
-            prior_prob = best_child['UCT_multiplier'] -1
-            over_LCB = prior_prob>0.35
-            under_UCB = prior_prob <0.8
-
-            if best_child['height'] > 20 and over_LCB:
-                threshold_gameover_visits = true_wins > 5000
-            else:
-                threshold_gameover_visits= true_wins > 1000
-
-            if threshold_gameover_visits and under_UCB:
-                if node['color'] == sim_info['root']['color']:
-                    if prior_prob > .4:
-                        meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 #Keep searching best until it drops down to a 40% WR if it is a high-ish probability node
-                    else:
-                        meets_winrate_threshold = true_wins*2.5  < best_child['gameover_visits']#Keep searching best until it drops down to a 60% WR if it is a low probability node
-                else:
-                    meets_winrate_threshold = true_wins * 3 <  best_child['gameover_visits'] #Keep searching for Wanderer if best has a 66% WR
-                meets_winrate_threshold = meets_winrate_threshold and over_LCB
-            else: #keep searching if it is over a very high probability threshold
-                meets_winrate_threshold = True
-
-            best_child_can_be_searched = best_child['win_status'] is None and not best_child['subtree_being_checked'] and best_child['threads_checking_node'] <=0
-            if best_child_can_be_searched and meets_winrate_threshold :
-                best = best_child
-            else:
-                best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
-
-        elif node['children'] is not None: #if this node has children to choose from: should alwayshappen
-            best = find_best_UCT_child(node, start_time, time_to_think, sim_info)
-    return best
-
 cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
 
 
@@ -532,7 +533,7 @@ def choose_best_true_loser(node_children, second_time=False):
     best = None
     filtered_children  = []
     prob_scaling = 3
-    action_value_threshold = 15000
+    action_value_threshold = 10000
     top_rank_prob = node_children[0]['UCT_multiplier']
     if top_rank_prob<1.1: #really only happens on the first couple of moves
         first_threshold = second_threshold = 1.04 #under 4% moves may have good stats but look whacky

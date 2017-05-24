@@ -521,18 +521,16 @@ cdef assign_children(dict parent, list children, lock):
                     game_over_row = 2
                     enemy_piece = 'b'
                 game_board = parent['game_board']
-                gameover_next_move = enemy_piece in game_board[game_over_row].values()
 
-                if gameover_next_move:
+                if enemy_piece in game_board[game_over_row].values():#Maybe gameover next move
                     for child in children:
                         move = move_lookup_by_index(child['index'], get_opponent_color(child['color']))
-                        if enemy_piece == game_board[int(move[4])][move[3]]:
-                            child['gameover_visits'] = 1000
+                        if enemy_piece == game_board[int(move[4])][move[3]]: #a game saving move
+                            child['gameover_visits'] = 1000 #some arbitrarily good prior values
                             child['gameover_wins'] = 0
                             child['visits'] = 65536
                             child['wins'] = 0
-                            parent_children.append(child)
-                        # if child['game_saving_move']: #only check the children without a win_status
+                            parent_children.append(child) #only check the children without a win_status
                         elif not child['gameover']: #if it didn't save or win the game, it was a loser
                             set_game_over_values_1_step_lookahead(child)
 

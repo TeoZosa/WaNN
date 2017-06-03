@@ -58,33 +58,9 @@ cpdef void update_win_statuses(dict node, win_status, new_subtree=False):
     continue_propagating = True
 
 
-
-    # if win_status is False and not node['gameover'] and not node['reexpanded_already']:
-    #     if node['color'] =='White':
-    #         reexpansion_limit = 1 #don't ever get doomed unless you know you are doomed
-    #     else:
-    #         reexpansion_limit = 1
-    #
-    #     if node['num_to_consider']<=0 or node['other_children'] is None or len(node['other_children']) <= 0 or node['times_reexpanded']>=reexpansion_limit:
-    #         node['reexpanded_already'] =True
-    #         continue_propagating = True#redundant
-    #     else:
-    #         continue_propagating = False
-    #         node['times_reexpanded']+=1
-    #         if node['num_to_consider'] <len(node['other_children']):
-    #             node['children'].extend(node['other_children'][:node['num_to_consider']])#TODO do eval onthesechildren?
-    #             node['other_children'] = node['other_children'][node['num_to_consider']:]
-    #         else:
-    #             node['children'].extend(node['other_children'])#TODO do eval onthesechildren?
-    #             node['other_children'] =None
-    #             node['reexpanded_already'] =True
-    #         backpropagate_num_checked_children(node)
-    #         update_num_children_being_checked(node)
-
-
     if continue_propagating:
-        if win_status is True:
-            update_tree_wins(node, 1, gameover=True)
+        # if win_status is True:
+        #     update_tree_wins(node, 1, gameover=True)
         if win_status is False : #and node['color'] == 'Black'
             update_tree_losses(node, 1, gameover=True)
         node['win_status'] =win_status
@@ -101,19 +77,26 @@ cdef list get_win_statuses_of_children(dict node):
         list win_statuses = []
         list win_statuses_considering = []
         dict child
-    if node['children'] is not None:
+        float threshold = 1.001
+
+
+    # if node['color'] == 'White':
+    #     threshold = 1.001
+    # else:
+    #     threshold = 1.001
+    children = node['children']
+    if children is not None:
+        # win_statuses = [child['win_status'] for child in children]
         considering_append = win_statuses_considering.append
         all_append = win_statuses.append
-        for child in node['children']:
-            if child['UCT_multiplier'] > 1.001:
+        for child in children:
+            if child['UCT_multiplier'] > threshold:
                 considering_append(child['win_status'])
             all_append(child['win_status'])
     if False not in win_statuses and len (win_statuses_considering)>0: #if any children are false, node is true. Else, just consider the ones over threshold probability. If they are True => just say we are doomed.
         win_statuses = win_statuses_considering
-    # else:
-    #     if node['children'] is not None:
-    #         for child in node['children']:
-    #             win_statuses.append(child['win_status'])
+
+
 
     return win_statuses
 
@@ -246,18 +229,19 @@ cpdef choose_UCT_or_best_child(dict node, start_time, int time_to_think, dict si
             prior_prob = best_child['UCT_multiplier'] -1
             over_LCB = prior_prob>0.35
             under_UCB = prior_prob <0.8
+            player_node = node['color'] == sim_info['root']['color']
 
-            if best_child['height'] > 20 and over_LCB:
+            if best_child['height'] > 20 and over_LCB and player_node:
                 threshold_gameover_visits = true_wins > 5000
             else:
                 threshold_gameover_visits= true_wins > 1000
 
             if threshold_gameover_visits and under_UCB:
-                if node['color'] == sim_info['root']['color']:
+                if player_node:
                     if prior_prob > .4:
-                        meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 #Keep searching best until it drops down to a 40% WR if it is a high-ish probability node
+                        meets_winrate_threshold = true_wins  < best_child['gameover_visits'] *.6 #Keep searching best until it drops down to a 50% WR if it is a high-ish probability node
                     else:
-                        meets_winrate_threshold = true_wins*2  < best_child['gameover_visits']#Keep searching best until it drops down to a 50% WR if it is a low probability node
+                        meets_winrate_threshold = true_wins < best_child['gameover_visits'] *.5#Keep searching best until it drops down to a 60% WR if it is a low probability node
                 else:
                     meets_winrate_threshold = true_wins * 3 <  best_child['gameover_visits'] #Keep searching for Wanderer if best has a 66% WR
                 meets_winrate_threshold = meets_winrate_threshold and over_LCB
@@ -284,45 +268,36 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
         double best_val
     best = None
     append = viable_children.append
-    #only stop checking children with win statuses after height 60 as we may need to reexpand a node marked as a win/loss_init
-    if node['win_status'] is not None:#search subtrees that need to be reexpanded (probably won't happenanymore)
-        # for child in node['children']:
-        #     if (child['win_status'] is None and not child['subtree_being_checked']) and (child['threads_checking_node'] <=0 or child['children'] is not None):
-        #         append(child)
+    if node['win_status'] is not None:
 
         viable_children = [child for child in node['children']
                            if (child['win_status'] is None and not child['subtree_being_checked'])
                            and (child['threads_checking_node'] <=0 or child['children'] is not None)]
         if len(viable_children) == 0:#search until all subtrees are checked
-            # for child in node['children']:
-            #     if not (child['subtree_checked'] or child['subtree_being_checked']) \
-            #         and (child['threads_checking_node'] <=0 or child['children'] is not None):
-            #         append(child)
+
             viable_children = [child for child in node['children']
                                if not (child['subtree_checked'] or child['subtree_being_checked'])  #DeMorgan's law
                                and (child['threads_checking_node'] <=0 or child['children'] is not None)]
             if len(viable_children) == 0:#search until all subtrees are checked
-                # for child in node['children']:
-                #     if not (child['subtree_checked'] or child['subtree_being_checked']) \
-                #         and (child['threads_checking_node'] <=0 or child['children'] is not None):
-                #         append(child)
+
                 viable_children = [child for child in node['children']
                                    if not (child['subtree_checked'] )  #DeMorgan's law
                                    and (child['threads_checking_node'] <=0 or child['children'] is not None)]
 
     else:#
+        is_WaNN = node['color'] == sim_info['root']['color']
 
-        best_prob = node['children'][0]['UCT_multiplier']-1
-        if node['color'] == sim_info['root']['color']:
-            if best_prob <1.1:
+        if is_WaNN:
+            best_prob = node['children'][0]['UCT_multiplier']-1
+            if best_prob <.1:#TODO Bugged white was doing good (67% @ 1.1 v 0.1 for the if)
                 first_threshold = second_threshold = 1.04 #under 4% moves may have good stats but look whacky
-            elif best_prob <1.2:
+            elif best_prob <.2:
                 first_threshold = 1.10
                 second_threshold = 1.05
-            elif best_prob <1.3:
+            elif best_prob <.3:
                 first_threshold = 1.15
                 second_threshold = 1.10
-            else:
+            else:#best prob >= 30%
                 first_threshold = 1.20
                 second_threshold = 1.15
         else:
@@ -330,40 +305,22 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
             second_threshold= 1.01
 
 
-        # for child in node['children']:
-        #     if (child['win_status'] is None and not child['subtree_being_checked'])  \
-        #         and child['UCT_multiplier'] > threshold \
-        #         and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))\
-        #         and (child['threads_checking_node'] <=0 or child['children'] is not None):
-        #         append(child)
-        #
+
         viable_children = [child for child in node['children']
                            if (child['win_status'] is None and not child['subtree_being_checked'])
                            and child['UCT_multiplier'] > first_threshold
                            and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
                            and (child['threads_checking_node'] <=0 or child['children'] is not None)]#and not child['subtree_being_checked']
         if len(viable_children) == 0:
-            # for child in node['children']:
-            #     if (child['win_status'] is None and not child['subtree_being_checked'])  \
-            #         and child['UCT_multiplier'] > second_threshold \
-            #         and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))\
-            #         and (child['threads_checking_node'] <=0 or child['children'] is not None):
-            #         append(child)
-            #TODO: 70%WR had  if node is sim_info['root']:, must try switching back to color and uncommenting the last line
-            if node is sim_info['root']:
+
+            if is_WaNN:
                 viable_children = [child for child in node['children']
                                    if (child['win_status'] is None and not child['subtree_being_checked'])
                                    and child['UCT_multiplier'] > first_threshold
-                                   # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
                                    and (child['threads_checking_node'] <=0 or child['children'] is not None)]
 
                 if len(viable_children) == 0:
-                    # for child in node['children']:
-                    #     if (child['win_status'] is None and not child['subtree_being_checked'])  \
-                    #         and child['UCT_multiplier'] > second_threshold \
-                    #         and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))\
-                    #         and (child['threads_checking_node'] <=0 or child['children'] is not None):
-                    #         append(child)
+
                     viable_children = [child for child in node['children']
                                        if (child['win_status'] is None and not child['subtree_being_checked'] )
                                        and child['UCT_multiplier'] > second_threshold
@@ -372,37 +329,20 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
 
 
                     if len(viable_children) == 0:
-                        # for child in node['children']:
-                        #     if (child['win_status'] is None and not child['subtree_being_checked'])  \
-                        #         and child['UCT_multiplier'] > second_threshold \
-                        #         and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))\
-                        #         and (child['threads_checking_node'] <=0 or child['children'] is not None):
-                        #         append(child)
+
                         viable_children = [child for child in node['children']
                                            if (child['win_status'] is None and not child['subtree_being_checked'] )
                                            and child['UCT_multiplier'] > second_threshold
-                                           # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
                                            and (child['threads_checking_node'] <=0 or child['children'] is not None)]#and not child['subtree_being_checked']
 
-                        # if len(viable_children) == 0:#TODO: WILL STALL THE TREE SEARCH IF WE DO EOG BATCH EXPANSIONS WITH B = 1 (THREADS BURROW INTO TREE. SINCE ONLY 1 CHILD => SUBTREE BEING CHECKED) since it needs to determine win statuses of lower prob children to determine win status
-                        #     # viable_children = [child for child in node['children']
-                        #     #        if (child['win_status'] is None)
-                        #     #        and child['UCT_multiplier'] > threshold
-                        #     #        # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
-                        #     #        and (child['threads_checking_node'] <=0 or child['children'] is not None)]
-                        #     # for child in node['children']:
-                        #     #      if (child['win_status'] is None and not child['subtree_being_checked'])  \
-                        #     #          and (child['threads_checking_node'] <=0 or child['children'] is not None):
-                        #     #          append(child)
-                        #     #
-                        #     viable_children = [child for child in node['children']
-                        #                        if (child['win_status'] is None and not child['subtree_being_checked'])
-                        #                        # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
-                        #                        and (child['threads_checking_node'] <=0 or child['children'] is not None)]
+                        if len(viable_children) == 0:#TODO: WILL STALL THE TREE SEARCH IF WE DO EOG BATCH EXPANSIONS WITH B = 1 (THREADS BURROW INTO TREE. SINCE ONLY 1 CHILD => SUBTREE BEING CHECKED) since it needs to determine win statuses of lower prob children to determine win status
+
+                            viable_children = [child for child in node['children']
+                                               if (child['win_status'] is None and not child['subtree_being_checked'])
+                                               and (child['threads_checking_node'] <=0 or child['children'] is not None)]
             else:
                 viable_children = [child for child in node['children']
                                    if (child['win_status'] is None and not child['subtree_being_checked'])
-                                   # and (child['gameover_wins']<=1000 or (child['gameover_wins'] * 2 < child['gameover_visits']))
                                    and (child['threads_checking_node'] <=0 or child['children'] is not None)]
 
     if len(viable_children)>0:
@@ -410,25 +350,6 @@ cdef find_best_UCT_child(dict node, start_time, int time_to_think, dict sim_info
                     [get_UCT(child, parent_visits, start_time, time_to_think, sim_info) for child in viable_children],
                      viable_children),
                key=itemgetter(0))[1]
-
-        # best = viable_children[0]
-        # best_val = get_UCT(best, parent_visits, start_time, time_to_think, sim_info)
-        # children_to_check = False
-        #
-        # for i in range(1, len(viable_children)):
-        #     #TODO: play with search after a height (ex. if keeping all children and we know win_status, we don't need to search those subtrees anymore)
-        #         child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think, sim_info)
-        #         if child_value > best_val:
-        #             best = viable_children[i]
-        #             best_val = child_value
-        #             children_to_check = True
-
-        # if best['win_status'] is False:  # all children were False (losers);
-        #     for i in range(1, len(viable_children)):
-        #             child_value = get_UCT(viable_children[i], parent_visits, start_time, time_to_think, sim_info)
-        #             if child_value > best_val:
-        #                 best = viable_children[i]
-        #                 best_val = child_value
 
     return best
 
@@ -458,7 +379,7 @@ cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
     # else:
     # cdef double random_number = rand()/INT_MAX
     cdef:
-        double PUCT_exploration_constant = 3#*random_number#3*annealed_factor# stochasticity_for_multithreading
+        double PUCT_exploration_constant = 1#*random_number#3*annealed_factor# stochasticity_for_multithreading
     
     
         # norm_wins, norm_visits,true_wins, true_losses = transform_wrt_overwhelming_amount(node, overwhelming_on=False)
@@ -487,14 +408,10 @@ cpdef double get_UCT(node, parent_visits, start_time, time_to_think, sim_info):
 
     # PUCT_exploration = PUCT_exploration_constant*NN_prob*(sqrt(max(1, parent_visits-norm_visits))/(1+norm_visits)) #interchange norm visits with node visits
     sibling_visits = max(1, parent_visits-norm_visits)
-    # with nogil:
     PUCT_exploration = calculate_PUCT(PUCT_exploration_constant, NN_prob, sibling_visits, norm_visits)
 
     exploitation_factor = norm_loss_rate# losses / visits of child = wins / visits for parent
 
-    # exploitation_factor = (node['visits'] - node['wins']) / node['visits']  # losses / visits of child = wins / visitsforparent
-    # exploration_factor = exploration_constant * sqrt(log(1+parent_visits) / node['visits'])
-    # UCT = (exploitation_factor + exploration_factor)
     # cdef double PUCT = (exploitation_factor + PUCT_exploration)
     return exploitation_factor + PUCT_exploration # PUCT from parent's point of view
 
@@ -533,8 +450,10 @@ def choose_best_true_loser(node_children, second_time=False):
     best = None
     filtered_children  = []
     prob_scaling = 3
-    action_value_threshold = 10000
-    top_rank_prob = node_children[0]['UCT_multiplier']
+    best_child = node_children[0]
+    action_value_threshold = best_child['gameover_wins']/2#150000
+    best_gameover_wins = best_child['gameover_wins']
+    top_rank_prob = best_child['UCT_multiplier']
     if top_rank_prob<1.1: #really only happens on the first couple of moves
         first_threshold = second_threshold = 1.04 #under 4% moves may have good stats but look whacky
     elif top_rank_prob <1.2:
@@ -546,6 +465,13 @@ def choose_best_true_loser(node_children, second_time=False):
     else:
         first_threshold = 1.20
         second_threshold = 1.15
+
+    # if best_child['height']>60:
+    #     first_threshold = 1.10
+    #     second_threshold = 1.05
+    # if best_gameover_wins >10000 and best_gameover_wins /best_child['gameover_visits']>.80:
+    #     first_threshold = second_threshold = 1.04 #under 4% moves may have good stats but look whacky
+
 
     #non-losing moves over probability threshold or action-value threshold
     filtered_children = [child for child in node_children if ((child['UCT_multiplier'] > first_threshold or child['gameover_visits']-child['gameover_wins'] > action_value_threshold) and child['win_status'] is not True)]
@@ -563,7 +489,7 @@ def choose_best_true_loser(node_children, second_time=False):
         best_losses, best = max( zip(
                     [child['gameover_visits']-child['gameover_wins'] for child in filtered_children],
                     filtered_children),
-                 key=itemgetter(0))
+                 key=itemgetter(0))#TODO move this to outside to get max over all children vs just filtered?
         highest_losses = best_losses
         best_rate = best_losses/max(1, best['gameover_visits']) + (best['UCT_multiplier']-1)/prob_scaling
 

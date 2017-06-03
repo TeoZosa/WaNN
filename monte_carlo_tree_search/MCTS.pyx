@@ -160,10 +160,10 @@ class NeuralNetsCombined_128():
             inference_batches = batch_split_no_labels(board_representations, batch_size)
         else:
             inference_batches = [board_representations]
-        if is_player:#Leave as is for WaNN as White. White == Winner, Black == All
+        if is_player:#Winner Net
             y_pred = self.output_white
             X = self.input_white
-        else:
+        else:#All Moves Netd
             y_pred = self.output_black
             X = self.input_black
         # self.sess.close()

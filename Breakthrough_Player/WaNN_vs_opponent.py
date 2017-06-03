@@ -6,8 +6,8 @@ import os
 import gc
 def play_games(time_to_think, num_games_to_play, white_player, black_opponent, policy_net):
     print(time_to_think)
-    date = r'05242017'
-    file_designator = '0699NetWin_50WRbestunder4_10000ActThresh_'#''NoPruningNoBatch'#'10KSearches_origPruning_norm4Ago_Stoch'
+    date = r'06022017'
+    file_designator = '0699NetWin_MoreVisits_ActionValueThreshold_OpenTLHeight60_BLACK'#''NoPruningNoBatch'#'10KSearches_origPruning_norm4Ago_Stoch'
     white_wins = 0
     black_wins = 0
     depth_limit = 1
@@ -72,8 +72,8 @@ if __name__ == '__main__':#for Windows since it lacks os.fork
     policy = "Policy"
     Windows_path = r'G:\TruncatedLogs\PythonDatasets\10ttt'
     OSX_path = r'/Users/TeofiloZosa/Dropbox/WaNNLogs/'
-    white_player = WaNN
-    black_opponent = wanderer
+    white_player = wanderer
+    black_opponent = WaNN
     player_for_path = WaNN
 
 #REG COMBINED SWITCHED COLORS

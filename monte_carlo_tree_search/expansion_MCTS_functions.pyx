@@ -81,6 +81,7 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
     sim_info = SimulationInfo(log_file)
     time_to_think = time_to_think+1 #takes 1 second for first eval (io needs to warm up?)with threads, takes 1.125 times longer to finish up
     sim_info['time_to_think'] = time_to_think
+    sim_info['start_time'] = start_time = time() #for black if we have to init a new root
 
     root = assign_root(game_board, player_color, previous_move, last_opponent_move, move_number, policy_net, sim_info, async_update_lock)
     sim_info['root'] = root

@@ -11,7 +11,10 @@ from Breakthrough_Player.board_utils import  enumerate_legal_moves_using_piece_a
 # from time import time
 cimport numpy as np
 
-
+"""'
+Holds relevant tree statistics. 
+Was originally supposed to be transparent to the tree search, currently holds variables essential to the search
+''"""
 cpdef dict SimulationInfo(file):
         return {'file': file,
         'counter': 0,
@@ -27,9 +30,16 @@ cpdef dict SimulationInfo(file):
         'eval_times': []}
 
 
+"""'
+int max for random function (may be used in get_UCT
+''"""
 cdef extern from "limits.h":
     double INT_MAX
-#backpropagate wins
+
+"""'
+backpropagate wins
+''"""
+
 cpdef void update_tree_wins(dict node, int amount=1, gameover=False): #visits and wins go together
     cdef dict parent
     node['wins'] +=amount
@@ -41,7 +51,9 @@ cpdef void update_tree_wins(dict node, int amount=1, gameover=False): #visits an
     if parent is not None: #node win => parent loss_init
         update_tree_losses(parent, amount, gameover)
 
-#backpropagate losses
+"""'
+backpropagate losses
+''"""
 cpdef void  update_tree_losses(dict node, int amount=1, gameover=False): # visit and no win = loss_init
     cdef dict parent
     node['visits'] +=amount
@@ -51,7 +63,10 @@ cpdef void  update_tree_losses(dict node, int amount=1, gameover=False): # visit
     if parent is not None: #node loss_init => parent win
         update_tree_wins(parent, amount, gameover)
 
-#backpropagate guaranteed win status
+"""'
+Solver
+backpropagate guaranteed wins.
+''"""
 cpdef void update_win_statuses(dict node, win_status, new_subtree=False):
     cdef dict parent
 
@@ -100,6 +115,9 @@ cdef list get_win_statuses_of_children(dict node):
 
     return win_statuses
 
+"""'
+solve subtree based on children's solutions
+''"""
 cdef void set_win_status_from_children(dict node, list children_win_statuses, new_subtree=False):
     if False in children_win_statuses: #Fact: if any child is false => parent is true
         update_win_statuses(node, True, new_subtree)  # some kid is a loser, I have some game winning move to choose from
@@ -109,6 +127,9 @@ cdef void set_win_status_from_children(dict node, list children_win_statuses, ne
         update_win_statuses(node, None, new_subtree) #maybe this subtree had an inaccurate win_status before, ensure tree is correct. since this is done upon root assignment, won't take time in the middle of search.
        # some kids are winners, some kids are unknown => can't say anything with certainty
 
+"""'
+backpropagate number of children with completely searched subtrees (for searches that looks even if a game has been solved)
+''"""
 
 cpdef void backpropagate_num_checked_children(dict node):
     while node is not None:
@@ -121,7 +142,9 @@ cpdef void backpropagate_num_checked_children(dict node):
            node=None
 
 
-
+"""'
+update the number of children with completely searched subtrees, 
+''"""
 
 cdef void set_num_checked_children(dict node): #necessary for gameover kids: wouldn't have reported that they are expanded since another node may also be
     cdef:
@@ -132,7 +155,9 @@ cdef void set_num_checked_children(dict node): #necessary for gameover kids: wou
             count += 1
     node['num_children_checked'] = count
 
-
+"""'
+update the number of threads checking a node by an amount
+''"""
 cdef void _crement_threads_checking_node(dict node, int amount):
     cdef:
         dict parent
@@ -173,15 +198,27 @@ cdef void _crement_threads_checking_node(dict node, int amount):
         #     update_num_children_being_checked(parent['parent'])
 
 
+"""'
+increment the number of threads searching a node by 1
+''"""
 cpdef void increment_threads_checking_node(dict node):
     _crement_threads_checking_node(node, 1)#
 
+"""'
+decrement the number of threads searching a node by 1
+''"""
 cpdef void decrement_threads_checking_node(dict node):
     _crement_threads_checking_node(node, -1)
 
+"""'
+reset the number of threads searching a node to 0
+''"""
 cpdef void reset_threads_checking_node(dict node):
     _crement_threads_checking_node(node, 0)
 
+"""'
+update the number of children with threads currently searching them
+''"""
 cpdef void update_num_children_being_checked(dict node):
     cdef:
         int children_being_checked = 0

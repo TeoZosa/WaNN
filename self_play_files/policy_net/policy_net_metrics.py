@@ -9,7 +9,7 @@ import os
 from time import time
 import random
 import h5py
-from monte_carlo_tree_search.MCTS import MCTS, NeuralNetsCombined, NeuralNet
+from monte_carlo_tree_search.MCTS import MCTS, NeuralNetsCombined_128, NeuralNet
 from tools import utils
 
 def load_examples_and_labels(path):
@@ -334,73 +334,50 @@ n_percent_of_top = 100
 
 
 
-dual_nets = True
 averaged = False
 
-if dual_nets:
-    policy_net = NeuralNetsCombined()
-    # policy_net = NeuralNet()
-    for color in ['White', 'Black']:
-        for game_stage in [
-            # '1stThird',
-            # '2ndThird',
-            # '3rdThird',
-            'AllThird'
-        ]:
-            input_path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}{game_stage}{color}'.format(features='POE', net_type='PolicyNet', game_stage=game_stage, color=color)
-            valid_examples, valid_labels = load_examples_and_labels(os.path.join(input_path, r'ValidationData'))
-            training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
-            print (len(training_examples))
-            break
-            # training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, 16384)
-            if averaged:
-                if color=='White':
-                    correct_prediction_position_white, correct_position_in_10_percent_of_top_white, incorrect_position_in_10_percent_of_top_white, not_in_top_n_white \
-                        = generate_prediction_statistics(valid_examples, valid_labels, sys.stdout, policy_net, color)
-                elif color =='Black':
-                    correct_prediction_position_black, correct_position_in_10_percent_of_top_black, incorrect_position_in_10_percent_of_top_black, not_in_top_n_black \
-                        = generate_prediction_statistics(valid_examples, valid_labels, sys.stdout, policy_net, color)
-            else:
-                with open(os.path.join(r'..', r'policy_net_model', r'metrics', '05012017_065Net_VALID_PolicyNetPredictionMetrics{n_percent}Prob_{game_stage}{color}.txt'.format(n_percent=n_percent_of_top,game_stage=game_stage, color=color)), 'w') as output_file:
-                    print("Length of Test Set = {num_examples}\n".format(num_examples=len(valid_examples)),
-                          file=output_file)
-                    correct_prediction_position, correct_position_in_10_percent_of_top, incorrect_position_in_10_percent_of_top,not_in_top_n = \
-                        generate_prediction_statistics(training_examples, training_labels, output_file, policy_net, color)
-                    # correct_prediction_position, correct_position_in_10_percent_of_top, incorrect_position_in_10_percent_of_top,not_in_top_n = \
-                    #     generate_prediction_statistics(valid_examples, valid_labels, output_file, policy_net, color)
-
-                    print_prediction_statistics(correct_prediction_position, correct_position_in_10_percent_of_top, incorrect_position_in_10_percent_of_top, not_in_top_n, output_file)
-    if averaged:
-        with open(os.path.join(r'..', r'policy_net_model', r'metrics',
-                               '05012017_065Net_VALID_PolicyNetPredictionMetrics{n_percent}Prob_{game_stage}Averaged.txt'.format(n_percent=n_percent_of_top,
-                                   game_stage=game_stage)), 'w') as output_file:
-            correct_prediction_position = [sum(x) for x in
-                                           zip(correct_prediction_position_white, correct_prediction_position_black)]
-            correct_position_in_10_percent_of_top = [sum(x) for x in zip(correct_position_in_10_percent_of_top_white,
-                                                                         correct_position_in_10_percent_of_top_black)]
-            incorrect_position_in_10_percent_of_top = [sum(x) for x in zip(incorrect_position_in_10_percent_of_top_white,
-                                                                         incorrect_position_in_10_percent_of_top_black)]
-            not_in_top_n = not_in_top_n_white + not_in_top_n_black
-            print_prediction_statistics(correct_prediction_position, correct_position_in_10_percent_of_top, incorrect_position_in_10_percent_of_top,not_in_top_n, output_file)
-
-
-
-
-else:
-    policy_net = NeuralNet()
+policy_net = NeuralNetsCombined_128()
+# policy_net = NeuralNet()
+for color in ['White', 'Black']:
     for game_stage in [
-        # '1stThird', '2ndThird', '3rdThird',
-        'AllThird']:
-        input_path = r'D:\BreakthroughLogs\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}{game_stage}'.format(
-            features='POE', net_type='PolicyNet', game_stage=game_stage)
+        # '1stThird',
+        # '2ndThird',
+        # '3rdThird',
+        'AllThird'
+    ]:
+        input_path = r'G:\TruncatedLogs\PythonDatasets\Datastructures\NumpyArrays\{net_type}\{features}\4DArraysHDF5(RxCxF){features}{net_type}{game_stage}{color}'.format(features='POE', net_type='PolicyNet', game_stage=game_stage, color=color)
         valid_examples, valid_labels = load_examples_and_labels(os.path.join(input_path, r'ValidationData'))
-
-        # training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
+        training_examples, training_labels = load_examples_and_labels(os.path.join(input_path, r'TrainingData'))
+        print (len(training_examples))
+        break
         # training_example_batches, training_label_batches = utils.batch_split(training_examples, training_labels, 16384)
-        with open(os.path.join(r'..', r'policy_net_model', r'metrics',
-                               '04302017VALIDPolicyNetPredictionMetrics{}.txt'.format(game_stage)), 'w') as output_file:
-            print("Length of Test Set = {num_examples}\n".format(num_examples=len(valid_examples)), file=output_file)
+        if averaged:
+            if color=='White':
+                correct_prediction_position_white, correct_position_in_10_percent_of_top_white, incorrect_position_in_10_percent_of_top_white, not_in_top_n_white \
+                    = generate_prediction_statistics(valid_examples, valid_labels, sys.stdout, policy_net, color)
+            elif color =='Black':
+                correct_prediction_position_black, correct_position_in_10_percent_of_top_black, incorrect_position_in_10_percent_of_top_black, not_in_top_n_black \
+                    = generate_prediction_statistics(valid_examples, valid_labels, sys.stdout, policy_net, color)
+        else:
+            with open(os.path.join(r'..', r'policy_net_model', r'metrics', '05012017_065Net_VALID_PolicyNetPredictionMetrics{n_percent}Prob_{game_stage}{color}.txt'.format(n_percent=n_percent_of_top,game_stage=game_stage, color=color)), 'w') as output_file:
+                print("Length of Test Set = {num_examples}\n".format(num_examples=len(valid_examples)),
+                      file=output_file)
+                correct_prediction_position, correct_position_in_10_percent_of_top, incorrect_position_in_10_percent_of_top,not_in_top_n = \
+                    generate_prediction_statistics(training_examples, training_labels, output_file, policy_net, color)
+                # correct_prediction_position, correct_position_in_10_percent_of_top, incorrect_position_in_10_percent_of_top,not_in_top_n = \
+                #     generate_prediction_statistics(valid_examples, valid_labels, output_file, policy_net, color)
 
-            # print_prediction_statistics(training_examples, training_labels, output_file, policy_net)
-            print_prediction_statistics(valid_examples, valid_labels, output_file, policy_net)
+                print_prediction_statistics(correct_prediction_position, correct_position_in_10_percent_of_top, incorrect_position_in_10_percent_of_top, not_in_top_n, output_file)
+if averaged:
+    with open(os.path.join(r'..', r'policy_net_model', r'metrics',
+                           '05012017_065Net_VALID_PolicyNetPredictionMetrics{n_percent}Prob_{game_stage}Averaged.txt'.format(n_percent=n_percent_of_top,
+                               game_stage=game_stage)), 'w') as output_file:
+        correct_prediction_position = [sum(x) for x in
+                                       zip(correct_prediction_position_white, correct_prediction_position_black)]
+        correct_position_in_10_percent_of_top = [sum(x) for x in zip(correct_position_in_10_percent_of_top_white,
+                                                                     correct_position_in_10_percent_of_top_black)]
+        incorrect_position_in_10_percent_of_top = [sum(x) for x in zip(incorrect_position_in_10_percent_of_top_white,
+                                                                     incorrect_position_in_10_percent_of_top_black)]
+        not_in_top_n = not_in_top_n_white + not_in_top_n_black
+        print_prediction_statistics(correct_prediction_position, correct_position_in_10_percent_of_top, incorrect_position_in_10_percent_of_top,not_in_top_n, output_file)
 

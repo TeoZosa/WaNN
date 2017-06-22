@@ -133,7 +133,8 @@ cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int d
         dict parent
 
     entered_once = False
-    over_time = not( time() - sim_info['start_time'] < sim_info['time_to_think'])
+    time_to_think = sim_info['time_to_think']
+    over_time = not( time() - sim_info['start_time'] < time_to_think)
     while depth < depth_limit and not over_time :# and len(sim_info['game_tree'])<10000
         entered_once = True
         # if len (unexpanded_nodes) > 0:
@@ -184,12 +185,15 @@ cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int d
 
             # the point of multithreading is that other threads can do useful work while this thread blocks from the policy net calls
             # start = time()
+            is_player = True
             NN_output = policy_net.evaluate(filtered_unexpanded_nodes, is_player=is_player)
             # total_time = (time()-start)*1000 # in ms
             # sim_info['eval_times'].append([len(filtered_unexpanded_nodes),total_time])
 
-
-            multiprocess = False
+            if time_to_think >30:
+                multiprocess = False
+            else:
+                multiprocess = False
             if multiprocess and ((len(filtered_unexpanded_nodes) >= 25 and (filtered_unexpanded_nodes[0]['color'] != sim_info['root']['color'])) or len(filtered_unexpanded_nodes) >=100):#lots of children toappend
                 unexpanded_children, over_time = offload_updates_to_separate_process(filtered_unexpanded_nodes, depth, depth_limit, NN_output, sim_info, lock)
             else:
@@ -211,15 +215,24 @@ cpdef expand_descendants_to_depth_wrt_NN(list unexpanded_nodes, int depth, int d
             decrement_threads_checking_node(parent)#
 
 def offload_updates_to_separate_process(unexpanded_nodes,  depth, depth_limit, NN_output, sim_info, lock):
-    grandparents = []
-    unexpanded_children = []
+    cdef:
+        int num_losing_children = 0
+        list grandparents = []
+        list unexpanded_children = []
+        list expanded_parents
+        dict parent
+        dict grandparent
+        int overwhelming_amount
     over_time = False
+    grandparents_append = grandparents.append
     with lock:
         unchecked_nodes = []
+        unchecked_append = unchecked_nodes.append
+
         for parent in unexpanded_nodes:
              if parent['threads_checking_node'] <= 1 and (parent['children'] is None):
-                 unchecked_nodes.append(parent)
-                 grandparents.append(parent['parent'])
+                 unchecked_append(parent)
+                 grandparents_append(parent['parent'])
                  parent['parent'] = None
 
              else:
@@ -242,19 +255,41 @@ def offload_updates_to_separate_process(unexpanded_nodes,  depth, depth_limit, N
                 grandparent = grandparents[i]
                 reattach_parent_to_grandparent(grandparent, parent)
                 reset_threads_checking_node(parent)
+                maybe_gameover = check_for_1_step_lookahead_gameover(parent)
             for child in unexpanded_children:
-                if child['gameover'] is True: #child color is aloser
+                if maybe_gameover:
+                    if not child['gameover']: #if it didn't save or win the game, it was a loser
+                        num_losing_children+=1
+                if child['gameover'] is True: #child color is a loser
                     if child['parent'] is not None:
                         if child['parent']['parent'] is not None:
                             overwhelming_amount = child['overwhelming_amount']
-                            update_tree_losses(child['parent']['parent'], overwhelming_amount, gameover=True) #if grandchild lost, parent won, grandparentlost
+                            update_tree_losses(child['parent']['parent'], overwhelming_amount, gameover=True) #if grandchild lost, parent won, grandparent lost
                 else:
                     eval_child(child)  # backprop eval
+            if maybe_gameover:
+                update_tree_wins(parent['parent'], amount=num_losing_children, gameover=True) #update tree through grandparent who didn't receive the original update
+
             for grandparent in grandparents:
                 update_win_status_from_children(grandparent)  # since parents may have been updated, grandparent must check these copies; maybe less duplication to do it here than in expanded parents loop?
                 backpropagate_num_checked_children(grandparent)
             sim_info['game_tree'].extend(expanded_parents)
     return unexpanded_children, over_time
+
+cdef check_for_1_step_lookahead_gameover(dict parent):
+    cdef:
+        dict game_board = parent['game_board']
+
+    if parent['color'] == 'Black':
+        game_over_row = 7
+        enemy_piece = 'w'
+    else:
+        game_over_row = 2
+        enemy_piece = 'b'
+    return enemy_piece in game_board[game_over_row].values()#Maybe gameover next move
+
+
+
 
 cdef do_updates_in_the_same_process(list unexpanded_nodes, int depth, int depth_limit, np.ndarray NN_output, dict sim_info, lock):
     cdef:
@@ -266,9 +301,11 @@ cdef do_updates_in_the_same_process(list unexpanded_nodes, int depth, int depth_
 
     over_time = False
     append = unexpanded_children.append
+    time_to_think = sim_info['time_to_think']
+
     for i in range(0, len(unexpanded_nodes)):
         parent = unexpanded_nodes[i]
-        if time() - sim_info['start_time'] < sim_info['time_to_think']:# and len(sim_info['game_tree'])<10000  # stop updating parents as soon as we go over our time to think
+        if time() - sim_info['start_time'] < time_to_think:# and len(sim_info['game_tree'])<10000  # stop updating parents as soon as we go over our time to think
             with lock:
                 if parent['threads_checking_node'] <= 1 and (parent['children'] is None):
                     if parent['threads_checking_node'] <= 0:
@@ -287,9 +324,10 @@ cdef do_updates_in_the_same_process(list unexpanded_nodes, int depth, int depth_
                                 child_0 =children [0]
                                 if child_0['win_status'] is None and child_0['threads_checking_node']<=0 and not child_0['subtree_being_checked']:
                                     append(children[0])
-                                # child_1 = children [1]
-                                # if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked'] and child_0['UCT_multiplier']<1.35 :#if first child wasn't that good #and parent['color'] == 'Black'
-                                #     unexpanded_children.append(children[1])
+                                # if time_to_think > 30:
+                                #     child_1 = children [1]
+                                #     if child_1['win_status'] is None and child_1['threads_checking_node']<=0 and not child_1['subtree_being_checked'] :#if first child wasn't that good #and parent['color'] == 'Black' # and child_0['UCT_multiplier']<1.35
+                                #         unexpanded_children.append(children[1])
                             elif num_children==1:
                                 child_0 = children[0]
                                 if child_0['win_status'] is None and child_0['threads_checking_node'] <= 0 and not child_0['subtree_being_checked']:
@@ -316,19 +354,22 @@ cdef list update_parent(dict parent, np.ndarray NN_output, dict sim_info, lock):
         children = enumerate_update_and_prune(parent, NN_output, sim_info,lock)
     return children
 
-def update_parents_for_process(args):#when more than n parents, have a separate process do the updating
-    unexpanded_nodes = args[0]
-    NN_output = args[1]
-    depth = args[2]
-    depth_limit = args[3]
-    start_time = args[4]
-    time_to_think = args[5]
+cpdef update_parents_for_process(list args):#when more than n parents, have a separate process do the updating
+    cdef:
+        list unexpanded_nodes = args[0]
+        np.ndarray NN_output = args[1]
+        int depth = args[2]
+        int depth_limit = args[3]
+        float start_time = args[4]
+        int time_to_think = args[5]
+
     root_color = args[6]
     sim_info = SimulationInfo(stdout)
     sim_info['do_eval'] = False
     lock = Lock()
 
     unexpanded_children = []
+    append = unexpanded_children.append
     over_time = False
     for i in range(0, len(unexpanded_nodes)):
         parent = unexpanded_nodes[i]
@@ -345,21 +386,26 @@ def update_parents_for_process(args):#when more than n parents, have a separate 
 
                 children = update_parent( parent, NN_output[i], sim_info, lock)
                 children_to_consider = []
-                if depth +1 < depth_limit:  # if we are allowed to enter the outermost while loop again
+                if depth +1 < depth_limit and len(children)>0:  # if we are allowed to enter the outermost while loop again
                     if parent['color'] == root_color:  # black move
                         best_child = None
                         for child in children:  # walk down children sorted by NN probability
-                            if child['win_status'] is None and child['threads_checking_node']<=0:
+                            if child['win_status'] is None and child['threads_checking_node']<=0 and not child['subtree_being_checked']:
                                 best_child = child
                                 break
                         if best_child is not None:
-                            children_to_consider = [best_child]
+                            # children_to_consider = [best_child]
+                            append(best_child)
                     else:
-                        if len(children)<3:
-                            children_to_consider = children
-                        else:
-                            children_to_consider = [children[0], children[1]]
-                unexpanded_children.extend(children_to_consider)
+                        count = 0
+                        while count < len(children) and count < 2:
+                            append(children[count])
+                            count += 1
+                #         if len(children)<3:
+                #             children_to_consider = children
+                #         else:
+                #             children_to_consider = [children[0], children[1]]
+                # unexpanded_children.extend(children_to_consider)
         else:
             reset_threads_checking_node(parent) # have to iterate over all parents to set this
             over_time = True

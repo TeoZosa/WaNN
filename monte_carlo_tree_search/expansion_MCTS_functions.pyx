@@ -89,8 +89,11 @@ def MCTS_with_expansions(game_board, player_color, time_to_think,
 
 
 
-    if root['subtree_checked']:# or root['win_status']is True
+    if root['subtree_checked'] or root['win_status']is not None :# or root['win_status']is True IF DOOMED, WANDERER PROBABLY ALREADY KNOWS; NOT TRUE FOR HUMAN OPPONENT
         done = True
+        if root['children'] is None: #1 step lookahead needs to be expanded.
+            expand_descendants_to_depth_wrt_NN([root], 0, 1, sim_info, async_update_lock, policy_net)
+
     else:
         done = False
     if MCTS_Type == 'Expansion MCTS Pruning':
@@ -298,8 +301,10 @@ cpdef run_MCTS_with_expansions_simulation(dict root,int depth_limit, dict sim_in
     if not root['subtree_checked']:
         play_MCTS_game_with_expansions(root, 0, depth_limit, sim_info,  policy_net, start_time, time_to_think, async_update_lock)
         sim_info['counter'] += 1
-        if root['subtree_checked']: #necessary for end game moves since 1-step lookahead makes the search stop prematurely
+        if root['subtree_checked']or root['win_status']is not None :# or root['win_status']is True IF DOOMED, WANDERER PROBABLY ALREADY KNOWS; NOT TRUE FOR HUMAN OPPONENT
             done = True
+            if root['children'] is None: #1 step lookahead needs to be expanded.
+                expand_descendants_to_depth_wrt_NN([root], 0, 1, sim_info, async_update_lock, policy_net)
         else:
             done = False
     else:
